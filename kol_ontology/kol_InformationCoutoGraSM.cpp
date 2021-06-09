@@ -26,9 +26,7 @@ kol::OntologySetType<std::string> kol::InformationCoutoGraSM::getCommonDisjointA
                                                                                          const std::string &termC2) const {
 
   OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
-  //std::cout << ancestorsC1.size() << std::endl;
   OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
-  //std::cout << ancestorsC2.size() << std::endl;
 
   //Couto: CommonDisjAnc = {}
   OntologySetType<std::string> cda;
@@ -43,7 +41,6 @@ kol::OntologySetType<std::string> kol::InformationCoutoGraSM::getCommonDisjointA
 
   //Couto: Anc = CommonAnc(c1,c2)
   OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
-  //std::cout << commonAncestors.size() << std::endl;
 
   std::vector<std::pair<double, std::string> > orderedCommonAncestors;
   //create a pair to associate a term with its information content
@@ -63,12 +60,8 @@ kol::OntologySetType<std::string> kol::InformationCoutoGraSM::getCommonDisjointA
     //Couto: isDisj=true
     bool isDisj = true;
 
-    //std::cout << "testing " << termA << std::endl;
-
     //Couto: for all cda in CommonDisjAnc do ...
     for (auto const &termCda : cda) {
-
-      //std::cout << "VS " << termCda << std::endl;
 
       //continue if the terms are the same
       if (termCda == termA) {
@@ -84,7 +77,7 @@ kol::OntologySetType<std::string> kol::InformationCoutoGraSM::getCommonDisjointA
 
     //Couto: if isDisj then...
     if (isDisj) {
-      //std::cout << myPair.second << " is cda " << std::endl;
+
       //Couto: addTo(CommonDisjAnc,a)
       cda.insert(termA);
 
@@ -105,32 +98,30 @@ bool kol::InformationCoutoGraSM::isDisjoint(const std::string &termC,
                                             const std::string &termA1,
                                             const std::string &termA2) const {
 
-  //std::cout << "isDisjoint " << termC << " ("  << termA1 << " , " << termA2 << ") "; //<< std::endl;
   //if not from same ontology, return 0;
   if (graph_ptr_->getTermOntology(termA1) != graph_ptr_->getTermOntology(termA2) ||
       graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA1) ||
       graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA2)) {
+
     return false;
+
   }
 
   if (ic_map_ptr_->termInformation(termA1) <= ic_map_ptr_->termInformation(termA2)) {
-    //std::cout << "case 1" << std::endl;
+
     size_t nPaths = getNumPaths(termA1, termA2);
-    //std::cout << "nPaths " << termA1 << " to "  << termA2 << " " << nPaths << std::endl << std::endl;
     size_t nPaths1 = getNumPaths(termA1, termC);
-    //std::cout << "nPaths " << termA1 << " to "  << termC << " " << nPaths1 << std::endl << std::endl;
     size_t nPaths2 = getNumPaths(termA2, termC);
-    //std::cout << "nPaths " << termA2 << " to "  << termC << " " << nPaths2 << std::endl << std::endl;
+
     if (nPaths1 >= nPaths * nPaths2) {
-      //std::cout << "true" << std::endl;
+
       return true;
 
     } else {
-      //std::cout << "false" << std::endl;
+
       return false;
 
     }
-    //return nPaths1 > nPaths*nPaths2;
 
   } else {
 
@@ -170,11 +161,9 @@ double kol::InformationCoutoGraSM::sharedInformation(const std::string &termA, c
 
   Accumulators::MeanAccumulator meanIC;
   OntologySetType<std::string> cda = getCommonDisjointAncestors(termA, termB);
-  //std::cout << "size " << cda.size() << std::endl;
 
   for (auto const &term : cda) {
-    //std::cout << *iter << std::endl;
-    //std::cout << ic_map_ptr_[*iter] << std::endl;
+
     meanIC(ic_map_ptr_->termInformation(term));
 
   }
@@ -217,9 +206,9 @@ void kol::InformationCoutoGraSM::visitHelper(const GoGraph::GoVertex &go_vertex,
                                              OntologySetType<std::string> &ancestors,
                                              OntologySetType<std::string> &finished,
                                              OntologyMapType<std::string, size_t> &pathMap) const {
+
   size_t childCount = 0;
   std::string vTerm = go_graph[go_vertex].termId;
-  //std::cout << "discover vertex " << vTerm << std::endl;
 
   //examine children and recurse
   GoGraph::InEdgeIterator it, end;
@@ -245,7 +234,7 @@ void kol::InformationCoutoGraSM::visitHelper(const GoGraph::GoVertex &go_vertex,
 
   //finish vertex
   finished.insert(vTerm);
-  //std::cout << "finish vertex " << vTerm << ", childred " << childCount << std::endl;
+
   if (childCount == 0) {
 
     pathMap[vTerm] = 1;

@@ -229,11 +229,11 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_ and ontology_db_ptr_) {
 
-    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_, ontology_db_ptr_);
+    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_);
 
   } else {
 
-    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Necessary deta files not defined for analysis");
+    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Necessary data files not defined for analysis");
 
   }
 

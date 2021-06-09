@@ -28,7 +28,8 @@ class OntologyCache {
 
 public:
 
-  explicit OntologyCache(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  OntologyCache( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+                 const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
   OntologyCache(const OntologyCache &) = delete;
   ~OntologyCache();
 
@@ -38,12 +39,13 @@ public:
   [[nodiscard]] double setSimilarityBP(const std::string& gene) const;
   [[nodiscard]] double setSimilarityMF(const std::string& gene) const;
   [[nodiscard]] double setSimilarityCC(const std::string& gene) const;
-  [[nodiscard]] bool isTargetGene(const std::string& gene) const { return malaria_gene_map_.contains(gene); }
+  [[nodiscard]] bool isTargetGene(const std::string& gene) const;
 
 private:
 
   std::shared_ptr<const OntologyGeneCache> gene_cache_ptr_;
 
+  // From the OMIM entry #611162 available at page https://www.omim.org/entry/611162
   inline static const std::map<std::string, std::string> malaria_gene_map_ {
       { "P16671", "CD36"}, { "P06028","GYPB"}, { "P12318", "FCGR2A"}, { "P31994", "FCGR2B"}, { "P05362", "ICAM1"},
       {  "O14931", "NCR3"}, { "P68871", "HBB"}, { "P35228", "NOS2"}, { "P01375", "TNF"}, { "O14931", "NCR3"},
@@ -54,7 +56,8 @@ private:
       {"Q6GTX8", "LAIR1"} };
 
 
-  void initializeOntology(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  void initializeOntology( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+                           const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
 
 };
 
@@ -78,10 +81,7 @@ public:
 
   void writeOntology(std::ostream& out_file, char output_delimiter) const;
   void writeOntologyHeader(std::ostream& out_file, char output_delimiter) const;
-  void processOntologyStats(const GeneCharacteristic& gene_info,
-                            const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                            const OntologyCache& ontology_cache);
-
+  void processOntologyStats(const std::string& gene_info, const OntologyCache& ontology_cache);
 
 private:
 

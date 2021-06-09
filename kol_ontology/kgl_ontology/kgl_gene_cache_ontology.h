@@ -33,11 +33,12 @@ class OntologyGeneCache {
 public:
 
   OntologyGeneCache( const std::vector<std::string>& gene_vector,
-                     const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr)
-      : ontology_db_ptr_(ontology_db_ptr) {
+                     const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+                     const std::shared_ptr<const kol::GoGraph>& go_graph_ptr)
+      : annotation_ptr_(annotation_ptr), go_graph_ptr_(go_graph_ptr) {
 
     gene_set_ = kol::SetUtilities::convertVector(gene_vector);
-    initializeOntology(ontology_db_ptr_);
+    initializeOntology();
 
   }
   OntologyGeneCache(const OntologyGeneCache &) = delete;
@@ -54,7 +55,8 @@ public:
 private:
 
   kol::OntologySetType<std::string> gene_set_;
-  std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
+  std::shared_ptr<const kol::TermAnnotation> annotation_ptr_;
+  std::shared_ptr<const kol::GoGraph> go_graph_ptr_;
 
   kol::OntologySetType<std::string> gene_set_go_terms_BP_;
   std::vector<std::string> all_go_terms_BP_;
@@ -72,14 +74,12 @@ private:
   std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_CC_ptr_;
 
 
-  void initializeOntology(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-  kol::OntologySetType<std::string> getGeneSetGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                                                       kol::GO::Ontology ontology);
-  std::vector<std::string> getAllGOVector(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                                          kol::GO::Ontology ontology);
-  std::shared_ptr<const kol::SimilarityLin> getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-  std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
-  std::shared_ptr<const kol::SimilarityJIangConrath> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+  void initializeOntology();
+  kol::OntologySetType<std::string> getGeneSetGOVector(kol::GO::Ontology ontology);
+  std::vector<std::string> getAllGOVector(kol::GO::Ontology ontology);
+  std::shared_ptr<const kol::SimilarityLin> getLinSimilarity();
+  std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity();
+  std::shared_ptr<const kol::SimilarityJIangConrath> getJiangSimilarity();
   // Cached GO Term and Gene Data.
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsBP() const {

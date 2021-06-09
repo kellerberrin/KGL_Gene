@@ -16,8 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::shared_ptr<const kol::SimilarityLin> kgl::OntologyDatabaseTest::getDAGLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
-
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getDAGLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
   std::shared_ptr<const kol::InformationContentDAG> ic_map_ptr(std::make_shared<kol::InformationContentDAG>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
@@ -26,7 +25,7 @@ std::shared_ptr<const kol::SimilarityLin> kgl::OntologyDatabaseTest::getDAGLinSi
 }
 
 
-std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyDatabaseTest::getDAGResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getDAGResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
   std::shared_ptr<const kol::InformationContentDAG> ic_map_ptr(std::make_shared<kol::InformationContentDAG>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
@@ -34,7 +33,7 @@ std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyDatabaseTest::getDAGRe
 
 }
 
-std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyDatabaseTest::getDAGJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getDAGJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
   std::shared_ptr<const kol::InformationContentDAG> ic_map_ptr(std::make_shared<kol::InformationContentDAG>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
@@ -43,7 +42,7 @@ std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyDatabaseTest::ge
 }
 
 
-std::shared_ptr<const kol::SimilarityLin> kgl::OntologyDatabaseTest::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getLinSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
 
   std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
@@ -53,7 +52,7 @@ std::shared_ptr<const kol::SimilarityLin> kgl::OntologyDatabaseTest::getLinSimil
 }
 
 
-std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyDatabaseTest::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
   std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
@@ -61,7 +60,7 @@ std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyDatabaseTest::getResni
 
 }
 
-std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyDatabaseTest::getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const {
 
   std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
@@ -70,11 +69,17 @@ std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyDatabaseTest::ge
 }
 
 
+std::shared_ptr<const kol::SetSimilarityInterface> kgl::OntologyDatabaseTest::getBestMatchAverage(const std::shared_ptr<const kol::SimilarityInterface>& similarity_ptr) const {
+
+  return std::make_shared<const kol::SetSimilarityBestMatchAverage>(similarity_ptr);
+
+}
 
 void kgl::OntologyDatabaseTest::performTests() const {
 
   calcPairs();
-  checkICs();
+//  checkICs();
+  calcGenePairs();
 
 }
 
@@ -170,5 +175,100 @@ void kgl::OntologyDatabaseTest::checkICs() const {
     out_file << go_term << ',' << ic_value << ',' << unique_ic_value << ',' << alt_ic_value <<  '\n';
 
   }
+
+}
+
+void kgl::OntologyDatabaseTest::calcGenePairs() const {
+
+  std::ofstream gene_test_file(GENE_FILE_NAME_);
+
+  if (not gene_test_file.good()) {
+
+    ExecEnv::log().error("OntologyDatabaseTest::calcGenePairs; could not opemn file: {}", GENE_FILE_NAME_);
+    return;
+
+  }
+
+  gene_test_file << "gene_row"
+                 << FIELD_DELIMITER_
+                 << "gene_col"
+                 << FIELD_DELIMITER_
+                 << "Lin_BP"
+                 << FIELD_DELIMITER_
+                 << "DAG_Lin_BP"
+                 << FIELD_DELIMITER_
+                 << "Resnik_MF"
+                 << FIELD_DELIMITER_
+                 << "DAG_Resnik_MF"
+                 << FIELD_DELIMITER_
+                 << "Jiang_CC"
+                 << FIELD_DELIMITER_
+                 << "DAG_Jiang_CC"
+                 << '\n';
+
+  std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(ontology_db_ptr_->annotation()->getAllGAFRecords(),
+                                                                                                             kol::AnnotationGeneName::SYMBOLIC_GENE_ID));
+  auto Lin_BP_ptr = getBestMatchAverage(getLinSimilarity(ontology_db_ptr_));
+  auto Resnik_MF_ptr = getBestMatchAverage(getResnikSimilarity(ontology_db_ptr_));
+  auto Jiang_CC_ptr = getBestMatchAverage(getJiangSimilarity(ontology_db_ptr_));
+
+  auto DAG_Lin_BP_ptr = getBestMatchAverage(getDAGLinSimilarity(ontology_db_ptr_));
+  auto DAG_Resnik_MF_ptr = getBestMatchAverage(getDAGResnikSimilarity(ontology_db_ptr_));
+  auto DAG_Jiang_CC_ptr = getBestMatchAverage(getDAGJiangSimilarity(ontology_db_ptr_));
+
+  // Generate a list of genes.
+  std::vector<std::string> gene_vector;
+  for (auto const & [gaf_if, symbolic_id] : malaria_gene_map_) {
+
+    gene_vector.push_back(symbolic_id);
+
+  }
+
+  for (auto const& gene_row : gene_vector) {
+
+    for (auto const& gene_col : gene_vector) {
+
+      auto gene_row_terms_BP = term_annotation_ptr->getGoTermsForGeneBP(gene_row);
+      auto gene_col_terms_BP = term_annotation_ptr->getGoTermsForGeneBP(gene_col);
+      double Lin_BP = Lin_BP_ptr->calculateSimilarity(gene_row_terms_BP, gene_col_terms_BP);
+      double DAG_Lin_BP = DAG_Lin_BP_ptr->calculateSimilarity(gene_row_terms_BP, gene_col_terms_BP);
+
+      auto gene_row_terms_MF = term_annotation_ptr->getGoTermsForGeneMF(gene_row);
+      auto gene_col_terms_MF = term_annotation_ptr->getGoTermsForGeneMF(gene_col);
+      double Resnik_MF = Resnik_MF_ptr->calculateSimilarity(gene_row_terms_MF, gene_col_terms_MF);
+      double DAG_Resnik_MF = DAG_Resnik_MF_ptr->calculateSimilarity(gene_row_terms_MF, gene_col_terms_MF);
+
+      auto gene_row_terms_CC = term_annotation_ptr->getGoTermsForGeneCC(gene_row);
+      auto gene_col_terms_CC = term_annotation_ptr->getGoTermsForGeneCC(gene_col);
+      double Jiang_CC = Jiang_CC_ptr->calculateSimilarity(gene_row_terms_CC, gene_col_terms_CC);
+      double DAG_Jiang_CC = DAG_Jiang_CC_ptr->calculateSimilarity(gene_row_terms_CC, gene_col_terms_CC);
+
+      gene_test_file << gene_row
+                     << FIELD_DELIMITER_
+                     << gene_col
+                     << FIELD_DELIMITER_
+                     << Lin_BP
+                     << FIELD_DELIMITER_
+                     << DAG_Lin_BP
+                     << FIELD_DELIMITER_
+                     << Resnik_MF
+                     << FIELD_DELIMITER_
+                     << DAG_Resnik_MF
+                     << FIELD_DELIMITER_
+                     << Jiang_CC
+                     << FIELD_DELIMITER_
+                     << DAG_Jiang_CC
+                     << '\n';
+
+    }
+
+  }
+
+
+
+
+
+
+
 
 }

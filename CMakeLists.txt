@@ -358,7 +358,7 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_SymbolicSet.cpp kol_ontology/unit_test/kol_test_symbolicset.h)
+        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_SymbolicSet.cpp kol_ontology/unit_test/kol_test_symbolicset.h kol_ontology/unit_test/kol_test_OntologyDatabase.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES

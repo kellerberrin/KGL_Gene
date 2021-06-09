@@ -16,9 +16,10 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::OntologyCache::OntologyCache(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+kgl::OntologyCache::OntologyCache( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+                                   const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
 
-  initializeOntology(ontology_db_ptr);
+  initializeOntology(annotation_ptr, go_graph_ptr);
 
 }
 
@@ -31,18 +32,18 @@ kgl::OntologyCache::~OntologyCache() {
 }
 
 
-void kgl::OntologyCache::initializeOntology(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+void kgl::OntologyCache::initializeOntology( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+                                             const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
 
   // Create a vector of Malaria genes from the map.
   std::vector<std::string> gene_vector;
   for (auto const&[go_gene, gene_name] : malaria_gene_map_) {
 
-    gene_vector.push_back(go_gene);
+    gene_vector.push_back(gene_name);
 
   }
 
-
-  gene_cache_ptr_ = std::make_shared<const OntologyGeneCache>(gene_vector, ontology_db_ptr);
+  gene_cache_ptr_ = std::make_shared<const OntologyGeneCache>(gene_vector, annotation_ptr, go_graph_ptr);
 
 }
 
@@ -67,19 +68,24 @@ double kgl::OntologyCache::setSimilarityCC(const std::string& gene) const {
 
 }
 
+bool kgl::OntologyCache::isTargetGene(const std::string& gene) const {
+
+  return gene_cache_ptr_->isTargetGene(gene);
+
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void kgl::OntologyStats::processOntologyStats(const GeneCharacteristic& gene_info,
-                                              const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
+void kgl::OntologyStats::processOntologyStats(const std::string& gene_id,
                                               const OntologyCache& ontology_cache) {
 
-  score_BP_ = ontology_cache.setSimilarityBP(gene_info.gafId());
-  score_MF_ = ontology_cache.setSimilarityMF(gene_info.gafId());
-  score_CC_ = ontology_cache.setSimilarityCC(gene_info.gafId());
+  score_BP_ = ontology_cache.setSimilarityBP(gene_id);
+  score_MF_ = ontology_cache.setSimilarityMF(gene_id);
+  score_CC_ = ontology_cache.setSimilarityCC(gene_id);
   max_score_ = std::max(score_BP_, std::max(score_MF_, score_CC_));
   double sum {0.0}, count{0.0};
   if (score_BP_ > 0.0) {
@@ -107,9 +113,10 @@ void kgl::OntologyStats::processOntologyStats(const GeneCharacteristic& gene_inf
 
   }
 
-  targetGene_ = ontology_cache.isTargetGene(gene_info.gafId());
+  targetGene_ = ontology_cache.isTargetGene(gene_id);
 
 }
+
 
 
 

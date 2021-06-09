@@ -18,9 +18,11 @@ public:
 
   // GoGraph file names.
   [[nodiscard]] static std::string oboFileName() { return std::string(GRAPH_DIRECTORY_) + std::string(GO_OBO_); }
+  [[nodiscard]] static std::string newOboFileName() { return std::string(GRAPH_DIRECTORY_) + std::string("new_") + std::string(GO_OBO_); }
   [[nodiscard]] static std::string xmlFileName() { return std::string(GRAPH_DIRECTORY_) + std::string(GO_XML_); }
   // Association file names.
   [[nodiscard]] static std::string gafFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_GAF_ANNOTATION_); }
+  [[nodiscard]] static std::string newGafFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string("new_") + std::string(HUMAN_GAF_ANNOTATION_); }
   [[nodiscard]] static std::string geneFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(GENE_ASSOCIATION_); }
   [[nodiscard]] static std::string entrezFileName() { return std::string(ANNOTATION_DIRECTORY_) + std::string(HUMAN_ENTREZ_ANNOTATION_); }
   // Matrix File Names for Different Ontologies.

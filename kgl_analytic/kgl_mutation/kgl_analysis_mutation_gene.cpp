@@ -6,6 +6,7 @@
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_clinvar.h"
 #include "kgl_variant_mutation.h"
+#include "kgl_ontology_database_test.h"
 
 
 
@@ -29,9 +30,13 @@ void kgl::GenomeMutation::analysisType() {
       member_text = "gene variant membership by defined exons";
       break;
 
-    default:
     case VariantGeneMembership::BY_ENSEMBL:
       member_text = "gene variant membership by Ensembl gene code (vep field)";
+      break;
+
+    default:
+    case VariantGeneMembership::BY_ENSEMBL_SUMMARY:
+      member_text = "gene variant membership by Ensembl gene code (vep field); NO_POPULATION_ANALYSIS.";
       break;
 
   }
@@ -57,7 +62,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
   analysis_initialized_ = true;
 
-  kol::TermAnnotation term_annotation(genome_ptr->geneOntology().getGafRecordVector(), kol::AnnotationGeneName::SYMBOLIC_GENE_ID);
+  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
+  std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(evidence_policy,
+                                                                                                             genome_ptr->geneOntology().getGafRecordVector(),
+                                                                                                             kol::AnnotationGeneName::SYMBOLIC_GENE_ID));
   const GeneSynonymVector synonym_vector = nomenclature_ptr->getGeneSynonym();
   ResortIds resort_ids;
   resort_ids.sortByHGNC(synonym_vector);
@@ -65,7 +73,9 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
   gene_vector_.clear();
   ExecEnv::log().info("Creating Ontology Cache ...");
-  OntologyCache ontology_cache(ontology_db_ptr);
+
+  OntologyCache ontology_cache(term_annotation_ptr, ontology_db_ptr->goGraph());
+
   ExecEnv::log().info("Ontology Cache Created");
 
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -80,7 +90,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       if (not name_vec.empty()) {
 
         name = name_vec.front();
-        auto [uniprot_id, symbolic_id] = term_annotation.getGeneIdentifiers(name);
+        auto [uniprot_id, symbolic_id] = term_annotation_ptr->getGeneIdentifiers(name);
         gaf_id = uniprot_id;
 
       }
@@ -88,7 +98,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       // If gaf_id_ is empty then try a lookup with the gene id.
       if (gaf_id.empty()) {
 
-        auto [uniprot_id, symbolic_id] = term_annotation.getGeneIdentifiers(gene_ptr->id());
+        auto [uniprot_id, symbolic_id] = term_annotation_ptr->getGeneIdentifiers(gene_ptr->id());
         gaf_id = uniprot_id;
 
       }
@@ -102,7 +112,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
       mutation.gene_variants.updateLofEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateHighEthnicity().updatePopulations(ped_data);
       mutation.gene_variants.updateModerateEthnicity().updatePopulations(ped_data);
-      mutation.ontology.processOntologyStats(mutation.gene_characteristic, ontology_db_ptr, ontology_cache);
+      mutation.ontology.processOntologyStats(mutation.gene_characteristic.geneId(), ontology_cache);
       gene_vector_.push_back(mutation);
 
     } // Gene.
@@ -117,8 +127,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data,
-                                          const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) {
+                                          const std::shared_ptr<const GenomePEDData>& ped_data) {
 
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.
@@ -160,6 +169,18 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 }
 
 
+kgl::GeneMutation kgl::GenomeMutation::geneSummaryAnalysis( const std::shared_ptr<const PopulationDB>&,
+                                                            const std::shared_ptr<const PopulationDB>&,
+                                                            const std::shared_ptr<const EnsemblIndexMap>&,
+                                                            GeneMutation gene_mutation) {
+
+
+
+  return gene_mutation;
+
+}
+
+
 kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
@@ -179,20 +200,24 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
       if (not contig_ptr->getMap().empty()) {
 
         // Which method gene membership of variants is determined.
-        std::shared_ptr<const ContigDB> span_variant_ptr;
+        std::shared_ptr<const ContigDB> gene_variant_ptr;
         switch(gene_membership_) {
 
           case VariantGeneMembership::BY_SPAN:
-            span_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
+            gene_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
             break;
 
           case VariantGeneMembership::BY_EXON:
-            span_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
+            gene_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
+            break;
+
+          case VariantGeneMembership::BY_ENSEMBL:
+            gene_variant_ptr = getGeneEnsemblSpan(contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
             break;
 
           default:
-          case VariantGeneMembership::BY_ENSEMBL:
-            span_variant_ptr = getGeneEnsemblSpan( contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
+          case VariantGeneMembership::BY_ENSEMBL_SUMMARY:
+            gene_variant_ptr = getGeneEnsemblSpan(contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
             break;
 
         }
@@ -213,8 +238,8 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         }
 
-        gene_mutation.clinvar.processClinvar(genome_id, span_variant_ptr, clinvar_contig, ped_data);
-        gene_mutation.gene_variants.ProcessVariantStats(genome_id, span_variant_ptr, unphased_population_ptr, ped_data);
+        gene_mutation.clinvar.processClinvar(genome_id, gene_variant_ptr, clinvar_contig, ped_data);
+        gene_mutation.gene_variants.ProcessVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, ped_data);
 
       } // contig not empty
 
@@ -274,7 +299,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblSpan( co
 
   } else {
 
-    return getGeneSpan(contig_ptr, gene_char);
+    return getGeneExon(contig_ptr, gene_char);
 
   }
 

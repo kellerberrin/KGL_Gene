@@ -53,7 +53,12 @@ public:
 // Variants indexed by their Ensembl gene id retrieved from the vep field.
 using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
 // How variants are allocated to genes.
-enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
+enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL, BY_ENSEMBL_SUMMARY };
+// By Span is all variants with in intron+exon span of the gene.
+// By Exon is all variants within the exon region of the gene.
+// By Ensembl looks up the Ensembl gene code in the variant vep.
+// By EnsemblSummary is the same as the above but does not use the variant profile of a supplied population data file.
+// Instead the statistics are generated directly from the summary (unphased single genome) data.
 
 class GenomeMutation {
 
@@ -72,8 +77,7 @@ public:
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                        const std::shared_ptr<const GenomePEDData>& ped_data,
-                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr);
+                        const std::shared_ptr<const GenomePEDData>& ped_data);
 
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
@@ -117,6 +121,12 @@ private:
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
+
+  GeneMutation geneSummaryAnalysis( const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                    const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
+                                    const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
+                                    GeneMutation gene_mutation);
+
 
   void analysisType();
 
