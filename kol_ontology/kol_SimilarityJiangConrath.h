@@ -13,7 +13,7 @@ Distributed under the Boost Software License, Version 1.0.
 namespace kellerberrin::ontology {
 
 
-/*! \class SimilarityJIangConrath
+/*! \class SimilarityJiangConrath
 	\brief A class to calculate Jiang Conrath similarity between 2 terms
 
 	This class calculates Jiang Conrath similarity.
@@ -32,7 +32,7 @@ namespace kellerberrin::ontology {
 	(see Lord et al.)
 
 */
-class SimilarityJIangConrath : public SimilarityInterface {
+class SimilarityJiangConrath : public SimilarityInterface {
 
 public:
 
@@ -40,10 +40,10 @@ public:
   /*!
     Creates the Jiang Conrath simialrity measure using a given shared information calculator
   */
-  SimilarityJIangConrath(const std::shared_ptr<const InformationInterface> &shared_info_ptr)
+  SimilarityJiangConrath(const std::shared_ptr<const InformationInterface> &shared_info_ptr)
       : shared_info_ptr_(shared_info_ptr) {}
 
-  ~SimilarityJIangConrath() override = default;
+  ~SimilarityJiangConrath() override = default;
 
   //! A method for calculating term-to-term similarity for GO terms using JiangConrath similarity
   /*!

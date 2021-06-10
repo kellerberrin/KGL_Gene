@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(test_asymmetric_similarity_Lin_BP)
 
   }
   std::vector<std::string> malaria_terms = kol::SetUtilities::convertSet(go_terms);
-  auto asymmetric_cache_ptr(std::make_shared<const kol::SimilarityCacheAsymmetric>(malaria_terms, ontology_terms, linSimPtr(), kol::GO::Ontology::BIOLOGICAL_PROCESS));
+  auto asymmetric_cache_ptr(std::make_shared<const kol::SimilarityCacheAsymmetric>(malaria_terms, ontology_terms, linSimPtr()));
   size_t term_look_up{0};
   for (auto const& row_term : malaria_terms) {
 

@@ -23,7 +23,7 @@ struct SymbolicSetValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSymbolicClass = kol::TestSetTermSymbolicSimilarity<kol::SimilarityJIangConrath, kol::SetSimilarityBestMatchAverage, SymbolicSetValues>;
+using TestSymbolicClass = kol::TestSetTermSymbolicSimilarity<kol::SimilarityJiangConrath, kol::SetSimilarityBestMatchAverage, SymbolicSetValues>;
 
 BOOST_FIXTURE_TEST_SUITE(SymbolicSetSuite, TestSymbolicClass)
 

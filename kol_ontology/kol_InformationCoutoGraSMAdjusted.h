@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KOL_GRASM_SHARED_INFORMATION_ADJUSTED
 #define KOL_GRASM_SHARED_INFORMATION_ADJUSTED
 
-#include "kol_InformationContentImpl.h"
+#include "kol_InformationContent.h"
 #include "kol_GoGraph.h"
 
 namespace kellerberrin::ontology {
@@ -35,7 +35,7 @@ public:
     Creates the InformationCoutoGraSMAdjusted class
   */
   InformationCoutoGraSMAdjusted(const std::shared_ptr<const GoGraph> &graph_ptr,
-                                const std::shared_ptr<const InformationContentImpl> &ic_map_ptr_)
+                                const std::shared_ptr<const InformationContent> &ic_map_ptr_)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr_) {}
 
   ~InformationCoutoGraSMAdjusted() override = default;

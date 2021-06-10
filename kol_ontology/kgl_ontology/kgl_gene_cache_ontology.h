@@ -79,7 +79,7 @@ private:
   std::vector<std::string> getAllGOVector(kol::GO::Ontology ontology);
   std::shared_ptr<const kol::SimilarityLin> getLinSimilarity();
   std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity();
-  std::shared_ptr<const kol::SimilarityJIangConrath> getJiangSimilarity();
+  std::shared_ptr<const kol::SimilarityJiangConrath> getJiangSimilarity();
   // Cached GO Term and Gene Data.
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsBP() const {

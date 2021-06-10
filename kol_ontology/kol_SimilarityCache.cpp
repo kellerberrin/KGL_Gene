@@ -109,12 +109,14 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const T
     auto const[iter, result] = term_to_index_.try_emplace(term, index);
     // Check that all terms are distinct
     if (not result) {
-      // Return the empty cache.
-      term_to_index_.clear();
-      return false;
+      // Warn and continue.
+      ExecEnv::log().warn("TermSimilarityCache::termSimilarityCache; duplicate GO terms returns from getOntologyTerms() function");
+
+    } else {
+
+      ++index;
 
     }
-    ++index;
 
   }
 

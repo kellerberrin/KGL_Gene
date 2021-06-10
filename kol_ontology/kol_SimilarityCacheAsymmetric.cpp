@@ -91,49 +91,51 @@ double kol::SimilarityCacheAsymmetric::lookUpMatrix(size_t row, size_t column) c
 */
 bool kol::SimilarityCacheAsymmetric::termSimilarityCache(const std::vector<std::string>& row_terms,
                                                          const std::vector<std::string>& column_terms,
-                                                         const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
-                                                         GO::Ontology ontology) {
+                                                         const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr) {
 
-  // Return the empty cache.
-  if (ontology == GO::Ontology::ONTO_ERROR) {
-
-    return false;
-
-  }
 
   if (row_terms.empty() or column_terms.empty()) {
 
+    ExecEnv::log().warn("SimilarityCacheAsymmetric::termSimilarityCache; empty term vectors supplied");
     return false;
 
   }
 
   size_t index{0};
+  std::vector<std::string> unique_row_terms;
   for (auto const &term : row_terms) {
 
     auto const[iter, result] = row_term_to_index_.try_emplace(term, index);
     // Check that all terms are distinct
     if (not result) {
-      // Return the empty cache.
-      row_term_to_index_.clear();
-      return false;
+      // Warn and continue.
+      ExecEnv::log().warn("SimilarityCacheAsymmetric::termSimilarityCache; duplicate GO term: {} in row terms vector", term);
+
+    } else {
+
+      unique_row_terms.push_back(term);
+      ++index;
 
     }
-    ++index;
 
   }
 
   index = 0;
+  std::vector<std::string> unique_column_terms;
   for (auto const &term : column_terms) {
 
     auto const[iter, result] = column_term_to_index_.try_emplace(term, index);
     // Check that all terms are distinct
     if (not result) {
-      // Return the empty cache.
-      column_term_to_index_.clear();
-      return false;
+      // Warn and continue.
+      ExecEnv::log().warn("SimilarityCacheAsymmetric::termSimilarityCache; duplicate GO term: {} in column terms vector", term);
+
+    } else {
+
+      ++index;
+      unique_column_terms.push_back(term);
 
     }
-    ++index;
 
   }
 
@@ -141,10 +143,10 @@ bool kol::SimilarityCacheAsymmetric::termSimilarityCache(const std::vector<std::
 
 
   // Create a cache matrix
-  const size_t row_count = row_terms.size();
+  const size_t row_count = unique_row_terms.size();
   cache_matrix_.reserve(row_count);
   // Create a pointer for the column term vector
-  std::shared_ptr<const std::vector<std::string>> column_terms_ptr(std::make_shared<const std::vector<std::string>>(column_terms));
+  std::shared_ptr<const std::vector<std::string>> column_terms_ptr(std::make_shared<const std::vector<std::string>>(unique_column_terms));
   // Default to HW threads less 1.
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // Simplify the future vector type definition.
@@ -154,7 +156,7 @@ bool kol::SimilarityCacheAsymmetric::termSimilarityCache(const std::vector<std::
 
   for (size_t row = 0; row < row_count; ++row) {
 
-    const std::string &row_term = row_terms[row];
+    const std::string &row_term = unique_row_terms[row];
 
     FutureResult future = thread_pool.enqueueTask(&SimilarityCacheAsymmetric::calcColumn,
                                                   row_term,

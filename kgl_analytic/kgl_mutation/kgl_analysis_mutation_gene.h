@@ -53,7 +53,7 @@ public:
 // Variants indexed by their Ensembl gene id retrieved from the vep field.
 using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
 // How variants are allocated to genes.
-enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL, BY_ENSEMBL_SUMMARY };
+enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
 // By Span is all variants with in intron+exon span of the gene.
 // By Exon is all variants within the exon region of the gene.
 // By Ensembl looks up the Ensembl gene code in the variant vep.

@@ -40,7 +40,6 @@ public:
       std::scoped_lock lock(mutex_);
 
       data_queue_.push(std::move(value));
-
       ++size_;
       ++activity_;
 
@@ -55,16 +54,14 @@ public:
   [[nodiscard]] T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(mutex_);
-
     // wait on non-empty
-    data_cond_.wait(lock,[this]{return not empty();});
-
-    T value = std::move(data_queue_.front());
-
-    data_queue_.pop();
+    data_cond_.wait(lock, [this]{ return not empty(); });
 
     --size_;
     ++activity_;
+
+    T value(std::move(data_queue_.front()));
+    data_queue_.pop();
 
     // Unlock the mutex.
     lock.unlock();
@@ -89,6 +86,7 @@ private:
   std::condition_variable data_cond_;
   std::atomic<size_t> size_{0};
   std::atomic<size_t> activity_{0};
+
 
 };
 

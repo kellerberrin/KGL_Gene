@@ -21,6 +21,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_InformationCoutoGraSM.h"
 #include "kol_EnrichmentTools.h"
 #include "kol_InformationExclusiveInherited.h"
+#include "kol_InformationFactory.h"
 #include "kol_InformationFrontier.h"
 #include "kol_SetSimilarityGentlemanSimUI.h"
 #include "kol_ParserAnnotationGaf.h"

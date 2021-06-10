@@ -34,10 +34,9 @@ public:
   */
   SimilarityCacheAsymmetric(const std::vector<std::string> &row_terms,
                             const std::vector<std::string> &column_terms,
-                            const std::shared_ptr<const SimilarityInterface> &term_sim_ptr,
-                            GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
+                            const std::shared_ptr<const SimilarityInterface> &term_sim_ptr) {
 
-    termSimilarityCache(row_terms, column_terms, term_sim_ptr, ontology);
+    termSimilarityCache(row_terms, column_terms, term_sim_ptr);
 
   }
 
@@ -77,8 +76,7 @@ private:
   */
   bool termSimilarityCache(const std::vector<std::string> &row_terms,
                            const std::vector<std::string> &column_terms,
-                           const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
-                           GO::Ontology ontology);
+                           const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr);
 
   // Multithreaded calculation.
   static std::unique_ptr<std::vector<double>> calcColumn(const std::string &row_term,

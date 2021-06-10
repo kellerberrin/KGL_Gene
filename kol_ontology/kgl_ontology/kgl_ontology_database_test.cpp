@@ -8,6 +8,7 @@
 #include "kel_utility.h"
 #include "kol_InformationContentDAG.h"
 #include "kol_InformationContent.h"
+#include "kol_SetSimilarityBMA_Alt.h"
 
 #include <fstream>
 
@@ -37,7 +38,7 @@ std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getDA
 
   std::shared_ptr<const kol::InformationContentDAG> ic_map_ptr(std::make_shared<kol::InformationContentDAG>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
-  return std::make_shared<const kol::SimilarityJIangConrath>(ic_map_ptr);
+  return std::make_shared<const kol::SimilarityJiangConrath>(ic_map_ptr);
 
 }
 
@@ -64,7 +65,7 @@ std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyDatabaseTest::getJi
 
   std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(ontology_db_ptr->goGraph(), ontology_db_ptr->annotation()));
 
-  return std::make_shared<const kol::SimilarityJIangConrath>(ic_map_ptr);
+  return std::make_shared<const kol::SimilarityJiangConrath>(ic_map_ptr);
 
 }
 
@@ -74,6 +75,14 @@ std::shared_ptr<const kol::SetSimilarityInterface> kgl::OntologyDatabaseTest::ge
   return std::make_shared<const kol::SetSimilarityBestMatchAverage>(similarity_ptr);
 
 }
+
+std::shared_ptr<const kol::SetSimilarityInterface> kgl::OntologyDatabaseTest::getBMA_Alt(const std::shared_ptr<const kol::SimilarityInterface>& similarity_ptr) const {
+
+  return std::make_shared<const kol::SetSimilarityBMA_Alt>(similarity_ptr);
+
+}
+
+
 
 void kgl::OntologyDatabaseTest::performTests() const {
 
@@ -263,12 +272,5 @@ void kgl::OntologyDatabaseTest::calcGenePairs() const {
     }
 
   }
-
-
-
-
-
-
-
 
 }

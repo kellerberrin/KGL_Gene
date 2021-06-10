@@ -30,13 +30,9 @@ void kgl::GenomeMutation::analysisType() {
       member_text = "gene variant membership by defined exons";
       break;
 
+    default:
     case VariantGeneMembership::BY_ENSEMBL:
       member_text = "gene variant membership by Ensembl gene code (vep field)";
-      break;
-
-    default:
-    case VariantGeneMembership::BY_ENSEMBL_SUMMARY:
-      member_text = "gene variant membership by Ensembl gene code (vep field); NO_POPULATION_ANALYSIS.";
       break;
 
   }
@@ -211,12 +207,8 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
             gene_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
             break;
 
-          case VariantGeneMembership::BY_ENSEMBL:
-            gene_variant_ptr = getGeneEnsemblSpan(contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
-            break;
-
           default:
-          case VariantGeneMembership::BY_ENSEMBL_SUMMARY:
+          case VariantGeneMembership::BY_ENSEMBL:
             gene_variant_ptr = getGeneEnsemblSpan(contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
             break;
 

@@ -24,7 +24,7 @@ struct BestPairsAvgSetValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestSetTermSimilarity<kol::SimilarityJIangConrath, kol::SetSimilarityBestMatchAverage, BestPairsAvgSetValues>;
+using TestSimilarityClass = kol::TestSetTermSimilarity<kol::SimilarityJiangConrath, kol::SetSimilarityBestMatchAverage, BestPairsAvgSetValues>;
 
 BOOST_FIXTURE_TEST_SUITE(BestPairsAvgSetSuite, TestSimilarityClass)
 

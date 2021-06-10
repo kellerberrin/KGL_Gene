@@ -35,7 +35,7 @@ public:
   */
   TermSimilarityCache(const std::shared_ptr<const TermAnnotation> &annotation_ptr,
                       const std::shared_ptr<const SimilarityInterface> &term_sim_ptr,
-                      GO::Ontology ontology = GO::Ontology::BIOLOGICAL_PROCESS) {
+                      GO::Ontology ontology) {
 
     termSimilarityCache(annotation_ptr, term_sim_ptr, ontology);
 

@@ -62,9 +62,9 @@ public:
     {
       std::unique_lock<std::mutex> lock(tide_mutex_);
       tide_cond_.wait(lock, [this] ()->bool { return queue_state_; });
-      mt_queue_.push(std::move(new_value));
     }
 
+    mt_queue_.push(std::move(new_value));
     tide_cond_.notify_one();
 
   }
@@ -72,10 +72,13 @@ public:
   T waitAndPop() {
 
     T value = mt_queue_.waitAndPop();
-    if (not queue_state_) {
+    { // Locked block to modify condition variable.
+      std::scoped_lock lock(tide_mutex_);
+      if (not queue_state_) {
 
-      queue_state_ = size() <= low_tide_;
+        queue_state_ = size() <= low_tide_;
 
+      }
     }
     tide_cond_.notify_one();
     return value;
@@ -258,7 +261,8 @@ private:
         ++previous_count_;
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          ExecEnv::log().warn("Monitor Queue: {}, size: {} stalled for samples: {}", queueName(), sample_size, static_cast<size_t>(previous_count_));
+          ExecEnv::log().warn("Monitor Queue: {}, size: {}, state: {}, stalled for samples: {}",
+                              queueName(), sample_size, (queue_state_ ? "'active'" : "'inactive'"), static_cast<size_t>(previous_count_));
 
         }
 

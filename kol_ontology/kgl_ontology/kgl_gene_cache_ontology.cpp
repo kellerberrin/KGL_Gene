@@ -29,8 +29,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   all_go_terms_BP_ = getAllGOVector(kol::GO::Ontology::BIOLOGICAL_PROCESS);
   cache_BP_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsBP(),
                                                                          all_go_terms_BP_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::BIOLOGICAL_PROCESS);
+                                                                         sim_calc_ptr);
   set_sim_BP_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_BP_ptr_);
   ExecEnv::log().info("BP GO cache created, All BP terms (columns): {}, Gene set BP terms (rows): {}", cache_BP_ptr_->columns(), cache_BP_ptr_->rows());
 
@@ -39,8 +38,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   all_go_terms_MF_ = getAllGOVector(kol::GO::Ontology::MOLECULAR_FUNCTION);
   cache_MF_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsMF(),
                                                                          all_go_terms_MF_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::MOLECULAR_FUNCTION);
+                                                                         sim_calc_ptr);
   set_sim_MF_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_MF_ptr_);
   ExecEnv::log().info("MF GO cache created, All MF terms (columns): {}, Gene set MF terms (rows): {}", cache_MF_ptr_->columns(), cache_MF_ptr_->rows());
 
@@ -49,8 +47,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   all_go_terms_CC_ =  getAllGOVector(kol::GO::Ontology::CELLULAR_COMPONENT);
   cache_CC_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsCC(),
                                                                          all_go_terms_CC_,
-                                                                         sim_calc_ptr,
-                                                                         kol::GO::Ontology::CELLULAR_COMPONENT);
+                                                                         sim_calc_ptr);
   set_sim_CC_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_CC_ptr_);
   ExecEnv::log().info("CC GO cache created, All CC terms (columns): {}, Gene set CC terms (rows): {}",  cache_CC_ptr_->columns(), cache_CC_ptr_->rows());
 
@@ -98,11 +95,11 @@ std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyGeneCache::getResnikSi
 
 }
 
-std::shared_ptr<const kol::SimilarityJIangConrath> kgl::OntologyGeneCache::getJiangSimilarity() {
+std::shared_ptr<const kol::SimilarityJiangConrath> kgl::OntologyGeneCache::getJiangSimilarity() {
 
   std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(go_graph_ptr_, annotation_ptr_));
 
-  return std::make_shared<const kol::SimilarityJIangConrath>(ic_map_ptr);
+  return std::make_shared<const kol::SimilarityJiangConrath>(ic_map_ptr);
 
 }
 

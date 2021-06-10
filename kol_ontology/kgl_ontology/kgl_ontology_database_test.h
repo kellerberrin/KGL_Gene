@@ -49,6 +49,7 @@ private:
   [[nodiscard]] std::shared_ptr<const kol::SimilarityInterface> getResnikSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
   [[nodiscard]] std::shared_ptr<const kol::SimilarityInterface> getJiangSimilarity(const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr) const;
   [[nodiscard]] std::shared_ptr<const kol::SetSimilarityInterface> getBestMatchAverage(const std::shared_ptr<const kol::SimilarityInterface>& similarity_ptr) const;
+  [[nodiscard]] std::shared_ptr<const kol::SetSimilarityInterface> getBMA_Alt(const std::shared_ptr<const kol::SimilarityInterface>& similarity_ptr) const;
 
   void calcPairs() const;
   void checkICs() const;

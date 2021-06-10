@@ -19,7 +19,7 @@ struct JiangConrathSimValues {
 
 namespace kol = kellerberrin::ontology;
 
-using TestSimilarityClass = kol::TestTermSimilarity<kol::SimilarityJIangConrath, JiangConrathSimValues>;
+using TestSimilarityClass = kol::TestTermSimilarity<kol::SimilarityJiangConrath, JiangConrathSimValues>;
 
 BOOST_FIXTURE_TEST_SUITE(TestJiangConrathSimSuite, TestSimilarityClass)
 

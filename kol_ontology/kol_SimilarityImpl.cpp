@@ -15,7 +15,7 @@ namespace kol = kellerberrin::ontology;
   This method returns the Resnik similarity or the information content of the most informative common ancestor.
 */
 
-double kol::SimilarityJIangConrath::calculateTermSimilarityAlt(const std::string &go_termA, const std::string &go_termB) const {
+double kol::SimilarityJiangConrath::calculateTermSimilarityAlt(const std::string &go_termA, const std::string &go_termB) const {
 
   if (go_termA == go_termB) {
 
@@ -41,7 +41,7 @@ double kol::SimilarityJIangConrath::calculateTermSimilarityAlt(const std::string
 }
 
 // This is the JiangConrath formula used by GOSemSim
-double kol::SimilarityJIangConrath::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
+double kol::SimilarityJiangConrath::calculateTermSimilarity(const std::string &goTermA, const std::string &goTermB) const {
 
   //if the terms do not exist return 0.0 similarity
   if (not shared_info_ptr_->validateTerms(goTermA, goTermB)) {

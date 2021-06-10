@@ -58,7 +58,7 @@ public:
     using return_type = typename std::result_of<F(Args...)>::type;
     auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     std::future<return_type> future = task->get_future();
-    work_queue_.push([task](){ (*task)(); });
+    work_queue_.push([task]{ (*task)(); });
     return future;
 
   }

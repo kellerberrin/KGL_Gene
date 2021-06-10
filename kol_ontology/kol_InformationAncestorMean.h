@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KOL_ANCESTOR_MEAN_SHARED_INFORMATION
 #define KOL_ANCESTOR_MEAN_SHARED_INFORMATION
 
-#include "kol_InformationContentImpl.h"
+#include "kol_InformationContent.h"
 #include "kol_GoGraph.h"
 
 
@@ -27,7 +27,7 @@ public:
     Creates the InformationAncestorMean class
   */
   InformationAncestorMean(const std::shared_ptr<const GoGraph> &graph_ptr,
-                          const std::shared_ptr<const InformationContentImpl> &ic_map_ptr)
+                          const std::shared_ptr<const InformationContent> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
   ~InformationAncestorMean() override = default;
