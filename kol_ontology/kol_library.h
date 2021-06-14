@@ -4,7 +4,7 @@ Distributed under the Boost Software License, Version 1.0.
 ==============================================================================*/
 
 #ifndef KOL_LIBRARY_H
-#define KOL_LIBRARY
+#define KOL_LIBRARY_H
 
 #include "kol_Accumulators.h"
 #include "kol_ParserGoObo.h"
@@ -21,7 +21,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_InformationCoutoGraSM.h"
 #include "kol_EnrichmentTools.h"
 #include "kol_InformationExclusiveInherited.h"
-#include "kol_InformationFactory.h"
 #include "kol_InformationFrontier.h"
 #include "kol_SetSimilarityGentlemanSimUI.h"
 #include "kol_ParserAnnotationGaf.h"
@@ -34,6 +33,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "kol_SetSimilarityMazanduSimUIC.h"
 #include "kol_SimilarityJiangConrath.h"
 #include "kol_SimilarityLin.h"
+#include "kol_OntologyFactory.h"
 #include "kol_SimilarityRelevance.h"
 #include "kol_SimilarityResnik.h"
 #include "kol_SimilarityPekarStaab.h"

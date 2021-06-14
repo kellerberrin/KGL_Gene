@@ -167,9 +167,13 @@ bool kol::ParserGoXml::isFileGood(const std::string &filename) const {
 
   std::ifstream in(filename.c_str());
   if (!in.good()) {
+
     return false;
+
   } else {
+
     in.close();
+
   }
 
   std::size_t count = 0;
@@ -183,7 +187,9 @@ bool kol::ParserGoXml::isFileGood(const std::string &filename) const {
     doc.parse<0>(xmlFile.data());
   }
   catch (rapidxml::parse_error &pe) {
+
     return false;
+
   }
 
   //create an xml node
@@ -192,17 +198,27 @@ bool kol::ParserGoXml::isFileGood(const std::string &filename) const {
 
     std::string type = node->name();
     if (type == "term") {
+
       count += 1;
       if (count == 3) {
+
         break;
+
       }
+
     }
+
   }
 
   if (count < 3) {
+
     return false;
+
   } else {
+
     return true;
+
   }
+
 }
 

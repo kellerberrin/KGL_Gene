@@ -8,7 +8,7 @@
 #include "kel_utility.h"
 #include "kol_InformationContentDAG.h"
 #include "kol_InformationContent.h"
-#include "kol_SetSimilarityBMA_Alt.h"
+#include "kol_SetSimilarityAverageBestMatch.h"
 
 #include <fstream>
 
@@ -78,7 +78,7 @@ std::shared_ptr<const kol::SetSimilarityInterface> kgl::OntologyDatabaseTest::ge
 
 std::shared_ptr<const kol::SetSimilarityInterface> kgl::OntologyDatabaseTest::getBMA_Alt(const std::shared_ptr<const kol::SimilarityInterface>& similarity_ptr) const {
 
-  return std::make_shared<const kol::SetSimilarityBMA_Alt>(similarity_ptr);
+  return std::make_shared<const kol::SetSimilarityAverageBestMatch>(similarity_ptr);
 
 }
 

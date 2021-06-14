@@ -14,8 +14,8 @@ double kol::SetSimilarityMazanduSimDIC::calculateSimilarity(const OntologySetTyp
                                                             const OntologySetType<std::string> &column_terms) const {
 
   // Get the induced set of terms for each set
-  OntologySetType<std::string> induced_row_terms = _graph->getExtendedTermSet(row_terms);
-  OntologySetType<std::string> induced_column_terms = _graph->getExtendedTermSet(column_terms);
+  OntologySetType<std::string> induced_row_terms = graph_->getExtendedTermSet(row_terms);
+  OntologySetType<std::string> induced_column_terms = graph_->getExtendedTermSet(column_terms);
   // Calculate union and intersection
   OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(induced_row_terms, induced_column_terms);
 
@@ -42,7 +42,7 @@ double kol::SetSimilarityMazanduSimDIC::calcICSum(const OntologySetType<std::str
   double sum{0.0};
   for (auto const &term : terms) {
 
-    sum += _icMap->termInformation(term);
+    sum += info_content_map_->termInformation(term);
 
   }
 

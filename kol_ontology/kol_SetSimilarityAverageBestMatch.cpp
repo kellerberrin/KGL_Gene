@@ -2,7 +2,7 @@
 // Created by kellerberrin on 10/6/21.
 //
 
-#include "kol_SetSimilarityBMA_Alt.h"
+#include "kol_SetSimilarityAverageBestMatch.h"
 #include "kol_OntologyTypes.h"
 
 namespace kol = kellerberrin::ontology;
@@ -13,8 +13,8 @@ namespace kol = kellerberrin::ontology;
   This method returns the best match average similarity.
   Order of row and column terms important when using Asymmetric similarity caches.
 */
-double kol::SetSimilarityBMA_Alt::calculateSimilarity( const OntologySetType<std::string> &row_terms,
-                                                       const OntologySetType<std::string> &column_terms) const {
+double kol::SetSimilarityAverageBestMatch::calculateSimilarity(const OntologySetType<std::string> &row_terms,
+                                                               const OntologySetType<std::string> &column_terms) const {
 
   //return 0 if either set is empty
   if (row_terms.empty() or column_terms.empty()) {

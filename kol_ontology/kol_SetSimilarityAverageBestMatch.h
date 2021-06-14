@@ -14,26 +14,26 @@
 namespace kellerberrin::ontology {
 
 /*! \class SetSimilarityBestMatchAverage
-	\brief A class to calculate the best match average similarity between go terms for 2 sets.
+	\brief A class to calculate the Average Best Match similarity between go terms for 2 sets.
 
-	This class defines the best match average similarity getween two sets of terms.
-	Used by Couto et al.
+	This class defines the Average Best Match (ABM) similarity between two sets of terms.
+  Not to be confused with Best Match Average (BMA).
 
-	F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity
-	between Gene Ontology terms," Data & Knowledge Engineering, vol. 61,
-	pp. 137-152, Apr 2007.
+ "DaGO-Fun: tool for Gene Ontology-based functional analysis using term information content measures"
+ Gaston K Mazandu and Nicola J Mulder; BMC Bioinformatics 2013, 14:284.
+
 */
-class SetSimilarityBMA_Alt : public SetSimilarityInterface {
+class SetSimilarityAverageBestMatch : public SetSimilarityInterface {
 
 public:
   //! Constructor
   /*!
     Creates the SetSimilarityBestMatchAverage class assigning the similarity measure private memeber.
   */
-  explicit SetSimilarityBMA_Alt(const std::shared_ptr<const SimilarityInterface> &similarity_ptr)
+  explicit SetSimilarityAverageBestMatch(const std::shared_ptr<const SimilarityInterface> &similarity_ptr)
       : similarity_ptr_(similarity_ptr) {}
 
-  ~SetSimilarityBMA_Alt() override = default;
+  ~SetSimilarityAverageBestMatch() override = default;
 
   //! A method for calculating term set to term set similarity for GO terms;
   /*!

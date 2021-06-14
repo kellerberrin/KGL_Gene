@@ -31,7 +31,7 @@ public:
     This pure virtual method requires similarity measure to implement the basic interface
       that returns a similarity value for two sets of go terms.
   */
-  [[nodiscard]] virtual double calculateSimilarity(const OntologySetType<std::string> &termsA, const OntologySetType<std::string> &termsB) const = 0;
+  [[nodiscard]] virtual double calculateSimilarity(const OntologySetType<std::string> &row_terms, const OntologySetType<std::string> &column_terms) const = 0;
 
 };
 

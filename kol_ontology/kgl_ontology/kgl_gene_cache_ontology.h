@@ -10,10 +10,9 @@
 #include "kgl_ontology_database.h"
 #include "kol_GoEnums.h"
 #include "kol_SimilarityCacheAsymmetric.h"
-#include "kol_SimilarityLin.h"
-#include "kol_SimilarityResnik.h"
-#include "kol_SimilarityJiangConrath.h"
-#include "kol_SetSimilarityBestMatchAverage.h"
+#include "kol_SimilarityInterface.h"
+#include "kol_SetSimilarityInterface.h"
+#include "kol_OntologyFactory.h"
 
 
 namespace kol = kellerberrin::ontology;
@@ -51,8 +50,21 @@ public:
   [[nodiscard]] double setSimilarityMF(const std::string& gene) const;
   [[nodiscard]] double setSimilarityCC(const std::string& gene) const;
   [[nodiscard]] bool isTargetGene(const std::string& gene) const { return gene_set_.contains(gene); }
+  [[nodiscard]] std::pair<std::string, double> maxMF(const std::string& gene) const;
+  [[nodiscard]] std::pair<std::string, double> maxBP(const std::string& gene) const;
+  [[nodiscard]] std::pair<std::string, double> maxCC(const std::string& gene) const;
+  [[nodiscard]] std::pair<std::string, double> maxFunSim(const std::string& gene) const;
 
 private:
+
+  // Options are:  ANCESTOR, CONTENT, CONTENT_DAG, COUTOGRASM, COUTOGRASMADJUSTED, EXCLUSIVEINHERITED, FRONTIER
+  static const constexpr kol::InformationContentType information_type_ = kol::InformationContentType::CONTENT;
+  // Options are: RESNIK, LIN, RELEVANCE, JIANG, PEKARSTAAB
+  static const constexpr kol::SimilarityType similarity_type_ = kol::SimilarityType::LIN;
+  // Options are: GENTLEMANSIMUI, JACCARD.  Stand-alone.
+  //  MAZANDUSIMDIC, MAZANDUSIMUIC, PESQUITASIMGIC.  Information source.
+  //  BESTMATCHAVERAGE, AVERAGEBESTMATCH, ALLPAIRSMAX, ALLPAIRSAVERAGE.  Similarity measure.
+  static const constexpr kol::SetSimilarityType setsimilarity_type_ = kol::SetSimilarityType::AVERAGEBESTMATCH;
 
   kol::OntologySetType<std::string> gene_set_;
   std::shared_ptr<const kol::TermAnnotation> annotation_ptr_;
@@ -61,25 +73,23 @@ private:
   kol::OntologySetType<std::string> gene_set_go_terms_BP_;
   std::vector<std::string> all_go_terms_BP_;
   std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_BP_ptr_;
-  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_BP_ptr_;
+  std::shared_ptr<const kol::SetSimilarityInterface> set_sim_BP_ptr_;
 
   kol::OntologySetType<std::string> gene_set_go_terms_MF_;
   std::vector<std::string> all_go_terms_MF_;
   std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_MF_ptr_;
-  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_MF_ptr_;
+  std::shared_ptr<const kol::SetSimilarityInterface> set_sim_MF_ptr_;
 
   kol::OntologySetType<std::string> gene_set_go_terms_CC_;
   std::vector<std::string> all_go_terms_CC_;
   std::shared_ptr<const kol::SimilarityCacheAsymmetric> cache_CC_ptr_;
-  std::shared_ptr<const kol::SetSimilarityBestMatchAverage> set_sim_CC_ptr_;
+  std::shared_ptr<const kol::SetSimilarityInterface> set_sim_CC_ptr_;
 
 
   void initializeOntology();
   kol::OntologySetType<std::string> getGeneSetGOVector(kol::GO::Ontology ontology);
   std::vector<std::string> getAllGOVector(kol::GO::Ontology ontology);
-  std::shared_ptr<const kol::SimilarityLin> getLinSimilarity();
-  std::shared_ptr<const kol::SimilarityResnik> getResnikSimilarity();
-  std::shared_ptr<const kol::SimilarityJiangConrath> getJiangSimilarity();
+  std::shared_ptr<const kol::SimilarityInterface> getSimilarity();
   // Cached GO Term and Gene Data.
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsBP() const {
@@ -89,8 +99,6 @@ private:
     return malaria_GO_vec;
 
   }
-  [[nodiscard]] const std::vector<std::string>& allGOTermsBP() const { return all_go_terms_BP_; }
-  [[nodiscard]] const kol::SimilarityCacheAsymmetric& cacheBP() const { return *cache_BP_ptr_; }
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsMF() const {
 
@@ -99,8 +107,6 @@ private:
     return malaria_GO_vec;
 
   }
-  [[nodiscard]] const std::vector<std::string>& allGOTermsMF() const { return all_go_terms_MF_; }
-  [[nodiscard]] const kol::SimilarityCacheAsymmetric& cacheMF() const { return *cache_MF_ptr_; }
 
   [[nodiscard]] std::vector<std::string> geneSetGOTermsCC() const {
 
@@ -109,8 +115,6 @@ private:
     return malaria_GO_vec;
 
   }
-  [[nodiscard]] const std::vector<std::string>& allGOTermsCC() const { return all_go_terms_CC_; }
-  [[nodiscard]] const kol::SimilarityCacheAsymmetric&  cacheCC() const { return *cache_CC_ptr_; }
 
 };
 

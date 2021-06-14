@@ -30,7 +30,7 @@ public:
   */
   SetSimilarityMazanduSimDIC(const std::shared_ptr<const GoGraph> &graph,
                              const std::shared_ptr<const InformationInterface> &icMap)
-      : _graph(graph), _icMap(icMap) {}
+      : graph_(graph), info_content_map_(icMap) {}
 
   ~SetSimilarityMazanduSimDIC() override = default;
 
@@ -47,13 +47,13 @@ private:
   /*!
     A reference to GO graph to be used.
   */
-  std::shared_ptr<const GoGraph> _graph;
+  std::shared_ptr<const GoGraph> graph_;
 
   //! The information content map.
   /*!
     An information content map.
   */
-  std::shared_ptr<const InformationInterface> _icMap;
+  std::shared_ptr<const InformationInterface> info_content_map_;
 
   //! A method for calculating the sum of information content of the terms in a set.
   /*!

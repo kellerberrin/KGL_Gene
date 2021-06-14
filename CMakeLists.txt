@@ -320,7 +320,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGaf.cpp kol_ontology/kol_TermAnnotation.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h kol_ontology/kol_SetSimilarityBMA_Alt.cpp kol_ontology/kol_SetSimilarityBMA_Alt.h kol_ontology/kol_SimilarityFactory.h kol_ontology/kol_InformationFactory.h)
+        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGaf.cpp kol_ontology/kol_TermAnnotation.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h kol_ontology/kol_SetSimilarityAverageBestMatch.cpp kol_ontology/kol_SetSimilarityAverageBestMatch.h kol_ontology/kol_OntologyFactory.cpp kol_ontology/kol_OntologyFactory.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

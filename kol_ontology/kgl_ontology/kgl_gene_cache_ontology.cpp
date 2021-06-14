@@ -22,7 +22,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::OntologyGeneCache::initializeOntology() {
 
 
-  auto sim_calc_ptr = getLinSimilarity();
+  auto sim_calc_ptr = getSimilarity();
 
   // Biological process
   gene_set_go_terms_BP_ = getGeneSetGOVector(kol::GO::Ontology::BIOLOGICAL_PROCESS);
@@ -30,7 +30,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   cache_BP_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsBP(),
                                                                          all_go_terms_BP_,
                                                                          sim_calc_ptr);
-  set_sim_BP_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_BP_ptr_);
+  set_sim_BP_ptr_ = kol::OntologyFactory::createSetSimilarity(cache_BP_ptr_, setsimilarity_type_);
   ExecEnv::log().info("BP GO cache created, All BP terms (columns): {}, Gene set BP terms (rows): {}", cache_BP_ptr_->columns(), cache_BP_ptr_->rows());
 
   // Molecular Function
@@ -39,7 +39,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   cache_MF_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsMF(),
                                                                          all_go_terms_MF_,
                                                                          sim_calc_ptr);
-  set_sim_MF_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_MF_ptr_);
+  set_sim_MF_ptr_ = kol::OntologyFactory::createSetSimilarity(cache_MF_ptr_, setsimilarity_type_);
   ExecEnv::log().info("MF GO cache created, All MF terms (columns): {}, Gene set MF terms (rows): {}", cache_MF_ptr_->columns(), cache_MF_ptr_->rows());
 
   // Cellular Component
@@ -48,7 +48,7 @@ void kgl::OntologyGeneCache::initializeOntology() {
   cache_CC_ptr_ = std::make_shared<const kol::SimilarityCacheAsymmetric>(geneSetGOTermsCC(),
                                                                          all_go_terms_CC_,
                                                                          sim_calc_ptr);
-  set_sim_CC_ptr_ = std::make_shared<const kol::SetSimilarityBestMatchAverage>(cache_CC_ptr_);
+  set_sim_CC_ptr_ = kol::OntologyFactory::createSetSimilarity(cache_CC_ptr_, setsimilarity_type_);
   ExecEnv::log().info("CC GO cache created, All CC terms (columns): {}, Gene set CC terms (rows): {}",  cache_CC_ptr_->columns(), cache_CC_ptr_->rows());
 
 }
@@ -78,28 +78,9 @@ std::vector<std::string> kgl::OntologyGeneCache::getAllGOVector(kol::GO::Ontolog
 }
 
 
-std::shared_ptr<const kol::SimilarityLin> kgl::OntologyGeneCache::getLinSimilarity() {
+std::shared_ptr<const kol::SimilarityInterface> kgl::OntologyGeneCache::getSimilarity() {
 
-  std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(go_graph_ptr_, annotation_ptr_));
-
-  return std::make_shared<const kol::SimilarityLin>(ic_map_ptr);
-
-}
-
-
-std::shared_ptr<const kol::SimilarityResnik> kgl::OntologyGeneCache::getResnikSimilarity() {
-
-  std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(go_graph_ptr_, annotation_ptr_));
-
-  return std::make_shared<const kol::SimilarityResnik>(ic_map_ptr);
-
-}
-
-std::shared_ptr<const kol::SimilarityJiangConrath> kgl::OntologyGeneCache::getJiangSimilarity() {
-
-  std::shared_ptr<const kol::InformationContent> ic_map_ptr(std::make_shared<kol::InformationContent>(go_graph_ptr_, annotation_ptr_));
-
-  return std::make_shared<const kol::SimilarityJiangConrath>(ic_map_ptr);
+  return kol::OntologyFactory::createSimilarity( annotation_ptr_, go_graph_ptr_, similarity_type_, information_type_);
 
 }
 
@@ -128,5 +109,113 @@ double kgl::OntologyGeneCache::setSimilarityCC(const std::string& gene) const {
 
 }
 
+std::pair<std::string, double> kgl::OntologyGeneCache::maxMF(const std::string& gene) const {
+
+  auto gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::MOLECULAR_FUNCTION);
+
+  double max_similarity{0.0};
+  std::string max_ref_gene;
+  for (auto const& ref_gene : gene_set_) {
+
+    auto ref_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::MOLECULAR_FUNCTION);
+
+    double similarity = set_sim_MF_ptr_->calculateSimilarity(gene_go_set, ref_gene_go_set);
+
+    if (similarity > max_similarity) {
+
+      max_similarity = similarity;
+      max_ref_gene = ref_gene;
+
+    }
+
+  }
+
+  return std::pair<std::string, double>(max_ref_gene, max_similarity);
+
+}
+
+
+std::pair<std::string, double> kgl::OntologyGeneCache::maxBP(const std::string& gene) const {
+
+  auto gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::BIOLOGICAL_PROCESS);
+
+  double max_similarity{0.0};
+  std::string max_ref_gene;
+  for (auto const& ref_gene : gene_set_) {
+
+    auto ref_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::BIOLOGICAL_PROCESS);
+
+    double similarity = set_sim_BP_ptr_->calculateSimilarity(ref_gene_go_set, gene_go_set);
+
+    if (similarity > max_similarity) {
+
+      max_similarity = similarity;
+      max_ref_gene = ref_gene;
+
+    }
+
+  }
+
+  return std::pair<std::string, double>(max_ref_gene, max_similarity);
+
+}
+
+
+std::pair<std::string, double> kgl::OntologyGeneCache::maxCC(const std::string& gene) const {
+
+  auto gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::CELLULAR_COMPONENT);
+
+  double max_similarity{0.0};
+  std::string max_ref_gene;
+  for (auto const& ref_gene : gene_set_) {
+
+    auto ref_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::CELLULAR_COMPONENT);
+
+    double similarity = set_sim_CC_ptr_->calculateSimilarity(ref_gene_go_set, gene_go_set);
+
+    if (similarity > max_similarity) {
+
+      max_similarity = similarity;
+      max_ref_gene = ref_gene;
+
+    }
+
+  }
+
+  return std::pair<std::string, double>(max_ref_gene, max_similarity);
+
+}
+
+
+std::pair<std::string, double> kgl::OntologyGeneCache::maxFunSim(const std::string& gene) const {
+
+
+  auto mf_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::MOLECULAR_FUNCTION);
+  auto bp_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::BIOLOGICAL_PROCESS);
+
+  double max_similarity{0.0};
+  std::string max_ref_gene;
+  for (auto const& ref_gene : gene_set_) {
+
+    auto mf_ref_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::MOLECULAR_FUNCTION);
+    auto bp_ref_gene_go_set = annotation_ptr_->getGoTermsForGeneByOntology(gene, kol::GO::Ontology::BIOLOGICAL_PROCESS);
+
+    double mf_similarity = set_sim_MF_ptr_->calculateSimilarity(mf_ref_gene_go_set, mf_gene_go_set);
+    double bp_similarity = set_sim_BP_ptr_->calculateSimilarity(bp_ref_gene_go_set, bp_gene_go_set);
+
+    double similarity = ((mf_similarity * mf_similarity) + (bp_similarity * bp_similarity)) / 2.0;
+
+    if (similarity > max_similarity) {
+
+      max_similarity = similarity;
+      max_ref_gene = ref_gene;
+
+    }
+
+  }
+
+  return std::pair<std::string, double>(max_ref_gene, max_similarity);
+
+}
 
 
