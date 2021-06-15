@@ -58,7 +58,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
   analysis_initialized_ = true;
 
-  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
+//  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
+  kol::PolicyEvidence evidence_policy;
   std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(evidence_policy,
                                                                                                              genome_ptr->geneOntology().getGafRecordVector(),
                                                                                                              kol::AnnotationGeneName::SYMBOLIC_GENE_ID));

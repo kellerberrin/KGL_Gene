@@ -74,29 +74,54 @@ bool kgl::OntologyCache::isTargetGene(const std::string& gene) const {
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxMF(const std::string& gene) const {
+std::pair<std::string, double> kgl::OntologyCache::maxMFSim(const std::string& gene) const {
 
-  return gene_cache_ptr_->maxMF(gene);
-
-}
-
-std::pair<std::string, double> kgl::OntologyCache::maxBP(const std::string& gene) const {
-
-  return gene_cache_ptr_->maxBP(gene);
+  return gene_cache_ptr_->maxMFSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxCC(const std::string& gene) const {
+std::pair<std::string, double> kgl::OntologyCache::maxBPSim(const std::string& gene) const {
 
-  return gene_cache_ptr_->maxCC(gene);
+  return gene_cache_ptr_->maxBPSim(gene);
+
+}
+
+std::pair<std::string, double> kgl::OntologyCache::maxCCSim(const std::string& gene) const {
+
+  return gene_cache_ptr_->maxCCSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxFunSim(const std::string& gene) const {
+std::pair<std::string, double> kgl::OntologyCache::maxFunMFBPSim(const std::string& gene) const {
 
-  return gene_cache_ptr_->maxFunSim(gene);
+  return gene_cache_ptr_->maxFunMFBPSim(gene);
 
 }
+
+std::pair<std::string, double> kgl::OntologyCache::maxMFInfo(const std::string& gene) const {
+
+  return gene_cache_ptr_->maxMFInfo(gene);
+
+}
+
+std::pair<std::string, double> kgl::OntologyCache::maxBPInfo(const std::string& gene) const {
+
+  return gene_cache_ptr_->maxBPInfo(gene);
+
+}
+
+std::pair<std::string, double> kgl::OntologyCache::maxCCInfo(const std::string& gene) const {
+
+  return gene_cache_ptr_->maxCCInfo(gene);
+
+}
+
+std::pair<std::string, double> kgl::OntologyCache::maxFunMFBPInfo(const std::string& gene) const {
+
+  return gene_cache_ptr_->maxFunMFBPInfo(gene);
+
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,21 +163,40 @@ void kgl::OntologyStats::processOntologyStats(const std::string& gene_id,
 
   targetGene_ = ontology_cache.isTargetGene(gene_id);
 
-  auto [max_MF_gene, max_MF] = ontology_cache.maxMF(gene_id);
-  max_MF_ = max_MF;
-  max_MF_gene_ = max_MF_gene;
+  // Similarity
+  auto [max_MF_gene_sim, max_MF_sim] = ontology_cache.maxMFSim(gene_id);
+  max_MF_sim_ = max_MF_sim;
+  max_MF_gene_sim_ = max_MF_gene_sim;
 
-//  auto [max_BP_gene, max_BP] = ontology_cache.maxBP(gene_id);
-//  max_BP_ = max_BP;
-//  max_BP_gene_ = max_BP_gene;
+  auto [max_BP_gene_sim, max_BP_sim] = ontology_cache.maxBPSim(gene_id);
+  max_BP_sim_ = max_BP_sim;
+  max_BP_gene_sim_ = max_BP_gene_sim;
 
-//  auto [max_CC_gene, max_CC] = ontology_cache.maxCC(gene_id);
-//  max_CC_ = max_CC;
-//  max_CC_gene_ = max_CC_gene;
+  auto [max_CC_gene_sim, max_CC_sim] = ontology_cache.maxCCSim(gene_id);
+  max_CC_sim_ = max_CC_sim;
+  max_CC_gene_sim_ = max_CC_gene_sim;
 
-//  auto [max_FunSim_gene, max_FunSim] = ontology_cache.maxFunSim(gene_id);
-//  max_FunSim_ = max_FunSim;
-//  max_FunSim_gene_ = max_FunSim_gene;
+  auto [max_FunMFBP_gene_sim, max_FunMFBP_sim] = ontology_cache.maxFunMFBPSim(gene_id);
+  max_FunMFBP_sim_ = max_FunMFBP_sim;
+  max_FunMFBP_gene_sim_ = max_FunMFBP_gene_sim;
+
+  // Information
+  auto [max_MF_gene_info, max_MF_info] = ontology_cache.maxMFInfo(gene_id);
+  max_MF_info_ = max_MF_info;
+  max_MF_gene_info_ = max_MF_gene_info;
+
+  auto [max_BP_gene_info, max_BP_info] = ontology_cache.maxBPInfo(gene_id);
+  max_BP_info_ = max_BP_info;
+  max_BP_gene_info_ = max_BP_gene_info;
+
+  auto [max_CC_gene_info, max_CC_info] = ontology_cache.maxCCInfo(gene_id);
+  max_CC_info_ = max_CC_info;
+  max_CC_gene_info_ = max_CC_gene_info;
+
+  auto [max_FunMFBP_gene_info, max_FunMFBP_info] = ontology_cache.maxFunMFBPInfo(gene_id);
+  max_FunMFBP_info_ = max_FunMFBP_info;
+  max_FunMFBP_gene_info_ = max_FunMFBP_gene_info;
+
 
 }
 
@@ -162,19 +206,27 @@ void kgl::OntologyStats::processOntologyStats(const std::string& gene_id,
 void kgl::OntologyStats::writeOntology(std::ostream& out_file, char output_delimiter) const {
 
   out_file << score_BP_ << output_delimiter
-           << score_MF_ << output_delimiter
-           << score_CC_ << output_delimiter
-           << max_score_ << output_delimiter
-           << av_score_ << output_delimiter
-           << (targetGene_ ? "Malaria" : "") << output_delimiter
-           << max_MF_ << output_delimiter
-           << max_MF_gene_ << output_delimiter
-           << max_BP_ << output_delimiter
-           << max_BP_gene_ << output_delimiter
-           << max_CC_ << output_delimiter
-           << max_CC_gene_ << output_delimiter
-           << max_FunSim_ << output_delimiter
-           << max_FunSim_gene_;
+      << score_MF_ << output_delimiter
+      << score_CC_ << output_delimiter
+      << max_score_ << output_delimiter
+      << av_score_ << output_delimiter
+      << (targetGene_ ? "Malaria" : "") << output_delimiter
+      << max_MF_sim_ << output_delimiter
+      << max_MF_gene_sim_ << output_delimiter
+      << max_BP_sim_ << output_delimiter
+      << max_BP_gene_sim_ << output_delimiter
+      << max_CC_sim_ << output_delimiter
+      << max_CC_gene_sim_ << output_delimiter
+      << max_FunMFBP_sim_ << output_delimiter
+      << max_FunMFBP_gene_sim_ << output_delimiter
+      << max_MF_info_ << output_delimiter
+      << max_MF_gene_info_ << output_delimiter
+      << max_BP_info_ << output_delimiter
+      << max_BP_gene_info_ << output_delimiter
+      << max_CC_info_ << output_delimiter
+      << max_CC_gene_info_ << output_delimiter
+      << max_FunMFBP_info_ << output_delimiter
+      << max_FunMFBP_gene_info_;
 
 }
 
@@ -186,14 +238,22 @@ void kgl::OntologyStats::writeOntologyHeader(std::ostream& out_file, char output
            << "MaxScore" << output_delimiter
            << "AvScore" << output_delimiter
            << "TargetGene" << output_delimiter
-           << "max_MF" << output_delimiter
-           << "max_MF_gene" << output_delimiter
-           << "max_BP" << output_delimiter
-           << "max_BP_gene" << output_delimiter
-           << "max_CC" << output_delimiter
-           << "max_CC_gene" << output_delimiter
-           << "max_FunSim" << output_delimiter
-           << "max_FunSim_gene";
+           << "max_MF_sim" << output_delimiter
+           << "max_MF_gene_sim" << output_delimiter
+           << "max_BP_sim" << output_delimiter
+           << "max_BP_gene_sim" << output_delimiter
+           << "max_CC_sim" << output_delimiter
+           << "max_CC_gene_sim" << output_delimiter
+           << "max_FunMFBP_sim" << output_delimiter
+           << "max_FunMFBP_gene_sim" << output_delimiter
+           << "max_MF_info" << output_delimiter
+           << "max_MF_gene_info" << output_delimiter
+           << "max_BP_info" << output_delimiter
+           << "max_BP_gene_info" << output_delimiter
+           << "max_CC_info" << output_delimiter
+           << "max_CC_gene_info" << output_delimiter
+           << "max_FunMFBP_info" << output_delimiter
+           << "max_FunMFBP_gene_info";
 
 
 }
