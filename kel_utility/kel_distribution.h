@@ -400,15 +400,22 @@ public:
 //  The test for under-representation, the p-value is the probability of randomly drawing k or fewer successes.
   [[nodiscard]] double lowerSingleTailTest(size_t successes_k) const;
 
+  // Bounds for the number of successes_k in a drawn sample_size_n (without replacement)
+  // The number of successes drawn only has support; k in { lowerSuccesses_k, ... , upperSuccesses_k}
+  [[nodiscard]] size_t upperSuccesses_k() const { return std::min(pop_successes_K_, sample_size_n_); }
+  [[nodiscard]] size_t lowerSuccesses_k() const {
+
+    int64_t lower_success = static_cast<int64_t>(sample_size_n_ + pop_successes_K_) - static_cast<int64_t>(population_N_);
+    return static_cast<size_t>(std::max<int64_t>(0, lower_success));
+
+  }
+
 private:
 
   size_t pop_successes_K_;
   size_t sample_size_n_;
   size_t population_N_;
 
-  // Bounds for the number of successes_k in a drawn sample_size_n (without replacement)
-  [[nodiscard]] size_t upperSuccesses_k() const { return std::min(pop_successes_K_, sample_size_n_); }
-  [[nodiscard]] size_t lowerSuccesses_k() const { return std::max<int64_t>(0, (sample_size_n_ + pop_successes_K_ - population_N_)); }
 
 };
 

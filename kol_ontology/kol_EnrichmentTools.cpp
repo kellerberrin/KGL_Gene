@@ -20,7 +20,7 @@ kol::OntologySetType<std::string> kol::EnrichmentTools::getDescendantGenes( cons
 
   OntologySetType<std::string> genes;
   for (auto const &current_term : descendants) {
-    //std::cout << *si << " " << go->getTermName(*si) << std::endl;
+
     data.addGenesForGoTerm(current_term, genes);
 
   }

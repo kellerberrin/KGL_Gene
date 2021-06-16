@@ -61,7 +61,7 @@ public:
 private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const InformationContentImpl> ic_map_ptr_;
+  std::shared_ptr<const InformationContent> ic_map_ptr_;
 
   //! A method for determining the common disjunctive ancestors
   /*!

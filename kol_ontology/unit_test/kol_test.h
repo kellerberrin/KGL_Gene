@@ -378,7 +378,7 @@ public:
 
   }
 
-  [[nodiscard]] const InformationContentDAG &termInformation() {
+  [[nodiscard]] const InformationContent &termInformation() {
 
     if (not term_information_ptr_) {
 
@@ -412,7 +412,7 @@ protected:
 
   }
 
-  inline static std::shared_ptr<const InformationContentDAG> term_information_ptr_;
+  inline static std::shared_ptr<const InformationContent> term_information_ptr_;
   inline static std::unique_ptr<const InformationInterface> term_similarity_ptr_;
 
 private:
@@ -442,7 +442,7 @@ private:
 
     std::shared_ptr<const GoGraph> graph_ptr = SS::getGoGraph();
     std::shared_ptr<const TermAnnotation> annotation_ptr = SS::getAnnotation();
-    SS::term_information_ptr_ = std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr);
+    SS::term_information_ptr_ = std::make_shared<const InformationContent>(graph_ptr, annotation_ptr);
     SS::term_similarity_ptr_ = std::make_unique<const SharedAnalysis>(graph_ptr, SS::term_information_ptr_);
 
   }

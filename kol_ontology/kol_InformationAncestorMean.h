@@ -32,7 +32,7 @@ public:
 
   ~InformationAncestorMean() override = default;
 
-  //! A method for calculating the shared infromation between two concepts.
+  //! A method for calculating the shared information between two concepts.
   /*!
     This method returns the shared information between two concepts.
   */
@@ -65,7 +65,7 @@ public:
 private:
 
   std::shared_ptr<const GoGraph> graph_ptr_;
-  std::shared_ptr<const InformationContentImpl> ic_map_ptr_;
+  std::shared_ptr<const InformationContent> ic_map_ptr_;
 
 
 };
