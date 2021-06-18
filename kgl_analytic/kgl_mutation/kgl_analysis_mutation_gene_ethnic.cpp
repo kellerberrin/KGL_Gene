@@ -14,6 +14,11 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
                                       size_t count,
                                       const std::shared_ptr<const GenomePEDData>& ped_data) {
 
+  if (count == 0) {
+
+    return true;
+
+  }
 
   if (not ped_data) {
 
@@ -21,8 +26,6 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
     return false;
 
   }
-
-  total_ += count;
 
   auto result = ped_data->getMap().find(genome_id);
 
@@ -267,3 +270,77 @@ void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const GenomePEDData>
 }
 
 
+size_t kgl::GeneEthnicitySex::superPopulationCount(const std::string& super_population) const {
+
+  auto result = super_population_.find(super_population);
+  if (result == super_population_.end()) {
+
+    ExecEnv::log().error("GeneEthnicitySex::superPopulationCount; could not find super population: {}", super_population);
+    return 0;
+
+  } else {
+
+    auto const& [pop, count] = *result;
+    return count;
+
+  }
+
+}
+
+
+size_t kgl::GeneEthnicitySex::populationCount(const std::string& population) const {
+
+  auto result = population_.find(population);
+  if (result == population_.end()) {
+
+    ExecEnv::log().error("GeneEthnicitySex::populationCount; could not find population: {}", population);
+    return 0;
+
+  } else {
+
+    auto const& [pop, count] = *result;
+    return count;
+
+  }
+
+}
+
+size_t kgl::GeneEthnicitySex::superPopulationTotal() const {
+
+  size_t total{0};
+  for (auto const& [population, count] : super_population_) {
+
+    total += count;
+
+  }
+
+  return total;
+
+}
+
+size_t kgl::GeneEthnicitySex::populationTotal() const {
+
+
+  size_t total{0};
+  for (auto const& [population, count] : population_) {
+
+    total += count;
+
+  }
+
+  return total;
+
+}
+
+bool kgl::GeneEthnicitySex::auditTotals() const {
+
+  if (superPopulationTotal() != populationTotal()) {
+
+    ExecEnv::log().error("GeneEthnicitySex::auditTotals; super population total: {} not equal to population total: {}", superPopulationTotal(), populationTotal());
+    return false;
+
+  }
+
+  return true;
+
+}

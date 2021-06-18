@@ -64,7 +64,12 @@ class GenomeMutation {
 
 public:
 
-  explicit GenomeMutation(VariantGeneMembership gene_membership) : gene_membership_(gene_membership) { analysisType(); }
+  explicit GenomeMutation(VariantGeneMembership gene_membership) : gene_membership_(gene_membership) {
+
+    analysisType();
+
+
+  }
   ~GenomeMutation() = default;
 
   // This analysis is performed first and only once.
@@ -90,6 +95,7 @@ private:
   std::vector<GeneMutation> gene_vector_;
   bool analysis_initialized_{false};   // Only execute genomeAnalysis once
   VariantGeneMembership gene_membership_;
+  GeneEthnicitySex ethnic_statistics_;
 
   constexpr static const char* CONCAT_TOKEN = "&";
   constexpr static const char* VEP_ENSEMBL_FIELD_ = "Gene";

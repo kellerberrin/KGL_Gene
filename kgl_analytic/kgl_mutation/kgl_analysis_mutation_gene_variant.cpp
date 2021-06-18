@@ -4,12 +4,13 @@
 
 #include "kgl_analysis_mutation_gene_variant.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
+#include "kel_distribution.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GeneVariants::ProcessVariantStats(const GenomeId_t& genome_id,
+void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                             const std::shared_ptr<const GenomePEDData>& ped_data) {
@@ -187,10 +188,10 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   std::shared_ptr<const ContigDB> phase_hom_variants = found_unphased_B->setIntersection(*found_unphased_A, VariantEquality::UNPHASED);
 
-  vep_info.all_lof = VepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.female_phase_lof = VepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.male_phase_lof = VepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.hom_lof = VepCount(phase_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.all_lof = vepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.female_phase_lof = vepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.male_phase_lof = vepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.hom_lof = vepCount(phase_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
 
 
   VepSubFieldValues vep_field(IMPACT_VEP_FIELD_);
@@ -258,7 +259,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 }
 
 
-size_t kgl::GeneVariants::VepCount( const std::shared_ptr<const ContigDB>& vep_contig,
+size_t kgl::GeneVariants::vepCount( const std::shared_ptr<const ContigDB>& vep_contig,
                                     const std::string& vep_field_ident,
                                     const std::string& vep_field_value) {
 
@@ -277,3 +278,118 @@ size_t kgl::GeneVariants::VepCount( const std::shared_ptr<const ContigDB>& vep_c
 
 }
 
+
+bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
+                                                  const GeneEthnicitySex& ethnic_statistics,
+                                                  const std::string& gene) {
+
+
+  bool tail_result{true};
+  size_t total_success = ethnic_lof_.total() + ethnic_high_.total() + ethnic_moderate_.total();
+  size_t population_size = population_ptr->getMap().size() * 3;
+
+  if (not ethnic_lof_.auditTotals()) {
+
+    ExecEnv::log().error("GeneVariants::processSummaryStatistics; problem with Vep LoF ethnic statistics totals");
+    tail_result = false;
+
+  }
+
+  if (not ethnic_high_.auditTotals()) {
+
+    ExecEnv::log().error("GeneVariants::processSummaryStatistics; problem with Vep High ethnic statistics totals");
+    tail_result = false;
+
+  }
+
+  if (not ethnic_moderate_.auditTotals()) {
+
+    ExecEnv::log().error("GeneVariants::processSummaryStatistics; problem with Vep Moderate ethnic statistics totals");
+    tail_result = false;
+
+  }
+
+  for (auto const& [super_population, sample_size] : ethnic_statistics.superPopulation()) {
+
+    double upper_tail{0.0};
+    double lower_tail{0.0};
+
+    if (total_success > 0) {
+
+      size_t lof_count = ethnic_lof_.superPopulationCount(super_population);
+      size_t high_count = ethnic_high_.superPopulationCount(super_population);
+      size_t mod_count = ethnic_moderate_.superPopulationCount(super_population);
+
+      size_t pop_success = lof_count + high_count + mod_count;
+
+      size_t variant_sample_size = sample_size * 3;
+
+      HypergeometricDistribution hyper_tail_stats(total_success, variant_sample_size, population_size);
+
+      if (pop_success > hyper_tail_stats.upperSuccesses_k()) {
+
+        ExecEnv::log().warn( "GeneVariants::processSummaryStatistics; Gene: {}, hypergeometric parameters, K: {}, N: {}, k: {}, n: {}",
+                             gene, total_success, population_size, pop_success, sample_size);
+        ExecEnv::log().warn( "GeneVariants::processSummaryStatistics; Gene: {}, hypergeometric parameters, lof_count: {}, high_count: {}, moderate_count: {}",
+                             gene, lof_count, high_count, mod_count);
+        tail_result = false;
+
+      }
+
+      upper_tail = hyper_tail_stats.upperSingleTailTest(pop_success);
+      lower_tail = hyper_tail_stats.lowerSingleTailTest(pop_success);
+
+
+    } // success > 0
+
+    auto upper_find = upper_tail_.find(super_population);
+    if (upper_find != upper_tail_.end()) { // Found
+
+      auto& [population, tail_value] = *upper_find;
+      if (tail_value != 0.0 and total_success > 0) {
+
+        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero upper tail statistic: {}, population: {}, ",
+                             tail_value,  population);
+        tail_value = upper_tail;
+        tail_result = false;
+
+      } else if (tail_value == 0.0 and total_success != 0) {
+
+        tail_value = lower_tail;
+
+      }
+
+    } else { // Not found.
+
+      upper_tail_.emplace(super_population, upper_tail);
+
+    }
+
+    auto lower_find = lower_tail_.find(super_population);
+    if (lower_find != lower_tail_.end()) {
+
+      auto& [population, tail_value] = *lower_find;
+      if (tail_value != 0.0 and total_success != 0) {
+
+        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero lower tail statistic: {}, population: {}",
+                             tail_value, population);
+        tail_value = lower_tail;
+        tail_result = false;
+
+      } else if (tail_value == 0.0 and total_success != 0) {
+
+        tail_value = lower_tail;
+
+      }
+
+    } else {
+
+      lower_tail_.emplace(super_population, lower_tail);
+
+    }
+
+  }
+
+  return tail_result;
+
+}

@@ -122,8 +122,21 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomePE
 
   out_file << unique_variants_ << output_delimiter
            << variant_count_ << output_delimiter
-           << span_variant_count_ << output_delimiter
-           << all_lof_ << output_delimiter
+           << span_variant_count_ << output_delimiter;
+
+  for (auto const& [population, upper_tail] : upper_tail_) {
+
+    out_file << upper_tail << output_delimiter;
+
+  }
+
+  for (auto const& [population, lower_tail] : lower_tail_) {
+
+    out_file << lower_tail << output_delimiter;
+
+  }
+
+  out_file << all_lof_ << output_delimiter
            << female_lof_ << output_delimiter
            << male_lof_ << output_delimiter
            << hom_lof_ << output_delimiter;
@@ -163,8 +176,21 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePE
 
   out_file << "UniqueVariants" << output_delimiter
            << "VariantCount" << output_delimiter
-           << "SpanVariantCount" << output_delimiter
-           << "AllLof" << output_delimiter
+           << "SpanVariantCount" << output_delimiter;
+
+  for (auto const& [upper_population, upper_tail] : upper_tail_) {
+
+    out_file << upper_population << output_delimiter;
+
+  }
+
+  for (auto const& [lower_population, lower_tail] : lower_tail_) {
+
+    out_file << lower_population << output_delimiter;
+
+  }
+
+  out_file << "AllLof" << output_delimiter
            << "FemalePhaseLoF" << output_delimiter
            << "MalePhaseLoF" << output_delimiter
            << "HomLoF" << output_delimiter;

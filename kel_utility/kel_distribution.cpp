@@ -294,16 +294,16 @@ double kel::HypergeometricDistribution::cdf(size_t successes_k) const {
 
   if (successes_k > upperSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
-                         successes_k, upperSuccesses_k());
+    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; successes k exceeds upper limit :{}",
+                        population_N_, pop_successes_K_, sample_size_n_, successes_k, upperSuccesses_k());
     successes_k = upperSuccesses_k();
 
   }
 
   if (successes_k < lowerSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
-                         successes_k, lowerSuccesses_k());
+    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; successes k exceeds upper limit :{}",
+                        population_N_, pop_successes_K_, sample_size_n_, successes_k, lowerSuccesses_k());
     successes_k = lowerSuccesses_k();
 
   }
@@ -318,7 +318,7 @@ double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
 
   if (successes_k > upperSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::quantile; successes k:{} exceeds upper limit :{}",
                          successes_k, upperSuccesses_k());
     successes_k = upperSuccesses_k();
 
@@ -326,7 +326,7 @@ double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
 
   if (successes_k < lowerSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::quantile; successes k:{} below lower limit :{}",
                          successes_k, lowerSuccesses_k());
     successes_k = lowerSuccesses_k();
 
@@ -338,9 +338,24 @@ double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
 
 }
 
+
+size_t kel::HypergeometricDistribution::lowerSuccesses_k() const {
+
+  int64_t lower_success = static_cast<int64_t>(sample_size_n_ + pop_successes_K_) - static_cast<int64_t>(population_N_);
+  return static_cast<size_t>(std::max<int64_t>(0, lower_success));
+
+}
+
+
 double kel::HypergeometricDistribution::upperSingleTailTest(size_t test_value_k) const {
 
-  return 1.0 - cdf(test_value_k-1);
+  if (test_value_k > 0) {
+
+    test_value_k = test_value_k - 1;
+
+  }
+
+  return 1.0 - cdf(test_value_k);
 
 }
 

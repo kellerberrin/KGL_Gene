@@ -58,7 +58,9 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
   analysis_initialized_ = true;
 
-//  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
+
+
+  //  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
   kol::PolicyEvidence evidence_policy;
   std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(evidence_policy,
                                                                                                              genome_ptr->geneOntology().getGafRecordVector(),
@@ -126,6 +128,19 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data) {
 
+  // Count the ethnic samples in the populations.
+  ethnic_statistics_.updatePopulations(ped_data);
+  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
+
+    ethnic_statistics_.pedAnalysis(genome_id, 1, ped_data);
+
+  }
+  if (not ethnic_statistics_.auditTotals()) {
+
+    ExecEnv::log().error("GenomeMutation::variantAnalysis; problem with ethnic statistics totals");
+
+  }
+
   ThreadPool thread_pool(ThreadPool::hardwareThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
@@ -186,12 +201,15 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          GeneMutation gene_mutation) {
 
 
+
   std::shared_ptr<const ContigDB> clinvar_contig;
+  bool contig_data{false};
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
     auto contig_opt = genome_ptr->getContig(gene_mutation.gene_characteristic.contigId());
     if (contig_opt) {
 
+      contig_data = true;
       std::shared_ptr<const ContigDB> contig_ptr = contig_opt.value();
 
       if (not contig_ptr->getMap().empty()) {
@@ -232,13 +250,27 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         }
 
         gene_mutation.clinvar.processClinvar(genome_id, gene_variant_ptr, clinvar_contig, ped_data);
-        gene_mutation.gene_variants.ProcessVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, ped_data);
+        gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, ped_data);
 
       } // contig not empty
 
     } // if contig
 
   } // for genome
+
+  // Generate aggregate variant statistics for each gene.
+  if (contig_data) {
+
+    if (not gene_mutation.gene_variants.processSummaryStatistics( population_ptr,
+                                                                  ethnic_statistics_,
+                                                                  gene_mutation.gene_characteristic.geneId())) {
+
+      ExecEnv::log().warn("GenomeMutation::geneSpanAnalysis; problem with processSummaryStatistics, gene: {}",
+                          gene_mutation.gene_characteristic.geneId());
+
+    }
+
+  }
 
   return gene_mutation;
 

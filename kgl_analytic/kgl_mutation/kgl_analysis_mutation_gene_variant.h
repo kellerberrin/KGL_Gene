@@ -80,10 +80,14 @@ public:
                            std::ostream &out_file,
                            char output_delimiter) const;
 
-  void ProcessVariantStats(const GenomeId_t& genome,
+  void processVariantStats(const GenomeId_t& genome,
                            const std::shared_ptr<const ContigDB> &span_variant_ptr,
                            const std::shared_ptr<const PopulationDB> &unphased_population_ptr,
                            const std::shared_ptr<const GenomePEDData>& ped_data);
+
+  [[nodiscard]] bool processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
+                                               const GeneEthnicitySex& ethnic_statistics,
+                                               const std::string& gene);
 
   [[nodiscard]] GeneEthnicitySex& updateLofEthnicity() { return ethnic_lof_; }
   [[nodiscard]] GeneEthnicitySex& updateHighEthnicity() { return ethnic_high_; }
@@ -112,6 +116,10 @@ private:
   size_t homozygous_{0};
   size_t heterozygous_{0};
 
+  // Hypergeometric summary statistics
+  std::map<std::string, double> upper_tail_;
+  std::map<std::string, double> lower_tail_;
+
   // Vep fields.
   constexpr static const char *LOF_VEP_FIELD_ = "LoF";
   constexpr static const char *LOF_HC_VALUE_ = "HC";
@@ -122,7 +130,7 @@ private:
   VepInfo geneSpanVep(const std::shared_ptr<const ContigDB> &span_contig,
                       const std::shared_ptr<const PopulationDB> &unphased_population_ptr);
 
-  size_t VepCount(const std::shared_ptr<const ContigDB> &vep_contig,
+  size_t vepCount(const std::shared_ptr<const ContigDB> &vep_contig,
                   const std::string &vep_field_ident,
                   const std::string &vep_field_value);
 

@@ -33,9 +33,12 @@ public:
 
   GeneEthnicitySex &operator=(const GeneEthnicitySex &) = default;
 
-  [[nodiscard]] size_t total() const { return total_; }
+  [[nodiscard]] size_t total() const { return superPopulationTotal(); }
+  [[nodiscard]] bool auditTotals() const;
   [[nodiscard]] const std::map<std::string, size_t> &population() const { return population_; }
   [[nodiscard]] const std::map<std::string, size_t> &superPopulation() const { return super_population_; }
+  [[nodiscard]] size_t superPopulationCount(const std::string& super_population) const;
+  [[nodiscard]] size_t populationCount(const std::string& population) const;
   [[nodiscard]] size_t male() const { return male_; }
   [[nodiscard]] size_t female() const { return female_; }
 
@@ -71,8 +74,6 @@ private:
   std::string header_prefix_{"E_"};
   // The information to output.
   size_t display_flags_{ DISPLAY_SEX_FLAG | DISPLAY_SUPER_POP_FLAG | DISPLAY_POPULATION_FLAG };
-  // Total number of samples
-  size_t total_{0};
   // Population breakdown
   std::map<std::string, size_t> population_;
   // Super Population breakdown
@@ -102,6 +103,9 @@ private:
   void writePop( const std::shared_ptr<const GenomePEDData>& ped_data,
                  std::ostream& out_file,
                  char output_delimiter) const;
+
+  size_t superPopulationTotal() const;
+  size_t populationTotal() const;
 
 };
 
