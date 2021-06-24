@@ -34,8 +34,6 @@ public:
   GeneMutation(const GeneMutation&) = default;
   GeneMutation& operator=(const GeneMutation&) = default;
 
-
-
   GeneCharacteristic gene_characteristic;
   GeneVariants gene_variants;
   GeneClinvar clinvar;
@@ -88,7 +86,17 @@ public:
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
 
   // A population of variants indexed by Ensembl gene code from the vep field. This may be useful elsewhere.
-  [[nodiscard]] static std::shared_ptr<const EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+  [[nodiscard]] static std::shared_ptr<EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
+
+  // A population of variants indexed by Ensembl gene code from the vep field. This may be useful elsewhere.
+  // Only add the variants of the genes specified in the gene list.
+  // An empty list adds all variants.
+  static void ensemblAddIndex( const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                               const std::vector<std::string>& ensembl_gene_list,
+                               std::shared_ptr<EnsemblIndexMap>& indexMap);
+
+  // A vector of gene information. This may be useful elsewhere.
+  [[nodiscard]] const std::vector<GeneMutation>& getGeneVector() const { return gene_vector_; }
 
 private:
 
@@ -127,12 +135,6 @@ private:
                                  const std::shared_ptr<const GenomePEDData>& ped_data,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
-
-  GeneMutation geneSummaryAnalysis( const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                                    const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                    const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
-                                    GeneMutation gene_mutation);
-
 
   void analysisType();
 

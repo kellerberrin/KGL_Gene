@@ -27,14 +27,14 @@ public:
   /*!
     Creates the default PolicyEvidence, subscribes to all valid evidence types.
   */
-  PolicyEvidence() { addEvidenceSet(GO::getAllValidEvidence()); }
+  PolicyEvidence() { addEvidence(GO::getAllValidEvidence()); }
   ~PolicyEvidence() = default;
 
   //! A parameterized constructor
   /*!
     Creates the PolicyEvidence using a list(vector) of evidence codes to allow
   */
-  explicit PolicyEvidence(const std::vector<GO::EvidenceCode> &evidenceCodes) { addEvidenceSet(evidenceCodes); }
+  explicit PolicyEvidence(const std::vector<GO::EvidenceCode> &evidenceCodes) { addEvidence(evidenceCodes); }
 
 
   //! a method to test if an evidence code is allowed or not
@@ -45,9 +45,9 @@ public:
 
   //! a method to add a evidence to the set of evidence codes allowed
   /*!
-    adds a evidence to the set of evidence codes allowed by setting its mapped value to true
+    Adds a vector evidence codes to the set of evidence codes
   */
-  void addEvidenceSet(const std::vector<GO::EvidenceCode>& evidenceCodes)
+  void addEvidence(const std::vector<GO::EvidenceCode>& evidenceCodes)
   {
 
     for (auto const & evidence_code : evidenceCodes) {
@@ -57,6 +57,18 @@ public:
     }
 
   }
+
+  // Complement of the above.
+  void excludeEvidence(const std::vector<GO::EvidenceCode>& evidenceCodes) {
+
+    for (auto const & evidence_code : evidenceCodes) {
+
+      evidence_set_.erase(evidence_code);
+
+    }
+
+  }
+
 
   //! An invalid policy is empty or contains an invalid error code.
   /*!

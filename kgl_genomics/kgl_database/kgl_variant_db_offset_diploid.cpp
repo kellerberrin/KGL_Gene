@@ -40,8 +40,8 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
       // We generally have an Indel and an SNP changing the same reference base.
       // Check to see which one is more common (higher frequency) and retain it, delete the other (VCF flaw).
-      auto front_opt = FrequencyDatabaseRead::processSuperPopField(*variant_vector_.front(), FrequencyDatabaseRead::SUPER_POP_ALL_);
-      auto back_opt = FrequencyDatabaseRead::processSuperPopField(*variant_vector_.back(), FrequencyDatabaseRead::SUPER_POP_ALL_);
+      auto front_opt = FrequencyDatabaseRead::superPopFrequency(*variant_vector_.front(), FrequencyDatabaseRead::SUPER_POP_ALL_);
+      auto back_opt = FrequencyDatabaseRead::superPopFrequency(*variant_vector_.back(), FrequencyDatabaseRead::SUPER_POP_ALL_);
 
       if (front_opt and back_opt) {
 
@@ -96,7 +96,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
       DiploidRecord diploid_record;
       diploid_record.variant_vector.push_back(variant_ptr);
-      auto frequency_opt = FrequencyDatabaseRead::processSuperPopField(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+      auto frequency_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
       if (frequency_opt) {
 
         diploid_record.frequency = frequency_opt.value();

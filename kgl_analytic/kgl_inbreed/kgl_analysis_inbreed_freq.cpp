@@ -21,7 +21,7 @@ kgl::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
   // Loop through the variants in the locus..
   for (auto const &variant : variant_vector) {
 
-    auto opt_value = FrequencyDatabaseRead::processSuperPopField(*variant, frequency_field);
+    auto opt_value = FrequencyDatabaseRead::superPopFrequency(*variant, frequency_field);
     if (not opt_value) {
 
       // Problem obtaining allele frequency, this allele may not be defined for the specified super population.

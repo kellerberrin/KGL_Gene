@@ -180,13 +180,13 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePE
 
   for (auto const& [upper_population, upper_tail] : upper_tail_) {
 
-    out_file << upper_population << output_delimiter;
+    out_file << "UT_" << upper_population << output_delimiter;
 
   }
 
   for (auto const& [lower_population, lower_tail] : lower_tail_) {
 
-    out_file << lower_population << output_delimiter;
+    out_file << "LT_" << lower_population << output_delimiter;
 
   }
 

@@ -96,7 +96,7 @@ private:
   // Options are:  ANCESTOR, CONTENT, CONTENT_DAG, COUTOGRASM, COUTOGRASMADJUSTED, EXCLUSIVEINHERITED, FRONTIER
   static const constexpr kol::InformationContentType information_type_ = kol::InformationContentType::CONTENT;
   //  Options are: MAZANDUSIMDIC, MAZANDUSIMUIC, PESQUITASIMGIC.  Information source.
-  static const constexpr kol::SetSimilarityType setinfo_type_ = kol::SetSimilarityType::MAZANDUSIMUIC;
+  static const constexpr kol::SetSimilarityType setinfo_type_ = kol::SetSimilarityType::MAZANDUSIMDIC;
 
   std::shared_ptr<const kol::SetSimilarityInterface> set_info_ptr_;
 

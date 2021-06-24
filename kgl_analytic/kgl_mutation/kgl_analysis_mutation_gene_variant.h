@@ -89,6 +89,8 @@ public:
                                                const GeneEthnicitySex& ethnic_statistics,
                                                const std::string& gene);
 
+  void initializeSummaryStatistics( const GeneEthnicitySex& ethnic_statistics);
+
   [[nodiscard]] GeneEthnicitySex& updateLofEthnicity() { return ethnic_lof_; }
   [[nodiscard]] GeneEthnicitySex& updateHighEthnicity() { return ethnic_high_; }
   [[nodiscard]] GeneEthnicitySex& updateModerateEthnicity() { return ethnic_moderate_; }

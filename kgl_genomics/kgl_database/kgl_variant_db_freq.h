@@ -19,7 +19,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // to access variant data such as super population variant frequencies. This object hides these differences.
 // To access super population EAS frequencies "EAS" is passed to this object and the correct database code
 // is looked up. So for Gnomad 2.1 "EAS" is translated internally to "AF_eas" and the variant frequency is
-// looked up from the variant database which has been previously parsed and is held in memory.
+// looked up from the variant database which has been previously parsed and is held in memory attached to a variant object.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,14 +31,26 @@ public:
   FrequencyDatabaseRead() = delete;
   ~FrequencyDatabaseRead() = delete;
 
-  // Read super population frequencies
-  [[nodiscard]] static std::optional<double> processSuperPopField(const Variant& variant,
+  // Read super population allele frequencies
+  [[nodiscard]] static std::optional<double> superPopFrequency(const Variant& variant,
+                                                               const std::string& super_population);
+
+  // Read super population total number of alleles in called genotypes (integer).
+  [[nodiscard]] static std::optional<int64_t> superPopTotalAlleles( const Variant& variant,
+                                                                    const std::string& super_population);
+
+  // Read super population alternate allele count for samples (integer)..
+  [[nodiscard]] static std::optional<int64_t> superPopAltAlleles( const Variant& variant,
                                                                   const std::string& super_population);
+
   // List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
 
-  // Read any frequency with supplied INFO field code.
-  [[nodiscard]] static std::optional<double> processFloatField(const Variant& variant, const std::string& database_field);
+  // Read any float field with supplied INFO field code.
+  [[nodiscard]] static std::optional<double> infoFloatField(const Variant& variant, const std::string& database_field);
+
+  // Read any integer field with supplied INFO field code.
+  [[nodiscard]] static std::optional<int64_t> infoIntegerField(const Variant& variant, const std::string& database_field);
 
   // Valid super population codes.
   constexpr static const char* SUPER_POP_AFR_{"AFR"} ;  // African
@@ -57,71 +69,59 @@ private:
                                                                 SUPER_POP_SAS_,
                                                                 SUPER_POP_ALL_ };
 
-  // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
-  [[nodiscard]] std::string lookupVariantSuperPopField(const std::string& super_population) const;
+
+
+  struct SuperPopFieldText {
+
+    std::string gnomad_2_1;
+    std::string gnomad_ex_2_1;
+    std::string gnomad_3_1;
+    std::string gnomadgenome_3_1;
+    std::string genome_1000;
+
+  };
+
+  // The Info field identifiers for alternative allele frequency (float).
+  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AF_ {
+
+      {SUPER_POP_AFR_, {"AF_afr", "AF_afr", "AF-afr", "gnomad-AF-afr", "AFR_AF"}},  // African
+      {SUPER_POP_AMR_, {"AF_amr", "AF_amr", "AF-amr", "gnomad-AF-amr", "AMR_AF"}},   // American
+      {SUPER_POP_EAS_, {"AF_eas", "AF_eas", "AF-eas", "gnomad-AF-eas", "EAS_AF"}},   // East Asian
+      {SUPER_POP_EUR_, {"AF_nfe", "AF_nfe", "AF-nfe", "gnomad-AF-nfe", "EUR_AF"}},   // European
+      {SUPER_POP_SAS_, {"AF", "AF_sas", "AF-sas", "gnomad-AF-sas", "SAS_AF"}},   // South Asian
+      {SUPER_POP_ALL_, {"AF", "AF", "AF", "gnomad-AF", "AF"}}   // All Super Populations
+
+  };
+
+  // The Info field identifiers for total number of alleles in called genotypes (integer).
+  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AN_ {
+
+      {SUPER_POP_AFR_, {"AN_afr", "AN_afr", "AN-afr", "gnomad-AN-afr", "AFR_AN"}},  // African
+      {SUPER_POP_AMR_, {"AN_amr", "AN_amr", "AN-amr", "gnomad-AN-amr", "AMR_AN"}},   // American
+      {SUPER_POP_EAS_, {"AN_eas", "AN_eas", "AN-eas", "gnomad-AN-eas", "EAS_AN"}},   // East Asian
+      {SUPER_POP_EUR_, {"AN_nfe", "AN_nfe", "AN-nfe", "gnomad-AN-nfe", "EUR_AN"}},   // European
+      {SUPER_POP_SAS_, {"AN", "AN_sas", "AN-sas", "gnomad-AN-sas", "SAS_AN"}},   // South Asian
+      {SUPER_POP_ALL_, {"AN", "AN", "AN", "gnomad-AN", "AN"}}   // All Super Populations
+
+  };
+
+
+  // The Info field identifiers for alternate allele count for samples (integer).
+  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AC_ {
+
+      {SUPER_POP_AFR_, {"AC_afr", "AC_afr", "AC-afr", "gnomad-AC-afr", "AFR_AC"}},  // African
+      {SUPER_POP_AMR_, {"AC_amr", "AC_amr", "AC-amr", "gnomad-AC-amr", "AMR_AC"}},   // American
+      {SUPER_POP_EAS_, {"AC_eas", "AC_eas", "AC-eas", "gnomad-AC-eas", "EAS_AC"}},   // East Asian
+      {SUPER_POP_EUR_, {"AC_nfe", "AC_nfe", "AC-nfe", "gnomad-AC-nfe", "EUR_AC"}},   // European
+      {SUPER_POP_SAS_, {"AC", "AC_sas", "AC-sas", "gnomad-AC-sas", "SAS_AC"}},   // South Asian
+      {SUPER_POP_ALL_, {"AC", "AC", "AC", "gnomad-AC", "AC"}}   // All Super Populations
+
+  };
 
   // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
-  [[nodiscard]] static std::optional<std::string> lookupVariantSuperPopField( DataSourceEnum data_source,
+  [[nodiscard]] static std::optional<std::string> lookupVariantSuperPopField( const std::map<std::string, SuperPopFieldText>& lookup_map,
+                                                                              DataSourceEnum data_source,
                                                                               const std::string& super_population);
-
-  // Use a super population code to lookup a corresponding AF field.
-  [[nodiscard]] static std::string lookupGnomad_2_1_Field(const std::string& super_population);
-
-  using SuperPopPair = std::pair<const char*, const char*>;
-  // The Info field identifiers for allele frequency for Gnomad 2.1.
-  constexpr static const SuperPopPair SUPER_POP_AFR_GNOMAD_2_1 {SUPER_POP_AFR_, "AF_afr"} ;  // African
-  constexpr static const SuperPopPair SUPER_POP_AMR_GNOMAD_2_1 {SUPER_POP_AMR_, "AF_amr"};  // American
-  constexpr static const SuperPopPair SUPER_POP_EAS_GNOMAD_2_1 {SUPER_POP_EAS_, "AF_eas"};  // East Asian
-  constexpr static const SuperPopPair SUPER_POP_EUR_GNOMAD_2_1 {SUPER_POP_EUR_, "AF_nfe"};  // European
-  constexpr static const SuperPopPair SUPER_POP_SAS_GNOMAD_2_1 {SUPER_POP_SAS_, "AF"};  // South Asian
-  constexpr static const SuperPopPair SUPER_POP_ALL_GNOMAD_2_1 {SUPER_POP_ALL_, "AF"};  // All Super Populations
-
-  // Use a super population code to lookup a corresponding AF field.
-  [[nodiscard]] static std::string lookupGnomad_ex_2_1_Field(const std::string& super_population);
-
-  // The Info field identifiers for allele frequency for Gnomes 2.1 exomes.
-  constexpr static const SuperPopPair SUPER_POP_AFR_GNOMAD_EX_2_1 {SUPER_POP_AFR_, "AF_afr"} ;  // African
-  constexpr static const SuperPopPair SUPER_POP_AMR_GNOMAD_EX_2_1 {SUPER_POP_AMR_, "AF_amr"};  // American
-  constexpr static const SuperPopPair SUPER_POP_EAS_GNOMAD_EX_2_1 {SUPER_POP_EAS_, "AF_eas"};  // East Asian
-  constexpr static const SuperPopPair SUPER_POP_EUR_GNOMAD_EX_2_1 {SUPER_POP_EUR_, "AF_nfe"};  // European
-  constexpr static const SuperPopPair SUPER_POP_SAS_GNOMAD_EX_2_1 {SUPER_POP_SAS_, "AF_sas"};  // South Asian
-  constexpr static const SuperPopPair SUPER_POP_ALL_GNOMAD_EX_2_1 {SUPER_POP_ALL_, "AF"};  // All Super Populations
-
-  // Use a super population code to lookup a corresponding AF field.
-  [[nodiscard]] static std::string lookupGnomad_3_1_Field(const std::string& super_population);
-
-  // The Info field identifiers for allele frequency for Gnomad 3.1
-  constexpr static const SuperPopPair SUPER_POP_AFR_GNOMAD_3_1 {SUPER_POP_AFR_, "AF-afr"} ;  // African
-  constexpr static const SuperPopPair SUPER_POP_AMR_GNOMAD_3_1 {SUPER_POP_AMR_, "AF-amr"};  // American
-  constexpr static const SuperPopPair SUPER_POP_EAS_GNOMAD_3_1 {SUPER_POP_EAS_, "AF-eas"};  // East Asian
-  constexpr static const SuperPopPair SUPER_POP_EUR_GNOMAD_3_1 {SUPER_POP_EUR_, "AF-nfe"};  // European
-  constexpr static const SuperPopPair SUPER_POP_SAS_GNOMAD_3_1 {SUPER_POP_SAS_, "AF-sas"};  // South Asian
-  constexpr static const SuperPopPair SUPER_POP_ALL_GNOMAD_3_1 {SUPER_POP_ALL_, "AF"};  // All Super Populations
-
-  // Use a super population code to lookup a corresponding AF field.
-  [[nodiscard]] static std::string lookupGnomadGenome_3_1_Field(const std::string& super_population);
-
-  // The Info field identifiers for allele frequency for Gnomad 3.1
-  constexpr static const SuperPopPair SUPER_POP_AFR_GNOMADGENOME_3_1 {SUPER_POP_AFR_, "gnomad-AF-afr"} ;  // African
-  constexpr static const SuperPopPair SUPER_POP_AMR_GNOMADGENOME_3_1 {SUPER_POP_AMR_, "gnomad-AF-amr"};  // American
-  constexpr static const SuperPopPair SUPER_POP_EAS_GNOMADGENOME_3_1 {SUPER_POP_EAS_, "gnomad-AF-eas"};  // East Asian
-  constexpr static const SuperPopPair SUPER_POP_EUR_GNOMADGENOME_3_1 {SUPER_POP_EUR_, "gnomad-AF-nfe"};  // European
-  constexpr static const SuperPopPair SUPER_POP_SAS_GNOMADGENOME_3_1 {SUPER_POP_SAS_, "gnomad-AF-sas"};  // South Asian
-  constexpr static const SuperPopPair SUPER_POP_ALL_GNOMADGENOME_3_1 {SUPER_POP_ALL_, "gnomad-AF"};  // All Super Populations
-
-
-  // Use a super population code to lookup a corresponding AF field.
-  [[nodiscard]] static std::string lookup_1000_Field(const std::string& super_population);
-
-  // The Info field identifiers for allele frequency for the 1000 genomes project.
-  constexpr static const SuperPopPair SUPER_POP_AFR_1000 {SUPER_POP_AFR_, "AFR_AF"} ;  // African
-  constexpr static const SuperPopPair SUPER_POP_AMR_1000 {SUPER_POP_AMR_, "AMR_AF"};  // American
-  constexpr static const SuperPopPair SUPER_POP_EAS_1000 {SUPER_POP_EAS_, "EAS_AF"};  // East Asian
-  constexpr static const SuperPopPair SUPER_POP_EUR_1000 {SUPER_POP_EUR_, "EUR_AF"};  // European
-  constexpr static const SuperPopPair SUPER_POP_SAS_1000 {SUPER_POP_SAS_, "SAS_AF"};  // South Asian
-  constexpr static const SuperPopPair SUPER_POP_ALL_1000 {SUPER_POP_ALL_, "AF"};  // All Super Populations
-
-
 
 };
 

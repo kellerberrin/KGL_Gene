@@ -393,3 +393,24 @@ bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const Po
   return tail_result;
 
 }
+
+void kgl::GeneVariants::initializeSummaryStatistics( const GeneEthnicitySex& ethnic_statistics) {
+
+  if (upper_tail_.size() == ethnic_statistics.superPopulation().size()
+      and lower_tail_.size() == ethnic_statistics.superPopulation().size()) {
+
+    return;
+
+  }
+
+  upper_tail_.clear();
+  lower_tail_.clear();
+
+  for (auto const& [super_population, sample_size] : ethnic_statistics.superPopulation()) {
+
+    upper_tail_.emplace(super_population, 0.0);
+    lower_tail_.emplace(super_population, 0.0);
+
+  }
+
+}

@@ -61,7 +61,12 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
 
 
   //  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
-  kol::PolicyEvidence evidence_policy;
+
+  kol::PolicyEvidence evidence_policy;  // all evidence codes.
+
+  const std::vector<kol::GO::EvidenceCode> automated_electronic_evidence{kol::GO::EvidenceCode::IEA};
+  evidence_policy.excludeEvidence(automated_electronic_evidence); // exclude IEA
+
   std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(evidence_policy,
                                                                                                              genome_ptr->geneOntology().getGafRecordVector(),
                                                                                                              kol::AnnotationGeneName::SYMBOLIC_GENE_ID));
@@ -181,18 +186,6 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 }
 
 
-kgl::GeneMutation kgl::GenomeMutation::geneSummaryAnalysis( const std::shared_ptr<const PopulationDB>&,
-                                                            const std::shared_ptr<const PopulationDB>&,
-                                                            const std::shared_ptr<const EnsemblIndexMap>&,
-                                                            GeneMutation gene_mutation) {
-
-
-
-  return gene_mutation;
-
-}
-
-
 kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
@@ -269,6 +262,11 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                           gene_mutation.gene_characteristic.geneId());
 
     }
+
+  } else {
+
+
+    gene_mutation.gene_variants.initializeSummaryStatistics( ethnic_statistics_);
 
   }
 
@@ -365,18 +363,44 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
 }
 
+std::shared_ptr<kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+
+  std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr(std::make_shared<EnsemblIndexMap>());
+
+  std::vector<std::string> empty_gene_list;
+
+  ensemblAddIndex(unphased_population_ptr, empty_gene_list, ensembl_indexed_variants_ptr);
+
+  return ensembl_indexed_variants_ptr;
+
+}
+
 
 // Index variants by the Ensembl gene code in the vep field.
-std::shared_ptr<const kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
+// Only add the variants of the genes specified in the gene list.
+// An empty list adds all variants.
+void kgl::GenomeMutation::ensemblAddIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
+                                          const std::vector<std::string>& ensembl_gene_list,
+                                          std::shared_ptr<EnsemblIndexMap>& index_map_ptr) {
 
   // Local object performs the indexing.
   class IndexMap {
 
   public:
 
-    IndexMap() : ensembl_indexed_variants_ptr_(std::make_shared<EnsemblIndexMap>()),
-                 pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)),
-                 unique_ident_(&pmr_memory_) {}
+    IndexMap( std::shared_ptr<EnsemblIndexMap>& index_map_ptr,
+              const std::vector<std::string>& ensembl_gene_list)
+                : ensembl_indexed_variants_ptr_(index_map_ptr),
+                  pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)),
+                  unique_ident_(&pmr_memory_) {
+
+      for (auto const& ensembl_gene_id : ensembl_gene_list) {
+
+        ensembl_gene_set_.insert(ensembl_gene_id);
+
+      }
+
+    }
     ~IndexMap() = default;
 
     bool ensemblIndex(const std::shared_ptr<const Variant>& variant) {
@@ -411,7 +435,11 @@ std::shared_ptr<const kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(co
 
         if (not ident.empty()) {
 
-          ensembl_indexed_variants_ptr_->emplace(ident, variant);
+          if (ensembl_gene_set_.empty() or ensembl_gene_set_.contains(ident)) {
+
+            ensembl_indexed_variants_ptr_->emplace(ident, variant);
+
+          }
 
         }
 
@@ -423,10 +451,9 @@ std::shared_ptr<const kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(co
 
     }
 
-    [[nodiscard]] std::shared_ptr<const EnsemblIndexMap> ensemblIndexedMap() const { return ensembl_indexed_variants_ptr_; }
-
   private:
 
+    std::set<std::string> ensembl_gene_set_;
     std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr_;
     std::byte pmr_byte_array_[PMR_BUFFER_SIZE_];
     std::pmr::monotonic_buffer_resource pmr_memory_;
@@ -437,10 +464,8 @@ std::shared_ptr<const kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(co
 
   }; // IndexMap object.
 
-  IndexMap index_map;
+  IndexMap index_map(index_map_ptr, ensembl_gene_list);
 
   unphased_population_ptr->processAll(index_map, &IndexMap::ensemblIndex);
-
-  return index_map.ensemblIndexedMap();
 
 }
