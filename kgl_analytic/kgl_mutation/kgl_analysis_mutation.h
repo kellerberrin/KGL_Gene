@@ -10,6 +10,7 @@
 #include "kgl_Pf3k_COI.h"
 #include "kgl_ped_parser.h"
 #include "kgl_analysis_mutation_gene.h"
+#include "kgl_analysis_mutation_gene_allele.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -55,9 +56,17 @@ private:
   std::shared_ptr<const EnsemblHGNCResource> nomenclature_ptr_;
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_EXON};
+
+  constexpr static const double FREQ_AFR_{0.10};
+  constexpr static const double UPPER_TAIL_AFR_{1E-05};   // 0.001 %
+  constexpr static const double LOWER_TAIL_AFR_{1E-05};   // 0.001 %
+  GenerateGeneAllele gene_allele_;
+
   std::string output_file_name_;
+  std::string allele_output_file_name_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
+  constexpr static const char* ALLELE_OUTPUT_FILE_ = "AlleleOut";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
