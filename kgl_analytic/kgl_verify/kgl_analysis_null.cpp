@@ -3,7 +3,9 @@
 //
 
 #include <kgl_variant_factory_vcf_evidence_analysis.h>
+#include "kgl_variant_db_freq.h"
 #include "kgl_analysis_null.h"
+#include "kgl_variant_sort.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -98,6 +100,47 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
                           field_item.infoVCF().description);
 
     }
+
+    // See how many genomes have the variant rs62418762.
+    ExecEnv::log().info("Starting Genome Variant sort ...");
+
+    auto genome_variant_index_ptr = VariantSort::variantGenomeIndexMT(population);
+
+    ExecEnv::log().info("Completed Genome Variant sort");
+
+//    const std::vector<std::string> variant_id_vector{"rs62418762"};
+    const std::vector<std::string> variant_id_vector { "rs10944597", "rs114240342", "rs114373344", "rs116065218", "rs12524302", "rs12527921",
+        "rs12528802", "rs12529529", "rs12661085", "rs12661202", "rs12664281", "rs12665626", "rs1328491", "rs141787228", "rs145866672",
+        "rs147631439", "rs149821037", "rs1999063", "rs2183001", "rs34821188", "rs34967714", "rs35673902", "rs4707739", "rs4707740",
+        "rs58551026", "rs58832941", "rs62418762", "rs62418800", "rs62418818", "rs62418819", "rs62420860", "rs6904002", "rs6925094",
+        "rs6939249", "rs6939736", "rs71897753", "rs72926662", "rs72928719", "rs75488031", "rs75869001", "rs7741533", "rs78233953",
+        "rs78702660", "rs78935233", "rs9353916" };
+
+    size_t genome_count{0};
+    for (auto const& [genome_id, sorted_variant_ptr] : *genome_variant_index_ptr) {
+
+      for (auto const& variant_id : variant_id_vector) {
+
+        auto result = sorted_variant_ptr->find(variant_id);
+        if (result != sorted_variant_ptr->end()) {
+
+          auto const& [variant_id, variant_ptr] = *result;
+
+          ++genome_count;
+          auto AN_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+          auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+          auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+          auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+          std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
+          ExecEnv::log().info("Genome: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
+                              genome_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
+
+        }
+
+      }
+
+    }
+//    ExecEnv::log().info("Genomes: {} containing variants: {}", genome_count, variant_id);
 
       // Investigate vep field values.
 

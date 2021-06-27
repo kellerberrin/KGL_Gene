@@ -31,15 +31,15 @@ public:
   FrequencyDatabaseRead() = delete;
   ~FrequencyDatabaseRead() = delete;
 
-  // Read super population allele frequencies
+  // Read super population allele frequencies "AF"
   [[nodiscard]] static std::optional<double> superPopFrequency(const Variant& variant,
                                                                const std::string& super_population);
 
-  // Read super population total number of alleles in called genotypes (integer).
+  // Read super population total number of alleles in called genotypes "AN" (integer).
   [[nodiscard]] static std::optional<int64_t> superPopTotalAlleles( const Variant& variant,
                                                                     const std::string& super_population);
 
-  // Read super population alternate allele count for samples (integer).
+  // Read super population alternate allele count for samples "AC" (integer).
   [[nodiscard]] static std::optional<int64_t> superPopAltAlleles( const Variant& variant,
                                                                   const std::string& super_population);
 

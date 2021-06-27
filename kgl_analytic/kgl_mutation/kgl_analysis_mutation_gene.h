@@ -7,6 +7,7 @@
 
 #include "kgl_genome_genome.h"
 #include "kgl_ped_parser.h"
+#include "kgl_variant_sort.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_stats.h"
 #include "kgl_analysis_mutation_gene_clinvar.h"
@@ -48,8 +49,6 @@ public:
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Variants indexed by their Ensembl gene id retrieved from the vep field.
-using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
 // How variants are allocated to genes.
 enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
 // By Span is all variants with in intron+exon span of the gene.
@@ -86,15 +85,6 @@ public:
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
 
-  // A population of variants indexed by Ensembl gene code from the vep field. This may be useful elsewhere.
-  [[nodiscard]] static std::shared_ptr<EnsemblIndexMap> ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr);
-
-  // A population of variants indexed by Ensembl gene code from the vep field. This may be useful elsewhere.
-  // Only add the variants of the genes specified in the gene list.
-  // An empty list adds all variants.
-  static void ensemblAddIndex( const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                               const std::vector<std::string>& ensembl_gene_list,
-                               std::shared_ptr<EnsemblIndexMap>& indexMap);
 
   // A vector of gene information. This may be useful elsewhere.
   [[nodiscard]] const std::vector<GeneMutation>& getGeneVector() const { return gene_vector_; }
@@ -106,9 +96,6 @@ private:
   VariantGeneMembership gene_membership_;
   GeneEthnicitySex ethnic_statistics_;
 
-  constexpr static const char* CONCAT_TOKEN = "&";
-  constexpr static const char* VEP_ENSEMBL_FIELD_ = "Gene";
-  constexpr static const size_t PMR_BUFFER_SIZE_ = 4096;
 
   static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
                           std::ostream& out_file,

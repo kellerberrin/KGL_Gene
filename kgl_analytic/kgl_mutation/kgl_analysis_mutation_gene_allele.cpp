@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_mutation_gene_allele.h"
 #include "kgl_variant_db_freq.h"
+#include "kgl_variant_sort.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kel_distribution.h"
 
@@ -16,7 +17,7 @@ void kgl::GenerateGeneAllele::updateAlleleMap(std::shared_ptr<const PopulationDB
 
   ExecEnv::log().info("Begin Update Allele Map (size: {}), file: {}", sorted_allele_map_->size(), unphased_population_ptr->fileId());
 
-  GenomeMutation::ensemblAddIndex(unphased_population_ptr, ensembl_gene_list_, sorted_allele_map_);
+  VariantSort::ensemblAddIndex(unphased_population_ptr, ensembl_gene_list_, sorted_allele_map_);
 
   ExecEnv::log().info("Completed Update Allele Map (size: {}), file: {}", sorted_allele_map_->size(), unphased_population_ptr->fileId());
 

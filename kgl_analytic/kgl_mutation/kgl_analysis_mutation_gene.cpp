@@ -6,7 +6,7 @@
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_clinvar.h"
 #include "kgl_variant_mutation.h"
-#include "kgl_ontology_database_test.h"
+#include "kgl_variant_sort.h"
 
 
 
@@ -151,7 +151,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
   // Index by Ensembl gene code.
-  std::shared_ptr<const EnsemblIndexMap> ensembl_index_map_ptr = ensemblIndex(unphased_population_ptr);
+  std::shared_ptr<const EnsemblIndexMap> ensembl_index_map_ptr = VariantSort::ensemblIndex(unphased_population_ptr);
   ExecEnv::log().info("Unphased variants sorted by Ensembl Gene code: {}, Total Unphased Variants: {}",
                       ensembl_index_map_ptr->size(), unphased_population_ptr->variantCount());
   // Queue a thread for each gene.
@@ -364,109 +364,4 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
 }
 
-std::shared_ptr<kgl::EnsemblIndexMap> kgl::GenomeMutation::ensemblIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
 
-  std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr(std::make_shared<EnsemblIndexMap>());
-
-  std::vector<std::string> empty_gene_list;
-
-  ensemblAddIndex(unphased_population_ptr, empty_gene_list, ensembl_indexed_variants_ptr);
-
-  return ensembl_indexed_variants_ptr;
-
-}
-
-
-// Index variants by the Ensembl gene code in the vep field.
-// Only add the variants of the genes specified in the gene list.
-// An empty list adds all variants.
-void kgl::GenomeMutation::ensemblAddIndex(const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                                          const std::vector<std::string>& ensembl_gene_list,
-                                          std::shared_ptr<EnsemblIndexMap>& index_map_ptr) {
-
-  // Local object performs the indexing.
-  class IndexMap {
-
-  public:
-
-    IndexMap( std::shared_ptr<EnsemblIndexMap>& index_map_ptr,
-              const std::vector<std::string>& ensembl_gene_list)
-                : ensembl_indexed_variants_ptr_(index_map_ptr),
-                  pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)),
-                  unique_ident_(&pmr_memory_) {
-
-      for (auto const& ensembl_gene_id : ensembl_gene_list) {
-
-        ensembl_gene_set_.insert(ensembl_gene_id);
-
-      }
-
-    }
-    ~IndexMap() = default;
-
-    bool ensemblIndex(const std::shared_ptr<const Variant>& variant) {
-
-      if (not initialized_) {
-
-        field_index_ = InfoEvidenceAnalysis::getVepIndexes(*variant, std::vector<std::string>{VEP_ENSEMBL_FIELD_});
-        initialized_ = true;
-
-      }
-
-      auto field_vector = InfoEvidenceAnalysis::getVepData(*variant, field_index_);
-
-      // Only unique gene idents.
-      for (auto const& field : field_vector) {
-
-        // Only 1 field in the map.
-        if (not field.empty()) {
-
-          const auto& [field_ident, field_value] = *field.begin();
-          if (not field_value.empty()) {
-
-            unique_ident_.insert(field_value);
-
-          }
-
-        }
-
-      }
-
-      for (auto const& ident : unique_ident_) {
-
-        if (not ident.empty()) {
-
-          if (ensembl_gene_set_.empty() or ensembl_gene_set_.contains(ident)) {
-
-            ensembl_indexed_variants_ptr_->emplace(ident, variant);
-
-          }
-
-        }
-
-      }
-
-      unique_ident_.clear();
-
-      return true;
-
-    }
-
-  private:
-
-    std::set<std::string> ensembl_gene_set_;
-    std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr_;
-    std::byte pmr_byte_array_[PMR_BUFFER_SIZE_];
-    std::pmr::monotonic_buffer_resource pmr_memory_;
-    std::pmr::set<std::string> unique_ident_;
-    VepIndexVector field_index_;
-    bool initialized_{false};
-
-
-  }; // IndexMap object.
-
-  IndexMap index_map(index_map_ptr, ensembl_gene_list);
-
-  unphased_population_ptr->processAll(index_map, &IndexMap::ensemblIndex);
-
-}
