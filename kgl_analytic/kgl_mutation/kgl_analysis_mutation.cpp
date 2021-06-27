@@ -14,6 +14,9 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const ActiveParameterList& named_parameters,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
+  // Initialize the analysis objects.
+  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(ensembl_gene_list_);
+
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
@@ -59,6 +62,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
     ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
 
   }
+
 
   return true;
 
@@ -131,7 +135,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       ped_data_ = ped_data;
       ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
       // Update the template populations.
-      gene_mutation_.genomeAnalysis(ref_genome_ptr_, ped_data_, ontology_db_ptr_, nomenclature_ptr_);
+      gene_mutation_.genomeAnalysis(target_gene_map_, ref_genome_ptr_, ped_data_, ontology_db_ptr_, nomenclature_ptr_);
 
       filterPedGenomes();
 
@@ -233,7 +237,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_ and ontology_db_ptr_) {
 
     gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_);
-    gene_allele_.updateAlleleMap(unphased_population_ptr_);
+    gene_allele_ptr_->updateAlleleMap(unphased_population_ptr_);
 
   } else {
 
@@ -259,12 +263,12 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
-  gene_allele_.filterAlleleMap(FREQ_AFR_, UPPER_TAIL_AFR_, LOWER_TAIL_AFR_);
+  gene_allele_ptr_->filterAlleleMap(FREQ_AFR_, UPPER_TAIL_AFR_, LOWER_TAIL_AFR_);
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   gene_mutation_.writeOutput(ped_data_, output_file_name_, OUTPUT_DELIMITER_);
-  gene_allele_.writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
+  gene_allele_ptr_->writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
 
   return true;
 

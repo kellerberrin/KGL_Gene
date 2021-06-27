@@ -28,7 +28,8 @@ class OntologyCache {
 
 public:
 
-  OntologyCache( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+  OntologyCache( const std::vector<std::string>& gene_vector,
+                 const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                  const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
   OntologyCache(const OntologyCache &) = delete;
   ~OntologyCache();
@@ -56,18 +57,9 @@ private:
 
   std::shared_ptr<const OntologyGeneCache> gene_cache_ptr_;
 
-  // From the OMIM entry #611162 available at page https://www.omim.org/entry/611162
-  inline static const std::map<std::string, std::string> malaria_gene_map_ {
-      { "P16671", "CD36"}, { "P06028","GYPB"}, { "P12318", "FCGR2A"}, { "P31994", "FCGR2B"}, { "P05362", "ICAM1"},
-      {  "O14931", "NCR3"}, { "P68871", "HBB"}, { "P35228", "NOS2"}, { "P01375", "TNF"}, { "O14931", "NCR3"},
-      { "Q9UNN8", "PROCR"}, { "P02730", "SLC4A1"}, { "Q9NSE2", "CISH"}, { "Q96A59", "MARVELD3"}, { "Q9Y231", "FUT9"},
-      { "P19320", "VCAM1"}, { "P58753", "TIRAP"}, { "P04921", "GYPC"}, { "P0C091", "FREM3"}, { "P02724", "GYPA"},
-      { "P11413", "G6PD"}, { "Q8N126", "CADM3"},  { "Q16570", "ACKR1"}, { "P23634", "ATP2B4"}, { "P17927", "CR1"},
-      { "P16442", "ABO"}, {"P69905", "HBA1"}, {"P35613", "BSG"}, {"P08174", "CD55"}, {"Q8NHL6",  "LILRB1"},
-      {"Q6GTX8", "LAIR1"} };
 
-
-  void initializeOntology( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+  void initializeOntology( const std::vector<std::string>& gene_vector,
+                           const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                            const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
 
 };

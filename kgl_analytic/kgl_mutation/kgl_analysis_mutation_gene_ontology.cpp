@@ -16,10 +16,11 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::OntologyCache::OntologyCache( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+kgl::OntologyCache::OntologyCache( const std::vector<std::string>& gene_vector,
+                                   const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                                    const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
 
-  initializeOntology(annotation_ptr, go_graph_ptr);
+  initializeOntology(gene_vector, annotation_ptr, go_graph_ptr);
 
 }
 
@@ -32,16 +33,9 @@ kgl::OntologyCache::~OntologyCache() {
 }
 
 
-void kgl::OntologyCache::initializeOntology( const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
+void kgl::OntologyCache::initializeOntology( const std::vector<std::string>& gene_vector,
+                                             const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                                              const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
-
-  // Create a vector of Malaria genes from the map.
-  std::vector<std::string> gene_vector;
-  for (auto const&[go_gene, gene_name] : malaria_gene_map_) {
-
-    gene_vector.push_back(gene_name);
-
-  }
 
   gene_cache_ptr_ = std::make_shared<const OntologyGeneCache>(gene_vector, annotation_ptr, go_graph_ptr);
 

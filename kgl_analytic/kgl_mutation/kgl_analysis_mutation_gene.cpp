@@ -42,7 +42,8 @@ void kgl::GenomeMutation::analysisType() {
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_ptr,
+bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target_genes,
+                                          const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const std::shared_ptr<const GenomePEDData>& ped_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                           const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr)
@@ -78,7 +79,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::shared_ptr<const GenomeRefe
   gene_vector_.clear();
   ExecEnv::log().info("Creating Ontology Cache ...");
 
-  OntologyCache ontology_cache(term_annotation_ptr, ontology_db_ptr->goGraph());
+  OntologyCache ontology_cache(target_genes, term_annotation_ptr, ontology_db_ptr->goGraph());
 
   ExecEnv::log().info("Ontology Cache Created");
 

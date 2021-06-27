@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_mutation_gene_allele.h"
 #include "kgl_variant_db_freq.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kel_distribution.h"
 
 #include <fstream>
@@ -94,8 +95,15 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "Reference" << delimiter
           << "Alternate" << delimiter
           << "GlobalFreq" << delimiter
-          << "AFRFreq"  << delimiter
-          << "TotalCount" << delimiter
+          << "AFRFreq"  << delimiter;
+
+  for (auto const& field_id : VEP_FIELD_LIST_) {
+
+    outfile << field_id << delimiter;
+
+  }
+
+  outfile << "TotalCount" << delimiter
           << "AltCount" << delimiter
           << "AFRCount" << delimiter
           << "AFRAltCount" << '\n';
@@ -145,6 +153,14 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
 
     out_file << afr_freq << delimiter;
 
+    auto vep_fields =  retrieveVepFields( variant_ptr, VEP_FIELD_LIST_);
+    for (auto const& [field_id, field_value] : vep_fields) {
+
+      out_file << field_value << delimiter;
+
+    }
+
+
     auto total_allele_count_opt =  FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, ALL_SUPER_POP_);
     auto alt_allele_count_opt =  FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, ALL_SUPER_POP_);
     auto afr_total_allele_count_opt =  FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, AFR_SUPER_POP_);
@@ -170,5 +186,80 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
              << afr_alt_allele_count << '\n';
 
   }
+
+}
+
+
+std::map<std::string, std::string> kgl::GenerateGeneAllele::retrieveVepFields( const std::shared_ptr<const Variant>& variant_ptr,
+                                                                               const std::vector<std::string>& field_list) {
+
+  static std::vector<std::pair<std::string, size_t>> field_indicies;
+  static bool initialized{false};
+  static bool error_flag{false};
+
+  if (not initialized) {
+
+    field_indicies = InfoEvidenceAnalysis::getVepIndexes(*variant_ptr, field_list);
+    initialized = true;
+
+  }
+
+  auto field_vector = InfoEvidenceAnalysis::getVepData(*variant_ptr, field_indicies);
+
+  std::map<std::string, std::set<std::string>> aggregated_fields;
+  // There may be multiple VEP fields.
+  for (auto& field : field_vector) {
+
+    if (field.size() != field_list.size()) {
+
+      if (not error_flag) {
+
+        ExecEnv::log().warn("GenerateGeneAllele::retrieveVepFields; requested fields: {}, returned VEP fields: {}", field_list.size(), field.size());
+        error_flag = true;
+
+      }
+
+      continue;
+
+    }
+
+    for (auto const& [field_id, field_value] : field) {
+
+      auto result = aggregated_fields.find(field_id);
+      if (result == aggregated_fields.end()) {
+
+        aggregated_fields.emplace(field_id, std::set<std::string>{field_value});
+
+      } else {
+
+        if (not field_value.empty()) {
+
+          auto& [agg_field_id, agg_set_value] = *result;
+          agg_set_value.insert(field_value);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  // Concatenate multiple field values.
+  std::map<std::string, std::string> vep_fields;
+  for (auto const&[field_id, field_value_set] : aggregated_fields) {
+
+    std::string concat_fields;
+    for (auto const& field_value : field_value_set) {
+
+      concat_fields += field_value + CONCATENATE_VEP_FIELDS_;
+
+    }
+
+    vep_fields[field_id] = concat_fields;
+
+  }
+
+  return vep_fields;
 
 }

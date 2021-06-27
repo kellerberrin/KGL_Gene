@@ -60,7 +60,7 @@ private:
   constexpr static const double FREQ_AFR_{0.10};
   constexpr static const double UPPER_TAIL_AFR_{1E-05};   // 0.001 %
   constexpr static const double LOWER_TAIL_AFR_{1E-05};   // 0.001 %
-  GenerateGeneAllele gene_allele_;
+  std::shared_ptr<GenerateGeneAllele> gene_allele_ptr_;
 
   std::string output_file_name_;
   std::string allele_output_file_name_;
@@ -72,6 +72,26 @@ private:
 
   bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
   void filterPedGenomes();
+
+  // From the OMIM entry #611162 available at https://www.omim.org/entry/611162
+  inline static const std::vector<std::string> target_gene_map_ {
+      "CD36", "GYPB", "FCGR2A", "FCGR2B", "ICAM1", "NCR3", "HBB", "NOS2", "TNF", "NCR3",
+      "PROCR", "SLC4A1", "CISH", "MARVELD3", "FUT9", "VCAM1", "TIRAP", "GYPC", "FREM3", "GYPA",
+      "G6PD", "CADM3",  "ACKR1", "ATP2B4", "CR1", "ABO", "HBA1", "BSG", "CD55", "LILRB1",
+      "LAIR1" };
+
+  // The list of genes to analyzed variant by variant. Must be ensembl codes (for now).
+  inline static const std::vector<std::string> ensembl_gene_list_{
+
+      "ENSG00000284690", "ENSG00000282992", "ENSG00000275019", "ENSG00000262576", "ENSG00000256797",
+      "ENSG00000254521", "ENSG00000213402", "ENSG00000204345", "ENSG00000198178", "ENSG00000196371",
+      "ENSG00000189184", "ENSG00000188211", "ENSG00000186407", "ENSG00000185475", "ENSG00000185187",
+      "ENSG00000183840", "ENSG00000183019", "ENSG00000180549", "ENSG00000179213", "ENSG00000172794",
+      "ENSG00000172322", "ENSG00000171840", "ENSG00000170956", "ENSG00000170425", "ENSG00000169704",
+      "ENSG00000167850", "ENSG00000167123", "ENSG00000166589", "ENSG00000165682", "ENSG00000164713",
+      "ENSG00000163600", "ENSG00000163485", "ENSG00000162897", "ENSG00000161649", "ENSG00000159674"
+
+  };
 
 };
 

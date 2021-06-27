@@ -319,7 +319,7 @@ kgl::VepValueMap kgl::InfoEvidenceAnalysis::getVepValues(const Variant& variant,
 
 }
 
-
+// Empty field list returns all available fields and associated offsets.
 kgl::VepIndexVector kgl::InfoEvidenceAnalysis::getVepIndexes(const Variant& variant, const std::vector<std::string>& vep_field_list) {
 
   std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(variant);

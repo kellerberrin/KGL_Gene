@@ -71,7 +71,8 @@ public:
   ~GenomeMutation() = default;
 
   // This analysis is performed first and only once.
-  bool genomeAnalysis( const std::shared_ptr<const GenomeReference>& genome_reference,
+  bool genomeAnalysis( const std::vector<std::string>& target_genes,
+                       const std::shared_ptr<const GenomeReference>& genome_reference,
                        const std::shared_ptr<const GenomePEDData>& ped_data,
                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                        const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr);
