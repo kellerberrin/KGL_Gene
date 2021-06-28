@@ -181,7 +181,7 @@ bool kgl::InbreedingOutput::writeNoPedResults(const InbreedParamOutput& output_r
 
 
 bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_results,
-                                             const GenomePEDData& ped_data,
+                                             const GenomeGenealogyData& ped_data,
                                              const std::string& file_path) {
 
   if (output_results.getColumns().empty()) {
@@ -254,16 +254,16 @@ bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_re
 
   for (auto const& genome_id : genome_set) {
 
-    auto result = ped_data.getMap().find(genome_id);
+    auto record_opt = ped_data.getGenomePedRecord(genome_id);
 
-    if (result == ped_data.getMap().end()) {
+    if (not record_opt) {
 
       ExecEnv::log().error("InbreedingAnalysis::writeColumnResults, Genome sample: {} does not have a PED record", genome_id);
       continue;
 
     }
 
-    auto const& [sample_id, ped_record] = *result;
+    auto const ped_record = record_opt.value();
 
     outfile << genome_id << DELIMITER_;
     outfile << ped_record.population() << DELIMITER_;

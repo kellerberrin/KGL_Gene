@@ -37,7 +37,6 @@ enum class DataSourceEnum { Genome1000,
                             Gnomad3_1,
                             Gnomad3_0,
                             Gnomad2_1,
-                            PedGnome1000,
                             Clinvar,
                             dbSNP,
                             Pf3kCOI,
@@ -48,18 +47,17 @@ enum class ParserTypeEnum { DiploidPhased,
                             DiploidFalciparum,
                             DiploidGnomad,
                             MonoGenomeUnphased,
-                            PedGenome1000,
                             Pf3kCOIParser};
 
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
                                UnphasedMonoGenome, // Genomic data that contains allele information (PopulationDB)
-                               PedGenome1000, // Additional data to complement the Genome1000 data. (GenomePEDData)
+                               PedGenome1000, // Additional data to complement the Genome1000 data. (GenomeGenealogyData)
                                Pf3kCOI};  // Complexity of Infection data for Pf3k P. Falciparum database.
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant,  GenomePEDData,  COIPf3kData};
+enum class DataImplEnum { PopulationVariant,  COIPf3kData};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +124,6 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "PedGnome1000", DataSourceEnum::PedGnome1000, ParserTypeEnum::PedGenome1000, DataStructureEnum::PedGenome1000, DataImplEnum::GenomePEDData, DataOrganism::HomoSapien },
     { "Pf3kCOI", DataSourceEnum::Pf3kCOI, ParserTypeEnum::Pf3kCOIParser, DataStructureEnum::Pf3kCOI, DataImplEnum::COIPf3kData, DataOrganism::PlasmodiumFalciparum },
 
 };

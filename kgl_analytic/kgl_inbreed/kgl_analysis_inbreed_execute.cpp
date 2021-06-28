@@ -15,7 +15,7 @@ namespace kgl = kellerberrin::genome;
 // Perform the genetic analysis per iteration.
 bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const PopulationDB> diploid_population,
                                                      std::shared_ptr<const PopulationDB> unphased_population,
-                                                     std::shared_ptr<const GenomePEDData> ped_data,
+                                                     std::shared_ptr<const GenomeGenealogyData> ped_data,
                                                      InbreedParamOutput& parameters) {
 
 
@@ -51,7 +51,7 @@ bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const Popul
 // Perform the genetic analysis per iteration.
 bool kgl::ExecuteInbreedingAnalysis::processDiploid(std::shared_ptr<const PopulationDB> diploid_population,
                                                     std::shared_ptr<const PopulationDB> unphased_population,
-                                                    std::shared_ptr<const GenomePEDData> ped_data,
+                                                    std::shared_ptr<const GenomeGenealogyData> ped_data,
                                                     InbreedParamOutput& parameters) {
 
 

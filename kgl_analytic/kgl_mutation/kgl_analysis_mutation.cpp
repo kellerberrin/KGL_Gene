@@ -27,7 +27,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   auto genome_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE);
   if (genome_resource_vector.size() != 1) {
 
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}", genome_resource_vector.size());
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}",
+                            ident(), genome_resource_vector.size());
 
   }
   ref_genome_ptr_ = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_vector.front());
@@ -35,7 +36,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   auto ontology_resource_vector = resource_ptr->getResources(RuntimeResourceType::ONTOLOGY_DATABASE);
   if (ontology_resource_vector.size() != 1) {
 
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}", ontology_resource_vector.size());
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}",
+                            ident(), ontology_resource_vector.size());
 
   }
 
@@ -56,13 +58,31 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
+  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_GENEALOGY);
+  if (genome_aux_resource_vector.size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Genome Aux database, actual count: {}"
+                            , ident(), genome_aux_resource_vector.size());
+
+  }
+
+  genome_aux_ptr_ = std::dynamic_pointer_cast<const GenomeAuxInfo>(genome_aux_resource_vector.front());
+
+  if (not getParameters(named_parameters, work_directory)) {
+
+    ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
+
+  }
+
   // Just in case.
-  if (not ref_genome_ptr_ or not ontology_db_ptr_ or not nomenclature_ptr_) {
+  if (not ref_genome_ptr_ or not ontology_db_ptr_ or not nomenclature_ptr_ or not genome_aux_ptr_) {
 
     ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
 
   }
 
+ // Update the template populations.
+  gene_mutation_.genomeAnalysis(target_gene_map_, ref_genome_ptr_, genome_aux_ptr_, ontology_db_ptr_, nomenclature_ptr_);
 
   return true;
 
@@ -117,36 +137,12 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 }
 
 
-
-
 // Perform the genetic analysis per iteration.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
   auto file_characteristic = data_ptr->dataCharacteristic();
-
-  if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
-
-    std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_ptr);
-
-    if (ped_data) {
-
-      ped_data_ = ped_data;
-      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
-      // Update the template populations.
-      gene_mutation_.genomeAnalysis(target_gene_map_, ref_genome_ptr_, ped_data_, ontology_db_ptr_, nomenclature_ptr_);
-
-      filterPedGenomes();
-
-    } else {
-
-      ExecEnv::log().critical("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_ptr->fileId());
-      return false;
-
-    }
-
-  }
 
   if (file_characteristic.data_implementation == DataImplEnum::PopulationVariant) {
 
@@ -170,8 +166,6 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
                           population->populationId(), pass_results.second, diploid_results.second);
 
       population_ptr_ = population;
-
-      filterPedGenomes();
 
 
     } else if ( file_characteristic.data_source == DataSourceEnum::Gnomad2_1
@@ -204,39 +198,15 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 }
 
 
-void kgl::MutationAnalysis::filterPedGenomes() {
-
-
-  if (population_ptr_ and ped_data_) {
-
-    std::vector<GenomeId_t> ped_genomes;
-    for (auto const& [genome, ped_data] :ped_data_->getMap()) {
-
-      ped_genomes.push_back(genome);
-
-    }
-
-    size_t orginal_genomes = population_ptr_->getMap().size();
-    auto non_const_population = std::const_pointer_cast<PopulationDB>(population_ptr_);
-    auto count_pair = non_const_population->inSituFilter(GenomeFilter(ped_genomes));
-    size_t final_genomes = non_const_population->getMap().size();
-    ExecEnv::log().info("Filtered population: {} to Ped defined genomes, original count: {}, genomes: {}; filtered count: {}, genomes: {}",
-                        population_ptr_->populationId(), count_pair.first, orginal_genomes, count_pair.second, final_genomes);
-
-  }
-
-}
-
-
 // Perform the genetic analysis per iteration.
 bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
 
-  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and ped_data_ and ontology_db_ptr_) {
+  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and genome_aux_ptr_ and ontology_db_ptr_) {
 
-    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, ped_data_);
+    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, genome_aux_ptr_);
     gene_allele_ptr_->updateAlleleMap(unphased_population_ptr_);
 
   } else {
@@ -267,7 +237,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput(ped_data_, output_file_name_, OUTPUT_DELIMITER_);
+  gene_mutation_.writeOutput(genome_aux_ptr_, output_file_name_, OUTPUT_DELIMITER_);
   gene_allele_ptr_->writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
 
   return true;

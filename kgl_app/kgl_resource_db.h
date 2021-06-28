@@ -19,7 +19,13 @@ namespace kellerberrin::genome {   //  organization level namespace
 // ResourceBase inherited by all resources.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class RuntimeResourceType { GENOME_DATABASE, ONTOLOGY_DATABASE, GENE_NOMENCLATURE };
+
+
+enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resources
+                                 ONTOLOGY_DATABASE,     // GO ontology data files.
+                                 GENE_NOMENCLATURE,     // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
+                                 GENOME_GENEALOGY,      // Genome aux info including genealogy (1000Genomes only).
+                                 GENOME_AUX_INFO };     // Genome aux info, sex, population and super-population data (all individual genomes).
 
 class ResourceBase {
 

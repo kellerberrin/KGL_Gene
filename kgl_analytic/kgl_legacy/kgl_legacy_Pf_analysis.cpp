@@ -42,7 +42,7 @@ RuntimeVCFFileMap vcf_map = runtime_options.getVCFFiles();
 for (const auto &[vcf_ident, vcf_file] : vcf_map) {
 
   // Get VCF reference genome.
-  std::shared_ptr<const GenomeReference> reference_genome_ptr = genome_collection->getGenome(
+  std::shared_ptr<const GenomeReference> reference_genome_ptr = genome_collection->getGenomePedRecord(
   vcf_file.referenceGenome());
 
   // Filter and process Gatk variants.

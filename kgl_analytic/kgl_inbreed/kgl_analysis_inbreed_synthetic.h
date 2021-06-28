@@ -7,7 +7,7 @@
 
 
 
-#include "kgl_ped_parser.h"
+#include "kgl_genealogy_parser.h"
 #include "kgl_analysis_inbreed_calc.h"
 #include "kgl_analysis_inbreed_output.h"
 

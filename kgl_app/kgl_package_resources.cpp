@@ -30,6 +30,14 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadGeneNomenclatureResource(resource_ident, resource_ptr);
         break;
 
+      case RuntimeResourceType::GENOME_GENEALOGY:
+        loadGenomeGenealogyResource(resource_ident, resource_ptr);
+        break;
+
+      case RuntimeResourceType::GENOME_AUX_INFO:
+        loadGenomeAuxResource(resource_ident, resource_ptr);
+        break;
+
       default:
         ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type, resource ident: {}.",
                                 package.packageIdentifier(), resource_ident);
@@ -105,7 +113,7 @@ void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenc
   auto result = runtime_config_.resourceMap().find(nomenclature_ident);
   if (result == runtime_config_.resourceMap().end()) {
 
-    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Nomenclature Database: {}, not defined", nomenclature_ident);
+    ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Nomenclature Database: {}, not defined", nomenclature_ident);
 
   }
 
@@ -128,5 +136,39 @@ void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenc
   std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(resource_ident, parse_gene_idents.getSynonymVector()));
 
   resource_ptr->addResource(gene_id_resource);
+
+}
+
+
+void kgl::ExecutePackage::loadGenomeGenealogyResource(const std::string& genealogy_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(genealogy_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGenomeGenealogyResource, Genome Genealogy Database: {}, not defined", genealogy_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto genealogy_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenealogyResource>(resource_base_ptr);
+
+  if (not genealogy_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGenomeGenealogyResource, Resource: {} is not a Genome Genealogy", resource_ident);
+
+  }
+
+  std::shared_ptr<GenomeGenealogyData> genealogy_data(std::make_shared<GenomeGenealogyData>(genealogy_resource_ptr->genealogyIdentifier()));
+  ParseGenomeGenealogyFile genealogy_parser(genealogy_data);
+  genealogy_parser.readParseImpl(genealogy_resource_ptr->genealogyFileName());
+
+  resource_ptr->addResource(genealogy_data);
+
+}
+
+
+void kgl::ExecutePackage::loadGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+
 
 }

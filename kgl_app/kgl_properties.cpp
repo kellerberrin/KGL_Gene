@@ -153,6 +153,14 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
           resources.emplace_back(RuntimeResourceType::GENE_NOMENCLATURE, resource_identifier);
 
+        } else if (resource_type == GENEALOGY_ID_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::GENOME_GENEALOGY, resource_identifier);
+
+        } else if (resource_type == AUX_ID_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::GENOME_AUX_INFO, resource_identifier);
+
         }
 
       }
@@ -432,7 +440,95 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-    } // Gene Nomenclature
+    } else if (tree_type == GENEALOGY_ID_DATABASE_) {
+
+      key = std::string(GENEALOGY_ID_IDENT_);
+      std::string genealogy_ident;
+      if (not sub_tree.getProperty(key, genealogy_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Genealogy Identifier.");
+        continue;
+
+      }
+
+      key = std::string(GENEALOGY_ID_FILE_);
+      std::string genealogy_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), genealogy_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Genealogy file name information, ident: {}", genealogy_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeGenealogyResource>(genealogy_ident, genealogy_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(genealogy_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Genome Genealogy ident: {} to map (duplicate)", genealogy_ident);
+
+      }
+
+    } else if (tree_type == GENE_ID_DATABASE_) {
+
+      key = std::string(GENE_ID_IDENT_);
+      std::string nomenclature_ident;
+      if (not sub_tree.getProperty(key, nomenclature_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No gene Nomenclature Identifier.");
+        continue;
+
+      }
+
+      key = std::string(GENE_ID_FILE_);
+      std::string nomenclature_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), nomenclature_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Gene Nomenclature file name information, ident: {}", nomenclature_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeNomenclatureResource>(nomenclature_ident,
+                                                                                                                nomenclature_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(nomenclature_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Gene Nomenclature ident: {} to map (duplicate)", nomenclature_ident);
+
+      }
+
+    } else if (tree_type == AUX_ID_DATABASE_) {
+
+      key = std::string(AUX_ID_IDENT_);
+      std::string genome_aux_ident;
+      if (not sub_tree.getProperty(key, genome_aux_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Aux Identifier.");
+        continue;
+
+      }
+
+      key = std::string(AUX_ID_FILE_);
+      std::string genome_aux_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), genome_aux_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Aux file name information, ident: {}", genome_aux_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeGenomeAuxResource>(genome_aux_ident, genome_aux_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(genome_aux_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Genome Aux ident: {} to map (duplicate)", genome_aux_ident);
+
+      }
+
+    } // Genome Aux
 
   } // For all resources.
 

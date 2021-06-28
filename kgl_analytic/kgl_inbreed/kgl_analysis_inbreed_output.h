@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_INBREED_OUTPUT_H
 
 
-#include "kgl_ped_parser.h"
+#include "kgl_genealogy_parser.h"
 #include "kgl_analysis_inbreed_args.h"
 
 
@@ -128,7 +128,7 @@ public:
 
   // Write the analysis results to a CSV file.
   static bool writePedResults( const InbreedParamOutput& output_results,
-                               const GenomePEDData& ped_data,
+                               const GenomeGenealogyData& ped_data,
                                const std::string& file_path);
 
   static bool writeNoPedResults(const InbreedParamOutput& output_results, const std::string& file_path);

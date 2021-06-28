@@ -207,8 +207,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_offset.h
         kgl_genomics/kgl_database/kgl_variant_db_contig.h
         kgl_genomics/kgl_database/kgl_variant_db_mutation.h
-        kgl_genomics/kgl_parser/kgl_ped_parser.h
-        kgl_genomics/kgl_parser/kgl_ped_parser.cpp
+        kgl_genomics/kgl_parser/kgl_genealogy_parser.h
+        kgl_genomics/kgl_parser/kgl_genealogy_parser.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
@@ -230,7 +230,11 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.cpp
         kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_mem_alloc.h
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.cpp
-        kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h kgl_genomics/kgl_database/kgl_genome_collection.h kgl_genomics/kgl_database/kgl_genome_collection.cpp kgl_genomics/kgl_database/kgl_variant_sort.cpp kgl_genomics/kgl_database/kgl_variant_sort.h)
+        kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h
+        kgl_genomics/kgl_database/kgl_genome_collection.h
+        kgl_genomics/kgl_database/kgl_genome_collection.cpp
+        kgl_genomics/kgl_database/kgl_variant_sort.cpp
+        kgl_genomics/kgl_database/kgl_variant_sort.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -320,7 +324,16 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_InformationContentDAG.cpp
         kol_ontology/kol_InformationContentImpl.cpp
         kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp kol_ontology/kol_GoEnums.cpp kol_ontology/kol_ParserAnnotationGaf.cpp kol_ontology/kol_TermAnnotation.cpp kol_ontology/kol_ParserGafRecord.cpp kol_ontology/kol_ParserGafRecord.h kol_ontology/kol_SetSimilarityAverageBestMatch.cpp kol_ontology/kol_SetSimilarityAverageBestMatch.h kol_ontology/kol_OntologyFactory.cpp kol_ontology/kol_OntologyFactory.h)
+        kol_ontology/kol_InformationContent.cpp
+        kol_ontology/kol_GoEnums.cpp
+        kol_ontology/kol_ParserAnnotationGaf.cpp
+        kol_ontology/kol_TermAnnotation.cpp
+        kol_ontology/kol_ParserGafRecord.cpp
+        kol_ontology/kol_ParserGafRecord.h
+        kol_ontology/kol_SetSimilarityAverageBestMatch.cpp
+        kol_ontology/kol_SetSimilarityAverageBestMatch.h
+        kol_ontology/kol_OntologyFactory.cpp
+        kol_ontology/kol_OntologyFactory.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES
@@ -358,7 +371,10 @@ set(ONTOLOGY_UNIT_TEST_FILES
         kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
         kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
         kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h kol_ontology/unit_test/kol_test_SymbolicSet.cpp kol_ontology/unit_test/kol_test_symbolicset.h kol_ontology/unit_test/kol_test_OntologyDatabase.cpp)
+        kol_ontology/unit_test/kol_test_data.h
+        kol_ontology/unit_test/kol_test_SymbolicSet.cpp
+        kol_ontology/unit_test/kol_test_symbolicset.h
+        kol_ontology/unit_test/kol_test_OntologyDatabase.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
@@ -433,7 +449,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.h kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h)
 
 # Deconvolution and mixture files.
 

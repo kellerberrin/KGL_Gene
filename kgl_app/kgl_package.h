@@ -46,6 +46,8 @@ private:
   void loadGenomeResource(const std::string& genome_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadOntologyResource(const std::string& ontology_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
+  void loadGenomeGenealogyResource(const std::string& genealogy_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
+  void loadGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,

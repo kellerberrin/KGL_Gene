@@ -72,18 +72,18 @@ public:
 
   GeneVariants &operator=(const GeneVariants &) = default;
 
-  void writeVariantHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+  void writeVariantHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                            std::ostream &out_file,
                            char output_delimiter) const;
 
-  bool writeVariantOutput( const std::shared_ptr<const GenomePEDData>& ped_data,
+  bool writeVariantOutput( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                            std::ostream &out_file,
                            char output_delimiter) const;
 
   void processVariantStats(const GenomeId_t& genome,
                            const std::shared_ptr<const ContigDB> &span_variant_ptr,
                            const std::shared_ptr<const PopulationDB> &unphased_population_ptr,
-                           const std::shared_ptr<const GenomePEDData>& ped_data);
+                           const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data);
 
   [[nodiscard]] bool processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
                                                const GeneEthnicitySex& ethnic_statistics,

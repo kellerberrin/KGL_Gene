@@ -44,7 +44,7 @@ void kgl::GenomeMutation::analysisType() {
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target_genes,
                                           const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data,
+                                          const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                           const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr)
 {
@@ -113,10 +113,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
       gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, resort_ids.getMap());
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
-      mutation.clinvar.updateEthnicity().updatePopulations(ped_data);
-      mutation.gene_variants.updateLofEthnicity().updatePopulations(ped_data);
-      mutation.gene_variants.updateHighEthnicity().updatePopulations(ped_data);
-      mutation.gene_variants.updateModerateEthnicity().updatePopulations(ped_data);
+      mutation.clinvar.updateEthnicity().updatePopulations(genome_aux_data);
+      mutation.gene_variants.updateLofEthnicity().updatePopulations(genome_aux_data);
+      mutation.gene_variants.updateHighEthnicity().updatePopulations(genome_aux_data);
+      mutation.gene_variants.updateModerateEthnicity().updatePopulations(genome_aux_data);
       mutation.ontology.processOntologyStats(mutation.gene_characteristic.geneId(), ontology_cache);
       gene_vector_.push_back(mutation);
 
@@ -132,13 +132,13 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                          const std::shared_ptr<const GenomePEDData>& ped_data) {
+                                          const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
 
   // Count the ethnic samples in the populations.
-  ethnic_statistics_.updatePopulations(ped_data);
+  ethnic_statistics_.updatePopulations(genome_aux_data);
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
-    ethnic_statistics_.pedAnalysis(genome_id, 1, ped_data);
+    ethnic_statistics_.pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
   if (not ethnic_statistics_.auditTotals()) {
@@ -157,14 +157,14 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   // Queue a thread for each gene.
   for (auto& gene_mutation : gene_vector_) {
 
-    std::future<GeneMutation> future = thread_pool.enqueueTask( &GenomeMutation::geneSpanAnalysis,
-                                                                this,
-                                                                population_ptr,
-                                                                unphased_population_ptr,
-                                                                clinvar_population_ptr,
-                                                                ped_data,
-                                                                ensembl_index_map_ptr,
-                                                                gene_mutation);
+    std::future<GeneMutation> future = thread_pool.enqueueTask(&GenomeMutation::geneSpanAnalysis,
+                                                               this,
+                                                               population_ptr,
+                                                               unphased_population_ptr,
+                                                               clinvar_population_ptr,
+                                                               genome_aux_data,
+                                                               ensembl_index_map_ptr,
+                                                               gene_mutation);
     future_vector.push_back(std::move(future));
 
   } // for genes
@@ -190,7 +190,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                                         const std::shared_ptr<const GenomePEDData>& ped_data,
+                                                         const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
@@ -243,8 +243,8 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         }
 
-        gene_mutation.clinvar.processClinvar(genome_id, gene_variant_ptr, clinvar_contig, ped_data);
-        gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, ped_data);
+        gene_mutation.clinvar.processClinvar(genome_id, gene_variant_ptr, clinvar_contig, genome_aux_data);
+        gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, genome_aux_data);
 
       } // contig not empty
 

@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_GENE_H
 
 #include "kgl_genome_genome.h"
-#include "kgl_ped_parser.h"
+#include "kgl_genealogy_parser.h"
 #include "kgl_variant_sort.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_stats.h"
@@ -72,7 +72,7 @@ public:
   // This analysis is performed first and only once.
   bool genomeAnalysis( const std::vector<std::string>& target_genes,
                        const std::shared_ptr<const GenomeReference>& genome_reference,
-                       const std::shared_ptr<const GenomePEDData>& ped_data,
+                       const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                        const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr);
 
@@ -80,10 +80,10 @@ public:
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                        const std::shared_ptr<const GenomePEDData>& ped_data);
+                        const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data);
 
   // Finally, output to file.
-  bool writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& out_file, char output_delimiter) const;
+  bool writeOutput(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data, const std::string& out_file, char output_delimiter) const;
 
 
   // A vector of gene information. This may be useful elsewhere.
@@ -97,7 +97,7 @@ private:
   GeneEthnicitySex ethnic_statistics_;
 
 
-  static void writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
+  static void writeHeader(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                           std::ostream& out_file,
                           char output_delimiter,
                           const GeneMutation& gene_mutation);
@@ -120,7 +120,7 @@ private:
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                 const std::shared_ptr<const GenomePEDData>& ped_data,
+                                 const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 

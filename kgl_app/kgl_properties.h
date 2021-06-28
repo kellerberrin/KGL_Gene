@@ -120,6 +120,14 @@ private:
   constexpr static const char* GENE_ID_DATABASE_ = "geneNomenclature";
   constexpr static const char* GENE_ID_IDENT_ = "nomenclatureIdent";
   constexpr static const char* GENE_ID_FILE_ = "nomenclatureFile";
+  // genome genealogy files; this a Resource Database.
+  constexpr static const char* GENEALOGY_ID_DATABASE_ = "genomeGenealogy";
+  constexpr static const char* GENEALOGY_ID_IDENT_ = "genealogyIdent";
+  constexpr static const char* GENEALOGY_ID_FILE_ = "genealogyFile";
+  // genome aux info files; this a Resource Database.
+  constexpr static const char* AUX_ID_DATABASE_ = "genomeAux";
+  constexpr static const char* AUX_ID_IDENT_ = "auxIdent";
+  constexpr static const char* AUX_ID_FILE_ = "auxFile";
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";

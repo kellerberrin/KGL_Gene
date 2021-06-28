@@ -2,7 +2,7 @@
 // Created by kellerberrin on 20/12/20.
 //
 
-#include "kgl_ped_parser.h"
+#include "kgl_genealogy_parser.h"
 #include "kgl_Pf3k_COI.h"
 #include "kgl_variant_factory_pf_impl.h"
 #include "kgl_variant_factory_grch_impl.h"
@@ -20,21 +20,7 @@ namespace kgl = kellerberrin::genome;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-// Read and parse the specified ancestry file.
-std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
 
-  std::shared_ptr<GenomePEDData> ped_data(std::make_shared<GenomePEDData>(file_info->identifier(), data_source));
-
-  ParsePedFile ped_parser(ped_data);
-
-  ped_parser.readParsePEDImpl(file_info->fileName());
-
-  return ped_data;
-
-}
-
-
-// Read and parse the specified ancestry file.
 std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readPf3kCOI(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
 
   std::shared_ptr<Pf3kCOIDB> pf3k_coi_data(std::make_shared<Pf3kCOIDB>(file_info->identifier(), data_source));
@@ -85,9 +71,6 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
     case ParserTypeEnum::DiploidGnomad:
       return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
-    case ParserTypeEnum::PedGenome1000:
-      return ParserSelection::readPEDAncestry(file_info_ptr, data_source);
-
     case ParserTypeEnum::Pf3kCOIParser:
       return ParserSelection::readPf3kCOI(file_info_ptr, data_source);
 
@@ -95,6 +78,6 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
   }
 
   // Never reached.
-  return ParserSelection::readPEDAncestry(file_info_ptr, data_source);
+  return ParserSelection::readPf3kCOI(file_info_ptr, data_source);
 
 }

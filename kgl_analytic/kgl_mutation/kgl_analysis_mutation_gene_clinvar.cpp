@@ -66,9 +66,9 @@ void kgl::VariantPhaseStats::writeHeader(std::ostream& out_file, char output_del
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const GenomePEDData>& ped_data,
-                                         std::ostream& out_file,
-                                         char output_delimiter) const {
+void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+                                     std::ostream& out_file,
+                                     char output_delimiter) const {
 
   out_file << getPhase().phaseEither() << output_delimiter
            << getPhase().phaseMale() << output_delimiter
@@ -90,12 +90,12 @@ void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const GenomePEDData>&
   concat_desc += "\"";
   out_file << concat_desc << output_delimiter;
 
-  getEthnicity().writeOutput(ped_data, out_file, output_delimiter);
+  getEthnicity().writeOutput(genome_aux_data, out_file, output_delimiter);
 
 }
 
 
-void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                     std::ostream& out_file,
                                     char output_delimiter) const {
 
@@ -104,7 +104,7 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomePEDData>& 
   out_file << output_delimiter
            << "CLV_Desc" << output_delimiter;
 
-  getEthnicity().writeHeader(ped_data, out_file, output_delimiter);
+  getEthnicity().writeHeader(genome_aux_data, out_file, output_delimiter);
 
 }
 
@@ -113,7 +113,7 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomePEDData>& 
 void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const ContigDB>& subject_variants,
                                        const std::shared_ptr<const ContigDB>& clinvar_contig,
-                                       const std::shared_ptr<const GenomePEDData>& ped_data) {
+                                       const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
 
 
   auto subject_clinvar = AnalyzeClinvar::findClinvar(subject_variants, clinvar_contig);
@@ -158,7 +158,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
   }
 
   size_t count = clinvar_variants > 0 ? 1 : 0;
-  updateEthnicity().pedAnalysis(genome_id, count, ped_data);
+  updateEthnicity().pedAnalysis(genome_id, count, genome_aux_data);
 
 }
 

@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                                            const std::shared_ptr<const GenomePEDData>& ped_data) {
+                                            const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
 
   std::map<std::string, size_t> variant_distribution;
   // Variant statistics.
@@ -25,7 +25,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_lof > 0) {
 
     ++all_lof_;
-    updateLofEthnicity().pedAnalysis(genome_id, 1, ped_data);
+    updateLofEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -52,7 +52,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_high_effect > 0) {
 
     ++all_high_effect_;
-    updateHighEthnicity().pedAnalysis(genome_id, 1, ped_data);
+    updateHighEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -66,7 +66,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_moderate_effect > 0) {
 
     ++all_moderate_effect_;
-    updateModerateEthnicity().pedAnalysis(genome_id, 1, ped_data);
+    updateModerateEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 

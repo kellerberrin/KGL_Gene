@@ -16,12 +16,28 @@ namespace kgl = kellerberrin::genome;
 // Setup the analytics to process VCF data.
 bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
                                               const ActiveParameterList& named_parameters,
-                                              const std::shared_ptr<const AnalysisResources>&) {
+                                              const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_value] : named_parameters.getMap()) {
 
     ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}", ident(), parameter_ident);
+
+  }
+
+  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_GENEALOGY);
+  if (genome_aux_resource_vector.size() != 1) {
+
+    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Genome Aux database, actual count: {}", genome_aux_resource_vector.size());
+
+  }
+
+  genealogy_data_ = std::dynamic_pointer_cast<const GenomeGenealogyData>(genome_aux_resource_vector.front());
+
+  // Just in case.
+  if (not genealogy_data_) {
+
+    ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
 
   }
 
@@ -76,25 +92,7 @@ bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_o
     unphased_population_ = unphased_population_->filterVariants(AndFilter(SNPFilter(), PassFilter()));
 
   }
-
-  if (file_characteristic.data_structure == DataStructureEnum::PedGenome1000) {
-
-    std::shared_ptr<const GenomePEDData> ped_data = std::dynamic_pointer_cast<const GenomePEDData>(data_object_ptr);
-
-    if (ped_data) {
-
-      ped_data_ = ped_data;
-      ExecEnv::log().info("Analysis: {}, ped file: {} contains: {} PED records", ident(), ped_data->fileId(), ped_data->getMap().size());
-
-    } else {
-
-      ExecEnv::log().critical("InbreedAnalysis::fileReadAnalysis, Analysis: {}, file: {} is not a PED Ancestor Object", ident(), data_object_ptr->fileId());
-      return false;
-
-    }
-
-  }
-
+  
   ExecEnv::log().info("Analysis: {}, completed data file: {}", ident(), data_object_ptr->fileId());
 
   return true;
@@ -107,7 +105,7 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
   // Check that we have the necessary databases available and defined.
-  if (not diploid_population_ or not unphased_population_ or not ped_data_) {
+  if (not diploid_population_ or not unphased_population_ or not genealogy_data_) {
 
     ExecEnv::log().critical("InbreedAnalysis::iterationAnalysis; necessary variant databases not supplied - program terminates.");
     return false;
@@ -118,7 +116,7 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
 
     // Set the allele frequency source for this population.
     param_output.getParameters().lociiArguments().frequencySource(unphased_population_->dataSource());
-    ExecuteInbreedingAnalysis::executeAnalysis(diploid_population_, unphased_population_, ped_data_, param_output);
+    ExecuteInbreedingAnalysis::executeAnalysis(diploid_population_, unphased_population_, genealogy_data_, param_output);
 
   }
 
@@ -152,9 +150,9 @@ bool kgl::InbreedAnalysis::writeResults() {
 
       InbreedingOutput::writeSynthetic( param_output, work_directory_);
 
-    } else if (ped_data_) {
+    } else if (genealogy_data_) {
 
-      InbreedingOutput::writePedResults(param_output, *ped_data_, work_directory_);
+      InbreedingOutput::writePedResults(param_output, *genealogy_data_, work_directory_);
 
     } else {
 

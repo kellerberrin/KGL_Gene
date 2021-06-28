@@ -17,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 // Calculate the Population Inbreeding Coefficient
 bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
                                                    const PopulationDB& diploid_population,
-                                                   const GenomePEDData& ped_data,
+                                                   const GenomeGenealogyData& ped_data,
                                                    InbreedParamOutput& param_output) {
 
 
@@ -82,7 +82,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Populat
 
 kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const PopulationDB> unphased_ptr,
                                                                      const PopulationDB& diploid_population,
-                                                                     const GenomePEDData& ped_data,
+                                                                     const GenomeGenealogyData& ped_data,
                                                                      const InbreedingParameters& parameters) {
 
   ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr, parameters.lociiArguments());
@@ -97,7 +97,7 @@ kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared
 
 kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
                                                          const PopulationDB& diploid_population,
-                                                         const GenomePEDData& ped_data,
+                                                         const GenomeGenealogyData& ped_data,
                                                          const InbreedingParameters& parameters) {
 
   ResultsMap results_map;
@@ -122,14 +122,14 @@ kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& c
 
       if (contig_opt) {
 
-        auto result = ped_data.getMap().find(genome_id);
-        if (result == ped_data.getMap().end()) {
+        auto record_opt = ped_data.getGenomePedRecord(genome_id);
+        if (not record_opt) {
 
           ExecEnv::log().error("InbreedingAnalysis::populationInbreeding, Genome sample: {} does not have a PED record", genome_id);
           continue;
 
         }
-        auto const& [sample_id, ped_record] = *result;
+        auto const ped_record = record_opt.value();
         auto locus_result = locus_map.find(ped_record.superPopulation());
         if (locus_result == locus_map.end()) {
 

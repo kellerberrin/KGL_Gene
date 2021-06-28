@@ -242,6 +242,63 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Genome genealogy information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimeGenealogyResource : public RuntimeResource {
+
+public:
+
+  RuntimeGenealogyResource( std::string genealogy_identifier,
+                            std::string genealogy_file_name)
+      : genealogy_identifier_(std::move(genealogy_identifier)),
+        genealogy_file_name_(std::move(genealogy_file_name)) {}
+  RuntimeGenealogyResource() = delete;
+  RuntimeGenealogyResource(const RuntimeGenealogyResource&) = default;
+  ~RuntimeGenealogyResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_GENEALOGY; }
+
+  [[nodiscard]] const std::string& genealogyIdentifier() const { return genealogy_identifier_; }
+  [[nodiscard]] const std::string& genealogyFileName() const { return genealogy_file_name_; }
+
+private:
+
+  std::string genealogy_identifier_;   // A unique short string to identify this genealogy database
+  std::string genealogy_file_name_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Genome aux population information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimeGenomeAuxResource : public RuntimeResource {
+
+public:
+
+  RuntimeGenomeAuxResource( std::string genome_aux_identifier,
+                            std::string genome_aux_file_name)
+      : genome_aux_identifier_(std::move(genome_aux_identifier)),
+        genome_aux_file_name_(std::move(genome_aux_file_name)) {}
+  RuntimeGenomeAuxResource() = delete;
+  RuntimeGenomeAuxResource(const RuntimeGenomeAuxResource&) = default;
+  ~RuntimeGenomeAuxResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_AUX_INFO; }
+
+  [[nodiscard]] const std::string& genomeAuxIdentifier() const { return genome_aux_identifier_; }
+  [[nodiscard]] const std::string& genomeAuxFileName() const { return genome_aux_file_name_; }
+
+private:
+
+  std::string genome_aux_identifier_;   // A unique short string to identify this genealogy database
+  std::string genome_aux_file_name_;
+
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Base Object to hold data file information.

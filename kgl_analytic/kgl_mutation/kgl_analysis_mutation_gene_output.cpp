@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>& ped_data, const std::string& output_file_name, char output_delimiter) const {
+bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data, const std::string& output_file_name, char output_delimiter) const {
 
   std::ofstream out_file(output_file_name);
 
@@ -33,7 +33,7 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
 
   if (not gene_vector_.empty()) {
 
-    writeHeader(ped_data, out_file, output_delimiter, gene_vector_.front());
+    writeHeader(genome_aux_data, out_file, output_delimiter, gene_vector_.front());
 
   }
 
@@ -47,11 +47,11 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const GenomePEDData>
 
     out_file << output_delimiter;
 
-    gene.gene_variants.writeVariantOutput(ped_data, out_file, output_delimiter);
+    gene.gene_variants.writeVariantOutput(genome_aux_data, out_file, output_delimiter);
 
     out_file << output_delimiter;
 
-    gene.clinvar.writeOutput(ped_data, out_file, output_delimiter);
+    gene.clinvar.writeOutput(genome_aux_data, out_file, output_delimiter);
 
     out_file << '\n';
 
@@ -114,7 +114,7 @@ void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char outpu
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomePEDData>& ped_data,
+bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -141,17 +141,17 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomePE
            << male_lof_ << output_delimiter
            << hom_lof_ << output_delimiter;
 
-  ethnic_lof_.writeOutput(ped_data, out_file, output_delimiter);
+  ethnic_lof_.writeOutput(genome_aux_data, out_file, output_delimiter);
 
   out_file << all_high_effect_ << output_delimiter
            << hom_high_effect_ << output_delimiter;
 
-  ethnic_high_.writeOutput(ped_data, out_file, output_delimiter);
+  ethnic_high_.writeOutput(genome_aux_data, out_file, output_delimiter);
 
   out_file << all_moderate_effect_ << output_delimiter
            << hom_moderate_effect_ << output_delimiter;
 
-  ethnic_moderate_.writeOutput(ped_data, out_file, output_delimiter);
+  ethnic_moderate_.writeOutput(genome_aux_data, out_file, output_delimiter);
 
   out_file << genome_count_ << output_delimiter
            << genome_variant_ << output_delimiter;
@@ -170,7 +170,7 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const GenomePE
 
 
 
-void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePEDData>& ped_data,
+void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -195,17 +195,17 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePE
            << "MalePhaseLoF" << output_delimiter
            << "HomLoF" << output_delimiter;
 
-  ethnic_lof_.writeHeader(ped_data, out_file, output_delimiter);
+  ethnic_lof_.writeHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file  << "AllHigh" << output_delimiter
             << "HomHigh" << output_delimiter;
 
-  ethnic_high_.writeHeader(ped_data, out_file, output_delimiter);
+  ethnic_high_.writeHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file  << "AllModerate" << output_delimiter
             << "HomModerate" << output_delimiter;
 
-  ethnic_moderate_.writeHeader(ped_data, out_file, output_delimiter);
+  ethnic_moderate_.writeHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file << "GenomeCount" << output_delimiter
            << "GenomeVariant" << output_delimiter
@@ -217,7 +217,7 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const GenomePE
 
 
 
-void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>& ped_data,
+void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
                                       std::ostream& out_file,
                                       char output_delimiter,
                                       const GeneMutation& gene_mutation) {
@@ -230,11 +230,11 @@ void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const GenomePEDData>
 
   out_file << output_delimiter;
 
-  gene_mutation.gene_variants.writeVariantHeader(ped_data, out_file, output_delimiter);
+  gene_mutation.gene_variants.writeVariantHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file << output_delimiter;
 
-  gene_mutation.clinvar.writeHeader(ped_data, out_file, output_delimiter);
+  gene_mutation.clinvar.writeHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file << '\n';
 
