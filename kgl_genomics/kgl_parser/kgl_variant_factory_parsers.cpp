@@ -2,7 +2,7 @@
 // Created by kellerberrin on 20/12/20.
 //
 
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kgl_Pf3k_COI.h"
 #include "kgl_variant_factory_pf_impl.h"
 #include "kgl_variant_factory_grch_impl.h"

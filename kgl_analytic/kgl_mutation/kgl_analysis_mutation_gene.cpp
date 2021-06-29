@@ -44,7 +44,7 @@ void kgl::GenomeMutation::analysisType() {
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target_genes,
                                           const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                          const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                           const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr)
 {
@@ -132,7 +132,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                          const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
+                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   // Count the ethnic samples in the populations.
   ethnic_statistics_.updatePopulations(genome_aux_data);
@@ -190,7 +190,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                                         const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+                                                         const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 

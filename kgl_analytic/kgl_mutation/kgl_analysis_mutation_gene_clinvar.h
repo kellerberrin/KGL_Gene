@@ -79,18 +79,18 @@ public:
   GeneClinvar &operator=(const GeneClinvar &) = default;
 
 
-  void writeOutput( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                     std::ostream& out_file,
                     char output_delimiter) const;
 
-  void writeHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                     std::ostream& out_file,
                     char output_delimiter) const;
 
   void processClinvar(const GenomeId_t& genome_id,
                       const std::shared_ptr<const ContigDB>& gene_variants,
                       const std::shared_ptr<const ContigDB>& clinvar_contig,
-                      const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data);
+                      const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
 
   // Superpopulation, population and sex breakdown.
   [[nodiscard]] GeneEthnicitySex& updateEthnicity() { return results_; }

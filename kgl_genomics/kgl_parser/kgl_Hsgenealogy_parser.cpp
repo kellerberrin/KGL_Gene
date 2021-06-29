@@ -2,7 +2,7 @@
 // Created by kellerberrin on 2/8/20.
 //
 
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kel_utility.h"
 
 #include <set>
@@ -10,27 +10,13 @@
 namespace kgl = kellerberrin::genome;
 
 
-kgl::GenomeAuxRecord::GenomeAuxRecord(const GenealogyRecord& ped_record) {
-
-  individual_id_ = ped_record.individualId();
-  sex_ = ped_record.sexType();
-  population_ = ped_record.population();
-  population_description_ = ped_record.populationDescription();
-  super_population_ = ped_record.superPopulation();
-  super_description_ = ped_record.superDescription();
-
-}
-
-
-
-
-bool kgl::GenomeGenealogyData::addPEDRecord(const GenealogyRecord& record) {
+bool kgl::HsGenomeGenealogyData::addGenealogyRecord(const HsGenealogyRecord& record) {
 
   auto [iter, result] = genealogy_record_map_.try_emplace(record.individualId(), record);
 
   if (not result) {
 
-    ExecEnv::log().error("GenomeGenealogyData::addPEDRecord, could add PED for sample: {} (duplicate)", record.individualId());
+    ExecEnv::log().error("HsGenomeGenealogyData::addGenealogyRecord, could add PED for sample: {} (duplicate)", record.individualId());
     return false;
 
   }
@@ -40,7 +26,7 @@ bool kgl::GenomeGenealogyData::addPEDRecord(const GenealogyRecord& record) {
 }
 
 
-std::vector<kgl::GenomeId_t> kgl::GenomeGenealogyData::getGenomeList() const {
+std::vector<kgl::GenomeId_t> kgl::HsGenomeGenealogyData::getGenomeList() const {
 
   std::vector<GenomeId_t> genome_list;
   for (auto const& [genome, genome_record] : getMap()) {
@@ -54,7 +40,7 @@ std::vector<kgl::GenomeId_t> kgl::GenomeGenealogyData::getGenomeList() const {
 }
 
 
-std::optional<kgl::GenealogyRecord> kgl::GenomeGenealogyData::getGenomePedRecord(const std::string& genome) const {
+std::optional<kgl::HsGenealogyRecord> kgl::HsGenomeGenealogyData::getGenomeGenealogyRecord(const std::string& genome) const {
 
   auto result = getMap().find(genome);
   if (result == getMap().end()) {
@@ -70,7 +56,7 @@ std::optional<kgl::GenealogyRecord> kgl::GenomeGenealogyData::getGenomePedRecord
 }
 
 
-std::optional<kgl::GenomeAuxRecord> kgl::GenomeGenealogyData::getGenome(const std::string& genome) const {
+std::optional<kgl::HsGenomeAuxRecord> kgl::HsGenomeGenealogyData::getGenome(const std::string& genome) const {
 
   auto result = getMap().find(genome);
   if (result == getMap().end()) {
@@ -81,13 +67,13 @@ std::optional<kgl::GenomeAuxRecord> kgl::GenomeGenealogyData::getGenome(const st
 
   auto const& [genome_id, genome_record] = *result;
 
-  return GenomeAuxRecord(genome_record);
+  return HsGenomeAuxRecord(genome_record);
 
 }
 
 
 // Create a list of populations.
-void kgl::GenomeGenealogyData::refreshPopulationLists() {
+void kgl::HsGenomeGenealogyData::refreshPopulationLists() {
 
   population_list_.clear();
   super_population_list_.clear();
@@ -104,7 +90,7 @@ void kgl::GenomeGenealogyData::refreshPopulationLists() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-void kgl::ParseGenomeGenealogyFile::readParseImpl(const std::string& file_name) {
+void kgl::ParseHsGenomeGenealogyFile::readParseImpl(const std::string& file_name) {
 
   std::shared_ptr<SquareTextRows> parsed_text = text_parser_.parseFlatFile(file_name, FIELD_DELIMITER_CHAR_);
 
@@ -130,18 +116,18 @@ void kgl::ParseGenomeGenealogyFile::readParseImpl(const std::string& file_name) 
 
 
 
-bool kgl::ParseGenomeGenealogyFile::moveToRecord(const std::vector<std::string>& field_strings) {
+bool kgl::ParseHsGenomeGenealogyFile::moveToRecord(const std::vector<std::string>& field_strings) {
 
 
-  if (field_strings.size() != GenealogyRecord::PEDFieldCount()) {
+  if (field_strings.size() != HsGenealogyRecord::genealogyFieldCount()) {
 
-    ExecEnv::log().error("ParseGenomeGenealogyFile::moveToRecord; field count: {} not equal mandatory count: {}",
-                         field_strings.size(), GenealogyRecord::PEDFieldCount());
+    ExecEnv::log().error("ParseHsGenomeGenealogyFile::moveToRecord; field count: {} not equal mandatory count: {}",
+                         field_strings.size(), HsGenealogyRecord::genealogyFieldCount());
     return false;
 
   }
 
-  GenealogyRecord ped_record(field_strings[0],   // family_id
+  HsGenealogyRecord ped_record(field_strings[0],   // family_id
                        field_strings[1],  //individual_id
                        field_strings[2],  // paternal_id
                        field_strings[3],  // maternal_id
@@ -157,9 +143,9 @@ bool kgl::ParseGenomeGenealogyFile::moveToRecord(const std::vector<std::string>&
                        field_strings[13], // third_order
                        field_strings[14]); // comments
 
-  if (not genealogy_data_->addPEDRecord(ped_record)) {
+  if (not genealogy_data_->addGenealogyRecord(ped_record)) {
 
-    ExecEnv::log().error("ParseGenomeGenealogyFile::moveToRecord; record cannot add PED record to map");
+    ExecEnv::log().error("ParseHsGenomeGenealogyFile::moveToRecord; record cannot add PED record to map");
     return false;
 
   }

@@ -66,7 +66,7 @@ void kgl::VariantPhaseStats::writeHeader(std::ostream& out_file, char output_del
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                      std::ostream& out_file,
                                      char output_delimiter) const {
 
@@ -95,7 +95,7 @@ void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const GenomeAuxInfo>&
 }
 
 
-void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                     std::ostream& out_file,
                                     char output_delimiter) const {
 
@@ -113,7 +113,7 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const GenomeAuxInfo>& 
 void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const ContigDB>& subject_variants,
                                        const std::shared_ptr<const ContigDB>& clinvar_contig,
-                                       const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
+                                       const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
 
   auto subject_clinvar = AnalyzeClinvar::findClinvar(subject_variants, clinvar_contig);

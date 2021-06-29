@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                                            const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
+                                            const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   std::map<std::string, size_t> variant_distribution;
   // Variant statistics.

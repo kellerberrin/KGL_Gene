@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
                                       size_t count,
-                                      const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
+                                      const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   if (count == 0) {
 
@@ -79,7 +79,7 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
 }
 
 
-void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data) {
+void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   // Generate the template populations.
   std::map<std::string, size_t> population_map;
@@ -104,7 +104,7 @@ void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const Genome
 }
 
 
-void kgl::GeneEthnicitySex::writeHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                          std::ostream& out_file,
                                          char output_delimiter) const {
 
@@ -140,7 +140,7 @@ void kgl::GeneEthnicitySex::writeSexHeader( std::ostream& out_file, char output_
 
 }
 
-void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                                  std::ostream& out_file,
                                                  char output_delimiter) const {
 
@@ -159,7 +159,7 @@ void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const Gen
 
 }
 
-void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -180,7 +180,7 @@ void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const GenomeAu
 
 
 
-void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                         std::ostream& out_file,
                                         char output_delimiter) const {
 
@@ -218,7 +218,7 @@ void kgl::GeneEthnicitySex::writeSex( std::ostream& out_file,
 }
 
 
-void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                            std::ostream& out_file,
                                            char output_delimiter) const {
 
@@ -244,7 +244,7 @@ void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const GenomeAux
 }
 
 
-void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                       std::ostream& out_file,
                                       char output_delimiter) const {
 

@@ -27,15 +27,15 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         break;
 
       case RuntimeResourceType::GENE_NOMENCLATURE:
-        loadGeneNomenclatureResource(resource_ident, resource_ptr);
+        loadHsGeneNomenclatureResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::GENOME_GENEALOGY:
-        loadGenomeGenealogyResource(resource_ident, resource_ptr);
+        loadHsGenomeGenealogyResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::GENOME_AUX_INFO:
-        loadGenomeAuxResource(resource_ident, resource_ptr);
+        loadHsGenomeAuxResource(resource_ident, resource_ptr);
         break;
 
       default:
@@ -108,12 +108,12 @@ void kgl::ExecutePackage::loadOntologyResource(const std::string& ontology_ident
 
 }
 
-void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(nomenclature_ident);
   if (result == runtime_config_.resourceMap().end()) {
 
-    ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Nomenclature Database: {}, not defined", nomenclature_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Nomenclature Database: {}, not defined", nomenclature_ident);
 
   }
 
@@ -129,7 +129,7 @@ void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenc
   ParseGeneIdents parse_gene_idents;
   if (not parse_gene_idents.parseIdentFile(nomenclature_resource_ptr->nomenclatureFileName())) {
 
-    ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Unable to parse Gene Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Gene Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
 
   }
 
@@ -140,12 +140,12 @@ void kgl::ExecutePackage::loadGeneNomenclatureResource(const std::string& nomenc
 }
 
 
-void kgl::ExecutePackage::loadGenomeGenealogyResource(const std::string& genealogy_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGenomeGenealogyResource(const std::string& genealogy_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(genealogy_ident);
   if (result == runtime_config_.resourceMap().end()) {
 
-    ExecEnv::log().critical("ExecutePackage::loadGenomeGenealogyResource, Genome Genealogy Database: {}, not defined", genealogy_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGenomeGenealogyResource, Genome Genealogy Database: {}, not defined", genealogy_ident);
 
   }
 
@@ -154,12 +154,12 @@ void kgl::ExecutePackage::loadGenomeGenealogyResource(const std::string& genealo
 
   if (not genealogy_resource_ptr) {
 
-    ExecEnv::log().critical("ExecutePackage::loadGenomeGenealogyResource, Resource: {} is not a Genome Genealogy", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGenomeGenealogyResource, Resource: {} is not a Genome Genealogy", resource_ident);
 
   }
 
-  std::shared_ptr<GenomeGenealogyData> genealogy_data(std::make_shared<GenomeGenealogyData>(genealogy_resource_ptr->genealogyIdentifier()));
-  ParseGenomeGenealogyFile genealogy_parser(genealogy_data);
+  std::shared_ptr<HsGenomeGenealogyData> genealogy_data(std::make_shared<HsGenomeGenealogyData>(genealogy_resource_ptr->genealogyIdentifier()));
+  ParseHsGenomeGenealogyFile genealogy_parser(genealogy_data);
   genealogy_parser.readParseImpl(genealogy_resource_ptr->genealogyFileName());
 
   resource_ptr->addResource(genealogy_data);
@@ -167,8 +167,28 @@ void kgl::ExecutePackage::loadGenomeGenealogyResource(const std::string& genealo
 }
 
 
-void kgl::ExecutePackage::loadGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
+  auto result = runtime_config_.resourceMap().find(genome_aux_ident);
+  if (result == runtime_config_.resourceMap().end()) {
 
+    ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Genome Genealogy Database: {}, not defined", genome_aux_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto genome_aux_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenomeAuxResource>(resource_base_ptr);
+
+  if (not genome_aux_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Resource: {} is not a HsGenomeAuxResource", resource_ident);
+
+  }
+
+  std::shared_ptr<HsGenomeAuxData> genome_aux_data(std::make_shared<HsGenomeAuxData>(genome_aux_resource_ptr->genomeAuxIdentifier()));
+  ParseHsGenomeAuxFile genome_aux_parser(genome_aux_data);
+  genome_aux_parser.readParseImpl(genome_aux_resource_ptr->genomeAuxFileName());
+
+  resource_ptr->addResource(genome_aux_data);
 
 }

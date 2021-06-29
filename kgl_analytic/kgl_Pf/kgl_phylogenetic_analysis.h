@@ -12,7 +12,7 @@
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_genome_aux_csv.h"
+#include "kgl_Pfgenome_aux.h"
 #include "kgl_sequence_compare_impl.h"
 
 
@@ -151,7 +151,7 @@ public:
                                                    const FeatureIdent_t& sequence_id,
                                                    std::shared_ptr<const GenomeReference> genome_db,
                                                    std::shared_ptr<const PopulationDB> pop_variant_ptr,
-                                                   const GenomeAuxData& aux_Pf3k_data);
+                                                   const PfGenomeAuxData& aux_Pf3k_data);
 
 private:
 

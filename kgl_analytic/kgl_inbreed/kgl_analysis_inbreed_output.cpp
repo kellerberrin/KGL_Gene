@@ -181,7 +181,7 @@ bool kgl::InbreedingOutput::writeNoPedResults(const InbreedParamOutput& output_r
 
 
 bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_results,
-                                             const GenomeGenealogyData& ped_data,
+                                             const HsGenomeGenealogyData& ped_data,
                                              const std::string& file_path) {
 
   if (output_results.getColumns().empty()) {
@@ -254,7 +254,7 @@ bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_re
 
   for (auto const& genome_id : genome_set) {
 
-    auto record_opt = ped_data.getGenomePedRecord(genome_id);
+    auto record_opt = ped_data.getGenomeGenealogyRecord(genome_id);
 
     if (not record_opt) {
 

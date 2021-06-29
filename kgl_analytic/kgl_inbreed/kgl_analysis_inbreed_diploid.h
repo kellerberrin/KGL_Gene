@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_INBREED_H
 
 
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kgl_analysis_inbreed_calc.h"
 #include "kgl_analysis_inbreed_output.h"
 
@@ -32,20 +32,20 @@ public:
   // Analyze a presented diploid population for inbreeding.
   static bool populationInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
                                    const PopulationDB& diploid_population,
-                                   const GenomeGenealogyData& ped_data,
+                                   const HsGenomeGenealogyData& ped_data,
                                    InbreedParamOutput& param_output);
 
 private:
 
   [[nodiscard]] static ResultsMap populationInbreedingSample( std::shared_ptr<const PopulationDB> unphased_ptr,
                                                               const PopulationDB& diploid_population,
-                                                              const GenomeGenealogyData& ped_data,
+                                                              const HsGenomeGenealogyData& ped_data,
                                                               const InbreedingParameters& parameters);
 
   // Use a threadpool to calculate the inbreeding coefficients.
   [[nodiscard]] static ResultsMap processResults( const ContigLocusMap& contig_locus_map,
                                                   const PopulationDB& diploid_population,
-                                                  const GenomeGenealogyData& ped_data,
+                                                  const HsGenomeGenealogyData& ped_data,
                                                   const InbreedingParameters& parameters);
 
 };

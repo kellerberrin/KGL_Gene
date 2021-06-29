@@ -5,7 +5,7 @@
 #ifndef KGL_ANALYSIS_INBREED_FREQ_H
 #define KGL_ANALYSIS_INBREED_FREQ_H
 
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kel_optimize.h"
 #include "kgl_variant_db_freq.h"
 

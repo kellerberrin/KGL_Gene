@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_genome.h"
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kgl_variant_db_population.h"
 
 
@@ -45,20 +45,20 @@ public:
   // Update population data using genome to lookup the ped record.
   bool pedAnalysis(const GenomeId_t& genome_id,
                    size_t count,
-                   const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data);
+                   const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
 
   // Generate the map entries for each population
-  void updatePopulations(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data);
+  void updatePopulations(const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
 
   void setDisplay(const std::string& header_prefix, size_t display_flags) {  header_prefix_ = header_prefix; display_flags_ = display_flags; }
 
   // Write the header for all data, Male, Female, SuperPop, Pop.
-  void writeHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                     std::ostream& out_file,
                     char output_delimiter) const;
 
 
-  void writeOutput(const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                    std::ostream& out_file,
                    char output_delimiter) const;
 
@@ -85,22 +85,22 @@ private:
   void writeSexHeader( std::ostream& out_file,
                        char output_delimiter) const;
 
-  void writeSuperPopHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeSuperPopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                             std::ostream& out_file,
                             char output_delimiter) const;
 
-  void writePopHeader( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writePopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                        std::ostream& out_file,
                        char output_delimiter) const;
 
   void writeSex( std::ostream& out_file,
                  char output_delimiter) const;
 
-  void writeSuperPop( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writeSuperPop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                       std::ostream& out_file,
                       char output_delimiter) const;
 
-  void writePop( const std::shared_ptr<const GenomeAuxInfo>& genome_aux_data,
+  void writePop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                  std::ostream& out_file,
                  char output_delimiter) const;
 

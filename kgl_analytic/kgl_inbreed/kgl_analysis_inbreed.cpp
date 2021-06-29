@@ -32,7 +32,7 @@ bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  genealogy_data_ = std::dynamic_pointer_cast<const GenomeGenealogyData>(genome_aux_resource_vector.front());
+  genealogy_data_ = std::dynamic_pointer_cast<const HsGenomeGenealogyData>(genome_aux_resource_vector.front());
 
   // Just in case.
   if (not genealogy_data_) {

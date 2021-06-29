@@ -168,8 +168,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_cigar.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.cpp
-        kgl_genomics/kgl_parser/kgl_genome_aux_csv.h
-        kgl_genomics/kgl_parser/kgl_genome_aux_csv_impl.cpp
+        kgl_genomics/kgl_parser/kgl_Pfgenome_aux.h
+        kgl_genomics/kgl_parser/kgl_Pfgenome_aux.cpp
         kgl_genomics/kgl_database/kgl_variant_db_genome.h
         kgl_genomics/kgl_database/kgl_variant_db_population.h
         kgl_genomics/kgl_database/kgl_genome_contig_feature.h
@@ -207,8 +207,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_offset.h
         kgl_genomics/kgl_database/kgl_variant_db_contig.h
         kgl_genomics/kgl_database/kgl_variant_db_mutation.h
-        kgl_genomics/kgl_parser/kgl_genealogy_parser.h
-        kgl_genomics/kgl_parser/kgl_genealogy_parser.cpp
+        kgl_genomics/kgl_parser/kgl_Hsgenealogy_parser.h
+        kgl_genomics/kgl_parser/kgl_Hsgenealogy_parser.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
@@ -234,7 +234,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_collection.h
         kgl_genomics/kgl_database/kgl_genome_collection.cpp
         kgl_genomics/kgl_database/kgl_variant_sort.cpp
-        kgl_genomics/kgl_database/kgl_variant_sort.h)
+        kgl_genomics/kgl_database/kgl_variant_sort.h kgl_genomics/kgl_parser/kgl_Hsgenome_aux.cpp kgl_genomics/kgl_parser/kgl_Hsgenome_aux.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

@@ -53,7 +53,7 @@ enum class ParserTypeEnum { DiploidPhased,
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
                                UnphasedMonoGenome, // Genomic data that contains allele information (PopulationDB)
-                               PedGenome1000, // Additional data to complement the Genome1000 data. (GenomeGenealogyData)
+                               PedGenome1000, // Additional data to complement the Genome1000 data. (HsGenomeGenealogyData)
                                Pf3kCOI};  // Complexity of Infection data for Pf3k P. Falciparum database.
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.

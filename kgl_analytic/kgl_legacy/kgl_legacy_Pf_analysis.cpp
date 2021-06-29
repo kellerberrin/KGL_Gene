@@ -9,7 +9,7 @@
 
 #include <kel_utility.h>
 #include "kgl_sequence_distance.h"
-#include "kgl_genome_aux_csv.h"
+#include "kgl_Pfgenome_aux.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_rna_search.h"
@@ -42,7 +42,7 @@ RuntimeVCFFileMap vcf_map = runtime_options.getVCFFiles();
 for (const auto &[vcf_ident, vcf_file] : vcf_map) {
 
   // Get VCF reference genome.
-  std::shared_ptr<const GenomeReference> reference_genome_ptr = genome_collection->getGenomePedRecord(
+  std::shared_ptr<const GenomeReference> reference_genome_ptr = genome_collection->getGenomeGenealogyRecord(
   vcf_file.referenceGenome());
 
   // Filter and process Gatk variants.
@@ -245,7 +245,7 @@ void kgl::PhylogeneticAnalysis::performSequence() {
   // Split into country populations.
   std::string aux_file_path;
 
-  std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
+  std::vector<PfCountryPair> country_pairs = PfGenomeAuxData::getCountries(aux_file_path, population_ptr_);
 
   for (auto country : country_pairs) {
 
@@ -330,8 +330,8 @@ void kgl::PhylogeneticAnalysis::performSNP() {
 // Split into country populations.
 std::string aux_file_path;
 
-std::vector<CountryPair> country_pairs = GenomeAuxData::getCountries(aux_file_path, population_ptr_);
-GenomeAuxData aux_data;
+std::vector<PfCountryPair> country_pairs = PfGenomeAuxData::getCountries(aux_file_path, population_ptr_);
+PfGenomeAuxData aux_data;
 if (not aux_data.readParseAuxData(aux_file_path)) {
 
   ExecEnv::log().critical("performSNP; Cannot read/parse aux file: {}", aux_file_path);

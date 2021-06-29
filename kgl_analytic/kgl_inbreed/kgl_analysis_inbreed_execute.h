@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_INBREED_EXECUTE_H
 
 
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kgl_analysis_inbreed_calc.h"
 #include "kgl_analysis_inbreed_args.h"
 #include "kgl_analysis_inbreed_output.h"
@@ -32,14 +32,14 @@ public:
 
   static bool executeAnalysis(std::shared_ptr<const PopulationDB> diploid_population,
                               std::shared_ptr<const PopulationDB> unphased_population,
-                              std::shared_ptr<const GenomeGenealogyData> ped_data,
+                              std::shared_ptr<const HsGenomeGenealogyData> ped_data,
                               InbreedParamOutput& param_output);
 
 private:
 
   static bool processDiploid(std::shared_ptr<const PopulationDB> diploid_population,
                              std::shared_ptr<const PopulationDB> unphased_population,
-                             std::shared_ptr<const GenomeGenealogyData> ped_data,
+                             std::shared_ptr<const HsGenomeGenealogyData> ped_data,
                              InbreedParamOutput& param_output);
   static bool processSynthetic(std::shared_ptr<const PopulationDB> unphased_population,
                                InbreedParamOutput& param_output);

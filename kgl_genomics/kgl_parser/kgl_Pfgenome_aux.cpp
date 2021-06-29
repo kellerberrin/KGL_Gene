@@ -4,7 +4,7 @@
 
 
 #include <fstream>
-#include "kgl_genome_aux_csv.h"
+#include "kgl_Pfgenome_aux.h"
 #include "kel_exec_env.h"
 
 
@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 namespace bt = boost;
 
 
-bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
+bool kgl::PfGenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
 
   std::ifstream aux_file;
@@ -28,7 +28,7 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
   if (not aux_file.good()) {
 
-    ExecEnv::log().critical("GenomeAuxData; I/O error; could not open auxillary file: {}", aux_file_name);
+    ExecEnv::log().critical("PfGenomeAuxData; I/O error; could not open auxillary file: {}", aux_file_name);
 
   }
 
@@ -56,7 +56,7 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
         if (not parseHeader(record_str)) {
 
-          ExecEnv::log().error("GenomeAuxData, Problem parsing header (first) record: {}", record_str);
+          ExecEnv::log().error("PfGenomeAuxData, Problem parsing header (first) record: {}", record_str);
 
         }
 
@@ -67,7 +67,7 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
 
       if (not parseDataline(record_str)) {
 
-        ExecEnv::log().error("GenomeAuxData, Problem parsing data line record: {}", record_str);
+        ExecEnv::log().error("PfGenomeAuxData, Problem parsing data line record: {}", record_str);
 
       }
 
@@ -80,24 +80,24 @@ bool kgl::GenomeAuxData::readParseAuxData(const std::string& aux_file_name) {
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().critical("GenomeAuxData, AUX file: {}, unexpected I/O exception: {}", aux_file_name, e.what());
+    ExecEnv::log().critical("PfGenomeAuxData, AUX file: {}, unexpected I/O exception: {}", aux_file_name, e.what());
 
   }
 
-  ExecEnv::log().info("GenomeAuxData, Parsed: {} lines from aux file: {}", counter, aux_file_name);
+  ExecEnv::log().info("PfGenomeAuxData, Parsed: {} lines from aux file: {}", counter, aux_file_name);
 
   return true;
 
 }
 
 
-bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
+bool kgl::PfGenomeAuxData::parseHeader(const std::string& record_str) {
 
-  GenomeAuxHeader lc_aux_data_header;
+  PfGenomeAuxHeader lc_aux_data_header;
 
   if (not tokenize( record_str, lc_aux_data_header)) {
 
-    ExecEnv::log().error("GenomeAuxData::parseHeader(); Problem tokenizing  line: {}", record_str);
+    ExecEnv::log().error("PfGenomeAuxData::parseHeader(); Problem tokenizing  line: {}", record_str);
     return false;
 
   }
@@ -114,28 +114,28 @@ bool kgl::GenomeAuxData::parseHeader(const std::string& record_str) {
 }
 
 
-bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
+bool kgl::PfGenomeAuxData::parseDataline(const std::string& record_str) {
 
-  GenomeAuxHeader attributes;
+  PfGenomeAuxHeader attributes;
 
   if (not tokenize( record_str, attributes)) {
 
-    ExecEnv::log().error("GenomeAuxData::parseDataline(); Problem tokenizing record line: {}", record_str);
+    ExecEnv::log().error("PfGenomeAuxData::parseDataline(); Problem tokenizing record line: {}", record_str);
     return false;
 
   }
 
   if (attributes.size() != aux_data_header_.size() or attributes.size() == 0) {
 
-    ExecEnv::log().error("GenomeAuxData; Header size: {} Aux size: {} mismatch; record line: {}", aux_data_header_.size(), attributes.size(), record_str);
+    ExecEnv::log().error("PfGenomeAuxData; Header size: {} Aux size: {} mismatch; record line: {}", aux_data_header_.size(), attributes.size(), record_str);
     return false;
   }
 
-  auto result = aux_sample_information_.insert(std::pair<std::string, GenomeAuxHeader>(attributes[0], attributes));
+  auto result = aux_sample_information_.insert(std::pair<std::string, PfGenomeAuxHeader>(attributes[0], attributes));
 
   if (not result.second) {
 
-    ExecEnv::log().error("GenomeAuxData; Duplicate record for item: {}; record line: {}", attributes[0], record_str);
+    ExecEnv::log().error("PfGenomeAuxData; Duplicate record for item: {}; record line: {}", attributes[0], record_str);
     return false;
 
   }
@@ -145,8 +145,8 @@ bool kgl::GenomeAuxData::parseDataline(const std::string& record_str) {
 }
 
 
-bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
-                                  GenomeAuxHeader& attribute_vector) {
+bool kgl::PfGenomeAuxData::tokenize(const std::string& parse_text,
+                                    PfGenomeAuxHeader& attribute_vector) {
 
   attribute_vector.clear();
   typedef boost::tokenizer<boost::escaped_list_separator<char>> tokenizer;
@@ -162,7 +162,7 @@ bool kgl::GenomeAuxData::tokenize(const std::string& parse_text,
 }
 
 // Returns the field offset or boolean false if field not found.
-bool kgl::GenomeAuxData::fieldOffset(const std::string& field_name, size_t& field_offset) const {
+bool kgl::PfGenomeAuxData::fieldOffset(const std::string& field_name, size_t& field_offset) const {
 
   std::string uc_field_name = Utility::trimAllWhiteSpace(Utility::toupper(field_name));
 
@@ -177,14 +177,14 @@ bool kgl::GenomeAuxData::fieldOffset(const std::string& field_name, size_t& fiel
 
   }
 
-  ExecEnv::log().warn("GenomeAuxData; could not find field: {}", uc_field_name);
+  ExecEnv::log().warn("PfGenomeAuxData; could not find field: {}", uc_field_name);
 
   field_offset = FIELD_NOT_FOUND;
   return false;
 
 }
 
-std::string kgl::GenomeAuxData::attributeValue(GenomeAuxHeader& attribute_vector, const std::string& attribute_name) const {
+std::string kgl::PfGenomeAuxData::attributeValue(PfGenomeAuxHeader& attribute_vector, const std::string& attribute_name) const {
 
   size_t field_offset;
 
@@ -192,7 +192,7 @@ std::string kgl::GenomeAuxData::attributeValue(GenomeAuxHeader& attribute_vector
 
     if (field_offset >= attribute_vector.size()) {
 
-      ExecEnv::log().error("GenomeAuxData::attributeValue; field offset: {} for attribute: {} exceeds attribute vector size: {}",
+      ExecEnv::log().error("PfGenomeAuxData::attributeValue; field offset: {} for attribute: {} exceeds attribute vector size: {}",
                            field_offset, attribute_name, attribute_vector.size());
       std::string Empty;
       return Empty;
@@ -210,13 +210,13 @@ std::string kgl::GenomeAuxData::attributeValue(GenomeAuxHeader& attribute_vector
 
 
 
-bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, GenomeAuxHeader& attribute_vector) const {
+bool kgl::PfGenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, PfGenomeAuxHeader& attribute_vector) const {
 
   auto result = aux_sample_information_.find(genome_name);
 
   if (result == aux_sample_information_.end()) {
 
-    ExecEnv::log().error("GenomeAuxData; Genome: {} not found in auxiliary data", genome_name);
+    ExecEnv::log().error("PfGenomeAuxData; Genome: {} not found in auxiliary data", genome_name);
     return false;
 
   }
@@ -227,9 +227,9 @@ bool kgl::GenomeAuxData::getGenomeAttributes(const GenomeId_t& genome_name, Geno
 
 }
 
-std::string kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name) const {
+std::string kgl::PfGenomeAuxData::locationDate(const GenomeId_t& genome_name) const {
 
-  GenomeAuxHeader attribute_vector;
+  PfGenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -244,12 +244,12 @@ std::string kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name) cons
 }
 
 
-bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
-                                      std::string& country,
-                                      std::string& location,
-                                      std::string& year) const {
+bool kgl::PfGenomeAuxData::locationDate(const GenomeId_t& genome_name,
+                                        std::string& country,
+                                        std::string& location,
+                                        std::string& year) const {
 
-  GenomeAuxHeader attribute_vector;
+  PfGenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     return false;
@@ -266,9 +266,9 @@ bool kgl::GenomeAuxData::locationDate(const GenomeId_t& genome_name,
 
 
 
-kgl::GenomeId_t kgl::GenomeAuxData::source(const GenomeId_t& genome_name) const {
+kgl::GenomeId_t kgl::PfGenomeAuxData::source(const GenomeId_t& genome_name) const {
 
-  GenomeAuxHeader attribute_vector;
+  PfGenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -282,9 +282,9 @@ kgl::GenomeId_t kgl::GenomeAuxData::source(const GenomeId_t& genome_name) const 
 }
 
 
-bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
+bool kgl::PfGenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 
-  GenomeAuxHeader attribute_vector;
+  PfGenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -297,9 +297,9 @@ bool kgl::GenomeAuxData::isFieldSample(const GenomeId_t& genome_name) const {
 }
 
 
-bool kgl::GenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const {
+bool kgl::PfGenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const {
 
-  GenomeAuxHeader attribute_vector;
+  PfGenomeAuxHeader attribute_vector;
   if (not getGenomeAttributes(genome_name, attribute_vector)) {
 
     ExecEnv::log().error("Could not find genome: {} in auxiliary data", genome_name);
@@ -312,7 +312,7 @@ bool kgl::GenomeAuxData::isPreferredSample(const GenomeId_t& genome_name) const 
 }
 
 
-std::vector<std::string> kgl::GenomeAuxData::countryList() const {
+std::vector<std::string> kgl::PfGenomeAuxData::countryList() const {
 
   std::set<std::string> unique_country;
 
@@ -335,7 +335,7 @@ std::vector<std::string> kgl::GenomeAuxData::countryList() const {
 }
 
 
-std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getCountry(const std::string& country) const {
+std::vector<kgl::GenomeId_t> kgl::PfGenomeAuxData::getCountry(const std::string& country) const {
 
   std::vector<GenomeId_t> genome_list;
 
@@ -354,7 +354,7 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getCountry(const std::string& c
 }
 
 
-std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getFieldSamples() const {
+std::vector<kgl::GenomeId_t> kgl::PfGenomeAuxData::getFieldSamples() const {
 
   std::vector<GenomeId_t> genome_list;
 
@@ -373,7 +373,7 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getFieldSamples() const {
 }
 
 
-std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
+std::vector<kgl::GenomeId_t> kgl::PfGenomeAuxData::getPreferredSamples() const {
 
   std::vector<GenomeId_t> genome_list;
 
@@ -393,15 +393,15 @@ std::vector<kgl::GenomeId_t> kgl::GenomeAuxData::getPreferredSamples() const {
 
 
 // Convenience static function splits the phased populations into different countries (preferred genomes only).
-std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string& aux_file,
-                                                               std::shared_ptr<const kgl::PopulationDB> population_ptr) {
+std::vector<kgl::PfCountryPair> kgl::PfGenomeAuxData::getCountries(const std::string& aux_file,
+                                                                   std::shared_ptr<const kgl::PopulationDB> population_ptr) {
 
   // Read the AUX data.
-  kgl::GenomeAuxData aux_data;
+  kgl::PfGenomeAuxData aux_data;
 
   if (not aux_data.readParseAuxData(aux_file)) {
 
-    ExecEnv::log().warn("GenomeAuxData::getCountries(); Problem parsing Auxiliary file:{}", aux_file);
+    ExecEnv::log().warn("PfGenomeAuxData::getCountries(); Problem parsing Auxiliary file:{}", aux_file);
 
   }
 
@@ -410,7 +410,7 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
 
   std::shared_ptr<const kgl::PopulationDB> preferred_pop_ptr = population_ptr;
 
-  std::vector<CountryPair> pair_vector;
+  std::vector<PfCountryPair> pair_vector;
   // Create a vector of all countries
   for (auto country : countries) {
 
@@ -439,7 +439,7 @@ std::vector<kgl::CountryPair> kgl::GenomeAuxData::getCountries(const std::string
     // Ignore empty populations
     if (not country_pop_ptr->getMap().empty()) {
 
-      pair_vector.emplace_back(CountryPair(country, country_pop_ptr));
+      pair_vector.emplace_back(PfCountryPair(country, country_pop_ptr));
 
     }
 

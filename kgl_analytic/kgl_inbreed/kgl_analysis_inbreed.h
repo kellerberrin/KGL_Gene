@@ -7,7 +7,7 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kgl_genealogy_parser.h"
+#include "kgl_Hsgenealogy_parser.h"
 #include "kgl_analysis_inbreed_args.h"
 #include "kgl_analysis_inbreed_output.h"
 #include "kgl_analysis_inbreed_execute.h"
@@ -54,7 +54,7 @@ private:
   // The population variant data.
   std::shared_ptr<const PopulationDB> diploid_population_;
   std::shared_ptr<const PopulationDB> unphased_population_;
-  std::shared_ptr<const GenomeGenealogyData> genealogy_data_;
+  std::shared_ptr<const HsGenomeGenealogyData> genealogy_data_;
 
   // Write to output files.
   bool writeResults();

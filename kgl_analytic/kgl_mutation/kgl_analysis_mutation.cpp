@@ -58,7 +58,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_GENEALOGY);
+  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_AUX_INFO);
   if (genome_aux_resource_vector.size() != 1) {
 
     ExecEnv::log().critical("Analysis Id: {}, expected single (1) Genome Aux database, actual count: {}"
@@ -66,7 +66,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  genome_aux_ptr_ = std::dynamic_pointer_cast<const GenomeAuxInfo>(genome_aux_resource_vector.front());
+  genome_aux_ptr_ = std::dynamic_pointer_cast<const HsGenomeAux>(genome_aux_resource_vector.front());
 
   if (not getParameters(named_parameters, work_directory)) {
 
