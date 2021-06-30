@@ -34,6 +34,9 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituFilter(const VariantFilter &filte
     case FilterType::OrFilter:
       return inSituGeneral(filter);
 
+    case FilterType::HomozygousFilter:
+      return inSituHomozygous();
+
     case FilterType::DiploidFilter:
       return inSituDiploid();
 
@@ -97,6 +100,31 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const VariantFilter &filt
     }
 
   }
+
+  return offset_count;
+
+}
+
+// If there are 2 identical variants, disregarding phase, then the variants are retained else they are deleted.
+std::pair<size_t, size_t> kgl::OffsetDB::inSituHomozygous() {
+
+  std::pair<size_t, size_t> offset_count{0, 0};
+
+  offset_count.first = variant_vector_.size();
+
+  if (offset_count.first == 2) {
+
+    if (variant_vector_[0]->variantHash() == variant_vector_[0]->variantHash()) {
+
+      offset_count.second = offset_count.first;
+      return offset_count;
+
+    }
+
+  }
+
+  variant_vector_.clear();
+  offset_count.second = 0;
 
   return offset_count;
 

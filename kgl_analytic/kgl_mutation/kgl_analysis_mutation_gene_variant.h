@@ -38,12 +38,8 @@ public:
   size_t female_phase_lof{0};        // Los of function in the female_ (A) chromosome.
   size_t hom_lof{0};          // Loss of gene function in both chromosomes.
   size_t all_high_effect{0};
-  size_t male_high_effect{0};
-  size_t female_high_effect{0};
   size_t hom_high_effect{0};          // Loss of gene function in both chromosomes.
   size_t all_moderate_effect{0};
-  size_t male_moderate_effect{0};
-  size_t female_moderate_effect{0};
   size_t hom_moderate_effect{0};          // Loss of gene function in both chromosomes.
 
 };

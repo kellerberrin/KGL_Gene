@@ -2,6 +2,7 @@
 // Created by kellerberrin on 5/1/21.
 //
 
+#include "kgl_analysis_mutation_data.h"
 #include "kgl_analysis_mutation.h"
 #include "kgl_analysis_gene_sequence.h"
 
@@ -15,7 +16,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   // Initialize the analysis objects.
-  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(ensembl_gene_list_);
+  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
 
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
@@ -82,7 +83,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   }
 
  // Update the template populations.
-  gene_mutation_.genomeAnalysis(target_gene_map_, ref_genome_ptr_, genome_aux_ptr_, ontology_db_ptr_, nomenclature_ptr_);
+  gene_mutation_.genomeAnalysis(MutationAnalysisData::OMIMGeneSymbol(), ref_genome_ptr_, genome_aux_ptr_, ontology_db_ptr_, nomenclature_ptr_);
 
   return true;
 

@@ -474,6 +474,37 @@ private:
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Return both variants if and only there are 2 variants at the location that are identical disregarding phase.
+// Note If the the variants are phased then the filter will pass back 2 identical variants which may need to be
+// further filtered for uniqueness. The inSituFilter version deletes all variant offsets that are not homozygous.
+// The homozygous filter must be called first before any other filter and cannot be used in a compound filter.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class HomozygousFilter: public VariantFilter {
+
+public:
+
+  HomozygousFilter() { filterName("Homozygous"); }
+  HomozygousFilter(const HomozygousFilter&) = default;
+  ~HomozygousFilter() override = default;
+
+  HomozygousFilter& operator=(const HomozygousFilter&) = default;
+
+  // Dummy implementation. Implemented at offset level
+  [[nodiscard]] bool applyFilter(const Variant&) const override { return true; }
+
+  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<HomozygousFilter>(); }
+
+  [[nodiscard]] FilterType filterType() const override { return FilterType::HomozygousFilter; }
+
+
+private:
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -65,6 +65,9 @@ private:
   // Note that VCF indels are generally offset by +1 because they always contain
   // a reference to the base that preceeds the indel for verification.
   std::pair<size_t, size_t> inSituDiploid();
+  // If there are 2 identical variants, disregarding phase.
+  // Then the variants are retained else they are deleted.
+  std::pair<size_t, size_t> inSituHomozygous();
 
 
 };

@@ -186,73 +186,20 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   auto found_all_unphased = unphased_contig->findContig(span_contig);
 
-  std::shared_ptr<const ContigDB> phase_hom_variants = found_unphased_B->setIntersection(*found_unphased_A, VariantEquality::UNPHASED);
+  // The homozygous filter must be called first.
+  auto phase_hom_variants = span_contig->filterVariants(HomozygousFilter());
+  auto found_hom_variants = phase_hom_variants->filterVariants(UniqueUnphasedFilter());
 
   vep_info.all_lof = vepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.female_phase_lof = vepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.male_phase_lof = vepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.hom_lof = vepCount(phase_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
+  vep_info.hom_lof = vepCount(found_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
 
+  vep_info.hom_high_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_HIGH_VALUE_);
+  vep_info.hom_moderate_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_MODERATE_VALUE_);
 
-  VepSubFieldValues vep_field(IMPACT_VEP_FIELD_);
-
-  vep_field.getContigValues(found_unphased_A);
-
-  auto result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.female_high_effect = count;
-
-  }
-
-  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.female_moderate_effect = count;
-
-  }
-
-  vep_field.getContigValues(found_unphased_B);
-
-  result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.male_high_effect = count;
-
-  }
-
-  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.male_moderate_effect = count;
-
-  }
-
-  vep_field.getContigValues(phase_hom_variants);
-
-  result = vep_field.getMap().find(IMPACT_HIGH_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.hom_high_effect = count;
-
-  }
-
-  result = vep_field.getMap().find(IMPACT_MODERATE_VALUE_);
-  if (result != vep_field.getMap().end()) {
-
-    auto [field_ident, count] = *result;
-    vep_info.hom_moderate_effect = count;
-
-  }
-
-  vep_info.all_high_effect = vep_info.male_high_effect + vep_info.female_high_effect;
-  vep_info.all_moderate_effect = vep_info.male_moderate_effect + vep_info.female_moderate_effect;
-
+  vep_info.all_high_effect = vepCount(found_all_unphased, IMPACT_VEP_FIELD_, IMPACT_HIGH_VALUE_);
+  vep_info.all_moderate_effect = vepCount(found_all_unphased, IMPACT_VEP_FIELD_, IMPACT_MODERATE_VALUE_);
 
   return vep_info;
 

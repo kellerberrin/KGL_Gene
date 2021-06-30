@@ -282,9 +282,6 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std:
 
   auto subset_contig = contig_ptr->subset(gene_char.geneBegin(), gene_char.geneEnd());
 
-  // Remove duplicates.
-  subset_contig->inSituFilter(UniquePhasedFilter());
-
   return subset_contig;
 
 }
@@ -305,9 +302,6 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
     }
 
   }
-
-  // Remove duplicates.
-  gene_contig->inSituFilter(UniquePhasedFilter());
 
   return gene_contig;
 
@@ -357,8 +351,6 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
   // Select all variants with the ensembl identifier.
   auto ensembl_variants = contig_ptr->findContig(gene_contig);
 
-  // Remove any duplicates.
-  ensembl_variants->inSituFilter(UniquePhasedFilter());
 
   return ensembl_variants;
 
