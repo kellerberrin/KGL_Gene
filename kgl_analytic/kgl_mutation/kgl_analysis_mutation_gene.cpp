@@ -4,7 +4,6 @@
 
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_analysis_mutation_gene.h"
-#include "kgl_analysis_mutation_clinvar.h"
 #include "kgl_variant_mutation.h"
 #include "kgl_variant_sort.h"
 
@@ -229,15 +228,15 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
         if (not clinvar_contig) {
 
-          clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
-          clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
+          clinvar_contig = GeneClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
+          clinvar_contig = GeneClinvar::FilterPathogenic(clinvar_contig);
 
         } else {
 
           if (clinvar_contig->contigId() != gene_mutation.gene_characteristic.contigId()) {
 
-            clinvar_contig = AnalyzeClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
-            clinvar_contig = AnalyzeClinvar::FilterPathogenic(clinvar_contig);
+            clinvar_contig = GeneClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
+            clinvar_contig = GeneClinvar::FilterPathogenic(clinvar_contig);
 
           }
 
@@ -311,15 +310,8 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                               const EnsemblIndexMap& ensembl_index_map,
                                                                               const GeneCharacteristic& gene_char) {
-  if (not gene_char.ensemblId().empty()) {
 
-    return getGeneEnsembl(contig_ptr, ensembl_index_map, gene_char);
-
-  } else {
-
-    return getGeneExon(contig_ptr, gene_char);
-
-  }
+  return getGeneEnsembl(contig_ptr, ensembl_index_map, gene_char);
 
 }
 
@@ -331,16 +323,39 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
   std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_char.contigId()));
 
+  if (gene_char.ensemblId().empty()) {
+
+    return  gene_contig;
+
+  }
+
   auto lower_iterator = ensembl_index_map.lower_bound(gene_char.ensemblId());
   auto const upper_iterator = ensembl_index_map.upper_bound(gene_char.ensemblId());
 
   while(lower_iterator != upper_iterator) {
 
     auto const& [ensembl_id, variant_ptr] = *lower_iterator;
-    if (not gene_contig->addVariant(variant_ptr)) {
 
-      ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
-                            variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+    auto offset_opt = contig_ptr->findOffsetArray(variant_ptr->offset());
+    if (offset_opt) {
+
+      for (auto const& offset_variant : offset_opt.value()) {
+
+        if (offset_variant->variantHash() == variant_ptr->variantHash()) {
+
+          // Add the unphased population ptr. Note that this loses phasing information (if present)
+          // The problem is that the currently (2021) the gnomad 3.1 files have damaged vep fields.
+          // So it's either vep or phase information but not both.
+          if (not gene_contig->addVariant(variant_ptr)) {
+
+            ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
+                                  variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+          }
+
+        }
+
+      }
 
     }
 
@@ -348,11 +363,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
   }
 
-  // Select all variants with the ensembl identifier.
-  auto ensembl_variants = contig_ptr->findContig(gene_contig);
-
-
-  return ensembl_variants;
+  return gene_contig;
 
 }
 

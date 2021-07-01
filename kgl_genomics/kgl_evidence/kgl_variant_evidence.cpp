@@ -4,6 +4,7 @@
 
 
 #include "kgl_variant_evidence.h"
+#include "kgl_variant_db_type.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -12,6 +13,8 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   std::stringstream ss;
 
+  ss << delimiter << "VCFSource:" << DataDB::dataSource(dataSource());
+
   ss << delimiter   << "VCFRecord:" << vcfRecordCount();
 
   if (formatData()) {
@@ -19,6 +22,7 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
     ss << formatData()->output(delimiter);
 
   }
+
 
   return ss.str();
 

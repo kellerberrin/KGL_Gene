@@ -55,7 +55,10 @@ private:
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   std::shared_ptr<const EnsemblHGNCResource> nomenclature_ptr_;
   // Results of the analysis. Type of gene membership is defined here.
-  GenomeMutation gene_mutation_{VariantGeneMembership::BY_EXON};
+  GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
+  // By Span is all variants with in intron+exon span of the gene
+  // By Ensembl looks up the variants based on the vep ensembl code.
+  // By Exon uses the gene exon addresses to find gene variants - warning assumes the first transcript.
 
   constexpr static const double FREQ_AFR_{0.10};
   constexpr static const double UPPER_TAIL_AFR_{1E-05};   // 0.001 %

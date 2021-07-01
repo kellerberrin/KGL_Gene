@@ -47,3 +47,16 @@ std::optional<kgl::DataCharacteristic> kgl::DataDB::findCharacteristic(DataSourc
 
 }
 
+
+std::string kgl::DataDB::dataSource(DataSourceEnum data_source) {
+
+  auto source_char_opt = findCharacteristic(data_source);
+  if (not source_char_opt) {
+
+    return "";
+
+  }
+
+  return source_char_opt.value().source_text;
+
+}

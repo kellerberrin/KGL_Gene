@@ -97,7 +97,7 @@ public:
 
   [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(const std::string& source_text);
   [[nodiscard]] static std::optional<DataCharacteristic> findCharacteristic(DataSourceEnum data_source);
-
+  [[nodiscard]] static std::string dataSource(DataSourceEnum data_source);
 
 private:
 

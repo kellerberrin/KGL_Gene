@@ -3,59 +3,12 @@
 //
 
 #include "kgl_analysis_mutation_gene_clinvar.h"
-#include "kgl_analysis_mutation_clinvar.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_filter.h"
 
 
 namespace kgl = kellerberrin::genome;
 
-
-
-
-bool kgl::VariantPhaseStats::phaseStatistics(const std::shared_ptr<const ContigDB>& subject_variants) {
-
-
-  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
-  size_t male_phase_variants = male_variants->variantCount();
-  if (male_phase_variants > 0) {
-
-    ++phase_male_;
-
-  }
-
-  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
-  size_t female_phase_variants = female_variants->variantCount();
-  if (female_phase_variants > 0) {
-
-    ++phase_female_;
-
-  }
-
-  if (male_phase_variants > 0 and female_phase_variants > 0) {
-
-    ++phase_hom_;
-
-  }
-
-  if (male_phase_variants > 0 or female_phase_variants > 0) {
-
-    ++phase_either_;
-
-  }
-
-  return true;
-
-}
-
-
-void kgl::VariantPhaseStats::writeHeader(std::ostream& out_file, char output_delimiter) {
-
-  out_file << "PhCount" << output_delimiter
-           << "PhMale" << output_delimiter
-           << "PhFemale" << output_delimiter
-           << "PhHom";
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,10 +23,6 @@ void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& g
                                      std::ostream& out_file,
                                      char output_delimiter) const {
 
-  out_file << getPhase().phaseEither() << output_delimiter
-           << getPhase().phaseMale() << output_delimiter
-           << getPhase().phaseFemale() << output_delimiter
-           << getPhase().phaseHomozygous() << output_delimiter;
 
   std::string concat_desc{"\""};
   for (auto const& desc : getClinvarDesc()) {
@@ -90,6 +39,9 @@ void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& g
   concat_desc += "\"";
   out_file << concat_desc << output_delimiter;
 
+  out_file << genome_count_ << output_delimiter
+           << hom_genome_ << output_delimiter;
+
   getEthnicity().writeOutput(genome_aux_data, out_file, output_delimiter);
 
 }
@@ -99,10 +51,10 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& ge
                                     std::ostream& out_file,
                                     char output_delimiter) const {
 
-  VariantPhaseStats::writeHeader(out_file, output_delimiter);
 
-  out_file << output_delimiter
-           << "CLV_Desc" << output_delimiter;
+  out_file << "CLV_Desc" << output_delimiter
+           << "CLV_All"  << output_delimiter
+           << "CLV_Hom"  << output_delimiter;
 
   getEthnicity().writeHeader(genome_aux_data, out_file, output_delimiter);
 
@@ -116,50 +68,103 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
 
-  auto subject_clinvar = AnalyzeClinvar::findClinvar(subject_variants, clinvar_contig);
-  auto info_vector = AnalyzeClinvar::clinvarInfo(subject_clinvar);
-  size_t clinvar_variants = subject_clinvar->variantCount();
-  if (clinvar_variants > 0) {
+  auto subject_clinvar = clinvar_contig->findContig(subject_variants);
+  auto info_vector = clinvarInfo(subject_clinvar);
+  if (subject_clinvar->variantCount() > 0) {
 
-    ++updatePhase().updatePhaseEither();
+    ++genome_count_;
+    updateEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
   for (auto const& record : info_vector) {
 
     // Save any unique descriptions.
-    updateClinvarDesc().insert(record.clndn);
+    clinvar_desc_.insert(record.clndn);
 
   }
 
-  auto male_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
-  auto male_clinvar = AnalyzeClinvar::findClinvar(male_variants, clinvar_contig);
-  size_t male_phase_variants = male_clinvar->variantCount();
-  if (male_phase_variants > 0) {
+  auto hom_clinvar = subject_clinvar->filterVariants(HomozygousFilter());
+  if (hom_clinvar->variantCount() > 0) {
 
-    ++updatePhase().updatePhaseMale();
+    ++hom_genome_;
 
   }
-
-  auto female_variants = subject_variants->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
-  auto female_clinvar = AnalyzeClinvar::findClinvar(female_variants, clinvar_contig);
-  size_t female_phase_variants = female_clinvar->variantCount();
-  if (female_phase_variants > 0) {
-
-    ++updatePhase().updatePhaseFemale();
-
-  }
-
-  auto phase_hom_variants = male_clinvar->setIntersection(*female_clinvar, VariantEquality::UNPHASED);
-  if (phase_hom_variants->variantCount() > 0) {
-
-    ++updatePhase().updatePhaseHomozygous();
-
-  }
-
-  size_t count = clinvar_variants > 0 ? 1 : 0;
-  updateEthnicity().pedAnalysis(genome_id, count, genome_aux_data);
 
 }
 
+
+
+std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const ContigId_t& contig_id,
+                                                                            const std::shared_ptr<const PopulationDB>& clinvar_population_ptr) {
+
+  std::shared_ptr<ContigDB> null_contig_ptr(std::make_shared<ContigDB>(contig_id));
+
+  if (clinvar_population_ptr->getMap().size() != 1) {
+
+    ExecEnv::log().error("AnalyzeClinvar::getClinvarContig; expected clinvar population to have 1 genome, actual size: {}",
+                         clinvar_population_ptr->getMap().size());
+
+    return null_contig_ptr;
+
+  }
+
+  auto [genomne_id, genome_ptr] = *(clinvar_population_ptr->getMap().begin());
+
+  auto contig_opt = genome_ptr->getContig(contig_id);
+
+  if (not contig_opt) {
+
+    return null_contig_ptr;
+
+  }
+
+  auto clinvar_contig_ptr = contig_opt.value();
+
+  return clinvar_contig_ptr;
+
+}
+
+
+
+std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::shared_ptr<const ContigDB> clinvar_contig) {
+
+  return clinvar_contig->filterVariants(InfoSubStringFilter(CLINVAR_CLNSIG_FIELD, CLINVAR_PATH_SIGNIF));
+
+}
+
+
+std::vector<kgl::ClinvarInfo> kgl::GeneClinvar::clinvarInfo(const std::shared_ptr<const ContigDB>& clinvar_contig_ptr) {
+
+  std::vector<ClinvarInfo> clinvarVector;
+
+  for (auto const& [offset, offset_ptr] : clinvar_contig_ptr->getMap()) {
+
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      ClinvarInfo clinvar_record;
+
+      auto field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, CLINVAR_CLNDN_FIELD);
+      if (field_opt) {
+
+        std::vector<std::string> desc_vector = InfoEvidenceAnalysis::varianttoStrings(field_opt.value());
+        if (not desc_vector.empty()) {
+
+          clinvar_record.clndn = desc_vector.front();
+
+        }
+
+      }
+
+      clinvar_record.variant_ptr = variant_ptr;
+
+      clinvarVector.push_back(clinvar_record);
+
+    }
+
+  }
+
+  return clinvarVector;
+
+}
 

@@ -438,8 +438,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_output.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_clinvar.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_clinvar.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_clinvar.cpp

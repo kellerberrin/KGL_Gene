@@ -15,7 +15,6 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                             const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
-  std::map<std::string, size_t> variant_distribution;
   // Variant statistics.
   ++genome_count_;
 
@@ -26,19 +25,6 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 
     ++all_lof_;
     updateLofEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
-
-  }
-
-
-  if (vep_info.female_phase_lof > 0) {
-
-    ++female_lof_;
-
-  }
-
-  if (vep_info.male_phase_lof > 0) {
-
-    ++male_lof_;
 
   }
 
@@ -86,68 +72,22 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 
   }
 
+  std::set<std::string> unique_variants;
   for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
     const OffsetDBArray& variant_array = offset_ptr->getVariantArray();
 
     for (auto const& variant_ptr : variant_array) {
 
-
-      if (variant_ptr->phaseId() == VariantPhase::DIPLOID_PHASE_A) {
-
-        ++female_phase_;
-
-      } else {
-
-        ++male_phase_;
-
-      }
-
-
-      auto find_result = variant_distribution.find(variant_ptr->variantPhaseHash());
-      if (find_result == variant_distribution.end()) {
-
-        auto[it, insert_result] = variant_distribution.try_emplace(variant_ptr->variantPhaseHash(), 1);
-        if (not insert_result) {
-
-          ExecEnv::log().error("GenomeMutation::variantAnalysis; cannot insert (duplicate) variant with hash: {}",
-                               variant_ptr->variantPhaseHash());
-
-        }
-
-      } else {
-
-        auto&[variant_ident, count] = *find_result;
-        ++count;
-
-      }
+      unique_variants.insert(variant_ptr->variantHash());
 
     } //for variant
 
   } //for offset
 
+  unique_variants_ = unique_variants.size();
 
-  unique_variants_ += variant_distribution.size();
   ++variant_count_;
-
-  for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
-
-    if (offset_ptr->getVariantArray().size() == 1) {
-
-      ++heterozygous_;
-
-    } else if (offset_ptr->getVariantArray().size() == 2) {
-
-      auto const& offset_array = offset_ptr->getVariantArray();
-      if (offset_array.front()->variantHash() == offset_array.back()->variantHash()) {
-
-        ++homozygous_;
-
-      }
-
-    }
-
-  }
 
 }
 
@@ -177,29 +117,17 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   auto unphased_contig = contig_opt.value();
 
-  auto phase_A_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_A));
-  auto found_unphased_A = unphased_contig->findContig(phase_A_variants);
-
-
-  auto phase_B_variants = span_contig->filterVariants(PhaseFilter(VariantPhase::DIPLOID_PHASE_B));
-  auto found_unphased_B = unphased_contig->findContig(phase_B_variants);
-
   auto found_all_unphased = unphased_contig->findContig(span_contig);
-
-  // The homozygous filter must be called first.
-  auto phase_hom_variants = span_contig->filterVariants(HomozygousFilter());
-  auto found_hom_variants = phase_hom_variants->filterVariants(UniqueUnphasedFilter());
+  auto found_hom_variants = span_contig->filterVariants(HomozygousFilter());
 
   vep_info.all_lof = vepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.female_phase_lof = vepCount(found_unphased_A, LOF_VEP_FIELD_, LOF_HC_VALUE_);
-  vep_info.male_phase_lof = vepCount(found_unphased_B, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.hom_lof = vepCount(found_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);
 
-  vep_info.hom_high_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_HIGH_VALUE_);
-  vep_info.hom_moderate_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_MODERATE_VALUE_);
-
   vep_info.all_high_effect = vepCount(found_all_unphased, IMPACT_VEP_FIELD_, IMPACT_HIGH_VALUE_);
+  vep_info.hom_high_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_HIGH_VALUE_);
+
   vep_info.all_moderate_effect = vepCount(found_all_unphased, IMPACT_VEP_FIELD_, IMPACT_MODERATE_VALUE_);
+  vep_info.hom_moderate_effect = vepCount(found_hom_variants, IMPACT_VEP_FIELD_, IMPACT_MODERATE_VALUE_);
 
   return vep_info;
 

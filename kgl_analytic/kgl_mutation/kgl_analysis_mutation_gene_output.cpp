@@ -118,7 +118,6 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenome
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
-  const double homozygous_bias{0.1};
 
   out_file << unique_variants_ << output_delimiter
            << variant_count_ << output_delimiter
@@ -137,8 +136,6 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenome
   }
 
   out_file << all_lof_ << output_delimiter
-           << female_lof_ << output_delimiter
-           << male_lof_ << output_delimiter
            << hom_lof_ << output_delimiter;
 
   ethnic_lof_.writeOutput(genome_aux_data, out_file, output_delimiter);
@@ -154,13 +151,8 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenome
   ethnic_moderate_.writeOutput(genome_aux_data, out_file, output_delimiter);
 
   out_file << genome_count_ << output_delimiter
-           << genome_variant_ << output_delimiter;
+           << genome_variant_;
 
-  out_file << heterozygous_ << output_delimiter
-           << homozygous_ << output_delimiter;
-
-  double ratio = static_cast<double>(heterozygous_) / (static_cast<double>(homozygous_) + homozygous_bias);
-  out_file << ratio;
 
   return true;
 
@@ -191,8 +183,6 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenome
   }
 
   out_file << "AllLof" << output_delimiter
-           << "FemalePhaseLoF" << output_delimiter
-           << "MalePhaseLoF" << output_delimiter
            << "HomLoF" << output_delimiter;
 
   ethnic_lof_.writeHeader(genome_aux_data, out_file, output_delimiter);
@@ -208,10 +198,7 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenome
   ethnic_moderate_.writeHeader(genome_aux_data, out_file, output_delimiter);
 
   out_file << "GenomeCount" << output_delimiter
-           << "GenomeVariant" << output_delimiter
-           << "Heterozygous" << output_delimiter
-           << "Homozygous" << output_delimiter
-           << "Het/Hom";
+           << "GenomeVariant";
 
 }
 
