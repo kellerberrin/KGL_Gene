@@ -29,7 +29,7 @@ Target operating system is Linux and has been developed on a workstation
 running the Mint 20.04 Linux distribution. The software should compile and be usable under 
 other recent Linux distributions but this is not tested.
 The software is written to the C++ 20 standard using the Clion IDE and compiled 
-with gcc version 10.2 (latest version as at Feb 2021).
+with gcc version 10.3 (latest version as at July 2021).
 I wish to thank JetBrains for providing me with a free Clion license to develop 
 this open source software.
 
@@ -38,7 +38,7 @@ The software is still under (very) active development and no stable release yet 
 Hardware requirements:
 
 The software is compute and memory intensive and requires a 1/10/100 class workstation; 
-1TB ecc memory, 10TB fast (nvme) disk storage and 100 execution threads. 
+1TB ecc memory, 10TB fast (nvme) disk storage and 100 hardware execution threads. 
 
 
 If you have any questions then please email me
