@@ -38,8 +38,9 @@ public:
   bool geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
                        const GenomeId_t& genome_id,
                        const std::string& name,
-                       const std::string& gaf_ident,
-                       const GeneIdentMap& key_HGNC_map);
+                       const std::string& hgnc_id,
+                       const std::string& ensembl_id,
+                       const std::string& uniprot_id);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& genePtr() const { return gene_ptr_; }
@@ -55,8 +56,6 @@ public:
 private:
 
   constexpr static const char* CONCAT_TOKEN_ = "&";
-  constexpr static const char* DBXREF_ = "DBXREF";
-  constexpr static const char* HGNC_ = "HGNC:";
 
   GenomeId_t genome_;
   ContigId_t contig_;

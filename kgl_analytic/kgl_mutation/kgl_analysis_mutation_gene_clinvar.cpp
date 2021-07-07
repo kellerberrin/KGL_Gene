@@ -61,14 +61,29 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& ge
 }
 
 
+void kgl::GeneClinvar:: processClinvar( const GenomeId_t& genome_id,
+                                        const ContigId_t& contig_id,
+                                        const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
+                                        const std::shared_ptr<const ContigDB>& gene_variants,
+                                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+
+  if (clinvar_contig_->contigId() != contig_id) {
+
+    clinvar_contig_ = GeneClinvar::getClinvarContig(contig_id, clinvar_population_ptr);
+    clinvar_contig_ = GeneClinvar::FilterPathogenic(clinvar_contig_);
+
+  }
+
+  processClinvar( genome_id, gene_variants, genome_aux_data);
+
+}
+
 
 void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const ContigDB>& subject_variants,
-                                       const std::shared_ptr<const ContigDB>& clinvar_contig,
                                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
-
-  auto subject_clinvar = clinvar_contig->findContig(subject_variants);
+  auto subject_clinvar = clinvar_contig_->findContig(subject_variants);
   auto info_vector = clinvarInfo(subject_clinvar);
   if (subject_clinvar->variantCount() > 0) {
 
@@ -94,9 +109,8 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
 }
 
 
-
 std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const ContigId_t& contig_id,
-                                                                            const std::shared_ptr<const PopulationDB>& clinvar_population_ptr) {
+                                                                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr) {
 
   std::shared_ptr<ContigDB> null_contig_ptr(std::make_shared<ContigDB>(contig_id));
 
@@ -167,4 +181,3 @@ std::vector<kgl::ClinvarInfo> kgl::GeneClinvar::clinvarInfo(const std::shared_pt
   return clinvarVector;
 
 }
-

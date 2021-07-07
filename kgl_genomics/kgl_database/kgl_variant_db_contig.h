@@ -48,6 +48,10 @@ public:
   // Phasing information is removed, this function cannot be specified with a haploid or diploid population.
   [[nodiscard]]  bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
+  // Unconditionally adds an offset without data structure locking, must guarantee that thread has unique access
+  // to the ContigDB object or unhappiness will result.
+  [[nodiscard]] bool addUnlockedOffset(ContigOffset_t offset, const OffsetDB& offset_db);
+
   [[nodiscard]]  size_t variantCount() const;
 
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
@@ -78,6 +82,8 @@ public:
                           ContigOffset_t end,
                           OffsetVariantMap& variant_map) const;
 
+  // Find the [lower, upper] offsets of a contig, {0,0} is returned if empty.
+  [[nodiscard]] std::pair<ContigOffset_t, ContigOffset_t> offsetBounds() const;
   // Retrieves a contig subset in the offset range [begin, end)
   [[nodiscard]] std::shared_ptr<ContigDB> subset(ContigOffset_t start, ContigOffset_t end) const;
 

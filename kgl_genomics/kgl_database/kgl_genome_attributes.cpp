@@ -40,3 +40,21 @@ void kgl::Attributes::insertAttribute(const std::string& key, const std::string&
 
 }
 
+std::string kgl::Attributes::getHGNC() const {
+
+  std::string hgnc_id;
+
+  for (auto const& [key, attrib] : attributes_) {
+
+    if (key == DBXREF_ and attrib.find(HGNC_) == 0) {
+
+      hgnc_id = attrib.substr(std::string(HGNC_).length(), std::string::npos);
+      hgnc_id = Utility::trimEndWhiteSpace(hgnc_id);
+
+    }
+
+  }
+
+  return hgnc_id;
+
+}

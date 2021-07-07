@@ -36,14 +36,6 @@ public:
 private:
 
 
-  // Called when the PedAncestry parser is specified to read in an ancestry (.ped) file
-  [[nodiscard]] static std::shared_ptr<DataDB> readPEDAncestry(std::shared_ptr<BaseFileInfo> file_info,
-                                                               DataSourceEnum data_source);
-
-  // Read Pf3k Complexity of Infection information.
-  [[nodiscard]] static std::shared_ptr<DataDB> readPf3kCOI( std::shared_ptr<BaseFileInfo> file_info,
-                                                            DataSourceEnum data_source);
-
   // Read and parse a package specified VCF file.
   template<class VCFParser>
   [[nodiscard]] static std::shared_ptr<DataDB> readVCF(const std::shared_ptr<const AnalysisResources>& resource_ptr,

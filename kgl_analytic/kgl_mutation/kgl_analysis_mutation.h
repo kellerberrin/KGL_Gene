@@ -7,8 +7,8 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kgl_Pf3k_COI.h"
 #include "kgl_Hsgenealogy_parser.h"
+#include "kgl_uniprot_parser.h"
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_gene_allele.h"
 
@@ -53,7 +53,7 @@ private:
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
-  std::shared_ptr<const EnsemblHGNCResource> nomenclature_ptr_;
+  std::shared_ptr<const UniprotResource> nomenclature_ptr_;
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
   // By Span is all variants with in intron+exon span of the gene

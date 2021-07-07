@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 
   if (parsed_record_ptr->getRowVector().size() < MINIMUM_ROW_COUNT_) {
 
-    ExecEnv::log().error("ParseGeneIdents::parseIdentFile; Row count: {} for file: {} is below minimum",
+    ExecEnv::log().error("ParseGeneIdents::parseUniprotFile; Row count: {} for file: {} is below minimum",
                          parsed_record_ptr->getRowVector().size(), file_name);
     return false;
 
@@ -26,7 +26,7 @@ namespace kgl = kellerberrin::genome;
 
   if (not parsed_record_ptr->checkRowSize(COLUMN_COUNT_)) {
 
-    ExecEnv::log().error("ParseGeneIdents::parseIdentFile; Not all rows have expected column count: {} for file: {}",
+    ExecEnv::log().error("ParseGeneIdents::parseUniprotFile; Not all rows have expected column count: {} for file: {}",
                          COLUMN_COUNT_, file_name);
     return false;
 
@@ -50,7 +50,7 @@ namespace kgl = kellerberrin::genome;
 
   }
 
-  ExecEnv::log().info("ParseGeneIdents::parseIdentFile; Parsed: {} HGNC and Ensembl gene identifiers from file: {}",
+  ExecEnv::log().info("ParseGeneIdents::parseUniprotFile; Parsed: {} HGNC and Ensembl gene identifiers from file: {}",
                       synonym_vector_.size() , file_name);
   return true;
 

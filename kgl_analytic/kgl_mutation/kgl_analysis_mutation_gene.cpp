@@ -3,6 +3,7 @@
 //
 
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
+#include "kgl_uniprot_parser.h"
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_variant_mutation.h"
 #include "kgl_variant_sort.h"
@@ -45,19 +46,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
                                           const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                                          const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr)
+                                          const std::shared_ptr<const UniprotResource>& nomenclature_ptr)
 {
 
   // Only execute this function once.
-
-  if (analysis_initialized_) {
-
-    return  true;
-
-  }
-
-  analysis_initialized_ = true;
-
 
 
   //  kol::PolicyEvidence evidence_policy(kol::GO::getEvidenceType(kol::GO::EvidenceType::EXPERIMENTAL));
@@ -70,10 +62,6 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
   std::shared_ptr<const kol::TermAnnotation> term_annotation_ptr(std::make_shared<const kol::TermAnnotation>(evidence_policy,
                                                                                                              genome_ptr->geneOntology().getGafRecordVector(),
                                                                                                              kol::AnnotationGeneName::SYMBOLIC_GENE_ID));
-  const GeneSynonymVector synonym_vector = nomenclature_ptr->getGeneSynonym();
-  ResortIds resort_ids;
-  resort_ids.sortByHGNC(synonym_vector);
-  ExecEnv::log().info("GenomeMutation::genomeAnalysis; HGNC sorted Gene Ids: {}", resort_ids.getMap().size());
 
   gene_vector_.clear();
   ExecEnv::log().info("Creating Ontology Cache ...");
@@ -108,8 +96,10 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
       }
 
 
+      auto [hgnc_id, ensembl_id] = getNomenclature( nomenclature_ptr, gene_ptr);
+
       GeneCharacteristic gene_characteristic;
-      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, gaf_id, resort_ids.getMap());
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, hgnc_id, ensembl_id, gaf_id);
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(genome_aux_data);
@@ -124,6 +114,33 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
   } // Contig.
 
   return true;
+
+}
+
+
+std::tuple<std::string, std::string>
+    kgl::GenomeMutation::getNomenclature( const std::shared_ptr<const UniprotResource>& nomenclature_ptr,
+                                          const std::shared_ptr<const GeneFeature>& gene_ptr) {
+
+
+  std::string ensembl_id;
+
+  std::string hgnc_id = gene_ptr->getAttributes().getHGNC();
+
+  // Retrieve Ensembl gene id, if available.
+  if (not hgnc_id.empty()) {
+
+    std::vector<std::string> ensembl_vector = nomenclature_ptr->HGNCToEnsembl(hgnc_id);
+
+    if (not ensembl_vector.empty()) {
+
+      ensembl_id = ensembl_vector.front();
+
+    }
+
+  }
+
+  return { hgnc_id, ensembl_id};
 
 }
 
@@ -181,6 +198,11 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   // todo: This logic is inefficient, the entire gene vector is copied for each VCF file (24 times). Re-design and Re-code.
   gene_vector_ = std::move(gene_vector);
 
+  ExecEnv::log().info("Gene variant Analysis completes, gene count: {}, total gene variants found: {}",
+                      gene_vector_.size(), static_cast<size_t>(gene_variant_count_));
+  ExecEnv::log().info("Gene variant Analysis statistics, ensembl candidate variants: {}, genome variants checked: {}, genome variants found: {}",
+                      static_cast<size_t>(ensembl_variant_count_), static_cast<size_t>(var_checked_count_), static_cast<size_t>(var_found_count_));
+
   return true;
 
 }
@@ -193,56 +215,57 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
-
-
-  std::shared_ptr<const ContigDB> clinvar_contig;
   bool contig_data{false};
+  EnsemblHashMap ensembl_hash_map;
+  ContigOffset_t lower_bound{0};
+  ContigOffset_t upper_bound{0};
+
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()){
 
-    auto contig_opt = genome_ptr->getContig(gene_mutation.gene_characteristic.contigId());
+    const ContigId_t& gene_contig_id = gene_mutation.gene_characteristic.contigId();
+    auto contig_opt = genome_ptr->getContig(gene_contig_id);
     if (contig_opt) {
 
       contig_data = true;
-      std::shared_ptr<const ContigDB> contig_ptr = contig_opt.value();
+      std::shared_ptr<const ContigDB> all_contig_ptr = contig_opt.value();
+      if (ensembl_hash_map.empty() and gene_membership_ == VariantGeneMembership::BY_ENSEMBL) {
 
-      if (not contig_ptr->getMap().empty()) {
+        getGeneEnsemblHashMap( *ensembl_index_map_ptr,
+                               gene_mutation.gene_characteristic,
+                               ensembl_hash_map,
+                               lower_bound,
+                               upper_bound);
+
+      }
+
+      if (not all_contig_ptr->getMap().empty()) {
 
         // Which method gene membership of variants is determined.
         std::shared_ptr<const ContigDB> gene_variant_ptr;
         switch(gene_membership_) {
 
           case VariantGeneMembership::BY_SPAN:
-            gene_variant_ptr = getGeneSpan(contig_ptr, gene_mutation.gene_characteristic);
+            gene_variant_ptr = getGeneSpan(all_contig_ptr, gene_mutation.gene_characteristic);
             break;
 
           case VariantGeneMembership::BY_EXON:
-            gene_variant_ptr = getGeneExon(contig_ptr, gene_mutation.gene_characteristic);
+            gene_variant_ptr = getGeneExon(all_contig_ptr, gene_mutation.gene_characteristic);
             break;
 
           default:
-          case VariantGeneMembership::BY_ENSEMBL:
-            gene_variant_ptr = getGeneEnsemblSpan(contig_ptr, *ensembl_index_map_ptr, gene_mutation.gene_characteristic);
+          case VariantGeneMembership::BY_ENSEMBL: {
+
+            auto contig_ptr = all_contig_ptr->subset(lower_bound, upper_bound);
+            gene_variant_ptr = getGeneEnsemblAlt(all_contig_ptr, ensembl_hash_map, gene_mutation.gene_characteristic);
+
+          }
             break;
 
         }
 
-        if (not clinvar_contig) {
+        gene_variant_count_ += gene_variant_ptr->variantCount();
 
-          clinvar_contig = GeneClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
-          clinvar_contig = GeneClinvar::FilterPathogenic(clinvar_contig);
-
-        } else {
-
-          if (clinvar_contig->contigId() != gene_mutation.gene_characteristic.contigId()) {
-
-            clinvar_contig = GeneClinvar::getClinvarContig(gene_mutation.gene_characteristic.contigId(), clinvar_population_ptr);
-            clinvar_contig = GeneClinvar::FilterPathogenic(clinvar_contig);
-
-          }
-
-        }
-
-        gene_mutation.clinvar.processClinvar(genome_id, gene_variant_ptr, clinvar_contig, genome_aux_data);
+        gene_mutation.clinvar.processClinvar( genome_id, gene_contig_id, clinvar_population_ptr, gene_variant_ptr, genome_aux_data);
         gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, genome_aux_data);
 
       } // contig not empty
@@ -306,15 +329,6 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 
 }
 
-// Get variants matching the ensembl.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                              const EnsemblIndexMap& ensembl_index_map,
-                                                                              const GeneCharacteristic& gene_char) {
-
-  return getGeneEnsembl(contig_ptr, ensembl_index_map, gene_char);
-
-}
-
 
 // Get variants matching the ensembl.
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const std::shared_ptr<const ContigDB>& contig_ptr,
@@ -367,4 +381,87 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
 }
 
+
+// Set up Ensembl map.
+void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_index_map,
+                                                 const GeneCharacteristic& gene_char,
+                                                 EnsemblHashMap& ensembl_hash_map,
+                                                 ContigOffset_t& lower_bound,
+                                                 ContigOffset_t& upper_bound) {
+
+  if (gene_char.ensemblId().empty()) {
+
+    lower_bound = 0;
+    upper_bound = 0;
+    ensembl_hash_map.clear();
+
+  }
+
+
+  auto lower_iterator = ensembl_index_map.lower_bound(gene_char.ensemblId());
+  auto const upper_iterator = ensembl_index_map.upper_bound(gene_char.ensemblId());
+
+  std::shared_ptr<ContigDB> ensembl_contig_ptr(std::make_shared<ContigDB>(gene_char.contigId()));
+
+  while (lower_iterator != upper_iterator) {
+
+    auto const&[ensembl_id, variant_ptr] = *lower_iterator;
+
+    ensembl_hash_map.emplace(variant_ptr->variantHash(), variant_ptr);
+
+    if (not ensembl_contig_ptr->addVariant(variant_ptr)) {
+
+      ExecEnv::log().error( "GenomeMutation::getGeneEnsemblHashMap, unable to add variant: {}",
+                            variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+    }
+
+    ++lower_iterator;
+
+  }
+
+  auto [lower, upper] = ensembl_contig_ptr->offsetBounds();
+
+  lower_bound = lower;
+  upper_bound = upper;
+
+  ensembl_variant_count_ += ensembl_hash_map.size();
+
+}
+
+
+// Get variants matching the ensembl.
+std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblAlt( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                             const EnsemblHashMap& ensembl_hash_map,
+                                                                             const GeneCharacteristic& gene_char) {
+
+  std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_char.contigId()));
+
+  for (auto const& [offset, offset_db_ptr] : contig_ptr->getMap()) {
+
+    for (auto const& variant_ptr :  offset_db_ptr->getVariantArray()) {
+
+      ++var_checked_count_;
+      auto result = ensembl_hash_map.find(variant_ptr->variantHash());
+      if (result != ensembl_hash_map.end()) {
+
+        auto const& [hash, ensembl_variant_ptr] = *result;
+        if (not gene_contig->addVariant(ensembl_variant_ptr)) {
+
+          ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
+                                ensembl_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+        }
+
+        ++var_found_count_;
+
+      }
+
+    }
+
+  }
+
+  return gene_contig;
+
+}
 

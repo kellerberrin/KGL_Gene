@@ -13,8 +13,9 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
-                                              const std::string& gaf_ident,
-                                              const GeneIdentMap& key_HGNC_map)
+                                              const std::string& hgnc_id,
+                                              const std::string& ensembl_id,
+                                              const std::string& uniprot_id)
 {
 
   std::vector<std::string> description_vec;
@@ -33,7 +34,6 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   description_ = description_str;
   biotype_ = biotype_str;
   valid_protein_ = ContigReference::verifyGene(gene_ptr);
-  gaf_id_ = gaf_ident;
   gene_begin_ = gene_ptr->sequence().begin();
   gene_end_ = gene_ptr->sequence().end();
   gene_span_ = gene_ptr->sequence().length();
@@ -67,32 +67,14 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
     concat_attributes += "-";
     concat_attributes += attrib;
 
-    if (key == DBXREF_ and attrib.find(HGNC_) == 0) {
-
-      HGNC_id_ = attrib.substr(std::string(HGNC_).length(), std::string::npos);
-      HGNC_id_ = Utility::trimEndWhiteSpace(HGNC_id_);
-
-    }
-
-
   }
 
   concat_attributes += "\"";
   attributes_ = concat_attributes;
 
-  // Retrieve Ensembl gene id, if available.
-  if (not HGNC_id_.empty()) {
-
-    auto result = key_HGNC_map.find(HGNC_id_);
-    if (result != key_HGNC_map.end()) {
-
-      auto const& [HGNC_id, ensembl_id] = *result;
-      ensembl_id_ = ensembl_id;
-
-    }
-
-  }
-
+  gaf_id_ = uniprot_id;
+  ensembl_id_ = ensembl_id;
+  HGNC_id_ = hgnc_id;
 
   return true;
 

@@ -5,6 +5,7 @@
 #include "kgl_package.h"
 #include "kgl_variant_factory_parsers.h"
 #include "kgl_ontology_database.h"
+#include "kgl_uniprot_parser.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -126,14 +127,14 @@ void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& nome
 
   }
 
-  ParseGeneIdents parse_gene_idents;
-  if (not parse_gene_idents.parseIdentFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+  ParseUniprotId parse_uniprot;
+  if (not parse_uniprot.parseUniprotFile(nomenclature_resource_ptr->nomenclatureFileName())) {
 
-    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Gene Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Uniprot Info file: {}", nomenclature_resource_ptr->nomenclatureFileName());
 
   }
 
-  std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(resource_ident, parse_gene_idents.getSynonymVector()));
+  std::shared_ptr<const UniprotResource> gene_id_resource(std::make_shared<const UniprotResource>(resource_ident, parse_uniprot.getUniproResource()));
 
   resource_ptr->addResource(gene_id_resource);
 

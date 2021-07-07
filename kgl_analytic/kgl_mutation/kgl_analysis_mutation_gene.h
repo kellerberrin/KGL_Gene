@@ -7,6 +7,7 @@
 
 #include "kgl_genome_genome.h"
 #include "kgl_Hsgenealogy_parser.h"
+#include "kgl_uniprot_parser.h"
 #include "kgl_variant_sort.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_stats.h"
@@ -57,6 +58,8 @@ enum class VariantGeneMembership { BY_SPAN, BY_EXON, BY_ENSEMBL };
 // By EnsemblSummary is the same as the above but does not use the variant profile of a supplied population data file.
 // Instead the statistics are generated directly from the summary (unphased single genome) data.
 
+using EnsemblHashMap = std::unordered_map<std::string, const std::shared_ptr<const Variant>>;
+
 class GenomeMutation {
 
 public:
@@ -74,7 +77,7 @@ public:
                        const std::shared_ptr<const GenomeReference>& genome_reference,
                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                       const std::shared_ptr<const EnsemblHGNCResource>& nomenclature_ptr);
+                       const std::shared_ptr<const UniprotResource>& nomenclature_ptr);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -86,15 +89,15 @@ public:
   bool writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data, const std::string& out_file, char output_delimiter) const;
 
 
-  // A vector of gene information. This may be useful elsewhere.
-  [[nodiscard]] const std::vector<GeneMutation>& getGeneVector() const { return gene_vector_; }
-
 private:
 
   std::vector<GeneMutation> gene_vector_;
-  bool analysis_initialized_{false};   // Only execute genomeAnalysis once
   VariantGeneMembership gene_membership_;
   GeneEthnicitySex ethnic_statistics_;
+  std::atomic<size_t> gene_variant_count_{0};
+  std::atomic<size_t> ensembl_variant_count_{0};
+  std::atomic<size_t> var_found_count_{0};
+  std::atomic<size_t> var_checked_count_{0};
 
 
   static void writeHeader(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
@@ -113,9 +116,9 @@ private:
                                                          const EnsemblIndexMap& ensembl_index_map,
                                                          const GeneCharacteristic& gene_char);
 
-  static std::shared_ptr<const ContigDB> getGeneEnsemblSpan( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                             const EnsemblIndexMap& ensembl_index_map,
-                                                             const GeneCharacteristic& gene_char);
+  [[nodiscard]] std::shared_ptr<const ContigDB> getGeneEnsemblAlt( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                   const EnsemblHashMap& ensembl_hash_map,
+                                                                   const GeneCharacteristic& gene_char);
 
   GeneMutation geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
@@ -126,7 +129,19 @@ private:
 
   void analysisType();
 
-};
+  // return order: hgnc_id, ensembl_id
+  std::tuple<std::string, std::string> getNomenclature( const std::shared_ptr<const UniprotResource>& nomenclature_ptr,
+                                                        const std::shared_ptr<const GeneFeature>& gene_ptr);
+
+  // Set up Ensembl map.
+  void getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_index_map,
+                              const GeneCharacteristic& gene_char,
+                              EnsemblHashMap& ensembl_hash_map,
+                              ContigOffset_t& lower_bound,
+                              ContigOffset_t& upper_bound);
+
+
+  };
 
 
 

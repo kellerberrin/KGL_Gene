@@ -51,9 +51,15 @@ public:
   bool getName(std::vector<std::string> &value_vec) const { return getAttributes(NAME_KEY, value_vec); }
   [[nodiscard]] const AttributeMap& getMap() const { return attributes_; }
 
+  // Get HGNC identifiers from Homo Sapien GFF files.
+  std::string getHGNC() const;
+
 private:
 
   AttributeMap attributes_;
+
+  constexpr static const char* DBXREF_ = "DBXREF";
+  constexpr static const char* HGNC_ = "HGNC:";
 
 };
 

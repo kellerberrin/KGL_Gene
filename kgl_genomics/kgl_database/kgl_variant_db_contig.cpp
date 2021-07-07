@@ -48,6 +48,53 @@ bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr
 }
 
 
+// Unconditionally adds an offset without locking, must guarantee that thread has unique access
+// to the ContigDB object or unhappiness will result.
+bool kgl::ContigDB::addUnlockedOffset(ContigOffset_t offset, const OffsetDB& offset_db) {
+
+  std::unique_ptr<OffsetDB> offset_db_ptr(std::make_unique<OffsetDB>());
+  // check variant offsets.
+  for (auto const& variant_ptr : offset_db.getVariantArray()) {
+
+    if (offset != variant_ptr->offset()) {
+
+      ExecEnv::log().error( "; mismatch offset: {}, variant: {}",
+                            offset, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+      return false;
+
+    }
+
+    offset_db_ptr->addVariant(variant_ptr);
+
+  }
+
+  auto result = contig_offset_map_.find(offset);
+
+  if (result != contig_offset_map_.end()) {
+    // Variant offset exists.
+
+    auto& [contig_offset, offset_ptr] = *result;
+
+    offset_ptr = std::move(offset_db_ptr);
+
+  } else {
+
+    auto insert_result = contig_offset_map_.try_emplace(offset, std::move(offset_db_ptr));
+
+    if (not insert_result.second) {
+
+      ExecEnv::log().error("ContigDB::addUnlockedOffset; Could not add variant offset: {} to the genome", offset);
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
 // Unconditionally adds an offset
 bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> offset_db) {
 
@@ -453,16 +500,33 @@ void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 }
 
 
+// Find the [lower, upper] offsets of a contig, {0,0} is returned if empty.
+std::pair<kgl::ContigOffset_t, kgl::ContigOffset_t> kgl::ContigDB::offsetBounds() const {
+
+  if (contig_offset_map_.empty()) {
+
+    return {0, 0};
+
+  }
+
+  auto const& [lower_bound, lower_offset_db] = *contig_offset_map_.begin();
+  auto const& [upper_bound, upper_offset_db] = *contig_offset_map_.rbegin();
+
+  return {lower_bound, upper_bound};
+
+}
+
+
 std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, ContigOffset_t end) const {
 
   std::shared_ptr<ContigDB> subset_contig(std::make_shared<ContigDB>(contigId()));
 
   auto lower_bound = contig_offset_map_.lower_bound(start);
-  auto upper_bound = contig_offset_map_.upper_bound(end-1); //  [start, end)
+  auto upper_bound = contig_offset_map_.upper_bound(end); //  [start, end)
 
-  for (auto it = lower_bound; it != upper_bound; ++it) {
+  while (lower_bound != upper_bound) {
 
-    auto const& [offset, offset_ptr] = *it;
+    auto const& [offset, offset_ptr] = *lower_bound;
 
     auto const& variant_array = offset_ptr->getVariantArray();
 
@@ -475,6 +539,8 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::subset(ContigOffset_t start, Conti
       }
 
     }
+
+    ++lower_bound;
 
   }
 
@@ -492,7 +558,9 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::setIntersection(const ContigDB& co
     auto result = contig_B.getMap().find(offset);
     if (result != contig_B.getMap().end()) {
 
-      auto intersection_offset = offset_ptr->setIntersection(*(result->second), variant_equality);
+      auto const& [offset, offset_db_ptr] = *result;
+
+      auto intersection_offset = offset_ptr->setIntersection(*offset_db_ptr, variant_equality);
       // If not empty add the intersection.
       if (not intersection_offset->getVariantArray().empty()) {
 

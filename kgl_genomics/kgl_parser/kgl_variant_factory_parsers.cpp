@@ -17,23 +17,6 @@ namespace kgl = kellerberrin::genome;
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-
-
-std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readPf3kCOI(std::shared_ptr<BaseFileInfo> file_info, DataSourceEnum data_source) {
-
-  std::shared_ptr<Pf3kCOIDB> pf3k_coi_data(std::make_shared<Pf3kCOIDB>(file_info->identifier(), data_source));
-
-  Pf3kCOIParser pf3k_coi_parser(pf3k_coi_data);
-
-  pf3k_coi_parser.parseCOIPf3k(file_info->fileName());
-
-  return pf3k_coi_data;
-
-}
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -71,13 +54,10 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
     case ParserTypeEnum::DiploidGnomad:
       return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source);
 
-    case ParserTypeEnum::Pf3kCOIParser:
-      return ParserSelection::readPf3kCOI(file_info_ptr, data_source);
-
+    default:
+      ExecEnv::log().critical("ParserSelection::parseData; Unknown data file: {} specified - unrecoverable", file_info_ptr->fileName());
+      return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source); // never reached.
 
   }
-
-  // Never reached.
-  return ParserSelection::readPf3kCOI(file_info_ptr, data_source);
 
 }

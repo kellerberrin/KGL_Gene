@@ -51,7 +51,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  nomenclature_ptr_ = std::dynamic_pointer_cast<const EnsemblHGNCResource>(nomenclature_resource_vector.front());
+  nomenclature_ptr_ = std::dynamic_pointer_cast<const UniprotResource>(nomenclature_resource_vector.front());
 
   if (not getParameters(named_parameters, work_directory)) {
 

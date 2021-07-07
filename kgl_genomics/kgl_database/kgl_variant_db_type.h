@@ -26,7 +26,7 @@ namespace kellerberrin::genome {   //  organization::project
 enum class DataOrganism { HomoSapien,
                           PlasmodiumFalciparum,
                           PlasmodiumVivax,
-                          NoOrganism};   // Data file is not organism specific
+                          NoOrganism};   // Data file is not organism specific or organism not defined.
 
 // Particular genetic data sources.
 enum class DataSourceEnum { Genome1000,
@@ -39,25 +39,21 @@ enum class DataSourceEnum { Genome1000,
                             Gnomad2_1,
                             Clinvar,
                             dbSNP,
-                            Pf3kCOI,
                             NotImplemented};   // Error condition if the data source is not found.
 
 // Parsers available for genetic sources.
 enum class ParserTypeEnum { DiploidPhased,
                             DiploidFalciparum,
                             DiploidGnomad,
-                            MonoGenomeUnphased,
-                            Pf3kCOIParser};
+                            MonoGenomeUnphased};
 
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
-                               UnphasedMonoGenome, // Genomic data that contains allele information (PopulationDB)
-                               PedGenome1000, // Additional data to complement the Genome1000 data. (HsGenomeGenealogyData)
-                               Pf3kCOI};  // Complexity of Infection data for Pf3k P. Falciparum database.
+                               UnphasedMonoGenome }; // Haploid Genomic data that contains allele information (PopulationDB)
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant,  COIPf3kData};
+enum class DataImplEnum { PopulationVariant };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +120,6 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Pf3kCOI", DataSourceEnum::Pf3kCOI, ParserTypeEnum::Pf3kCOIParser, DataStructureEnum::Pf3kCOI, DataImplEnum::COIPf3kData, DataOrganism::PlasmodiumFalciparum },
 
 };
 
