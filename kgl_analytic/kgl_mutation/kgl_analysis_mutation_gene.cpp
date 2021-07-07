@@ -256,7 +256,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
           case VariantGeneMembership::BY_ENSEMBL: {
 
             auto contig_ptr = all_contig_ptr->subset(lower_bound, upper_bound);
-            gene_variant_ptr = getGeneEnsemblAlt(all_contig_ptr, ensembl_hash_map, gene_mutation.gene_characteristic);
+            gene_variant_ptr = getGeneEnsemblAlt(contig_ptr, ensembl_hash_map, gene_mutation.gene_characteristic);
 
           }
             break;
