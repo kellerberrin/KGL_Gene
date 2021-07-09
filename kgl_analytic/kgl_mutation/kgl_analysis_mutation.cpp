@@ -18,6 +18,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   // Initialize the analysis objects.
   gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
 
+  // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
@@ -25,65 +26,26 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
-  auto genome_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE);
-  if (genome_resource_vector.size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) reference genome, actual count: {}",
-                            ident(), genome_resource_vector.size());
-
-  }
-  ref_genome_ptr_ = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_vector.front());
-
-  auto ontology_resource_vector = resource_ptr->getResources(RuntimeResourceType::ONTOLOGY_DATABASE);
-  if (ontology_resource_vector.size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) ontology database, actual count: {}",
-                            ident(), ontology_resource_vector.size());
-
-  }
-
-  ontology_db_ptr_ = std::dynamic_pointer_cast<const kol::OntologyDatabase>(ontology_resource_vector.front());
-
-  auto nomenclature_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENE_NOMENCLATURE);
-  if (nomenclature_resource_vector.size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Nomenclature database, actual count: {}", nomenclature_resource_vector.size());
-
-  }
-
-  nomenclature_ptr_ = std::dynamic_pointer_cast<const UniprotResource>(nomenclature_resource_vector.front());
-
   if (not getParameters(named_parameters, work_directory)) {
 
     ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
 
   }
 
-  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_AUX_INFO);
-  if (genome_aux_resource_vector.size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Genome Aux database, actual count: {}"
-                            , ident(), genome_aux_resource_vector.size());
-
-  }
-
-  genome_aux_ptr_ = std::dynamic_pointer_cast<const HsGenomeAux>(genome_aux_resource_vector.front());
-
-  if (not getParameters(named_parameters, work_directory)) {
-
-    ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
-
-  }
-
-  // Just in case.
-  if (not ref_genome_ptr_ or not ontology_db_ptr_ or not nomenclature_ptr_ or not genome_aux_ptr_) {
-
-    ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
-
-  }
+  // Get the analysis resources.
+  ref_genome_ptr_ = resource_ptr->getSingleResource<const GenomeReference>(RuntimeResourceType::GENOME_DATABASE);
+  ontology_db_ptr_ = resource_ptr->getSingleResource<const kol::OntologyDatabase>(RuntimeResourceType::ONTOLOGY_DATABASE);
+  genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(RuntimeResourceType::GENOME_AUX_INFO);
+  uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_UNIPROTID);
+  ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);
 
  // Update the template populations.
-  gene_mutation_.genomeAnalysis(MutationAnalysisData::OMIMGeneSymbol(), ref_genome_ptr_, genome_aux_ptr_, ontology_db_ptr_, nomenclature_ptr_);
+  gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
+                                 ref_genome_ptr_,
+                                 genome_aux_ptr_,
+                                 ontology_db_ptr_,
+                                 uniprot_nomenclature_ptr_,
+                                 ensembl_nomenclature_ptr_);
 
   return true;
 

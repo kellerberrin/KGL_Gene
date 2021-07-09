@@ -115,10 +115,9 @@ class HsGenomeGenealogyData : public HsGenomeAux {
 
 public:
 
-  explicit HsGenomeGenealogyData(std::string genealogy_ident) : genealogy_ident_(std::move(genealogy_ident)) {}
+  explicit HsGenomeGenealogyData(std::string genealogy_ident) : HsGenomeAux(std::move(genealogy_ident)) {}
   ~HsGenomeGenealogyData() override = default;
 
-  [[nodiscard]] const std::string& genealogyId() const { return genealogy_ident_; }
   [[nodiscard]] std::optional<HsGenealogyRecord> getGenomeGenealogyRecord(const std::string& genome) const;
 
   bool addGenealogyRecord(const HsGenealogyRecord& record);
@@ -136,7 +135,6 @@ public:
 private:
 
   HsGenealogyRecordMap genealogy_record_map_;
-  std::string genealogy_ident_;
   HsAuxPopulationMap population_list_;
   HsAuxPopulationMap super_population_list_;
 

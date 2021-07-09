@@ -20,29 +20,34 @@ namespace kellerberrin::genome {   //  organization level namespace
 struct GeneIDSynonyms {
 
   std::string HGNC_id;
+  std::string Canonical;
   std::string ensembl_id;
 
 };
 using GeneSynonymVector = std::vector<GeneIDSynonyms>;
-
+using HGNCEnsemblMap = std::map<std::string, std::string>;
 
 class EnsemblHGNCResource : public ResourceBase {
 
 public:
 
-  explicit EnsemblHGNCResource(std::string identifier, GeneSynonymVector synonym_vector) : identifier_(std::move(identifier)),
-                                                                                           synonym_vector_(std::move(synonym_vector)) {}
+  explicit EnsemblHGNCResource(std::string identifier, GeneSynonymVector synonym_vector) : ResourceBase(std::move(identifier)),
+                                                                                           synonym_vector_(std::move(synonym_vector)) {
+
+    IndexHGNC();
+
+  }
   ~EnsemblHGNCResource() override = default;
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
 
-  [[nodiscard]] const std::string& identifier() const { return identifier_; }
-  [[nodiscard]] const GeneSynonymVector& getGeneSynonym() const { return synonym_vector_; }
+  [[nodiscard]] std::string HGNCToEnsembl(const std::string& hgnc_id) const;
 
 private:
 
-  const std::string identifier_;
   const GeneSynonymVector synonym_vector_;
+  HGNCEnsemblMap hgnc_emsembl_map_;
+  void IndexHGNC();
 
 };
 
@@ -68,9 +73,11 @@ private:
   GeneSynonymVector  synonym_vector_;
 
   constexpr static const size_t MINIMUM_ROW_COUNT_{1};
-  constexpr static const size_t COLUMN_COUNT_{2};
+  constexpr static const size_t COLUMN_COUNT_{3};
 
-  constexpr static const size_t HGNC_OFFSET_{1};
+  constexpr static const size_t HGNC_OFFSET_{2};
+  constexpr static const size_t CANONICAL_OFFSET_{1};
+  constexpr static const char* CANONICAL_VALUE_{"1"};
   constexpr static const size_t ENSEMBL_OFFSET_{0};
 
 };

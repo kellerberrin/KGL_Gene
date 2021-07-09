@@ -127,16 +127,37 @@ void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& nome
 
   }
 
-  ParseUniprotId parse_uniprot;
-  if (not parse_uniprot.parseUniprotFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+  if (resource_ident == ResourceBase::NOMENCLATURE_UNIPROTID) {
 
-    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Uniprot Info file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+    ParseUniprotId parse_uniprot;
+    if (not parse_uniprot.parseUniprotFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+
+      ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Uniprot Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+
+    }
+
+    std::shared_ptr<const UniprotResource> gene_id_resource(std::make_shared<const UniprotResource>(resource_ident, parse_uniprot.getUniproResource()));
+
+    resource_ptr->addResource(gene_id_resource);
+
+  } else if (resource_ident == ResourceBase::NOMENCLATURE_ENSEMBL) {
+
+    ParseGeneIdents parse_gene_idents;
+    if (not parse_gene_idents.parseIdentFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+
+      ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Unable to parse Ensembl Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+
+    }
+
+    std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(resource_ident, parse_gene_idents.getSynonymVector()));
+
+    resource_ptr->addResource(gene_id_resource);
+
+  } else {
+
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Nomenclature resource ident: {} unknown", resource_ident);
 
   }
-
-  std::shared_ptr<const UniprotResource> gene_id_resource(std::make_shared<const UniprotResource>(resource_ident, parse_uniprot.getUniproResource()));
-
-  resource_ptr->addResource(gene_id_resource);
 
 }
 

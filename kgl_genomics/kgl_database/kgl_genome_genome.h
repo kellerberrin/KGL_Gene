@@ -29,14 +29,14 @@ class GenomeReference : public ResourceBase {
 
 public:
 
-  explicit GenomeReference(const GenomeId_t& genome_id) : _genome_id(genome_id) {}
+  explicit GenomeReference(const GenomeId_t& genome_id) : ResourceBase(genome_id) {}
   GenomeReference(const GenomeReference&) = default;
   ~GenomeReference() override = default;
 
   // Resource type identifier.
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
-  // Organism identifier
-  [[nodiscard]] const GenomeId_t& genomeId() const { return _genome_id; }
+  // Organism identifier and resource identifier
+  [[nodiscard]] const GenomeId_t& genomeId() const { return identifier(); }
 
   // Return false if contig already exists.
   [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
@@ -69,7 +69,6 @@ public:
 
 private:
 
-  const GenomeId_t _genome_id;
   GenomeContigMap genome_sequence_map_;
   GeneOntology gene_ontology_;
 
