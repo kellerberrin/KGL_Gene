@@ -47,13 +47,16 @@ public:
 
 private:
 
-  std::shared_ptr<const GenomeReference> ref_genome_ptr_;
+  // Parsed VCF Files.
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const PopulationDB> unphased_population_ptr_;
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
+  // Various requested resources.
+  std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
-  std::shared_ptr<const UniprotResource> nomenclature_ptr_;
+  std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
+  std::shared_ptr<const EnsemblHGNCResource> ensembl_nomenclature_ptr_;
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
   // By Span is all variants with in intron+exon span of the gene

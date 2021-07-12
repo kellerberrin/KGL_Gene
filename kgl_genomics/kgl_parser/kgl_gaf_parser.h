@@ -55,34 +55,6 @@ private:
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Resort the gene identifiers
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using GeneIdentMap = std::map<std::string, std::string>;
-class ResortIds {
-
-public:
-
-  ResortIds() = default;
-  ~ResortIds() = default;
-
-  void sortByHGNC(const GeneSynonymVector& ident_vector);
-  void sortByEnsembl(const GeneSynonymVector& ident_vector);
-
-  [[nodiscard]] const GeneIdentMap& getMap() const { return gene_id_map_; }
-
-private:
-
-  GeneIdentMap gene_id_map_;
-
-};
-
-
-
-
 }   // end namespace
 
 

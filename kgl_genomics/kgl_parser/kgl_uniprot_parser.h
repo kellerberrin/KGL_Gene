@@ -35,7 +35,7 @@ class UniprotResource : public ResourceBase {
 public:
 
   explicit UniprotResource(std::string identifier, UniprotIDMap&& uniprot_map)
-  : identifier_(std::move(identifier)), uniprot_map_(uniprot_map) {
+  : ResourceBase(std::move(identifier)), uniprot_map_(uniprot_map) {
 
     createIndexes();
 
@@ -43,7 +43,6 @@ public:
   ~UniprotResource() override = default;
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
-  [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
   [[nodiscard]] std::vector<std::string> symbolToUniprot(const std::string& symbol) const;
   [[nodiscard]] std::vector<std::string> HGNCToEnsembl(const std::string& hgnc) const { return lookupInfo( hgnc, hgnc_index_, ENSEMBL_FIELD); }
@@ -58,7 +57,6 @@ public:
 
 private:
 
-  const std::string identifier_;
   const UniprotIDMap uniprot_map_;
   std::multimap<std::string, std::string> uniprot_index_;
   std::multimap<std::string, std::string> entrez_index_;

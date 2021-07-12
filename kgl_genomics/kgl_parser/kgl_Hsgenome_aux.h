@@ -81,7 +81,7 @@ class HsGenomeAux : public ResourceBase {
 
 public:
 
-  HsGenomeAux() = default;
+  explicit HsGenomeAux(std::string identifier) : ResourceBase(std::move(identifier)) {}
   ~HsGenomeAux() override = default;
 
   [[nodiscard]] virtual const HsAuxPopulationMap& populationList() const = 0;
@@ -108,10 +108,9 @@ class HsGenomeAuxData : public HsGenomeAux {
 
 public:
 
-  explicit HsGenomeAuxData(std::string genome_aux_ident) : genome_aux_ident_(std::move(genome_aux_ident)) {}
+  explicit HsGenomeAuxData(std::string genome_aux_ident) : HsGenomeAux(std::move(genome_aux_ident)) {}
   ~HsGenomeAuxData() override = default;
 
-  [[nodiscard]] const std::string& genomeAuxId() const { return genome_aux_ident_; }
 
   // Re-create the population lists any time after construction.
   void refreshPopulationLists();
@@ -127,7 +126,6 @@ public:
 private:
 
   HsGenomeAuxRecordMap genome_aux_record_map_;
-  std::string genome_aux_ident_;
   HsAuxPopulationMap population_list_;
   HsAuxPopulationMap super_population_list_;
 

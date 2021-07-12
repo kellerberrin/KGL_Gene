@@ -39,13 +39,11 @@ public:
   [[nodiscard]] kgl::RuntimeResourceType getResourceType() const override { return kgl::RuntimeResourceType::ONTOLOGY_DATABASE; }
 
   // Ontology Resources.
-  [[nodiscard]] const std::string& ontologyIdent() const { return ontology_ident_; }
   [[nodiscard]] const std::shared_ptr<const GoGraph>& goGraph() const { return go_graph_ptr_; }
   [[nodiscard]] const std::shared_ptr<const TermAnnotation>& annotation() const { return annotation_ptr_; }
 
 private:
 
-  const std::string ontology_ident_;
   std::shared_ptr<const GoGraph> go_graph_ptr_;
   std::shared_ptr<const TermAnnotation> annotation_ptr_;
 

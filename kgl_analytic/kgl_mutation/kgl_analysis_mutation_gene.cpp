@@ -46,7 +46,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
                                           const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
-                                          const std::shared_ptr<const UniprotResource>& nomenclature_ptr)
+                                          const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                                          const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr)
 {
 
   // Only execute this function once.
@@ -96,7 +97,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
       }
 
 
-      auto [hgnc_id, ensembl_id] = getNomenclature( nomenclature_ptr, gene_ptr);
+      auto [hgnc_id, ensembl_id] = getNomenclature( uniprot_nomenclature_ptr, ensembl_nomenclature_ptr, gene_ptr);
 
       GeneCharacteristic gene_characteristic;
       gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, hgnc_id, ensembl_id, gaf_id);
@@ -119,7 +120,8 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 
 
 std::tuple<std::string, std::string>
-    kgl::GenomeMutation::getNomenclature( const std::shared_ptr<const UniprotResource>& nomenclature_ptr,
+    kgl::GenomeMutation::getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                                          const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr,
                                           const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
 
@@ -130,7 +132,7 @@ std::tuple<std::string, std::string>
   // Retrieve Ensembl gene id, if available.
   if (not hgnc_id.empty()) {
 
-    std::vector<std::string> ensembl_vector = nomenclature_ptr->HGNCToEnsembl(hgnc_id);
+    std::vector<std::string> ensembl_vector = uniprot_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
 
     if (not ensembl_vector.empty()) {
 
@@ -139,6 +141,8 @@ std::tuple<std::string, std::string>
     }
 
   }
+
+  ensembl_id = ensembl_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
 
   return { hgnc_id, ensembl_id};
 

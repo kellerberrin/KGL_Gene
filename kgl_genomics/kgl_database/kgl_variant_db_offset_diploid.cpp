@@ -102,9 +102,15 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
         diploid_record.frequency = frequency_opt.value();
 
       } else {
+        static bool warning{false};
 
-        ExecEnv::log().warn("OffsetDB::inSituDiploid; unable to retrieve AF frequency for variant: {}",
-                            variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+        // Only issue the warning once.
+        if (not warning) {
+
+          ExecEnv::log().warn("OffsetDB::inSituDiploid; unable to retrieve AF frequency for variant: {}",
+                              variant_ptr->output(',', VariantOutputIndex::START_0_BASED, true));
+          warning = true;
+        }
         diploid_record.frequency = 0.0;
 
       }

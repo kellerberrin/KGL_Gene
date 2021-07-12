@@ -13,12 +13,13 @@
 
 
 namespace kol = kellerberrin::ontology;
+namespace kgl = kellerberrin::genome;
 
 
 
 kol::OntologyDatabase::OntologyDatabase( const std::string& ontology_ident,
                                          const std::string& go_graph_file,
-                                         const std::string& annotation_file) : ontology_ident_(ontology_ident) {
+                                         const std::string& annotation_file) : kgl::ResourceBase(ontology_ident) {
 
   go_graph_ptr_ = getGoGraph(go_graph_file);
   annotation_ptr_ = getAnnotation(annotation_file);
