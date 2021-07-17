@@ -128,6 +128,16 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 };
 
 
+// Used in adhoc gene polymorphism analysis.
+const std::vector<std::string> kgl::MutationAnalysisData::adhoc_ensembl_symbol_ = {
+
+    "ENSG00000150337",   // FCGR1A
+    "ENSG00000143226",   // FCGR2A
+    "ENSG00000072694",   // FCGR2B
+    "ENSG00000162747",  // FCGR3B
+    "ENSG00000203747"   // FCGR3A
+
+};
 
 // The list of genes to be analyzed variant by variant. Must be ensembl codes (for now).
 const std::vector<std::string> kgl::MutationAnalysisData::ontology_derived_gene_list_{

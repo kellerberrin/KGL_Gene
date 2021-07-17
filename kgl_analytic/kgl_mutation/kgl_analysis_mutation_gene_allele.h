@@ -18,12 +18,12 @@ class GenerateGeneAllele {
 
 public:
 
-  GenerateGeneAllele(const std::vector<std::string>& ensembl_gene_list) : sorted_allele_map_(std::make_shared<EnsemblIndexMap>()),
-                                                                          ensembl_gene_list_(ensembl_gene_list) {}
+  GenerateGeneAllele(const std::vector<std::string>& ensembl_gene_list) : ensembl_gene_list_(ensembl_gene_list),
+                                                                          sorted_allele_map_(std::make_shared<EnsemblIndexMap>()) {}
   ~GenerateGeneAllele() = default;
 
   void updateAlleleMap(std::shared_ptr<const PopulationDB> unphased_population_ptr);
-  void filterAlleleMap(const double AFR_frequency, const double upper_tail, const double lower_tail);
+  void filterAlleleMap(const double ALL_frequency, const double AFR_frequency);
 
   void writeOutput(const std::string& output_file, const char delimiter) const;
 
@@ -34,8 +34,8 @@ private:
   const static constexpr char *AFR_SUPER_POP_{"AFR"};
   const static constexpr char *ALL_SUPER_POP_{"ALL"};
 
-  std::shared_ptr<EnsemblIndexMap> sorted_allele_map_;
   const std::vector<std::string> ensembl_gene_list_;
+  std::shared_ptr<EnsemblIndexMap> sorted_allele_map_;
 
   static void writeHeader(std::ofstream& outfile, const char delimiter);
 

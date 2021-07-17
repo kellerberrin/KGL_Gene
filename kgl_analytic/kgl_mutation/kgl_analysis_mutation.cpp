@@ -16,7 +16,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   // Initialize the analysis objects.
-  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
+//  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
+  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::adHocGenes());
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
@@ -196,7 +197,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
-  gene_allele_ptr_->filterAlleleMap(FREQ_AFR_, UPPER_TAIL_AFR_, LOWER_TAIL_AFR_);
+  gene_allele_ptr_->filterAlleleMap(FREQ_ALL_, FREQ_AFR_);
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 

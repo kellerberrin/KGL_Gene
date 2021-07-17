@@ -39,6 +39,9 @@ public:
   [[nodiscard]] static const std::vector<std::string> UniprotGeneSymbol();
   [[nodiscard]] static const std::vector<std::string> UniprotGeneEnsembl();
 
+  // Used in adhoc gene polymorphism analysis.
+  [[nodiscard]] static const std::vector<std::string> adHocGenes() { return adhoc_ensembl_symbol_; }
+
 private:
 
   // From the OMIM entry #611162 available at https://www.omim.org/entry/611162
@@ -50,6 +53,8 @@ private:
   // The list of genes to be analyzed variant by variant. Must be ensembl codes (for now).
   static const std::vector<std::string> ontology_derived_gene_list_;
 
+  // Used in adhoc gene polymorphism analysis.
+  static const std::vector<std::string> adhoc_ensembl_symbol_;
 
 };
 

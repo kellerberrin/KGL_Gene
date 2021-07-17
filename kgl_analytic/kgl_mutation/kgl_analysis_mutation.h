@@ -63,9 +63,8 @@ private:
   // By Ensembl looks up the variants based on the vep ensembl code.
   // By Exon uses the gene exon addresses to find gene variants - warning assumes the first transcript.
 
-  constexpr static const double FREQ_AFR_{0.10};
-  constexpr static const double UPPER_TAIL_AFR_{1E-05};   // 0.001 %
-  constexpr static const double LOWER_TAIL_AFR_{1E-05};   // 0.001 %
+  constexpr static const double FREQ_AFR_{0.0};
+  constexpr static const double FREQ_ALL_{0.0};
   std::shared_ptr<GenerateGeneAllele> gene_allele_ptr_;
 
   std::string output_file_name_;

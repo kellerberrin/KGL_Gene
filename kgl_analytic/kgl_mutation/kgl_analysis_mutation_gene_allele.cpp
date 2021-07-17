@@ -25,19 +25,21 @@ void kgl::GenerateGeneAllele::updateAlleleMap(std::shared_ptr<const PopulationDB
 
 
 
-void kgl::GenerateGeneAllele::filterAlleleMap(const double AFR_frequency, const double upper_tail, const double lower_tail) {
+void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const double AFR_frequency) {
 
   EnsemblIndexMap freq_sorted_allele_map;
 
   for (auto const& [ensembl_id, variant_ptr] : *sorted_allele_map_) {
 
     auto frequency_AFR_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, AFR_SUPER_POP_);
+    auto frequency_ALL_opt =  FrequencyDatabaseRead::superPopFrequency(*variant_ptr, ALL_SUPER_POP_);
 
-    if (frequency_AFR_opt) {
+    if (frequency_AFR_opt and frequency_ALL_opt) {
 
-      double frequency = frequency_AFR_opt.value();
+      double afr_frequency = frequency_AFR_opt.value();
+      double all_frequency = frequency_ALL_opt.value();
 
-      if (frequency >= AFR_frequency) {
+      if (afr_frequency >= AFR_frequency and all_frequency >= ALL_frequency) {
 
         freq_sorted_allele_map.emplace(ensembl_id, variant_ptr);
 
@@ -47,42 +49,11 @@ void kgl::GenerateGeneAllele::filterAlleleMap(const double AFR_frequency, const 
 
   }
 
-  ExecEnv::log().info("Allele map filtered for AFR Freq >= {}, size: {}", AFR_frequency, freq_sorted_allele_map.size());
+  ExecEnv::log().info("Allele map filtered for ALL Freq >= {}, AFR Freq >= {}, unfiltered size: {}, filtered size: {}",
+                      ALL_frequency, AFR_frequency, sorted_allele_map_->size(), freq_sorted_allele_map.size());
 
-  EnsemblIndexMap tail_sorted_allele_map;
 
-  for (auto const& [ensembl_id, variant_ptr] : freq_sorted_allele_map) {
-
-    auto total_allele_count_opt =  FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, ALL_SUPER_POP_);
-    auto alt_allele_count_opt =  FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, ALL_SUPER_POP_);
-    auto afr_total_allele_count_opt =  FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, AFR_SUPER_POP_);
-    auto afr_alt_allele_count_opt =  FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, AFR_SUPER_POP_);
-
-    if (total_allele_count_opt and alt_allele_count_opt and afr_total_allele_count_opt and afr_alt_allele_count_opt) {
-
-      size_t total_allele_count = total_allele_count_opt.value();
-      size_t alt_allele_count =  alt_allele_count_opt.value();
-      size_t afr_total_allele_count = afr_total_allele_count_opt.value();
-      size_t afr_alt_allele_count = afr_alt_allele_count_opt.value();
-
-      HypergeometricDistribution tail_dist(alt_allele_count, afr_total_allele_count, total_allele_count);
-
-      double upper = tail_dist.upperSingleTailTest(afr_alt_allele_count);
-      double lower = tail_dist.lowerSingleTailTest(afr_alt_allele_count);
-
-      if (upper <= upper_tail or lower <= lower_tail) {
-
-        tail_sorted_allele_map.emplace(ensembl_id, variant_ptr);
-
-      }
-
-    }
-
-  }
-
-  ExecEnv::log().info("Allele map filtered for upper_tail <= {}, lower_tail <= {}, size: {}", upper_tail, lower_tail, tail_sorted_allele_map.size());
-
-  *sorted_allele_map_ = std::move(tail_sorted_allele_map);
+  *sorted_allele_map_ = std::move(freq_sorted_allele_map);
 
 }
 
@@ -107,7 +78,9 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
   outfile << "TotalCount" << delimiter
           << "AltCount" << delimiter
           << "AFRCount" << delimiter
-          << "AFRAltCount" << '\n';
+          << "AFRAltCount" << delimiter
+          << "AFR_Freq%" << delimiter
+          << "NonAFR_Freq%" << '\n';
 
 }
 
@@ -184,7 +157,30 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
     out_file << total_allele_count << delimiter
              << alt_allele_count << delimiter
              << afr_total_allele_count << delimiter
-             << afr_alt_allele_count << '\n';
+             << afr_alt_allele_count << delimiter;
+
+    if (afr_total_allele_count > 0) {
+
+      double afr_percent = (static_cast<double>(afr_alt_allele_count) / static_cast<double>(afr_total_allele_count)) * 100.0;
+      out_file << afr_percent << delimiter;
+
+    } else {
+
+      out_file << 0 << delimiter;
+
+    }
+
+    int64_t non_afr_count = total_allele_count - afr_total_allele_count;
+    if (non_afr_count  > 0) {
+
+      double non_afr_percent = ((static_cast<double>(alt_allele_count)-static_cast<double>(afr_alt_allele_count)) / static_cast<double>(non_afr_count)) * 100.0;
+      out_file << non_afr_percent  << '\n';
+
+    } else {
+
+      out_file << 0 << '\n';
+
+    }
 
   }
 
