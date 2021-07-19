@@ -39,9 +39,7 @@ void kgl::VariantSort::ensemblAddIndex(const std::shared_ptr<const PopulationDB>
 
     IndexMap( std::shared_ptr<EnsemblIndexMap>& index_map_ptr,
               const std::vector<std::string>& ensembl_gene_list)
-        : ensembl_indexed_variants_ptr_(index_map_ptr),
-          pmr_memory_(pmr_byte_array_, sizeof(pmr_byte_array_)),
-          unique_ident_(&pmr_memory_) {
+        : ensembl_indexed_variants_ptr_(index_map_ptr) {
 
       for (auto const& ensembl_gene_id : ensembl_gene_list) {
 
@@ -104,9 +102,7 @@ void kgl::VariantSort::ensemblAddIndex(const std::shared_ptr<const PopulationDB>
 
     std::set<std::string> ensembl_gene_set_;
     std::shared_ptr<EnsemblIndexMap> ensembl_indexed_variants_ptr_;
-    std::byte pmr_byte_array_[PMR_BUFFER_SIZE_];
-    std::pmr::monotonic_buffer_resource pmr_memory_;
-    std::pmr::set<std::string> unique_ident_;
+    std::set<std::string> unique_ident_;
     VepIndexVector field_index_;
     bool initialized_{false};
 
@@ -216,7 +212,8 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
 
 // Index by Genome and then by variant Id, multi-threaded.
-std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr) {
+std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr,
+                                                                                   size_t max_threads) {
 
   // Local object performs the indexing.
   class IndexMap {
@@ -255,8 +252,11 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
   }; // IndexMap object.
 
 
+  // Thread count strategy
+  size_t thread_count = std::max<size_t>(1, max_threads);
+  thread_count = std::min(thread_count, ThreadPool::defaultThreads());
+  thread_count = std::min( thread_count, population_ptr->getMap().size());
   // Fire-up the threads.
-  size_t thread_count = std::min(ThreadPool::hardwareThreads()-1, population_ptr->getMap().size());
   ThreadPool thread_pool(thread_count);
 
   using GenomeIndexFuture = std::future<std::shared_ptr<VariantIdIndexMap>>;

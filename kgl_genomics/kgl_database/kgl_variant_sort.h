@@ -57,8 +57,9 @@ public:
   // Variants indexed by genome and then by variant id ('rsXXXXXXXXX').
   [[nodiscard]] static std::shared_ptr<VariantGenomeIndexMap> variantGenomeIndex(const std::shared_ptr<const PopulationDB>& population_ptr);
 
-  // Multithreaded version of the above.
-  [[nodiscard]] static std::shared_ptr<VariantGenomeIndexMap> variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr);
+  // Multithreaded version indexes by variant id ('rsXXXXXXXXX') using a thread for each genome.
+  [[nodiscard]] static std::shared_ptr<VariantGenomeIndexMap> variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr,
+                                                                                   size_t max_threads = ThreadPool::defaultThreads());
 
 private:
 

@@ -39,8 +39,15 @@ public:
   [[nodiscard]] static const std::vector<std::string> UniprotGeneSymbol();
   [[nodiscard]] static const std::vector<std::string> UniprotGeneEnsembl();
 
-  // Used in adhoc gene polymorphism analysis.
-  [[nodiscard]] static const std::vector<std::string> adHocGenes() { return adhoc_ensembl_symbol_; }
+  // Used in adhoc FCGR gene  polymorphism analysis.
+  [[nodiscard]] static const std::vector<std::string> adHocFCGRGenes() { return adhoc_FCGR_ensembl_symbol_; }
+
+  // Used in adhoc LILRB1 gene  polymorphism analysis.
+  [[nodiscard]] static const std::vector<std::string> adHocLILRB1Genes() { return adhoc_LILRB1_ensembl_symbol_; }
+  // Adhoc LILRB1 gene polymorphism analysis using alternative Ensembl IDs from Gene Card.
+  // The sad truth is that there are multiple Ensembl identifiers per gene (why?), we will need to accommodate this
+  // problem in a code re-design.
+  [[nodiscard]] static const std::vector<std::string> adHocAltLILRB1Genes() { return alt_LILRB1_ensembl_symbol_; }
 
 private:
 
@@ -54,7 +61,16 @@ private:
   static const std::vector<std::string> ontology_derived_gene_list_;
 
   // Used in adhoc gene polymorphism analysis.
-  static const std::vector<std::string> adhoc_ensembl_symbol_;
+  static const std::vector<std::string> adhoc_FCGR_ensembl_symbol_;
+
+  // Used in adhoc gene polymorphism analysis.
+  static const std::vector<std::string> adhoc_LILRB1_ensembl_symbol_;
+
+  // Adhoc LILRB1 gene polymorphism analysis using alternative Ensembl IDs from Gene Card.
+  // The sad truth is that there are multiple Ensembl identifiers per gene (why?), we will need to accommodate this
+  // problem in a code re-design.
+  static const std::vector<std::string> alt_LILRB1_ensembl_symbol_;
+
 
 };
 

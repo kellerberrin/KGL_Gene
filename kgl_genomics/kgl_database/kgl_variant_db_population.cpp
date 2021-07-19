@@ -84,7 +84,7 @@ size_t kgl::PopulationDB::variantCount() const {
 
   }
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
+  size_t thread_count = std::min(getMap().size(), ThreadPool::defaultThreads());
   ThreadPool thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<size_t>> future_vector;
@@ -136,7 +136,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   }
 
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
+  size_t thread_count = std::min(getMap().size(), ThreadPool::defaultThreads());
   ThreadPool thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
@@ -198,7 +198,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   }
 
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), ThreadPool::hardwareThreads());
+  size_t thread_count = std::min(getMap().size(), ThreadPool::defaultThreads());
   ThreadPool thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
@@ -309,7 +309,7 @@ size_t kgl::PopulationDB::mergePopulation(const std::shared_ptr<const Population
 // Ensures that all variants are correctly specified.
 std::pair<size_t, size_t> kgl::PopulationDB::validate(const std::shared_ptr<const GenomeReference>& genome_db) const {
 
-  ThreadPool thread_pool(ThreadPool::hardwareThreads());
+  ThreadPool thread_pool(ThreadPool::defaultThreads());
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
 
   // Queue a thread for each genome.

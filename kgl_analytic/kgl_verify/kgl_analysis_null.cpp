@@ -54,28 +54,9 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
     ExecEnv::log().critical("NullAnalysis::fileReadAnalysis; File: {} is not a Homo Sapien Population", data_ptr->fileId());
 
   }
-    /*
-    for (auto const& [genome_id, genome_ptr] : population->getMap()) {
 
-      ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: {}, GenomeID: {}, Contigs: {}",
-                          population->populationId(), genome_id, genome_ptr->getMap().size());
-
-      for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
-
-        ExecEnv::log().info("NullAnalysis::fileReadAnalysis; ContigID: {}, Contig Offsets: {}, Contig Variants: {}",
-                            contig_id, contig_ptr->getMap().size(), contig_ptr->variantCount());
-
-      }
-
-    }
-
-    ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
-                        population->populationId(), genome_count_);
-
-*/
-
-    ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
-                        population->populationId(), population->getMap().size());
+  ExecEnv::log().info("NullAnalysis::fileReadAnalysis; Diploid Population: ,{}, Total Genomes: {}",
+                      population->populationId(), population->getMap().size());
 
     // Iterate any available info fields
     std::optional<std::shared_ptr<const InfoEvidenceHeader>> info_header_opt = population->getVCFInfoEvidenceHeader();
@@ -101,70 +82,169 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
     }
 
-    // See how many genomes have the variant rs62418762.
-    ExecEnv::log().info("Starting Genome Variant sort ...");
-
-    auto genome_variant_index_ptr = VariantSort::variantGenomeIndexMT(population);
-
-    ExecEnv::log().info("Completed Genome Variant sort");
-
-//    const std::vector<std::string> variant_id_vector{"rs62418762"};
-    const std::vector<std::string> variant_id_vector { "rs10944597", "rs114240342", "rs114373344", "rs116065218", "rs12524302", "rs12527921",
-        "rs12528802", "rs12529529", "rs12661085", "rs12661202", "rs12664281", "rs12665626", "rs1328491", "rs141787228", "rs145866672",
-        "rs147631439", "rs149821037", "rs1999063", "rs2183001", "rs34821188", "rs34967714", "rs35673902", "rs4707739", "rs4707740",
-        "rs58551026", "rs58832941", "rs62418762", "rs62418800", "rs62418818", "rs62418819", "rs62420860", "rs6904002", "rs6925094",
-        "rs6939249", "rs6939736", "rs71897753", "rs72926662", "rs72928719", "rs75488031", "rs75869001", "rs7741533", "rs78233953",
-        "rs78702660", "rs78935233", "rs9353916" };
-
-    size_t genome_count{0};
-    for (auto const& [genome_id, sorted_variant_ptr] : *genome_variant_index_ptr) {
-
-      for (auto const& variant_id : variant_id_vector) {
-
-        auto result = sorted_variant_ptr->find(variant_id);
-        if (result != sorted_variant_ptr->end()) {
-
-          auto const& [variant_id, variant_ptr] = *result;
-
-          ++genome_count;
-          auto AN_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
-          auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
-          auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
-          auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
-          std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
-          ExecEnv::log().info("Genome: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
-                              genome_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
-
-        }
-
-      }
-
-    }
-//    ExecEnv::log().info("Genomes: {} containing variants: {}", genome_count, variant_id);
-
-      // Investigate vep field values.
-
-      InfoEvidenceAnalysis::vepSubFieldCount("Gene", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("EXON", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("INTRON", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
-      InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
-//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_info", population);
-//    InfoEvidenceAnalysis::vepSubFieldValues("Gene", population);
-    InfoEvidenceAnalysis::vepSubFieldValues("SOMATIC", population);
+    ensemblIdIndex(population);
 
   }
-
 
   return true;
 
 }
+
+void kgl::NullAnalysis::ensemblIdIndex(const std::shared_ptr<const PopulationDB>& population) {
+
+  // Used in adhoc polymorphism analysis (chromosome 19).
+  const std::vector<std::string> LILRB1_ensembl_symbol = {
+
+      "ENSG00000167613",   // Alt  LAIR1
+      "ENSG00000104972", // Alt LILRB1
+      "ENSG00000204577", // Alt LILRB3
+      "ENSG00000244482", // Alt LILRA6
+      "ENSG00000105609", // Alt LILRB5	leukocyte immunoglobulin like receptor B5
+      "ENSG00000131042", // Alt LILRB2	leukocyte immunoglobulin like receptor B2
+      "ENSG00000187116", //	Alt LILRA5	leukocyte immunoglobulin like receptor A5
+      "ENSG00000239961", // Alt LILRA4	leukocyte immunoglobulin like receptor A4
+      "ENSG00000167618", //	Alt LAIR2	leukocyte associated immunoglobulin like receptor 2
+      "ENSG00000239998", //	Alt LILRA2	leukocyte immunoglobulin like receptor A2
+      "ENSG00000104974", //	Alt LILRA1	leukocyte immunoglobulin like receptor A1
+      "ENSG00000186818",  // 	Alt LILRB4	leukocyte immunoglobulin like receptor B4
+      "ENSG00000242019", //	Alt KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
+      "ENSG00000243772", //	Alt KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
+      "ENSG00000125498", //	Alt KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
+      "ENSG00000189013", //	Alt KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
+      "ENSG00000167633", //	Alt KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
+      "ENSG00000221957", //	Alt KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
+      "ENSG00000240403",	// Alt KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+
+
+      "ENSG00000276452",   // LILRB1
+      "ENSG00000276163",   //  LAIR1
+      "ENSG00000277816",  //   LILRB3
+      "ENSG00000275584",	// LILRA6	leukocyte immunoglobulin like receptor A6
+      "ENSG00000277414", 	// LILRB5	leukocyte immunoglobulin like receptor B5
+      "ENSG00000274513",  //	LILRB2	leukocyte immunoglobulin like receptor B2
+      "ENSG00000278355", //	LILRA5	leukocyte immunoglobulin like receptor A5
+      "ENSG00000276798", //	LILRA4	leukocyte immunoglobulin like receptor A4
+      "ENSG00000274084", //	LAIR2	leukocyte associated immunoglobulin like receptor 2
+      "ENSG00000274000", //	LILRA2	leukocyte immunoglobulin like receptor A2
+      "ENSG00000274935", //	LILRA1	leukocyte immunoglobulin like receptor A1
+      "ENSG00000278555",  // 	LILRB4	leukocyte immunoglobulin like receptor B4
+      "ENSG00000276433", //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
+      "ENSG00000273947", //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
+      "ENSG00000276820", //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
+      "ENSG00000276779", //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
+      "ENSG00000273775", //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
+      "ENSG00000274324", //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
+      "ENSG00000273735"	// KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+
+  };
+
+  // Used in adhoc FCGR gene  polymorphism analysis (chromosome 1).
+  const std::vector<std::string> FCGR_ensembl_symbol = {
+
+      "ENSG00000150337",   // FCGR1A
+      "ENSG00000143226",   // FCGR2A
+      "ENSG00000072694",   // FCGR2B
+      "ENSG00000162747",  // FCGR3B
+      "ENSG00000203747"   // FCGR3A
+
+  };
+
+
+  ExecEnv::log().info("Starting Genome Ensembl Variant sort ...");
+
+  auto all_ensembl_map_ptr = VariantSort::ensemblIndex(population);
+  ExecEnv::log().info("All Ensembl Variant sort, variants found: {}", all_ensembl_map_ptr->size());
+
+  std::shared_ptr<EnsemblIndexMap> ensembl_index_ptr(std::make_shared<EnsemblIndexMap>());
+  VariantSort::ensemblAddIndex( population,LILRB1_ensembl_symbol, ensembl_index_ptr);
+
+  ExecEnv::log().info("Completed Genome Ensembl Variant sort, variants found: {}", ensembl_index_ptr->size());
+
+
+  for (auto const& [ensembl_id, variant_ptr] : *ensembl_index_ptr) {
+
+    auto AN_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+    auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+    auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+    auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+    std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
+    ExecEnv::log().info("Ensembl: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
+                        ensembl_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
+
+  }
+
+}
+
+
+void kgl::NullAnalysis::genomeIdIndex(const std::shared_ptr<const PopulationDB>& population) {
+
+  // See how many genomes have the variant rs62418762.
+  ExecEnv::log().info("Starting Genome Variant sort ...");
+
+  auto genome_variant_index_ptr = VariantSort::variantGenomeIndexMT(population);
+
+  ExecEnv::log().info("Completed Genome Variant sort");
+
+  //    const std::vector<std::string> variant_id_vector{"rs62418762"};
+  const std::vector<std::string> variant_id_vector { "rs10944597", "rs114240342", "rs114373344", "rs116065218", "rs12524302", "rs12527921",
+                                                     "rs12528802", "rs12529529", "rs12661085", "rs12661202", "rs12664281", "rs12665626", "rs1328491", "rs141787228", "rs145866672",
+                                                     "rs147631439", "rs149821037", "rs1999063", "rs2183001", "rs34821188", "rs34967714", "rs35673902", "rs4707739", "rs4707740",
+                                                     "rs58551026", "rs58832941", "rs62418762", "rs62418800", "rs62418818", "rs62418819", "rs62420860", "rs6904002", "rs6925094",
+                                                     "rs6939249", "rs6939736", "rs71897753", "rs72926662", "rs72928719", "rs75488031", "rs75869001", "rs7741533", "rs78233953",
+                                                     "rs78702660", "rs78935233", "rs9353916" };
+
+  size_t genome_count{0};
+  for (auto const& [genome_id, sorted_variant_ptr] : *genome_variant_index_ptr) {
+
+    for (auto const& variant_id : variant_id_vector) {
+
+      auto result = sorted_variant_ptr->find(variant_id);
+      if (result != sorted_variant_ptr->end()) {
+
+        auto const& [variant_id, variant_ptr] = *result;
+
+        ++genome_count;
+        auto AN_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+        auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
+        auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+        auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
+        std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
+        ExecEnv::log().info("Genome: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
+                            genome_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
+
+      }
+
+    }
+
+  }
+
+}
+
+
+
+void kgl::NullAnalysis::investigateVepFields(const std::shared_ptr<const PopulationDB>& population) {
+
+
+  // Investigate vep field values.
+
+    InfoEvidenceAnalysis::vepSubFieldCount("Gene", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("Consequence", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("IMPACT", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("Feature_type", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("BIOTYPE", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("EXON", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("INTRON", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("LoF", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_filter", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_flags", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("CLIN_SIG", population);
+//      InfoEvidenceAnalysis::vepSubFieldValues("LoF_info", population);
+//    InfoEvidenceAnalysis::vepSubFieldValues("Gene", population);
+    InfoEvidenceAnalysis::vepSubFieldValues("SOMATIC", population);
+
+
+}
+
 
 // Perform the genetic analysis per iteration.
 bool kgl::NullAnalysis::iterationAnalysis() {

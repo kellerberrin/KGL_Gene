@@ -114,7 +114,7 @@ kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& c
   for (auto const& [genome_contig_id, locus_map] : contig_locus_map) {
 
     // Use a thread pool to calculate inbreeding and relatedness.
-    ThreadPool thread_pool(ThreadPool::hardwareThreads());
+    ThreadPool thread_pool(ThreadPool::defaultThreads());
     std::vector<std::future<LocusResults>> future_vector;
     for (auto const&[genome_id, genome_ptr] : diploid_population.getMap()) {
 

@@ -99,7 +99,7 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
                                                                                                      *locus_list,
                                                                                                      parameters.lociiArguments());
 
-      ThreadPool thread_pool(ThreadPool::hardwareThreads());
+      ThreadPool thread_pool(ThreadPool::defaultThreads());
       std::vector<std::future<LocusResults>> future_vector;
       for (auto const&[genome_id, genome_ptr] : population->getMap()) {
 

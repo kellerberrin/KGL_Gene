@@ -44,6 +44,10 @@ private:
 
   std::string work_directory_;
 
+  void investigateVepFields(const std::shared_ptr<const PopulationDB>& population);
+  void genomeIdIndex(const std::shared_ptr<const PopulationDB>& population);
+  void ensemblIdIndex(const std::shared_ptr<const PopulationDB>& population);
+
 };
 
 

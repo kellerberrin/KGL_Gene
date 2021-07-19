@@ -17,7 +17,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   // Initialize the analysis objects.
 //  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
-  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::adHocGenes());
+  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::adHocAltLILRB1Genes());
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);

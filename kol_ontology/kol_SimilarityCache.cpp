@@ -124,7 +124,7 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const T
   const size_t term_count = ontology_terms_ptr->size();
   cache_matrix_.reserve(term_count);
   // Default to HW threads less 1.
-  ThreadPool thread_pool(ThreadPool::hardwareThreads());
+  ThreadPool thread_pool(ThreadPool::defaultThreads());
   // Simplify the future vector type definition.
   using ColumnResult = std::unique_ptr<std::vector<double>>;
   using FutureResult = std::future<ColumnResult>;

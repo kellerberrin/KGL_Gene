@@ -127,9 +127,62 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 
 };
 
+// Used in adhoc LILRB1 gene  polymorphism analysis (chromosome 19).
+const std::vector<std::string> kgl::MutationAnalysisData::adhoc_LILRB1_ensembl_symbol_ = {
 
-// Used in adhoc gene polymorphism analysis.
-const std::vector<std::string> kgl::MutationAnalysisData::adhoc_ensembl_symbol_ = {
+    "ENSG00000276452",   // LILRB1
+    "ENSG00000276163",   //  LAIR1
+    "ENSG00000277816",  //   LILRB3
+    "ENSG00000275584",	// LILRA6	leukocyte immunoglobulin like receptor A6
+    "ENSG00000277414", 	// LILRB5	leukocyte immunoglobulin like receptor B5
+    "ENSG00000274513",  //	LILRB2	leukocyte immunoglobulin like receptor B2
+    "ENSG00000278355", //	LILRA5	leukocyte immunoglobulin like receptor A5
+    "ENSG00000276798", //	LILRA4	leukocyte immunoglobulin like receptor A4
+    "ENSG00000274084", //	LAIR2	leukocyte associated immunoglobulin like receptor 2
+    "ENSG00000274000", //	LILRA2	leukocyte immunoglobulin like receptor A2
+    "ENSG00000274935", //	LILRA1	leukocyte immunoglobulin like receptor A1
+    "ENSG00000278555",  // 	LILRB4	leukocyte immunoglobulin like receptor B4
+    "ENSG00000276433", //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
+    "ENSG00000273947", //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
+     "ENSG00000276820", //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
+    "ENSG00000276779", //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
+    "ENSG00000273775", //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
+    "ENSG00000274324", //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
+    "ENSG00000273735"	// KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+
+};
+
+// Used in adhoc polymorphism analysis (chromosome 19).
+const std::vector<std::string> kgl::MutationAnalysisData::alt_LILRB1_ensembl_symbol_ = {
+
+    "ENSG00000167613",   // Alt  LAIR1
+    "ENSG00000104972", // Alt LILRB1
+    "ENSG00000204577", // Alt LILRB3
+    "ENSG00000244482", // Alt LILRA6
+    "ENSG00000105609", // Alt LILRB5	leukocyte immunoglobulin like receptor B5
+    "ENSG00000131042", // Alt LILRB2	leukocyte immunoglobulin like receptor B2
+    "ENSG00000187116", //	Alt LILRA5	leukocyte immunoglobulin like receptor A5
+    "ENSG00000239961", // Alt LILRA4	leukocyte immunoglobulin like receptor A4
+    "ENSG00000167618", //	Alt LAIR2	leukocyte associated immunoglobulin like receptor 2
+    "ENSG00000239998", //	Alt LILRA2	leukocyte immunoglobulin like receptor A2
+    "ENSG00000104974", //	Alt LILRA1	leukocyte immunoglobulin like receptor A1
+    "ENSG00000186818",  // 	Alt LILRB4	leukocyte immunoglobulin like receptor B4
+    "ENSG00000242019", //	Alt KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
+    "ENSG00000243772", //	Alt KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
+    "ENSG00000125498", //	Alt KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
+    "ENSG00000189013", //	Alt KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
+    "ENSG00000167633", //	Alt KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
+    "ENSG00000221957", //	Alt KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
+    "ENSG00000240403"	// Alt KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+
+};
+
+
+
+
+
+// Used in adhoc FCGR gene  polymorphism analysis (chromosome 1).
+const std::vector<std::string> kgl::MutationAnalysisData::adhoc_FCGR_ensembl_symbol_ = {
 
     "ENSG00000150337",   // FCGR1A
     "ENSG00000143226",   // FCGR2A

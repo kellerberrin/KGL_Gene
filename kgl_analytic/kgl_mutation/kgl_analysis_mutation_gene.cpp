@@ -167,7 +167,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 
   }
 
-  ThreadPool thread_pool(ThreadPool::hardwareThreads());
+  ThreadPool thread_pool(ThreadPool::defaultThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
   // Index by Ensembl gene code.
