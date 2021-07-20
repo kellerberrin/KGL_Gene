@@ -16,8 +16,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   // Initialize the analysis objects.
-//  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::UniprotGeneEnsembl());
-  gene_allele_ptr_ = std::make_shared<GenerateGeneAllele>(MutationAnalysisData::adHocAltLILRB1Genes());
+  gene_allele_.initialize(MutationAnalysisData::adHocLILRB1Genes());
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
@@ -101,7 +100,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 }
 
 
-// Perform the genetic analysis per iteration.
+// Perform pre-processing (generally just type casting) for each file read into the analysis object.
 bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
@@ -121,6 +120,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       }
 
+      // Must cast to a non-count pointer because we want to do some in-Situ filtering.
+      // In-Situ filtering is used to minimise memory usage.
       auto population = std::const_pointer_cast<PopulationDB>(const_population);
 
       ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population->populationId(), population->variantCount());
@@ -129,6 +130,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       ExecEnv::log().info("Filtered Population: {} 'SNP and Pass' count: {}, 'Diploid' count: {}",
                           population->populationId(), pass_results.second, diploid_results.second);
 
+      // Filtering is done so assign to the object pointer.
       population_ptr_ = population;
 
 
@@ -167,15 +169,27 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
+  // Check that everything is defined for the iteration analysis.
+  if ( population_ptr_
+       and unphased_population_ptr_
+       and clinvar_population_ptr_
+       and genome_aux_ptr_
+       and ontology_db_ptr_) {
 
-  if (population_ptr_ and unphased_population_ptr_ and clinvar_population_ptr_ and genome_aux_ptr_ and ontology_db_ptr_) {
-
-    gene_mutation_.variantAnalysis(population_ptr_, unphased_population_ptr_, clinvar_population_ptr_, genome_aux_ptr_);
-    gene_allele_ptr_->updateAlleleMap(unphased_population_ptr_);
+    // Sort variants by Gene Ensembl Code
+    auto sorted_variants_ptr = std::make_shared<SortedVariantAnalysis>(unphased_population_ptr_);
+    // Perform the analysis
+    gene_mutation_.variantAnalysis( population_ptr_,
+                                    unphased_population_ptr_,
+                                    clinvar_population_ptr_,
+                                    genome_aux_ptr_,
+                                    sorted_variants_ptr->ensemblMap());
+    // Add the sorted variants to the gene allele anlysis.
+    gene_allele_.addSortedVariants(sorted_variants_ptr);
 
   } else {
 
-    ExecEnv::log().error("MutationAnalysis::iterationAnalysis; Necessary data files not defined for analysis");
+    ExecEnv::log().critical("MutationAnalysis::iterationAnalysis; Cannot recover. Necessary data files not defined for analysis");
 
   }
 
@@ -185,6 +199,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
   // Explicitly clean up the populations to recover memory.
   population_ptr_ = nullptr;
   unphased_population_ptr_ = nullptr;
+  // Some memory auditing code to look for memory leaks.
   AuditMemory::trimFreeStore();
   mem_pair = Utility::process_mem_usage2();
   ExecEnv::log().info("After Clear(), Variant Objects:{}, Data Blocks:{}, VM Usage: {}, Resident Memory: {}",
@@ -197,12 +212,12 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
-  gene_allele_ptr_->filterAlleleMap(FREQ_ALL_, FREQ_AFR_);
+  gene_allele_.filterAlleleMap(FREQ_ALL_, FREQ_AFR_);
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   gene_mutation_.writeOutput(genome_aux_ptr_, output_file_name_, OUTPUT_DELIMITER_);
-  gene_allele_ptr_->writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
+  gene_allele_.writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
 
   return true;
 

@@ -9,6 +9,7 @@
 #include "kgl_analysis_virtual.h"
 #include "kgl_Hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
+#include "kgl_variant_sort_analysis.h"
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_gene_allele.h"
 
@@ -47,16 +48,24 @@ public:
 
 private:
 
-  // Parsed VCF Files.
+  // These objects are cleaned up after each file (chromosome) iteration
+  // to minimize memory use (which is still substantial).
+  // Parsed VCF Files (reclaimed after each iteration).
   std::shared_ptr<const PopulationDB> population_ptr_;
   std::shared_ptr<const PopulationDB> unphased_population_ptr_;
+
+  // All the objects below have the same lifetime as the analysis object.
+  // These objects are considered (relatively) low memory usage.
+  // Clinvar is relatively small, it is retained otherwise it would need to be
+  // reloaded for each iteration.
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
-  // Various requested resources.
+  // Various (low memory) requested resources
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const EnsemblHGNCResource> ensembl_nomenclature_ptr_;
+
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
   // By Span is all variants with in intron+exon span of the gene
@@ -65,8 +74,9 @@ private:
 
   constexpr static const double FREQ_AFR_{0.0};
   constexpr static const double FREQ_ALL_{0.0};
-  std::shared_ptr<GenerateGeneAllele> gene_allele_ptr_;
+  GenerateGeneAllele gene_allele_;
 
+  // Parameters and output files.
   std::string output_file_name_;
   std::string allele_output_file_name_;
 

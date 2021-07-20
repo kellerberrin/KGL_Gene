@@ -84,7 +84,8 @@ public:
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
+                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                        const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr);
 
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data, const std::string& out_file, char output_delimiter) const;
@@ -131,7 +132,7 @@ private:
   void analysisType();
 
   // return order: hgnc_id, ensembl_id
-  std::tuple<std::string, std::string> getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+  std::tuple<std::string, std::vector<std::string>> getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
                                                         const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr,
                                                         const std::shared_ptr<const GeneFeature>& gene_ptr);
 

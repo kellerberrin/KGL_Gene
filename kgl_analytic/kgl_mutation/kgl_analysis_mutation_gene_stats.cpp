@@ -14,7 +14,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
                                               const std::string& hgnc_id,
-                                              const std::string& ensembl_id,
+                                              const std::vector<std::string>& ensembl_ids,
                                               const std::string& uniprot_id)
 {
 
@@ -73,7 +73,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   attributes_ = concat_attributes;
 
   gaf_id_ = uniprot_id;
-  ensembl_id_ = ensembl_id;
+  ensembl_ids_ = ensembl_ids;
   HGNC_id_ = hgnc_id;
 
   return true;

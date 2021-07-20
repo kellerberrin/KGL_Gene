@@ -7,6 +7,7 @@
 
 
 #include "kgl_analysis_mutation_gene.h"
+#include "kgl_variant_sort_analysis.h"
 
 
 
@@ -18,15 +19,13 @@ class GenerateGeneAllele {
 
 public:
 
-  GenerateGeneAllele(const std::vector<std::string>& ensembl_gene_list) : ensembl_gene_list_(ensembl_gene_list),
-                                                                          sorted_allele_map_(std::make_shared<EnsemblIndexMap>()) {}
+  GenerateGeneAllele() = default;
   ~GenerateGeneAllele() = default;
 
-  void updateAlleleMap(std::shared_ptr<const PopulationDB> unphased_population_ptr);
+  void initialize(const std::vector<std::string>& ensembl_gene_list) { ensembl_gene_list_ = ensembl_gene_list; sorted_allele_map_.clear(); }
   void filterAlleleMap(const double ALL_frequency, const double AFR_frequency);
-
   void writeOutput(const std::string& output_file, const char delimiter) const;
-
+  void addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
 
 private:
 
@@ -34,8 +33,8 @@ private:
   const static constexpr char *AFR_SUPER_POP_{"AFR"};
   const static constexpr char *ALL_SUPER_POP_{"ALL"};
 
-  const std::vector<std::string> ensembl_gene_list_;
-  std::shared_ptr<EnsemblIndexMap> sorted_allele_map_;
+  std::vector<std::string> ensembl_gene_list_;
+  EnsemblIndexMap sorted_allele_map_;
 
   static void writeHeader(std::ofstream& outfile, const char delimiter);
 

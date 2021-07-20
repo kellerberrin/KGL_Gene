@@ -65,9 +65,22 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const HsGenomeAux>& 
 void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_delimiter) const {
 
   out_file << genome_ << output_delimiter
-      << contig_ << output_delimiter
-      << HGNC_id_ << output_delimiter
-      << ensembl_id_ << output_delimiter
+           << contig_ << output_delimiter
+           << HGNC_id_ << output_delimiter;
+
+  std::string ensembl_text;
+  for (auto const& ensembl_id : ensembl_ids_) {
+
+    ensembl_text += ensembl_id;
+    if (ensembl_id != ensembl_ids_.back()) {
+
+      ensembl_text += CONCAT_TOKEN_;
+
+    }
+
+  }
+
+  out_file << ensembl_text << output_delimiter
       << gene_name_ << output_delimiter
       << description_ << output_delimiter
       << biotype_ << output_delimiter

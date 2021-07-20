@@ -13,23 +13,17 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GenerateGeneAllele::updateAlleleMap(std::shared_ptr<const PopulationDB> unphased_population_ptr) {
+void kgl::GenerateGeneAllele::addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
-  ExecEnv::log().info("Begin Update Allele Map (size: {}), file: {}", sorted_allele_map_->size(), unphased_population_ptr->fileId());
-
-  VariantSort::ensemblAddIndex(unphased_population_ptr, ensembl_gene_list_, sorted_allele_map_);
-
-  ExecEnv::log().info("Completed Update Allele Map (size: {}), file: {}", sorted_allele_map_->size(), unphased_population_ptr->fileId());
+  sorted_allele_map_.merge(sorted_variants->filterEnsembl(ensembl_gene_list_));
 
 }
-
-
 
 void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const double AFR_frequency) {
 
   EnsemblIndexMap freq_sorted_allele_map;
 
-  for (auto const& [ensembl_id, variant_ptr] : *sorted_allele_map_) {
+  for (auto const& [ensembl_id, variant_ptr] : sorted_allele_map_) {
 
     auto frequency_AFR_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, AFR_SUPER_POP_);
     auto frequency_ALL_opt =  FrequencyDatabaseRead::superPopFrequency(*variant_ptr, ALL_SUPER_POP_);
@@ -50,10 +44,10 @@ void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const 
   }
 
   ExecEnv::log().info("Allele map filtered for ALL Freq >= {}, AFR Freq >= {}, unfiltered size: {}, filtered size: {}",
-                      ALL_frequency, AFR_frequency, sorted_allele_map_->size(), freq_sorted_allele_map.size());
+                      ALL_frequency, AFR_frequency, sorted_allele_map_.size(), freq_sorted_allele_map.size());
 
 
-  *sorted_allele_map_ = std::move(freq_sorted_allele_map);
+  sorted_allele_map_ = std::move(freq_sorted_allele_map);
 
 }
 
@@ -98,7 +92,7 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
 
   writeHeader(out_file, delimiter);
 
-  for (auto const& [ensembl_id, variant_ptr] : *sorted_allele_map_) {
+  for (auto const& [ensembl_id, variant_ptr] : sorted_allele_map_) {
 
     out_file << ensembl_id << delimiter
              << variant_ptr->identifier() << delimiter

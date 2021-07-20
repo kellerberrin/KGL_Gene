@@ -39,7 +39,7 @@ public:
                        const GenomeId_t& genome_id,
                        const std::string& name,
                        const std::string& hgnc_id,
-                       const std::string& ensembl_id,
+                       const std::vector<std::string>& ensembl_ids,
                        const std::string& uniprot_id);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
@@ -48,7 +48,7 @@ public:
   [[nodiscard]] ContigOffset_t geneEnd() const { return gene_end_; }
   [[nodiscard]] ContigSize_t nucleotides() const { return nucleotides_; }
   [[nodiscard]] ContigSize_t geneSpan() const { return gene_span_; }
-  [[nodiscard]] const std::string& ensemblId() const { return ensembl_id_; }
+  [[nodiscard]] const std::vector<std::string>& ensemblIds() const { return ensembl_ids_; }
   [[nodiscard]] const std::string& gafId() const { return gaf_id_; }
   [[nodiscard]] const std::string& geneId() const { return gene_name_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
@@ -67,7 +67,7 @@ private:
   std::string gaf_id_;
   std::set<std::string> GO_set_;
   std::string HGNC_id_;
-  std::string ensembl_id_;
+  std::vector<std::string> ensembl_ids_;
   ContigOffset_t gene_begin_{0};
   ContigOffset_t gene_end_{0};
   ContigSize_t gene_span_{0};

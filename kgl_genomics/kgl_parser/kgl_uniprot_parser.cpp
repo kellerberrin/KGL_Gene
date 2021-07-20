@@ -5,6 +5,8 @@
 #include "kel_utility.h"
 #include "kgl_uniprot_parser.h"
 
+#include <set>
+
 
 
 namespace kgl = kellerberrin::genome;
@@ -62,7 +64,7 @@ std::vector<std::string> kgl::UniprotResource::lookupInfo( const std::string& lo
   auto lower_lookup = lookup_map.lower_bound(lookup_value);
   auto const upper_lookup = lookup_map.upper_bound(lookup_value);
 
-  std::vector<std::string> field_values;
+  std::set<std::string> field_values;
 
   while(lower_lookup != upper_lookup) {
 
@@ -77,7 +79,7 @@ std::vector<std::string> kgl::UniprotResource::lookupInfo( const std::string& lo
       while(lower_field != upper_field) {
 
         auto const& [field_id, field_value] = *lower_field;
-        field_values.push_back(field_value);
+        field_values.insert(field_value);
         ++lower_field;
 
       }
@@ -88,7 +90,16 @@ std::vector<std::string> kgl::UniprotResource::lookupInfo( const std::string& lo
 
   }
 
-  return field_values;
+  // Only want unique values.
+  std::vector<std::string> field_vector;
+  field_vector.reserve(field_values.size());
+  for (auto const& field : field_values) {
+
+    field_vector.push_back(field);
+
+  }
+
+  return field_vector;
 
 }
 
@@ -124,6 +135,35 @@ std::vector<std::string> kgl::UniprotResource::symbolToUniprot(const std::string
 
 }
 
+
+std::vector<std::string> kgl::UniprotResource::uniprotToEnsembl(const std::string& uniprot_id) const {
+
+
+  std::vector<std::string> ensembl_ids;
+  auto result = uniprot_map_.find(uniprot_id);
+  if (result != uniprot_map_.end()) {
+
+    auto const& [uniprot_key, attribute_map] = *result;
+    auto lower_bound = attribute_map.attribute_map.find(ENSEMBL_FIELD);
+    auto upper_bound = attribute_map.attribute_map.find(ENSEMBL_FIELD);
+
+    while (lower_bound != upper_bound) {
+
+      auto const& [ensembl_type, ensembl_id] = *lower_bound;
+      ensembl_ids.push_back(ensembl_id);
+      ++lower_bound;
+
+    }
+
+    return ensembl_ids;
+
+  } else {
+
+    return ensembl_ids;
+
+  }
+
+}
 
 
 std::vector<std::string> kgl::UniprotResource::HGNCToUniprot(const std::string& symbol) const {

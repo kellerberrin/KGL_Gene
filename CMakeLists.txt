@@ -234,7 +234,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_collection.h
         kgl_genomics/kgl_database/kgl_genome_collection.cpp
         kgl_genomics/kgl_database/kgl_variant_sort.cpp
-        kgl_genomics/kgl_database/kgl_variant_sort.h kgl_genomics/kgl_parser/kgl_Hsgenome_aux.cpp kgl_genomics/kgl_parser/kgl_Hsgenome_aux.h kgl_genomics/kgl_parser/kgl_uniprot_parser.cpp kgl_genomics/kgl_parser/kgl_uniprot_parser.h)
+        kgl_genomics/kgl_database/kgl_variant_sort.h
+        kgl_genomics/kgl_parser/kgl_Hsgenome_aux.cpp
+        kgl_genomics/kgl_parser/kgl_Hsgenome_aux.h
+        kgl_genomics/kgl_parser/kgl_uniprot_parser.cpp
+        kgl_genomics/kgl_parser/kgl_uniprot_parser.h
+        kgl_genomics/kgl_database/kgl_variant_sort_analysis.cpp
+        kgl_genomics/kgl_database/kgl_variant_sort_analysis.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -449,7 +455,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp)
 
 # Deconvolution and mixture files.
 

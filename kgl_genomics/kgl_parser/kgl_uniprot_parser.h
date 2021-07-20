@@ -47,6 +47,7 @@ public:
   [[nodiscard]] std::vector<std::string> symbolToUniprot(const std::string& symbol) const;
   [[nodiscard]] std::vector<std::string> HGNCToEnsembl(const std::string& hgnc) const { return lookupInfo( hgnc, hgnc_index_, ENSEMBL_FIELD); }
   [[nodiscard]] std::vector<std::string> HGNCToUniprot(const std::string& hgnc) const;
+  [[nodiscard]] std::vector<std::string> uniprotToEnsembl(const std::string& hgnc) const;
 
   const static constexpr char* UNIPROTKB_ID{"UniProtKB-ID"};
   const static constexpr char* ENTREZ_GENE{"GeneID"};

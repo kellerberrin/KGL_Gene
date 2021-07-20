@@ -119,32 +119,25 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 }
 
 
-std::tuple<std::string, std::string>
+std::tuple<std::string, std::vector<std::string>>
     kgl::GenomeMutation::getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                                          const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr,
+                                          const std::shared_ptr<const EnsemblHGNCResource>&,
                                           const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
 
-  std::string ensembl_id;
-
+  std::vector<std::string> ensembl_ids;
   std::string hgnc_id = gene_ptr->getAttributes().getHGNC();
 
   // Retrieve Ensembl gene id, if available.
   if (not hgnc_id.empty()) {
 
-    std::vector<std::string> ensembl_vector = uniprot_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
-
-    if (not ensembl_vector.empty()) {
-
-      ensembl_id = ensembl_vector.front();
-
-    }
+    ensembl_ids = uniprot_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
 
   }
 
-  ensembl_id = ensembl_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
+//  ensembl_id = ensembl_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
 
-  return { hgnc_id, ensembl_id};
+  return { hgnc_id, ensembl_ids};
 
 }
 
@@ -152,7 +145,8 @@ std::tuple<std::string, std::string>
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
-                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr) {
 
   // Count the ethnic samples in the populations.
   ethnic_statistics_.updatePopulations(genome_aux_data);
@@ -170,8 +164,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   ThreadPool thread_pool(ThreadPool::defaultThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
-  // Index by Ensembl gene code.
-  std::shared_ptr<const EnsemblIndexMap> ensembl_index_map_ptr = VariantSort::ensemblIndex(unphased_population_ptr);
+
   ExecEnv::log().info("Unphased variants sorted by Ensembl Gene code: {}, Total Unphased Variants: {}",
                       ensembl_index_map_ptr->size(), unphased_population_ptr->variantCount());
   // Queue a thread for each gene.
@@ -341,33 +334,37 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
   std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(gene_char.contigId()));
 
-  if (gene_char.ensemblId().empty()) {
+  if (gene_char.ensemblIds().empty()) {
 
     return  gene_contig;
 
   }
 
-  auto lower_iterator = ensembl_index_map.lower_bound(gene_char.ensemblId());
-  auto const upper_iterator = ensembl_index_map.upper_bound(gene_char.ensemblId());
+  for (auto const& ensembl_id : gene_char.ensemblIds()) {
 
-  while(lower_iterator != upper_iterator) {
+    auto lower_iterator = ensembl_index_map.lower_bound(ensembl_id);
+    auto const upper_iterator = ensembl_index_map.upper_bound(ensembl_id);
 
-    auto const& [ensembl_id, variant_ptr] = *lower_iterator;
+    while(lower_iterator != upper_iterator) {
 
-    auto offset_opt = contig_ptr->findOffsetArray(variant_ptr->offset());
-    if (offset_opt) {
+      auto const& [ensembl_id, variant_ptr] = *lower_iterator;
 
-      for (auto const& offset_variant : offset_opt.value()) {
+      auto offset_opt = contig_ptr->findOffsetArray(variant_ptr->offset());
+      if (offset_opt) {
 
-        if (offset_variant->variantHash() == variant_ptr->variantHash()) {
+        for (auto const& offset_variant : offset_opt.value()) {
 
-          // Add the unphased population ptr. Note that this loses phasing information (if present)
-          // The problem is that the currently (2021) the gnomad 3.1 files have damaged vep fields.
-          // So it's either vep or phase information but not both.
-          if (not gene_contig->addVariant(variant_ptr)) {
+          if (offset_variant->variantHash() == variant_ptr->variantHash()) {
 
-            ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
-                                  variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            // Add the unphased population ptr. Note that this loses phasing information (if present)
+            // The problem is that the currently (2021) the gnomad 3.1 files have damaged vep fields.
+            // So it's either vep or phase information but not both.
+            if (not gene_contig->addVariant(variant_ptr)) {
+
+              ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
+                                    variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+
+            }
 
           }
 
@@ -375,11 +372,12 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
       }
 
+      ++lower_iterator;
+
     }
 
-    ++lower_iterator;
-
   }
+
 
   return gene_contig;
 
@@ -393,41 +391,52 @@ void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_
                                                  ContigOffset_t& lower_bound,
                                                  ContigOffset_t& upper_bound) {
 
-  if (gene_char.ensemblId().empty()) {
+  lower_bound = 0;
+  upper_bound = 0;
+  ensembl_hash_map.clear();
 
-    lower_bound = 0;
-    upper_bound = 0;
-    ensembl_hash_map.clear();
+  if (gene_char.ensemblIds().empty()) {
+
+    return;
 
   }
 
+  for (auto const& ensembl_id : gene_char.ensemblIds()) {
 
-  auto lower_iterator = ensembl_index_map.lower_bound(gene_char.ensemblId());
-  auto const upper_iterator = ensembl_index_map.upper_bound(gene_char.ensemblId());
+    auto lower_iterator = ensembl_index_map.lower_bound(ensembl_id);
+    auto const upper_iterator = ensembl_index_map.upper_bound(ensembl_id);
 
-  std::shared_ptr<ContigDB> ensembl_contig_ptr(std::make_shared<ContigDB>(gene_char.contigId()));
+    while (lower_iterator != upper_iterator) {
 
-  while (lower_iterator != upper_iterator) {
+      auto const&[ensembl_id, variant_ptr] = *lower_iterator;
 
-    auto const&[ensembl_id, variant_ptr] = *lower_iterator;
+      if (lower_bound == 0) {
 
-    ensembl_hash_map.emplace(variant_ptr->variantHash(), variant_ptr);
+        lower_bound = variant_ptr->offset();
 
-    if (not ensembl_contig_ptr->addVariant(variant_ptr)) {
+      } else {
 
-      ExecEnv::log().error( "GenomeMutation::getGeneEnsemblHashMap, unable to add variant: {}",
-                            variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+        lower_bound = std::min(lower_bound, variant_ptr->offset());
+
+      }
+
+      if (upper_bound == 0) {
+
+        upper_bound = variant_ptr->offset();
+
+      } else {
+
+        upper_bound = std::max(lower_bound, variant_ptr->offset());
+
+      }
+
+      ensembl_hash_map.emplace(variant_ptr->variantHash(), variant_ptr);
+
+      ++lower_iterator;
 
     }
 
-    ++lower_iterator;
-
   }
-
-  auto [lower, upper] = ensembl_contig_ptr->offsetBounds();
-
-  lower_bound = lower;
-  upper_bound = upper;
 
   ensembl_variant_count_ += ensembl_hash_map.size();
 
