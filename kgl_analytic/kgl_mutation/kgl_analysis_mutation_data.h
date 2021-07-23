@@ -43,7 +43,8 @@ public:
   [[nodiscard]] static const std::vector<std::string> adHocFCGRGenes() { return adhoc_FCGR_ensembl_symbol_; }
 
   // Used in adhoc LILRB1 gene  polymorphism analysis.
-  [[nodiscard]] static const std::vector<std::string> adHocLILRB1Genes() { return adhoc_LILRB1_ensembl_symbol_; }
+  [[nodiscard]] static const std::vector<std::string> adHocLILRB1GeneSymbol();
+  [[nodiscard]] static const std::vector<std::string> adHocLILRB1GenesEnsembl();
   // Adhoc LILRB1 gene polymorphism analysis using alternative Ensembl IDs from Gene Card.
   // The sad truth is that there are multiple Ensembl identifiers per gene (why?), we will need to accommodate this
   // problem in a code re-design.
@@ -64,7 +65,7 @@ private:
   static const std::vector<std::string> adhoc_FCGR_ensembl_symbol_;
 
   // Used in adhoc gene polymorphism analysis.
-  static const std::vector<std::string> adhoc_LILRB1_ensembl_symbol_;
+  static const std::vector<std::pair<std::string, std::string>> adhoc_LILRB1_ensembl_symbol_;
 
   // Adhoc LILRB1 gene polymorphism analysis using alternative Ensembl IDs from Gene Card.
   // The sad truth is that there are multiple Ensembl identifiers per gene (why?), we will need to accommodate this

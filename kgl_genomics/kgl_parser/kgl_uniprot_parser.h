@@ -44,10 +44,12 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
 
-  [[nodiscard]] std::vector<std::string> symbolToUniprot(const std::string& symbol) const;
+
+  [[nodiscard]] std::vector<std::string> symbolToEnsembl(const std::string& symbol) const { return lookupInfo( symbol, symbol_index_, ENSEMBL_FIELD); }
+  [[nodiscard]] std::vector<std::string> symbolVectorToEnsembl(const std::vector<std::string>& symbols) const { return vectorConvert(&UniprotResource::symbolToEnsembl, symbols); }
+
   [[nodiscard]] std::vector<std::string> HGNCToEnsembl(const std::string& hgnc) const { return lookupInfo( hgnc, hgnc_index_, ENSEMBL_FIELD); }
-  [[nodiscard]] std::vector<std::string> HGNCToUniprot(const std::string& hgnc) const;
-  [[nodiscard]] std::vector<std::string> uniprotToEnsembl(const std::string& hgnc) const;
+  [[nodiscard]] std::vector<std::string> HGNCVectorToEnsembl(const std::vector<std::string>& symbols) const { return vectorConvert(&UniprotResource::HGNCToEnsembl, symbols); }
 
   const static constexpr char* UNIPROTKB_ID{"UniProtKB-ID"};
   const static constexpr char* ENTREZ_GENE{"GeneID"};
@@ -71,6 +73,9 @@ private:
   [[nodiscard]] std::vector<std::string> lookupInfo(const std::string& lookup_value,
                                                     const std::multimap<std::string, std::string>& lookup_map,
                                                     const std::string& lookup_type) const;
+
+  using ConvertFnPtr = std::vector<std::string> (UniprotResource:: *)(const std::string&) const;
+  [[nodiscard]] std::vector<std::string> vectorConvert(ConvertFnPtr conversion_fn, const std::vector<std::string>& id_vector) const;
 
 };
 

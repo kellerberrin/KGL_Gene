@@ -44,6 +44,7 @@ protected:
 
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed.
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.
+  constexpr static const char* BZ2_FILE_EXTENSTION_ = ".BZ2"; // Burrows-Wheeler compression assumed.
 
 };
 

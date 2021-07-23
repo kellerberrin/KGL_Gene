@@ -127,28 +127,58 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 
 };
 
-// Used in adhoc LILRB1 gene  polymorphism analysis (chromosome 19).
-const std::vector<std::string> kgl::MutationAnalysisData::adhoc_LILRB1_ensembl_symbol_ = {
 
-    "ENSG00000276452",   // LILRB1
-    "ENSG00000276163",   //  LAIR1
-    "ENSG00000277816",  //   LILRB3
-    "ENSG00000275584",	// LILRA6	leukocyte immunoglobulin like receptor A6
-    "ENSG00000277414", 	// LILRB5	leukocyte immunoglobulin like receptor B5
-    "ENSG00000274513",  //	LILRB2	leukocyte immunoglobulin like receptor B2
-    "ENSG00000278355", //	LILRA5	leukocyte immunoglobulin like receptor A5
-    "ENSG00000276798", //	LILRA4	leukocyte immunoglobulin like receptor A4
-    "ENSG00000274084", //	LAIR2	leukocyte associated immunoglobulin like receptor 2
-    "ENSG00000274000", //	LILRA2	leukocyte immunoglobulin like receptor A2
-    "ENSG00000274935", //	LILRA1	leukocyte immunoglobulin like receptor A1
-    "ENSG00000278555",  // 	LILRB4	leukocyte immunoglobulin like receptor B4
-    "ENSG00000276433", //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
-    "ENSG00000273947", //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
-     "ENSG00000276820", //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
-    "ENSG00000276779", //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
-    "ENSG00000273775", //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
-    "ENSG00000274324", //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
-    "ENSG00000273735"	// KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+// Malaria active genes harvested from the Uniprot website.
+const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GeneSymbol() {
+
+  std::vector<std::string> gene_vector;
+  for (auto const&[ensembl, symbol] : adhoc_LILRB1_ensembl_symbol_) {
+
+    gene_vector.push_back(symbol);
+
+  }
+
+  return gene_vector;
+
+}
+
+// Malaria active genes harvested from the Uniprot website.
+const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GenesEnsembl() {
+
+  std::vector<std::string> gene_vector;
+  for (auto const&[ensembl, symbol] : adhoc_LILRB1_ensembl_symbol_) {
+
+    gene_vector.push_back(ensembl);
+
+  }
+
+  return gene_vector;
+
+}
+
+
+// Used in adhoc LILRB1 gene  polymorphism analysis (chromosome 19).
+const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData::adhoc_LILRB1_ensembl_symbol_ = {
+
+    { "ENSG00000276452", "LILRB1"},  // LILRB1
+    { "ENSG00000276163", "LAIR1" },  //  LAIR1
+    { "ENSG00000277816", "LILRB3" }, //   LILRB3
+    { "ENSG00000275584", "LILRA6"},  // LILRA6	leukocyte immunoglobulin like receptor A6
+    { "ENSG00000277414", "LILRB5"},  // LILRB5	leukocyte immunoglobulin like receptor B5
+    { "ENSG00000274513", "LILRB2" }, //	LILRB2	leukocyte immunoglobulin like receptor B2
+    { "ENSG00000278355", "LILRA5" }, //	LILRA5	leukocyte immunoglobulin like receptor A5
+    { "ENSG00000276798", "LILRA4"},  //	LILRA4	leukocyte immunoglobulin like receptor A4
+    { "ENSG00000274084", "LAIR2" },  //	LAIR2	leukocyte associated immunoglobulin like receptor 2
+    { "ENSG00000274000", "LILRA2" }, //	LILRA2	leukocyte immunoglobulin like receptor A2
+    { "ENSG00000274935", "LILRA1" }, //	LILRA1	leukocyte immunoglobulin like receptor A1
+    { "ENSG00000278555", "LILRB4" },  // 	LILRB4	leukocyte immunoglobulin like receptor B4
+    { "ENSG00000276433", "KIR3DL3" }, //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
+    { "ENSG00000273947", "KIR2DL3" }, //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
+    { "ENSG00000276820", "KIR2DL1" }, //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
+    { "ENSG00000276779", "KIR2DL4" }, //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
+    { "ENSG00000273775", "KIR3DL1" }, //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
+    {"ENSG00000274324", "KIR2DS4" }, //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
+    { "ENSG00000273735",	"KIR3DL2"}  // KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
 
 };
 

@@ -103,94 +103,22 @@ std::vector<std::string> kgl::UniprotResource::lookupInfo( const std::string& lo
 
 }
 
-std::vector<std::string> kgl::UniprotResource::symbolToUniprot(const std::string& symbol) const {
 
-  std::vector<std::string> uniprot;
-  auto lower_lookup = symbol_index_.lower_bound(symbol);
-  auto const upper_lookup = symbol_index_.upper_bound(symbol);
+std::vector<std::string> kgl::UniprotResource::vectorConvert(ConvertFnPtr conversion_fn, const std::vector<std::string>& id_vector) const {
 
-  while(lower_lookup != upper_lookup) {
+  std::vector<std::string> converted_ids;
+  for (auto const& id : id_vector) {
 
-    auto const&[sym_key, uniprotkb_id] = *lower_lookup;
-
-    auto result = uniprot_map_.find(uniprotkb_id);
-    if (result != uniprot_map_.end()) {
-
-      auto const& [uniprot_key, attribute_map] = *result;
-      uniprot.push_back(attribute_map.uniprotac_id);
-
-    }
-
-    ++lower_lookup;
+    auto id_convert = std::invoke(conversion_fn, this, id);
+    converted_ids.insert( converted_ids.end(), id_convert.begin(), id_convert.end() );
 
   }
 
-  if (uniprot.empty()) {
-
-    uniprot = lookupInfo( symbol, synonym_index_, GENE_SYNONYM);
-
-  }
-
-  return uniprot;
+  return converted_ids;
 
 }
 
 
-std::vector<std::string> kgl::UniprotResource::uniprotToEnsembl(const std::string& uniprot_id) const {
-
-
-  std::vector<std::string> ensembl_ids;
-  auto result = uniprot_map_.find(uniprot_id);
-  if (result != uniprot_map_.end()) {
-
-    auto const& [uniprot_key, attribute_map] = *result;
-    auto lower_bound = attribute_map.attribute_map.find(ENSEMBL_FIELD);
-    auto upper_bound = attribute_map.attribute_map.find(ENSEMBL_FIELD);
-
-    while (lower_bound != upper_bound) {
-
-      auto const& [ensembl_type, ensembl_id] = *lower_bound;
-      ensembl_ids.push_back(ensembl_id);
-      ++lower_bound;
-
-    }
-
-    return ensembl_ids;
-
-  } else {
-
-    return ensembl_ids;
-
-  }
-
-}
-
-
-std::vector<std::string> kgl::UniprotResource::HGNCToUniprot(const std::string& symbol) const {
-
-  std::vector<std::string> uniprot;
-  auto lower_lookup = hgnc_index_.lower_bound(symbol);
-  auto const upper_lookup = hgnc_index_.upper_bound(symbol);
-
-  while(lower_lookup != upper_lookup) {
-
-    auto const&[sym_key, uniprotkb_id] = *lower_lookup;
-
-    auto result = uniprot_map_.find(uniprotkb_id);
-    if (result != uniprot_map_.end()) {
-
-      auto const& [uniprot_key, attribute_map] = *result;
-      uniprot.push_back(attribute_map.uniprotac_id);
-
-    }
-
-    ++lower_lookup;
-
-  }
-
-  return uniprot;
-
-}
 
 
 [[nodiscard]] bool kgl::ParseUniprotId::parseUniprotFile(const std::string& file_name) {

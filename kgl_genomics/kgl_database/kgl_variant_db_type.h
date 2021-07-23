@@ -39,13 +39,16 @@ enum class DataSourceEnum { Genome1000,
                             Gnomad2_1,
                             Clinvar,
                             dbSNP,
+                            JSONdbSNP,
                             NotImplemented};   // Error condition if the data source is not found.
 
 // Parsers available for genetic sources.
 enum class ParserTypeEnum { DiploidPhased,
                             DiploidFalciparum,
                             DiploidGnomad,
-                            MonoGenomeUnphased};
+                            MonoGenomeUnphased,
+                            MonoDBSNPUnphased,
+                            MonoJSONdbSNPUnphased};
 
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
@@ -119,7 +122,8 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "Gnomad3_0", DataSourceEnum::Gnomad3_0, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoDBSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
 
 };
 

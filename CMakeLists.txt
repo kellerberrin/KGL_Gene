@@ -240,7 +240,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_uniprot_parser.cpp
         kgl_genomics/kgl_parser/kgl_uniprot_parser.h
         kgl_genomics/kgl_database/kgl_variant_sort_analysis.cpp
-        kgl_genomics/kgl_database/kgl_variant_sort_analysis.h)
+        kgl_genomics/kgl_database/kgl_variant_sort_analysis.h
+        kgl_genomics/kgl_parser/kgl_variant_parse_json.cpp
+        kgl_genomics/kgl_parser/kgl_variant_parse_json.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -505,7 +507,7 @@ target_link_libraries(kgl_analysis kgl_genomics kel_utility )
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 

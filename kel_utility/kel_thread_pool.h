@@ -36,8 +36,9 @@ public:
   explicit ThreadPool(size_t threads) { startThreads(threads); }
   ~ThreadPool() noexcept { joinThreads(); }
 
-  // Convenience routine, default available hardware threads, one less than actually available, minimum 1 thread.
+  // Convenience routines, default is available hardware threads minus 1, minimum 1 thread.
   static size_t defaultThreads() { return std::max<size_t>(std::thread::hardware_concurrency() - 1, 1); }
+  static size_t defaultThreads(size_t job_size) { return (job_size > 0 ? std::min<size_t>(defaultThreads(), job_size) : 1); }
 
   // Assumes the function has a void return type, does not return a future.
   template<typename F, typename... Args>

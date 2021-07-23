@@ -621,7 +621,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_ident;
       if (not sub_tree.second.getProperty(key, ped_ident)) {
 
-        ExecEnv::log().error("RuntimeProperties::getDataFiles; No File Identifier");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; General Data File; No File Identifier");
         continue;
 
       }
@@ -630,7 +630,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_file_name;
       if (not sub_tree.second.getFileProperty(key, workDirectory(), ped_file_name)) {
 
-        ExecEnv::log().error("RuntimeProperties::getDataFiles; No Ped file name information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; General Data File; No file name information");
         continue;
 
       }
@@ -639,7 +639,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
       std::string ped_parser_type;
       if (not sub_tree.second.getProperty(key, ped_parser_type)) {
 
-        ExecEnv::log().error("RuntimeProperties::getDataFiles; No Ped file parser type information");
+        ExecEnv::log().error("RuntimeProperties::getDataFiles; General Data File; No file parser type information");
         continue;
 
       }

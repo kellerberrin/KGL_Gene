@@ -169,9 +169,24 @@ bool kgl::GrchVCFImpl::addThreadSafeVariant(const std::shared_ptr<const Variant>
 
   // The population structure can be updated concurrently (embedded mutexes).
 
-  std::vector<GenomeId_t> genome_vector;
-  genome_vector.push_back(genome);
+  if (filterVariant(variant_ptr, genome)) {
 
-  return unphased_population_ptr_->addVariant(variant_ptr, genome_vector);
+    std::vector<GenomeId_t> genome_vector;
+    genome_vector.push_back(genome);
+
+    return unphased_population_ptr_->addVariant(variant_ptr, genome_vector);
+
+  } else {
+
+    return true;
+
+  }
+
+}
+
+
+bool kgl::SNPdbVCFImpl::filterVariant(const std::shared_ptr<const Variant>& /* variant_ptr*/ ,  const GenomeId_t& /* genome */) const {
+
+  return true;
 
 }

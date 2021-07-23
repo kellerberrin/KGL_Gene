@@ -212,8 +212,7 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
 
 // Index by Genome and then by variant Id, multi-threaded.
-std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr,
-                                                                                   size_t max_threads) {
+std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndexMT(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
   // Local object performs the indexing.
   class IndexMap {
@@ -253,9 +252,7 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
 
   // Thread count strategy
-  size_t thread_count = std::max<size_t>(1, max_threads);
-  thread_count = std::min(thread_count, ThreadPool::defaultThreads());
-  thread_count = std::min( thread_count, population_ptr->getMap().size());
+  size_t thread_count = ThreadPool::defaultThreads(population_ptr->getMap().size());
   // Fire-up the threads.
   ThreadPool thread_pool(thread_count);
 

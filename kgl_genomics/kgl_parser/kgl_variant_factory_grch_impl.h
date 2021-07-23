@@ -26,11 +26,11 @@ class GrchVCFImpl : public VCFReaderMT {
 
 public:
 
-  GrchVCFImpl(std::shared_ptr<PopulationDB> population_ptr,
-              std::shared_ptr<const GenomeReference> genome_db_ptr,
+  GrchVCFImpl(const std::shared_ptr<PopulationDB>& population_ptr,
+              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
               const ContigAliasMap& contig_alias_map,
-              const EvidenceInfoSet& evidence_map) : unphased_population_ptr_(std::move(population_ptr)),
-                                                     genome_db_ptr_(std::move(genome_db_ptr)),
+              const EvidenceInfoSet& evidence_map) : unphased_population_ptr_(population_ptr),
+                                                     genome_db_ptr_(genome_db_ptr),
                                                      contig_alias_map_(contig_alias_map),
                                                      evidence_factory_(evidence_map) {}
 
@@ -58,8 +58,32 @@ private:
   size_t variant_count_{0};
 
   bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const;
+// Filters the variants to be added to the population structure.
+  virtual bool filterVariant(const std::shared_ptr<const Variant>&,  const GenomeId_t&) const { return true; }
 
 };
+
+
+
+
+class SNPdbVCFImpl : public GrchVCFImpl {
+
+public:
+
+  SNPdbVCFImpl( const std::shared_ptr<PopulationDB>& population_ptr,
+                const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                const ContigAliasMap& contig_alias_map,
+                const EvidenceInfoSet& evidence_map) : GrchVCFImpl(population_ptr, genome_db_ptr, contig_alias_map, evidence_map) {}
+
+  ~SNPdbVCFImpl() override = default;
+
+private:
+
+  // Filters the variants to be added to the population structure.
+  bool filterVariant(const std::shared_ptr<const Variant>& variant_ptr,  const GenomeId_t& genome) const override;
+
+};
+
 
 } // namespace
 

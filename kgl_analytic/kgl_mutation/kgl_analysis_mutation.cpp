@@ -15,8 +15,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const ActiveParameterList& named_parameters,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
-  // Initialize the analysis objects.
-  gene_allele_.initialize(MutationAnalysisData::adHocLILRB1Genes());
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
@@ -46,6 +44,11 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                  ontology_db_ptr_,
                                  uniprot_nomenclature_ptr_,
                                  ensembl_nomenclature_ptr_);
+
+
+  // Initialize the gene allele analysis object.
+  auto allele_ensembl_vector = uniprot_nomenclature_ptr_->symbolVectorToEnsembl(MutationAnalysisData::adHocLILRB1GeneSymbol());
+  gene_allele_.initialize(allele_ensembl_vector);
 
   return true;
 

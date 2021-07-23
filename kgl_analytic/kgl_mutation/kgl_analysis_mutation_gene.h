@@ -131,11 +131,6 @@ private:
 
   void analysisType();
 
-  // return order: hgnc_id, ensembl_id
-  std::tuple<std::string, std::vector<std::string>> getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                                                        const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr,
-                                                        const std::shared_ptr<const GeneFeature>& gene_ptr);
-
   // Set up Ensembl map.
   void getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_index_map,
                               const GeneCharacteristic& gene_char,

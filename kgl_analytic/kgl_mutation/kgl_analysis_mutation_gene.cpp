@@ -47,7 +47,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                                           const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                                          const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr)
+                                          const std::shared_ptr<const EnsemblHGNCResource>& /* ensembl_nomenclature_ptr */)
 {
 
   // Only execute this function once.
@@ -96,11 +96,11 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 
       }
 
-
-      auto [hgnc_id, ensembl_id] = getNomenclature( uniprot_nomenclature_ptr, ensembl_nomenclature_ptr, gene_ptr);
+      std::string hgnc_id = gene_ptr->getAttributes().getHGNC();
+      std::vector<std::string> ensembl_ids = uniprot_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
 
       GeneCharacteristic gene_characteristic;
-      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, hgnc_id, ensembl_id, gaf_id);
+      gene_characteristic.geneDefinition(gene_ptr, genome_ptr->genomeId(), name, hgnc_id, ensembl_ids, gaf_id);
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(genome_aux_data);
@@ -119,27 +119,6 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 }
 
 
-std::tuple<std::string, std::vector<std::string>>
-    kgl::GenomeMutation::getNomenclature( const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                                          const std::shared_ptr<const EnsemblHGNCResource>&,
-                                          const std::shared_ptr<const GeneFeature>& gene_ptr) {
-
-
-  std::vector<std::string> ensembl_ids;
-  std::string hgnc_id = gene_ptr->getAttributes().getHGNC();
-
-  // Retrieve Ensembl gene id, if available.
-  if (not hgnc_id.empty()) {
-
-    ensembl_ids = uniprot_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
-
-  }
-
-//  ensembl_id = ensembl_nomenclature_ptr->HGNCToEnsembl(hgnc_id);
-
-  return { hgnc_id, ensembl_ids};
-
-}
 
 
 bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -426,7 +405,7 @@ void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_
 
       } else {
 
-        upper_bound = std::max(lower_bound, variant_ptr->offset());
+        upper_bound = std::max(upper_bound, variant_ptr->offset());
 
       }
 

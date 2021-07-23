@@ -29,23 +29,26 @@ public:
   ~ParserSelection() = default;
 
   [[nodiscard]] static std::shared_ptr<DataDB> parseData(const std::shared_ptr<const AnalysisResources>& resource_ptr,
-                                                         std::shared_ptr<BaseFileInfo> file_info,
+                                                         const std::shared_ptr<const BaseFileInfo>& file_info,
                                                          const VariantEvidenceMap& evidence_map,
                                                          const ContigAliasMap& contig_alias);
 
 private:
 
+  // Read and parse a package specified VCF file.
+  [[nodiscard]] static std::shared_ptr<DataDB> readJSONdbSNP( const std::shared_ptr<const BaseFileInfo>& file_info,
+                                                              DataSourceEnum data_source);
 
   // Read and parse a package specified VCF file.
   template<class VCFParser>
   [[nodiscard]] static std::shared_ptr<DataDB> readVCF(const std::shared_ptr<const AnalysisResources>& resource_ptr,
-                                                       std::shared_ptr<BaseFileInfo> file_info,
+                                                       const std::shared_ptr<const BaseFileInfo>& file_info,
                                                        const VariantEvidenceMap& evidence_map,
                                                        const ContigAliasMap& contig_alias,
                                                        DataSourceEnum data_source) {
 
     // Get the physical file name, VCF file type etc.
-    auto vcf_file_info = std::dynamic_pointer_cast<RuntimeVCFFileInfo>(file_info);
+    auto vcf_file_info = std::dynamic_pointer_cast<const RuntimeVCFFileInfo>(file_info);
 
     if (not vcf_file_info) {
 
