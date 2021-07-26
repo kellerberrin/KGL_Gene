@@ -49,7 +49,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   // Initialize the gene allele analysis object.
   auto allele_ensembl_vector = uniprot_nomenclature_ptr_->symbolVectorToEnsembl(MutationAnalysisData::adHocLILRB1GeneSymbol());
-  gene_allele_.initialize(allele_ensembl_vector);
+  gene_allele_.initialize(allele_ensembl_vector, allele_citation_ptr_);
 
   return true;
 

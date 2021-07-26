@@ -60,6 +60,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "Offset" << delimiter
           << "Reference" << delimiter
           << "Alternate" << delimiter
+          << "Citations" << delimiter
           << "GlobalFreq" << delimiter
           << "AFRFreq"  << delimiter;
 
@@ -100,6 +101,26 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
              << variant_ptr->offset() << delimiter
              << variant_ptr->reference().getSequenceAsString() << delimiter
              << variant_ptr->alternate().getSequenceAsString() << delimiter;
+
+    if (not variant_ptr->identifier().empty()) {
+
+      auto find_result = allele_citation_ptr_->citationMap().find(variant_ptr->identifier());
+      if (find_result != allele_citation_ptr_->citationMap().end()) {
+
+        auto const& [rsid, citations] = *find_result;
+        out_file << citations.size() << delimiter;
+
+      } else {
+
+        out_file << 0 << delimiter;
+
+      }
+
+    } else {
+
+      out_file << 0 << delimiter;
+
+    }
 
     double global_freq{0.0};
     auto frequency_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, ALL_SUPER_POP_);

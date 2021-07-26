@@ -185,9 +185,9 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenome
            << "PMIDCitedVariants" << output_delimiter
            << "SpanVariantCount" << output_delimiter;
 
-  for (auto const& [upper_pop, upper_tail] : upper_tail_) {
+  for (auto const& [upper_population, upper_tail] : upper_tail_) {
 
-    out_file << "UT_" << upper_pop << output_delimiter;
+    out_file << "UT_" << upper_population << output_delimiter;
 
   }
 
