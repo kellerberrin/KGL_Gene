@@ -128,6 +128,10 @@ private:
   constexpr static const char* AUX_ID_DATABASE_ = "genomeAux";
   constexpr static const char* AUX_ID_IDENT_ = "auxIdent";
   constexpr static const char* AUX_ID_FILE_ = "auxFile";
+  // Allele Citations; this is a resource database.
+  constexpr static const char* CITATION_DATABASE_ = "alleleCitation";
+  constexpr static const char* CITATION_IDENT_ = "citationIdent";
+  constexpr static const char* CITATION_FILE_ = "citationFile";
   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";

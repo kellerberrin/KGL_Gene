@@ -298,7 +298,7 @@ void kpl::Data::compressPatterns() {
         ++t;
 
       }
-      // constant_state equals 0 if polymorphic or state code of state present if monomorphic
+      // constant_state equals 0 if polymorphic or FSM_State code of FSM_State present if monomorphic
       _monomorphic[p] = constant_state;
       ++p;
     }
@@ -445,7 +445,7 @@ unsigned kpl::Data::storeData(unsigned ntax, unsigned nchar_before, NxsCharacter
     unsigned k = nchar_before;
 
     for (int raw_state_code : row) {
-      // For codon model, raw_state_code ranges from 0-63, but deletion of stop codons means fewer state codes
+      // For codon model, raw_state_code ranges from 0-63, but deletion of stop codons means fewer FSM_State codes
       state_t state = std::numeric_limits<state_t>::max(); // complete ambiguity, all bits set
       bool complete_ambiguity = (!dt.isCodon() && raw_state_code == (int) num_states);
       bool all_missing_or_gaps = (raw_state_code < 0);
@@ -465,7 +465,7 @@ unsigned kpl::Data::storeData(unsigned ntax, unsigned nchar_before, NxsCharacter
           state = (state_t) 1 << state_code;
 
         } else {
-          // incomplete ambiguity (NCL state code > num_states)
+          // incomplete ambiguity (NCL FSM_State code > num_states)
 
           const NxsDiscreteDatatypeMapper *mapper = block->GetDatatypeMapperForChar(k - nchar_before);
           const std::set<NxsDiscreteStateCell> &state_set = mapper->GetStateSetForCode(raw_state_code);

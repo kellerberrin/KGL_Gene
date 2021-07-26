@@ -272,6 +272,35 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Allele Citation information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimeCitationResource : public RuntimeResource {
+
+public:
+
+  RuntimeCitationResource(std::string citation_identifier,
+                          std::string citation_file_name)
+      : citation_identifier_(std::move(citation_identifier)),
+        citation_file_name_(std::move(citation_file_name)) {}
+  RuntimeCitationResource() = delete;
+  RuntimeCitationResource(const RuntimeCitationResource&) = default;
+  ~RuntimeCitationResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ALLELE_CITATION; }
+
+  [[nodiscard]] const std::string& citationIdentifier() const { return citation_identifier_; }
+  [[nodiscard]] const std::string& citationFileName() const { return citation_file_name_; }
+
+private:
+
+  std::string citation_identifier_;   // A unique short string to identify this resource
+  std::string citation_file_name_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold Genome aux population information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

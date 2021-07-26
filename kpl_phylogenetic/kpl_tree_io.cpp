@@ -243,8 +243,8 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newi
     enum {
       Prev_Tok_LParen = 0x01,  // previous token was a left parenthesis ('(')
       Prev_Tok_RParen = 0x02,  // previous token was a right parenthesis (')')
-      Prev_Tok_Colon = 0x04,  // previous token was a colon (':')
-      Prev_Tok_Comma = 0x08,  // previous token was a comma (',')
+      Prev_Tok_Colon = 0x04,  // previous token was a COLON (':')
+      Prev_Tok_Comma = 0x08,  // previous token was a COMMA (',')
       Prev_Tok_Name = 0x10,  // previous token was a node name (e.g. '2', 'P._articulata')
       Prev_Tok_EdgeLen = 0x20  // previous token was an edge length (e.g. '0.1', '1.7e-3')
     };
@@ -319,7 +319,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newi
 
           inside_unquoted_name = false;
 
-          // Expect node name only after a left paren (child's name), a comma (sib's name) or a right paren (parent's name)
+          // Expect node name only after a left paren (child's name), a COMMA (sib's name) or a right paren (parent's name)
           if (!(previous & Name_Valid)) {
 
             throw XStrom(boost::str(
@@ -409,22 +409,22 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newi
           break;
 
         case ':':
-          // Expect colon only after a node name or another right paren
+          // Expect COLON only after a node name or another right paren
           if (!(previous & Colon_Valid)) {
 
             throw XStrom(
-            boost::str(boost::format("Unexpected colon at position %d in tree description") % position_in_string));
+            boost::str(boost::format("Unexpected COLON at position %d in tree description") % position_in_string));
 
           }
           previous = Prev_Tok_Colon;
           break;
 
         case ',':
-          // Expect comma only after an edge length, a node name, or a right paren
+          // Expect COMMA only after an edge length, a node name, or a right paren
           if (Node::isNullNode(nd->getParent()) || !(previous & Comma_Valid)) {
 
             throw XStrom(
-            boost::str(boost::format("Unexpected comma at position %d in tree description") % position_in_string));
+            boost::str(boost::format("Unexpected COMMA at position %d in tree description") % position_in_string));
 
           }
 
@@ -454,7 +454,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newi
           break;
 
         case '(':
-          // Expect left paren only after a comma or another left paren
+          // Expect left paren only after a COMMA or another left paren
           if (!(previous & LParen_Valid)) {
 
             throw XStrom(boost::str(boost::format("Not expecting left parenthesis at position %d in tree description") %
@@ -483,7 +483,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::sbuildFromNewick(const std::string& newi
           // Encountered an apostrophe, which always indicates the start of a
           // node name (but note that node names do not have to be quoted)
 
-          // Expect node name only after a left paren (child's name), a comma (sib's name)
+          // Expect node name only after a left paren (child's name), a COMMA (sib's name)
           // or a right paren (parent's name)
           if (not (previous & Name_Valid)) {
 
@@ -619,8 +619,8 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newic
     enum {
       Prev_Tok_LParen = 0x01,  // previous token was a left parenthesis ('(')
       Prev_Tok_RParen = 0x02,  // previous token was a right parenthesis (')')
-      Prev_Tok_Colon = 0x04,  // previous token was a colon (':')
-      Prev_Tok_Comma = 0x08,  // previous token was a comma (',')
+      Prev_Tok_Colon = 0x04,  // previous token was a COLON (':')
+      Prev_Tok_Comma = 0x08,  // previous token was a COMMA (',')
       Prev_Tok_Name = 0x10,  // previous token was a node name (e.g. '2', 'P._articulata')
       Prev_Tok_EdgeLen = 0x20  // previous token was an edge length (e.g. '0.1', '1.7e-3')
     };
@@ -695,7 +695,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newic
 
           inside_unquoted_name = false;
 
-          // Expect node name only after a left paren (child's name), a comma (sib's name) or a right paren (parent's name)
+          // Expect node name only after a left paren (child's name), a COMMA (sib's name) or a right paren (parent's name)
           if (!(previous & Name_Valid)) {
 
             throw XStrom(boost::str(
@@ -783,22 +783,22 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newic
           break;
 
         case ':':
-          // Expect colon only after a node name or another right paren
+          // Expect COLON only after a node name or another right paren
           if (!(previous & Colon_Valid)) {
 
             throw XStrom(
-            boost::str(boost::format("Unexpected colon at position %d in tree description") % position_in_string));
+            boost::str(boost::format("Unexpected COLON at position %d in tree description") % position_in_string));
 
           }
           previous = Prev_Tok_Colon;
           break;
 
         case ',':
-          // Expect comma only after an edge length, a node name, or a right paren
+          // Expect COMMA only after an edge length, a node name, or a right paren
           if (!nd->_parent || !(previous & Comma_Valid)) {
 
             throw XStrom(
-            boost::str(boost::format("Unexpected comma at position %d in tree description") % position_in_string));
+            boost::str(boost::format("Unexpected COMMA at position %d in tree description") % position_in_string));
 
           }
 
@@ -826,7 +826,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newic
           break;
 
         case '(':
-          // Expect left paren only after a comma or another left paren
+          // Expect left paren only after a COMMA or another left paren
           if (!(previous & LParen_Valid)) {
 
             throw XStrom(boost::str(boost::format("Not expecting left parenthesis at position %d in tree description") %
@@ -853,7 +853,7 @@ std::shared_ptr<kpl::Tree> kpl::TreeIO::buildFromNewick(const std::string& newic
           // Encountered an apostrophe, which always indicates the start of a
           // node name (but note that node names do not have to be quoted)
 
-          // Expect node name only after a left paren (child's name), a comma (sib's name)
+          // Expect node name only after a left paren (child's name), a COMMA (sib's name)
           // or a right paren (parent's name)
           if (!(previous & Name_Valid)) {
 

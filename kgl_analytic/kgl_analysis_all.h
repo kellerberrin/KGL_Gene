@@ -10,6 +10,7 @@
 #include "kgl_analysis_virtual.h" // The pure virtual interface definition and base class
 #include "kgl_analysis_null.h" // The "do nothing" class and a template for additional analysis objects.
 #include "kgl_analysis_verify.h" // Does "correctness" verification on any specified data files (duplicate variants etc).
+#include "kgl_analysis_json.h" // Processes Allele Json files and writes resultant the information to file.
 #include "kgl_analysis_interval.h" // Basic sequence and variant statistics.
 #include "kgl_analysis_info_filter.h" // Age related variant statistics, only applicable to Gnomad variant data.
 #include "kgl_analysis_inbreed.h" // Analysis of Diploid phased population read from the 1000 genomes project.
@@ -42,6 +43,7 @@ inline VirtualAnalysisVector getAnalysisVector() {
   analysis_vector.push_back(std::make_unique<InbreedAnalysis>());
   analysis_vector.push_back(std::make_unique<PfEMPAnalysis>());
   analysis_vector.push_back(std::make_unique<MutationAnalysis>());
+  analysis_vector.push_back(std::make_unique<JsonAnalysis>());
 
   return analysis_vector;
 

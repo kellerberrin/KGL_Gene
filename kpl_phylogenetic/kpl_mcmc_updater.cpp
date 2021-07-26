@@ -205,18 +205,18 @@ double kpl::Updater::update(double prev_lnL) {
   tree_manipulator_ptr_->deselectAllPartials();
   tree_manipulator_ptr_->deselectAllTMatrices();
 
-  // Set model to proposed state and calculate log_hastings_ratio_
+  // Set model to proposed FSM_State and calculate log_hastings_ratio_
   proposeNewState();
 
   // Use alternative partials and transition_ probability buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected
   tree_manipulator_ptr_->flipPartialsAndTMatrices();
 
-  // Calculate the log-likelihood and log-prior for the proposed state
+  // Calculate the log-likelihood and log-prior for the proposed FSM_State
   double log_likelihood = calcLogLikelihood();
   double log_prior = calcLogPrior();
 
-  // Decide whether to accept or reject the proposed state
+  // Decide whether to accept or reject the proposed FSM_State
   bool accept = true;
   double log_R = 0.0;
   double logu = 0.0;

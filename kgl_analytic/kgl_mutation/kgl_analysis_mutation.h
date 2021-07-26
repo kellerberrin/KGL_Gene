@@ -12,6 +12,7 @@
 #include "kgl_variant_sort_analysis.h"
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_gene_allele.h"
+#include "kgl_citation_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -59,12 +60,13 @@ private:
   // Clinvar is relatively small, it is retained otherwise it would need to be
   // reloaded for each iteration.
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
-  // Various (low memory) requested resources
+  // Various (low memory usage) requested resources
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const EnsemblHGNCResource> ensembl_nomenclature_ptr_;
+  std::shared_ptr<const CitationResource> allele_citation_ptr_;
 
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
@@ -74,6 +76,8 @@ private:
 
   constexpr static const double FREQ_AFR_{0.0};
   constexpr static const double FREQ_ALL_{0.0};
+
+  // Allele Specific Analysis.
   GenerateGeneAllele gene_allele_;
 
   // Parameters and output files.

@@ -2588,7 +2588,7 @@ namespace rapidxml
 // Undefine internal macros
 #undef RAPIDXML_PARSE_ERROR
 
-// On MSVC, restore warnings state
+// On MSVC, restore warnings FSM_State
 #ifdef _MSC_VER
     #pragma warning(pop)
 #endif

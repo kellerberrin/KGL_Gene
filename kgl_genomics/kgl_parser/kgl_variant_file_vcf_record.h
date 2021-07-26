@@ -32,7 +32,7 @@ public:
   std::string id;
   // Bases in the reference.
   std::string ref;
-  // Bases in the alternatives, comma-separated.
+  // Bases in the alternatives, COMMA-separated.
   std::string alt;
   // Quality
   double qual;

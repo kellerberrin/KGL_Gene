@@ -28,7 +28,8 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_analytic/kgl_info
                     kgl_analytic/kgl_Pf
                     kgl_analytic/kgl_legacy
-                    kgl_app)
+                    kgl_app
+                    contrib/rapidjson/include) # 3rd party Json parser
 
 
 
@@ -241,8 +242,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_uniprot_parser.h
         kgl_genomics/kgl_database/kgl_variant_sort_analysis.cpp
         kgl_genomics/kgl_database/kgl_variant_sort_analysis.h
-        kgl_genomics/kgl_parser/kgl_variant_parse_json.cpp
-        kgl_genomics/kgl_parser/kgl_variant_parse_json.h)
+        kgl_genomics/kgl_parser/kgl_Json_parser.cpp
+        kgl_genomics/kgl_parser/kgl_Json_parser.h
+        kgl_genomics/kgl_parser/kgl_citation_parser.cpp
+        kgl_genomics/kgl_parser/kgl_citation_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -459,7 +462,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp kgl_analytic/kgl_verify/kgl_analysis_json.cpp kgl_analytic/kgl_verify/kgl_analysis_json.h)
 
 # Deconvolution and mixture files.
 

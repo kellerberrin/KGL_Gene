@@ -5,7 +5,7 @@
 #ifndef KGL_ANALYSIS_MUTATION_GENE_VARIANT_H
 #define KGL_ANALYSIS_MUTATION_GENE_VARIANT_H
 
-
+#include "kgl_citation_parser.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_ethnic.h"
 
@@ -77,7 +77,8 @@ public:
   void processVariantStats(const GenomeId_t& genome,
                            const std::shared_ptr<const ContigDB> &span_variant_ptr,
                            const std::shared_ptr<const PopulationDB> &unphased_population_ptr,
-                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
+                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                           const std::shared_ptr<const CitationResource>& allele_citation_ptr);
 
   [[nodiscard]] bool processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
                                                const GeneEthnicitySex& ethnic_statistics,
@@ -103,6 +104,7 @@ private:
   size_t all_moderate_effect_{0};          // Moderate impact variant
   size_t hom_moderate_effect_{0};
   GeneEthnicitySex ethnic_moderate_;
+  size_t citation_count_{0};
   size_t genome_count_{0};   // Total number of genomes.
   size_t genome_variant_{0};  // Number of genomes that contain variants for this gene.
 

@@ -13,7 +13,8 @@ namespace kgl = kellerberrin::genome;
 void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
-                                            const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+                                            const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                            const std::shared_ptr<const CitationResource>& allele_citation_ptr) {
 
   // Variant statistics.
   ++genome_count_;
@@ -80,6 +81,17 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
     for (auto const& variant_ptr : variant_array) {
 
       unique_variants.insert(variant_ptr->variantHash());
+// count variants with citations.
+      if (not variant_ptr->identifier().empty()) {
+
+        auto find_result = allele_citation_ptr->citationMap().find(variant_ptr->identifier());
+        if (find_result != allele_citation_ptr->citationMap().end()) {
+
+          ++citation_count_;
+
+        }
+
+      }
 
     } //for variant
 

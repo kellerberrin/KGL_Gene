@@ -125,6 +125,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                          const std::shared_ptr<const CitationResource>& allele_citation_ptr,
                                           const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr) {
 
   // Count the ethnic samples in the populations.
@@ -155,6 +156,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
                                                                unphased_population_ptr,
                                                                clinvar_population_ptr,
                                                                genome_aux_data,
+                                                               allele_citation_ptr,
                                                                ensembl_index_map_ptr,
                                                                gene_mutation);
     future_vector.push_back(std::move(future));
@@ -188,6 +190,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                                         const std::shared_ptr<const CitationResource>& allele_citation_ptr,
                                                          const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                                          GeneMutation gene_mutation) {
 
@@ -242,7 +245,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         gene_variant_count_ += gene_variant_ptr->variantCount();
 
         gene_mutation.clinvar.processClinvar( genome_id, gene_contig_id, clinvar_population_ptr, gene_variant_ptr, genome_aux_data);
-        gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, genome_aux_data);
+        gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, genome_aux_data, allele_citation_ptr);
 
       } // contig not empty
 

@@ -154,7 +154,7 @@ std::string kpl::Model::describeModel() {
   //
   //          data subset           1           2           3
   //    -----------------------------------------------------
-  //          state freqs           1           1           1
+  //          FSM_State freqs           1           1           1
   //    exchangeabilities           1           1           2
   //        rate variance           1           2           3
   //               pinvar           1           2           -
@@ -222,7 +222,7 @@ std::string kpl::Model::describeModel() {
     ss["subset"] += boost::str(boost::format("%12d") % (i+1));
     ss["dashes"] += "------------";
 
-    // Determine whether state freqs are unique for this subset
+    // Determine whether FSM_State freqs are unique for this subset
     QMatrix::freq_xchg_ptr_t pfreq = _qmatrix[i]->getStateFreqsSharedPtr();
     QMatrix::freq_xchg_t & freq = *pfreq;
     double * freq_addr = &freq[0];
@@ -409,7 +409,7 @@ std::string kpl::Model::describeModel() {
 
   s += boost::str(boost::format("%20s%s\n") % "data subset" % ss["subset"]);
   s += boost::str(boost::format("%20s%s\n") % "-----------------" % ss["dashes"]);
-  s += boost::str(boost::format("%20s%s\n") % "state freqs" % ss["freqs"]);
+  s += boost::str(boost::format("%20s%s\n") % "FSM_State freqs" % ss["freqs"]);
   s += boost::str(boost::format("%20s%s\n") % "exchangeabilities" % ss["xchg"]);
   s += boost::str(boost::format("%20s%s\n") % "omega" % ss["omega"]);
   s += boost::str(boost::format("%20s%s\n") % "rate variance" % ss["ratevar"]);
@@ -424,7 +424,7 @@ std::string kpl::Model::describeModel() {
 
   }
 
-  s += "\n  state freqs:\n";
+  s += "\n  FSM_State freqs:\n";
 
   for (unsigned i = 0; i < _num_subsets; i++) {
 

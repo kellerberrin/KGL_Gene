@@ -233,7 +233,7 @@ void kpl::PolytomyUpdater::proposeAddEdgeMove(Node::PtrNode  u) {
   // Calculate (if necessary) the probability of each possible partitioning of the chosen polytomy
   // Select number of spokes to move over to new node
   // Note that 0 and 1 are not allowed because they
-  // would leave the tree in an invalid state
+  // would leave the tree in an invalid FSM_State
   const _partition_vect_t & prob_n = computePolytomyDistribution(_polytomy_size);
   double p = lot()->uniform();
   double cum = 0.0;

@@ -161,11 +161,15 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
           resources.emplace_back(RuntimeResourceType::GENOME_AUX_INFO, resource_identifier);
 
+        } else if (resource_type == CITATION_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::ALLELE_CITATION, resource_identifier);
+
         }
 
       }
 
-    }
+    } // for resources
 
     // Get a Vector of iteration items (VCF files) to load iteratively.
     // Each of these larger data (VCF) files are iteratively loaded into memory and then presented to the analysis functions.
@@ -466,6 +470,35 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
       if (not result) {
 
         ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Genome Genealogy ident: {} to map (duplicate)", genealogy_ident);
+
+      }
+
+    } else if (tree_type == CITATION_DATABASE_) {
+
+      key = std::string(CITATION_IDENT_);
+      std::string citation_ident;
+      if (not sub_tree.getProperty(key, citation_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Allele Citation Identifier.");
+        continue;
+
+      }
+
+      key = std::string(CITATION_FILE_);
+      std::string citation_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), citation_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Allele Citation file name information, ident: {}", citation_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeCitationResource>(citation_ident, citation_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(citation_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Allele Citation ident: {} to map (duplicate)", citation_ident);
 
       }
 

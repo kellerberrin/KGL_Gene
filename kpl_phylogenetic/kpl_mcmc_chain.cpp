@@ -89,7 +89,7 @@ size_t kpl::Chain::createUpdaters(const std::shared_ptr<Model>& model_ptr,
 
   }
 
-  // Add state frequency parameter updaters to updaters_
+  // Add FSM_State frequency parameter updaters to updaters_
   const Model::state_freq_params_t& statefreq_shptr_vect = model_ptr_->getStateFreqParams();
   for (auto& statefreq_shptr : statefreq_shptr_vect) {
 

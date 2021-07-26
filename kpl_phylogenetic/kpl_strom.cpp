@@ -70,7 +70,7 @@ bool kpl::Strom::parseCommandLine(int argc, const char **argv) {
       ("treefile,t",  boost::program_options::value(&_tree_file_name)->required(), "name of a tree file in NEXUS format")
       ("subset",  boost::program_options::value(&partition_subsets), "a string defining a partition subset, e.g. 'first:1-1234\3' or 'default[codon:standard]:1-3702'")
       ("ncateg,c", boost::program_options::value(&partition_ncateg), "number of categories in the discrete Gamma rate heterogeneity model")
-      ("statefreq", boost::program_options::value(&partition_statefreq), "a string defining state frequencies for one or more data subsets, e.g. 'first,second:0.1,0.2,0.3,0.4'")
+      ("statefreq", boost::program_options::value(&partition_statefreq), "a string defining FSM_State frequencies for one or more data subsets, e.g. 'first,second:0.1,0.2,0.3,0.4'")
       ("omega", boost::program_options::value(&partition_omega), "a string defining the nonsynonymous/synonymous rate ratio omega for one or more data subsets, e.g. 'first,second:0.1'")
       ("rmatrix", boost::program_options::value(&partition_rmatrix), "a string defining the rmatrix for one or more data subsets, e.g. 'first,second:1,2,1,1,2,1'")
       ("ratevar", boost::program_options::value(&partition_ratevar), "a string defining the among-site rate variance for one or more data subsets, e.g. 'first,second:2.5'")
@@ -439,7 +439,7 @@ bool kpl::Strom::splitAssignmentString(const std::string & definition, std::vect
   boost::split(twoparts, definition, boost::is_any_of(":"));
   if (twoparts.size() != 2) {
 
-    throw XStrom("Expecting exactly one colon in assignment");
+    throw XStrom("Expecting exactly one COLON in assignment");
 
   }
   std::string comma_delimited_subset_names_string = twoparts[0];
@@ -906,7 +906,7 @@ void kpl::Strom::swapChains() {
   _swaps[upper]++;
 
   // Propose swap of chains i and j
-  // Proposed state swap will be successful if a uniform random deviate is less than R, where
+  // Proposed FSM_State swap will be successful if a uniform random deviate is less than R, where
   //    R = Ri * Rj = (Pi(j) / Pi(i)) * (Pj(i) / Pj(j))
   // Chain i: power = a, kernel = pi
   // Chain j: power = b, kernel = pj

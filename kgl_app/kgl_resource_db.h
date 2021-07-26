@@ -26,7 +26,8 @@ enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resourc
                                  ONTOLOGY_DATABASE,     // GO ontology data files.
                                  GENE_NOMENCLATURE,     // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
                                  GENOME_GENEALOGY,      // Genome aux info including genealogy (1000Genomes only).
-                                 GENOME_AUX_INFO };     // Genome aux info, sex, population and super-population data (all individual genomes).
+                                 GENOME_AUX_INFO,       // Genome aux info, sex, population and super-population data (all individual genomes).
+                                 ALLELE_CITATION };     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
 
 class ResourceBase {
 
@@ -109,7 +110,8 @@ private:
       { RuntimeResourceType::ONTOLOGY_DATABASE,"RuntimeResourceType::ONTOLOGY_DATABASE"},     // GO ontology data files.
       { RuntimeResourceType::GENE_NOMENCLATURE, "RuntimeResourceType::GENE_NOMENCLATURE"},    // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
       { RuntimeResourceType::GENOME_GENEALOGY, "RuntimeResourceType::GENOME_GENEALOGY"},      // Genome aux info including genealogy (1000Genomes only).
-      { RuntimeResourceType:: GENOME_AUX_INFO, "RuntimeResourceType:: GENOME_AUX_INFO"}     // Genome aux info, sex, population and super-population data (all individual genomes).
+      { RuntimeResourceType::GENOME_AUX_INFO, "RuntimeResourceType::GENOME_AUX_INFO"},     // Genome aux info, sex, population and super-population data (all individual genomes).
+      { RuntimeResourceType::ALLELE_CITATION, "RuntimeResourceType::ALLELE_CITATION"}     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
 
   };
 

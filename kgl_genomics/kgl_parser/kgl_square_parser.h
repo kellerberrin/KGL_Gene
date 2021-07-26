@@ -32,7 +32,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Comments can be insert in the file by starting the line with the character '#', e.g. "# This is a comment\n"
 // Comments are ignored by the parser.
 //
-// Note that the file fields will generally be comma ',' (.csv) or tab '\t' (.tsv) delimited.
+// Note that the file fields will generally be COMMA ',' (.csv) or tab '\t' (.tsv) delimited.
 // Leading and trailing (but not internal) whitespace will be stripped off fields.
 // Rows are accessed by index.
 //

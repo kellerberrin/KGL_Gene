@@ -157,7 +157,7 @@ void kpl::QMatrixNucleotide::setStateFreqsSharedPtr(QMatrix::freq_xchg_ptr_t fre
 
   if (freq_ptr->size() != 4) {
 
-    throw XStrom(boost::format("Expecting 4 state frequencies and got %d: perhaps you meant to specify a subset data type other than nucleotide") % freq_ptr->size());
+    throw XStrom(boost::format("Expecting 4 FSM_State frequencies and got %d: perhaps you meant to specify a subset data type other than nucleotide") % freq_ptr->size());
 
   }
 
@@ -165,7 +165,7 @@ void kpl::QMatrixNucleotide::setStateFreqsSharedPtr(QMatrix::freq_xchg_ptr_t fre
 
   if (std::fabs(sum_of_freqs - 1.0) > 0.001) {
 
-    throw XStrom(boost::format("Expecting sum of 4 state frequencies to be 1, but instead got %g") % sum_of_freqs);
+    throw XStrom(boost::format("Expecting sum of 4 FSM_State frequencies to be 1, but instead got %g") % sum_of_freqs);
 
   }
 
@@ -179,7 +179,7 @@ void kpl::QMatrixNucleotide::setStateFreqs(QMatrix::freq_xchg_t & freqs) {
 
   if (freqs.size() != 4) {
 
-    throw XStrom(boost::format("Expecting 4 state frequencies and got %d: perhaps you meant to specify a subset data type other than nucleotide") % freqs.size());
+    throw XStrom(boost::format("Expecting 4 FSM_State frequencies and got %d: perhaps you meant to specify a subset data type other than nucleotide") % freqs.size());
 
   }
 

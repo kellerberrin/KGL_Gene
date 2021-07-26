@@ -391,7 +391,7 @@ void kpl::Likelihood::setTipStates() {
         auto interval = _data->getSubsetBeginEnd(s);
         for (unsigned p = interval.first; p < interval.second; p++) {
 
-          // d is the state for taxon t, pattern p (in subset s)
+          // d is the FSM_State for taxon t, pattern p (in subset s)
           // d is stored as a bit field (e.g., for nucleotide data, A=1, C=2, G=4, T=8, ?=15),
           // but BeagleLib expects states to be integers (e.g. for nucleotide data,
           // A=0, C=1, G=2, T=3, ?=4).
@@ -454,7 +454,7 @@ void kpl::Likelihood::setTipStates() {
 
       if (code != 0) {
 
-        throw XStrom(boost::format("failed to set tip state for taxon %d (\"%s\"; BeagleLib error code was %d)") % (t+1) % _data->getTaxonNames()[t] % code % _beagle_error[code]);
+        throw XStrom(boost::format("failed to set tip FSM_State for taxon %d (\"%s\"; BeagleLib error code was %d)") % (t+1) % _data->getTaxonNames()[t] % code % _beagle_error[code]);
 
       }
       ++t;
@@ -488,7 +488,7 @@ void kpl::Likelihood::setTipPartials() {
         auto interval = _data->getSubsetBeginEnd(s);
         for (unsigned p = interval.first; p < interval.second; p++) {
 
-          // d is the state for taxon t, pattern p (in subset s)
+          // d is the FSM_State for taxon t, pattern p (in subset s)
           Data::state_t d = row[p];
 
           // Handle common nucleotide case separately
@@ -521,7 +521,7 @@ void kpl::Likelihood::setTipPartials() {
 
       if (code != 0) {
 
-        throw XStrom(boost::format("failed to set tip state for taxon %d (\"%s\"; BeagleLib error code was %d)") % (t+1) % _data->getTaxonNames()[t] % code % _beagle_error[code]);
+        throw XStrom(boost::format("failed to set tip FSM_State for taxon %d (\"%s\"; BeagleLib error code was %d)") % (t+1) % _data->getTaxonNames()[t] % code % _beagle_error[code]);
 
       }
 
@@ -540,7 +540,7 @@ void kpl::Likelihood::setPatternPartitionAssignments() {
   assert(_data);
 
   // beagleSetPatternPartitions does not need to be called if data are unpartitioned
-  // (and, in fact, BeagleLib only supports partitioning for 4-state instances if GPU is used,
+  // (and, in fact, BeagleLib only supports partitioning for 4-FSM_State instances if GPU is used,
   // so not calling beagleSetPatternPartitions allows unpartitioned codon model analyses)
   if (_instances.size() == 1 && _instances[0].subsets.size() == 1) {
 
@@ -671,7 +671,7 @@ void kpl::Likelihood::setModelRateMatrix() {
 
       if (code != 0) {
 
-        throw XStrom(boost::str(boost::format("Failed to set state frequencies for BeagleLib instance %d. BeagleLib error code was %d (%s)") % info.handle % code % _beagle_error[code]));
+        throw XStrom(boost::str(boost::format("Failed to set FSM_State frequencies for BeagleLib instance %d. BeagleLib error code was %d (%s)") % info.handle % code % _beagle_error[code]));
 
       }
 
@@ -936,7 +936,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, const Tre
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &_weights_indices[0],        // weights to apply to each partialsBuffer
-        &_freqs_indices[0],          // state frequencies for each partialsBuffer
+        &_freqs_indices[0],          // FSM_State frequencies for each partialsBuffer
         &_scaling_indices[0],        // scaleBuffers containing accumulated factors
         &_subset_indices[0],         // indices of subsets
         nsubsets,                    // partition subset count
@@ -958,7 +958,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, const Tre
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &categoryWeightsIndex,       // weights to apply to each partialsBuffer
-        &stateFrequencyIndex,        // state frequencies for each partialsBuffer
+        &stateFrequencyIndex,        // FSM_State frequencies for each partialsBuffer
         &cumulativeScalingIndex,     // scaleBuffers containing accumulated factors
         1,                           // Number of partialsBuffer
         &log_likelihood,             // destination for log likelihood
@@ -1202,7 +1202,7 @@ int kpl::Likelihood::setBeagleStateFrequencies(std::shared_ptr<const Model> mode
 
   int code = beagleSetStateFrequencies(
       beagle_instance,   // Instance number (input)
-      instance_subset,   // Index of state frequencies buffer (input)
+      instance_subset,   // Index of FSM_State frequencies buffer (input)
       pfreq);            // State frequencies array (stateCount) (input)
 
   return code;

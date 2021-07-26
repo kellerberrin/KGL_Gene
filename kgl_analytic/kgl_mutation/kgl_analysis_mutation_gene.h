@@ -8,6 +8,7 @@
 #include "kgl_genome_genome.h"
 #include "kgl_Hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
+#include "kgl_citation_parser.h"
 #include "kgl_variant_sort.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_stats.h"
@@ -85,6 +86,7 @@ public:
                         const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                         const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                        const std::shared_ptr<const CitationResource>& allele_citation_ptr,
                         const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr);
 
   // Finally, output to file.
@@ -126,6 +128,7 @@ private:
                                  const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                  const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                  const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                 const std::shared_ptr<const CitationResource>& allele_citation_ptr,
                                  const std::shared_ptr<const EnsemblIndexMap>& ensembl_index_map_ptr,
                                  GeneMutation gene_mutation);
 

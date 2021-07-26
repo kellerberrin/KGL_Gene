@@ -8,7 +8,7 @@
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant_factory_1000_impl.h"
 #include "kgl_variant_factory_gnomad_impl.h"
-#include "kgl_variant_parse_json.h"
+#include "kgl_Json_parser.h"
 
 
 #include "kgl_variant_factory_parsers.h"
@@ -73,23 +73,18 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
 [[nodiscard]] std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readJSONdbSNP( const std::shared_ptr<const BaseFileInfo>& file_info,
                                                                                 DataSourceEnum data_source) {
 
-  // The variant population and VCF data source.
-  std::shared_ptr<PopulationDB> vcf_population_ptr(std::make_shared<PopulationDB>(file_info->identifier(), data_source));
+  // An rsid indexed map of PMID citation identifiers.
+  std::shared_ptr<DBCitation> db_citation_ptr(std::make_shared<DBCitation>(data_source, file_info->fileName()));
 
-  // Read the VCF with the appropriate parser in a unique block so that that the parser is deleted before validation begins.
-  // This prevents the parser queues stall warning from activating if the population verification is lengthy.
-  {
-    JSONInfoParser reader;
-    if (reader.commenceJSONIO(file_info->fileName())) {
+  JSONInfoParser reader;
+  if (reader.commenceJSONIO(file_info->fileName())) {
 
-      size_t json_size = reader.dequeueJSONline();
-      ExecEnv::log().info("JSON File: {} has size: {}", file_info->fileName(), json_size);
-
-    }
+    reader.parseJson(db_citation_ptr);
+    ExecEnv::log().info("JSON File: {} has alleles with PMID citations: {}", file_info->fileName(), db_citation_ptr->citationMap().size());
 
   }
 
-  return vcf_population_ptr;   // return the empty population for now.
+  return db_citation_ptr;   // return the citation DB object.
 
 }
 

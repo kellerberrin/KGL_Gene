@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Efficient parser for the info field.
-// Implemented as a simple finite state parser.
+// Implemented as a simple finite FSM_State parser.
 bool kgl::VCFInfoParser::infoTokenParser() {
 
   enum class ParserStates { KeyToken, ValueToken} parser_state = ParserStates::KeyToken;

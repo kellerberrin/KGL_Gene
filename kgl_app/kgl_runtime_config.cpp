@@ -27,7 +27,14 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
 
       if (not analysis_map_.contains(analysis_ident)) {
 
-        ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Analysis: {}, not defined", package_ident, analysis_ident);
+        ExecEnv::log().error("ExecutePackage::verifyPackage, Package: {}, Analysis: {}, not defined", package_ident, analysis_ident);
+        for (auto const& [ident, runtime] : analysis_map_) {
+
+          ExecEnv::log().warn("ExecutePackage::verifyPackage, Available Analysis: {}", ident);
+
+        }
+
+        ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Analysis: {}, not defined, unrecoverable.", package_ident, analysis_ident);
 
       }
 

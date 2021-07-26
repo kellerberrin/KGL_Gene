@@ -36,6 +36,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(RuntimeResourceType::GENOME_AUX_INFO);
   uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_UNIPROTID);
   ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);
+  allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
@@ -186,6 +187,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
                                     unphased_population_ptr_,
                                     clinvar_population_ptr_,
                                     genome_aux_ptr_,
+                                    allele_citation_ptr_,
                                     sorted_variants_ptr->ensemblMap());
     // Add the sorted variants to the gene allele anlysis.
     gene_allele_.addSortedVariants(sorted_variants_ptr);

@@ -114,10 +114,10 @@ private:
   bool pass_filter_{true};  // The VCF record has "PASS"ed all quality filters.
   std::shared_ptr<const DataMemoryBlock> info_data_block_;   // INFO data items, may be missing.
   std::shared_ptr<const FormatData> format_data_;  // Format data items, may be missing.
-  // Zero based index. Which of the alternate variants (from left to right in the comma delimited alt field) is this variant.
+  // Zero based index. Which of the alternate variants (from left to right in the COMMA delimited alt field) is this variant.
   // These variables can be used to access Info field vectors that are designated Type='A' for alternate allele.
   uint32_t alternate_variant_index_{0}; // The default index 0 / count 1 implies 1 alternate variant (the usual case).
-  uint32_t alternate_variant_count_{0}; // How many comma delimited alternate variants were specified in the VCF record.
+  uint32_t alternate_variant_count_{0}; // How many COMMA delimited alternate variants were specified in the VCF record.
 
 
 };

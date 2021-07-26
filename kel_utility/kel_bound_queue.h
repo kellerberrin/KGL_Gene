@@ -261,7 +261,7 @@ private:
         ++previous_count_;
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          ExecEnv::log().warn("Monitor Queue: {}, size: {}, state: {}, stalled for samples: {}",
+          ExecEnv::log().warn("Monitor Queue: {}, size: {}, FSM_State: {}, stalled for samples: {}",
                               queueName(), sample_size, (queue_state_ ? "'active'" : "'inactive'"), static_cast<size_t>(previous_count_));
 
         }

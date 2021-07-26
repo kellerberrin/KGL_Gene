@@ -171,11 +171,11 @@ void kpl::Partition::parseSubsetDefinition(std::string & s) {
 
   std::vector<std::string> v;
 
-  // first separate part before colon (stored in v[0]) from part after colon (stored in v[1])
+  // first separate part before COLON (stored in v[0]) from part after COLON (stored in v[1])
   boost::split(v, s, boost::is_any_of(":"));
   if (v.size() != 2) {
 
-    throw XStrom("Expecting exactly one colon in partition subset definition");
+    throw XStrom("Expecting exactly one COLON in partition subset definition");
 
   }
 
@@ -206,7 +206,7 @@ void kpl::Partition::parseSubsetDefinition(std::string & s) {
     datatype = match_obj[3].str();
     boost::to_lower(datatype);
 
-    // check for comma plus genetic code in case of codon
+    // check for COMMA plus genetic code in case of codon
     std::regex re(R"(codon\s*,\s*(\S+))");
     std::smatch m;
     if (std::regex_match(datatype, m, re)) {

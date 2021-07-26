@@ -120,8 +120,8 @@ bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
                  or int_value == static_cast<size_t>(Alphabet::D)
                  or int_value == static_cast<size_t>(Alphabet::E)
                  or int_value == static_cast<size_t>(Alphabet::G)
-//                 or int_value == static_cast<size_t>(Alphabet::U)
-//                 or int_value == static_cast<size_t>(Alphabet::O)
+//                 or INTEGER_VALUE == static_cast<size_t>(Alphabet::U)
+//                 or INTEGER_VALUE == static_cast<size_t>(Alphabet::O)
                  or int_value == static_cast<size_t>(Alphabet::_)
                  or int_value == static_cast<size_t>(Alphabet::Z);
 

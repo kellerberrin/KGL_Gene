@@ -150,7 +150,7 @@ void kpl::QMatrixCodon::setStateFreqsSharedPtr(QMatrix::freq_xchg_ptr_t freq_ptr
   unsigned nstates = _genetic_code->getNumNonStopCodons();
   if (freq_ptr->size() != nstates) {
 
-    throw XStrom(boost::format("Expecting %d state frequencies and got %d: perhaps you meant to specify a subset data type other than codon") % nstates % freq_ptr->size());
+    throw XStrom(boost::format("Expecting %d FSM_State frequencies and got %d: perhaps you meant to specify a subset data type other than codon") % nstates % freq_ptr->size());
 
   }
 
@@ -176,7 +176,7 @@ void kpl::QMatrixCodon::setStateFreqs(QMatrix::freq_xchg_t & freqs) {
 
   if (freqs.size() != nstates) {
 
-    throw XStrom(boost::format("Expecting %d state frequencies and got %d: perhaps you meant to specify a subset data type other than codon") % nstates % freqs.size());
+    throw XStrom(boost::format("Expecting %d FSM_State frequencies and got %d: perhaps you meant to specify a subset data type other than codon") % nstates % freqs.size());
 
   }
   std::copy(freqs.begin(), freqs.end(), _state_freqs->begin());

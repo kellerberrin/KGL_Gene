@@ -135,7 +135,7 @@ std::vector<std::string> kgl::UniprotResource::vectorConvert(ConvertFnPtr conver
 
   }
 
-  // Simple state parser.
+  // Simple FSM_State parser.
   enum class PARSER_STATE { INITIAL, PROCESS_FIELD};
   PARSER_STATE parser_state = PARSER_STATE::INITIAL;
 

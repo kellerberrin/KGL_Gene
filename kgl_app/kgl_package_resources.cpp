@@ -6,6 +6,7 @@
 #include "kgl_variant_factory_parsers.h"
 #include "kgl_ontology_database.h"
 #include "kgl_uniprot_parser.h"
+#include "kgl_citation_parser.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -37,6 +38,10 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
       case RuntimeResourceType::GENOME_AUX_INFO:
         loadHsGenomeAuxResource(resource_ident, resource_ptr);
+        break;
+
+      case RuntimeResourceType::ALLELE_CITATION:
+        loadCitationResource(resource_ident, resource_ptr);
         break;
 
       default:
@@ -212,5 +217,37 @@ void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& genome_aux_
   genome_aux_parser.readParseImpl(genome_aux_resource_ptr->genomeAuxFileName());
 
   resource_ptr->addResource(genome_aux_data);
+
+}
+
+
+void kgl::ExecutePackage::loadCitationResource(const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(citation_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadCitationResource, Allele Citation Database: {}, not defined", citation_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto citation_resource_ptr = std::dynamic_pointer_cast<const RuntimeCitationResource>(resource_base_ptr);
+
+  if (not citation_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadCitationResource, Resource: {} is not an Allele Citation Resource", resource_ident);
+
+  }
+
+  ParseCitations citation_parser;
+  if (not citation_parser.parseCitationFile(citation_resource_ptr->citationFileName())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadCitationResource; failed to create citation resource from file: {}", citation_resource_ptr->citationFileName());
+
+  }
+
+  std::shared_ptr<CitationResource> citation_ptr(std::make_shared<CitationResource>(citation_resource_ptr->citationIdentifier(), citation_parser.getCitationMap()));
+
+  resource_ptr->addResource(citation_ptr);
 
 }

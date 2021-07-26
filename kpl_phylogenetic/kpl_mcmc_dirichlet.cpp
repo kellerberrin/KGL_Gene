@@ -118,7 +118,7 @@ void kpl::DirichletUpdater::proposeNewState() {
   double sum_gamma_deviates     = std::accumulate(_curr_point.begin(), _curr_point.end(), 0.0);
   double sum_forward_parameters = std::accumulate(forward_params.begin(), forward_params.end(), 0.0);
 
-  // Choose new state by sampling from forward proposal distribution.
+  // Choose new FSM_State by sampling from forward proposal distribution.
   // We've already stored gamma deviates in _curr_point, now just need to normalize them.
   for (unsigned i = 0; i < dim; ++i) {
 

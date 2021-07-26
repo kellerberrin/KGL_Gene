@@ -53,10 +53,11 @@ enum class ParserTypeEnum { DiploidPhased,
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
-                               UnphasedMonoGenome }; // Haploid Genomic data that contains allele information (PopulationDB)
+                               UnphasedMonoGenome,
+                               CitationMap }; // Haploid Genomic data that contains allele information (PopulationDB)
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant };
+enum class DataImplEnum { PopulationVariant, PMIDCitationMap };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +124,7 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoDBSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
+    { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::CitationMap, DataImplEnum::PMIDCitationMap, DataOrganism::HomoSapien },
 
 };
 
