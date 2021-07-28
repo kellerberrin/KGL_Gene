@@ -11,7 +11,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This object parses Allele Json Files and typically writes the information to file.
+// This object parses Allele Json Files and typically writes the parsed information to a resource file.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,13 +32,12 @@ public:
 
   [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<JsonAnalysis>(); }
 
-  // Setup the analytics to process VCF data.
+  // Setup the analytics to process data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
                                         const ActiveParameterList &named_parameters,
                                         const std::shared_ptr<const AnalysisResources> &resource_ptr) override;
 
-
-  // Perform the genetic analysis per VCF file
+  // Perform the genetic analysis per file
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) override;
 
   // Perform the genetic analysis per iteration
@@ -49,14 +48,19 @@ public:
 
 private:
 
-  DBCitationMap citation_map_;
   std::string citation_file_name_;
+  std::vector<std::string> json_file_names_;
 
-  constexpr static const char* CITATION_OUTPUT_FILE_ = "CitationOut";
+  constexpr static const char* CITATION_OUTPUT_FILE_ = "CitationMT";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
-};
+  [[nodiscard]] bool writeAppendCitations(const DBCitationMap& citation_map) const;
+  [[nodiscard]] static std::shared_ptr<const DBCitationMap> parseJsonFile(std::string json_file);
+
+
+
+  };
 
 
 } // namespace

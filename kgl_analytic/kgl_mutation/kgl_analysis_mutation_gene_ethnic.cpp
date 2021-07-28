@@ -27,6 +27,13 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
 
   }
 
+  // Setup the populations maps if empty.
+  if (super_population_.empty() or population_.empty()) {
+
+    updatePopulations(genome_aux_data);
+
+  }
+
   auto record_opt = genome_aux_data->getGenome(genome_id);
 
   if (not record_opt) {

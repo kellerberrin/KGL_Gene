@@ -9,6 +9,20 @@
 
 namespace kgl = kellerberrin::genome;
 
+void kgl::GeneVariants::initializeEthnic(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+
+  ethnic_lof_.setDisplay("LOF_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+  ethnic_high_.setDisplay("HIGH_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+  ethnic_moderate_.setDisplay("MOD_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+  ethnic_citation_.setDisplay("CITE_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
+
+  ethnic_lof_.updatePopulations(genome_aux_data);
+  ethnic_high_.updatePopulations(genome_aux_data);
+  ethnic_moderate_.updatePopulations(genome_aux_data);
+  ethnic_citation_.updatePopulations(genome_aux_data);
+
+}
+
 
 void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
@@ -25,7 +39,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_lof > 0) {
 
     ++all_lof_;
-    updateLofEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_lof_.pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -39,7 +53,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_high_effect > 0) {
 
     ++all_high_effect_;
-    updateHighEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_high_.pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -53,7 +67,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_moderate_effect > 0) {
 
     ++all_moderate_effect_;
-    updateModerateEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_moderate_.pedAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -73,21 +87,29 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 
   }
 
-  std::set<std::string> unique_variants;
   for (auto const& [offset, offset_ptr] : span_variant_ptr->getMap()) {
 
     const OffsetDBArray& variant_array = offset_ptr->getVariantArray();
 
     for (auto const& variant_ptr : variant_array) {
 
-      unique_variants.insert(variant_ptr->variantHash());
+      unique_variants_.insert(variant_ptr->variantHash());
 // count variants with citations.
       if (not variant_ptr->identifier().empty()) {
 
         auto find_result = allele_citation_ptr->citationMap().find(variant_ptr->identifier());
         if (find_result != allele_citation_ptr->citationMap().end()) {
 
+          auto const& [rsid, citations] = *find_result;
+          for (auto const& cite : citations) {
+
+            unique_citations_.insert(cite);
+
+          }
+          // Increment if any citation
           ++citation_count_;
+          // Ethnic profile
+          ethnic_citation_.pedAnalysis(genome_id, 1, genome_aux_data);
 
         }
 
@@ -96,8 +118,6 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
     } //for variant
 
   } //for offset
-
-  unique_variants_ = unique_variants.size();
 
   ++variant_count_;
 

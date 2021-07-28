@@ -40,7 +40,7 @@ enum class DataSourceEnum { Genome1000,
                             Clinvar,
                             dbSNP,
                             JSONdbSNP,
-                            NotImplemented};   // Error condition if the data source is not found.
+                            NotImplemented};   // Data source is not specified.
 
 // Parsers available for genetic sources.
 enum class ParserTypeEnum { DiploidPhased,
@@ -48,16 +48,18 @@ enum class ParserTypeEnum { DiploidPhased,
                             DiploidGnomad,
                             MonoGenomeUnphased,
                             MonoDBSNPUnphased,
-                            MonoJSONdbSNPUnphased};
+                            MonoJSONdbSNPUnphased,
+                            FilenameOnly};  // File name is passed to the requesting package - no parsing performed.
 
 // The conceptual structure of the genetic information.
 enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 only (PopulationDB)
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
                                UnphasedMonoGenome,
-                               CitationMap }; // Haploid Genomic data that contains allele information (PopulationDB)
+                               CitationMap,
+                               NoStructure}; // No data passed to the requesting package (only the file name)
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant, PMIDCitationMap };
+enum class DataImplEnum { PopulationVariant, PMIDCitationMap, FileName };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,18 +117,47 @@ private:
 inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
 
     { "Genome1000", DataSourceEnum::Genome1000, ParserTypeEnum::DiploidPhased, DataStructureEnum::DiploidPhased, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien},
-    { "GnomadGenome3_1", DataSourceEnum::GnomadGenome3_1, ParserTypeEnum::DiploidGnomad, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Falciparum", DataSourceEnum::Falciparum, ParserTypeEnum::DiploidFalciparum, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant, DataOrganism::PlasmodiumFalciparum },
+    { "GnomadGenome3_1", DataSourceEnum::GnomadGenome3_1, ParserTypeEnum::DiploidGnomad, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant,         DataOrganism::HomoSapien },
+    { "Falciparum", DataSourceEnum::Falciparum, ParserTypeEnum::DiploidFalciparum, DataStructureEnum::DiploidUnphased, DataImplEnum::PopulationVariant,               DataOrganism::PlasmodiumFalciparum },
     { "GnomadExomes3_1", DataSourceEnum::GnomadExomes3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
     { "GnomadExomes2_1", DataSourceEnum::GnomadExomes2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Gnomad3_1", DataSourceEnum::Gnomad3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Gnomad3_0", DataSourceEnum::Gnomad3_0, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoDBSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant, DataOrganism::HomoSapien },
-    { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::CitationMap, DataImplEnum::PMIDCitationMap, DataOrganism::HomoSapien },
+    { "Gnomad3_1", DataSourceEnum::Gnomad3_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,             DataOrganism::HomoSapien },
+    { "Gnomad3_0", DataSourceEnum::Gnomad3_0, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,             DataOrganism::HomoSapien },
+    { "Gnomad2_1", DataSourceEnum::Gnomad2_1, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,             DataOrganism::HomoSapien },
+    { "Clinvar", DataSourceEnum::Clinvar, ParserTypeEnum::MonoGenomeUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,                 DataOrganism::HomoSapien },
+    { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoDBSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,                      DataOrganism::HomoSapien },
+    { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::CitationMap, DataImplEnum::PMIDCitationMap,                   DataOrganism::HomoSapien },
+    { "FileNameOnly", DataSourceEnum::NotImplemented, ParserTypeEnum::FilenameOnly, DataStructureEnum::NoStructure, DataImplEnum::FileName,                           DataOrganism::NoOrganism},
 
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Data file processing handled within the requesting package.
+// Just pass the data source and file name back to the requesting package.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FilenameDataDB : public DataDB {
+
+public:
+
+  FilenameDataDB(DataSourceEnum data_source, const std::string& file_name) : DataDB(data_source) , file_name_(file_name) {}
+  ~FilenameDataDB() override = default;
+
+  [[nodiscard]] const std::string& fileId() const override { return file_name_; }
+
+
+private:
+
+  const std::string file_name_;
+
+};
+
+
+
+
 
 
 

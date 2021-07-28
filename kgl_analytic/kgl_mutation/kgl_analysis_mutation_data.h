@@ -48,7 +48,7 @@ public:
   // Adhoc LILRB1 gene polymorphism analysis using alternative Ensembl IDs from Gene Card.
   // The sad truth is that there are multiple Ensembl identifiers per gene (why?), we will need to accommodate this
   // problem in a code re-design.
-  [[nodiscard]] static const std::vector<std::string> adHocAltLILRB1Genes() { return alt_LILRB1_ensembl_symbol_; }
+  [[nodiscard]] static const std::vector<std::string> adHocAltLILRB1GeneSymbol() { return alt_LILRB1_ensembl_symbol_; }
 
 private:
 

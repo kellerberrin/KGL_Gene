@@ -37,6 +37,7 @@ public:
   ~DBCitation() override = default;
 
   [[nodiscard]] const DBCitationMap& citationMap() const { return citation_map_; }
+  [[nodiscard]] DBCitationMap& citationMap() { return citation_map_; }
   [[nodiscard]] bool insertCitations(const std::string& allele_rsid, const std::vector<std::string>& pmid_citations);
   [[nodiscard]] const std::string& fileId() const override { return file_name_; }
 
@@ -62,10 +63,9 @@ public:
   JSONInfoParser() = default;
   ~JSONInfoParser() = default;
 
-  // Begin reading IO records, spawns threads.
-  [[nodiscard]] bool commenceJSONIO(const std::string& json_file_name);
-  // Parse the Json file for PMID citations.
-  void parseJson(const std::shared_ptr<DBCitation>& db_citation_ptr);
+  bool parseFile(const std::string& json_file_name, const std::shared_ptr<DBCitation>& db_citation_ptr);
+  bool parseFile(const std::string& json_file_name, DBCitationMap& citation_map);
+
   [[nodiscard]] const std::string& getFileName() const { return file_data_.fileName(); }
 
 private:
@@ -74,6 +74,11 @@ private:
   FileDataIO file_data_;
 
   static const constexpr size_t REPORT_INTERVAL{100000}; // Parser progress messages.
+
+  // Begin reading IO records, spawns threads.
+  [[nodiscard]] bool commenceJSONIO(const std::string& json_file_name);
+  // Parse the Json file for PMID citations.
+  void parseJson(DBCitationMap& citation_map);
 
 };
 

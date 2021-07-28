@@ -61,6 +61,9 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
     case ParserTypeEnum::MonoJSONdbSNPUnphased:
       return readJSONdbSNP(file_info_ptr, data_source);
 
+    case ParserTypeEnum::FilenameOnly:
+      return std::make_shared<FilenameDataDB>(data_source, file_info_ptr->fileName()); // Just return file type and file name.
+
     default:
       ExecEnv::log().critical("ParserSelection::parseData; Unknown data file: {} specified - unrecoverable", file_info_ptr->fileName());
       return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source); // never reached.
@@ -76,13 +79,7 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
   // An rsid indexed map of PMID citation identifiers.
   std::shared_ptr<DBCitation> db_citation_ptr(std::make_shared<DBCitation>(data_source, file_info->fileName()));
 
-  JSONInfoParser reader;
-  if (reader.commenceJSONIO(file_info->fileName())) {
-
-    reader.parseJson(db_citation_ptr);
-    ExecEnv::log().info("JSON File: {} has alleles with PMID citations: {}", file_info->fileName(), db_citation_ptr->citationMap().size());
-
-  }
+  JSONInfoParser().parseFile(file_info->fileName(), db_citation_ptr);
 
   return db_citation_ptr;   // return the citation DB object.
 

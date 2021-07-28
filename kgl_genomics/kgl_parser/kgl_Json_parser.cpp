@@ -34,6 +34,33 @@ bool kgl::DBCitation::insertCitations(const std::string& allele_rsid, const std:
 }
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::JSONInfoParser::parseFile(const std::string& json_file_name, const std::shared_ptr<DBCitation>& db_citation_ptr) {
+
+  return parseFile(json_file_name, db_citation_ptr->citationMap());
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::JSONInfoParser::parseFile(const std::string& json_file_name, DBCitationMap& citation_map) {
+
+  if (commenceJSONIO(json_file_name)) {
+
+    parseJson(citation_map);
+    ExecEnv::log().info("JSON File: {} has alleles with PMID citations: {}", json_file_name, citation_map.size());
+
+  } else {
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -54,7 +81,7 @@ bool kgl::JSONInfoParser::commenceJSONIO(const std::string& json_file_name) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Dequeue a line record and incrementally call the JSON parser
 
-void kgl::JSONInfoParser::parseJson(const std::shared_ptr<DBCitation>& db_citation_ptr) {
+void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
 
   size_t chars_processed{0};
   size_t lines_processed{0};
@@ -132,13 +159,12 @@ void kgl::JSONInfoParser::parseJson(const std::shared_ptr<DBCitation>& db_citati
 
         }
 
-        if (not db_citation_ptr->insertCitations(rsid, cite_string_array)) {
+        auto [iter, result] = citation_map.try_emplace(rsid, cite_string_array);
+        if (not result) {
 
-          ExecEnv::log().error("JSONInfoParser::parseJson; problem processing citations for rsid: {}", rsid);
+          ExecEnv::log().error("JSONInfoParser::parseJson; problem processing citations for (duplicate) rsid: {}", rsid);
 
         }
-
-//        ExecEnv::log().info("Allele ref snp: {} has PMID citations: {}", rsid, cite_string);
 
       }
 

@@ -462,7 +462,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp kgl_analytic/kgl_verify/kgl_analysis_json.cpp kgl_analytic/kgl_verify/kgl_analysis_json.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp kgl_analytic/kgl_info/kgl_analysis_json.cpp kgl_analytic/kgl_info/kgl_analysis_json.h)
 
 # Deconvolution and mixture files.
 

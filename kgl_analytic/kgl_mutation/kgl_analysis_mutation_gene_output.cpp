@@ -132,10 +132,14 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenome
                                             char output_delimiter) const {
 
 
-  out_file << unique_variants_ << output_delimiter
+  out_file << unique_variants_.size() << output_delimiter
            << variant_count_ << output_delimiter
-           << citation_count_ << output_delimiter
-           << span_variant_count_ << output_delimiter;
+           << unique_citations_.size() << output_delimiter
+           << citation_count_ << output_delimiter;
+
+  ethnic_citation_.writeOutput(genome_aux_data, out_file, output_delimiter);
+
+  out_file << span_variant_count_ << output_delimiter;
 
   for (auto const& [population, upper_tail] : upper_tail_) {
 
@@ -182,8 +186,12 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenome
 
   out_file << "UniqueVariants" << output_delimiter
            << "VariantCount" << output_delimiter
-           << "PMIDCitedVariants" << output_delimiter
-           << "SpanVariantCount" << output_delimiter;
+           << "UniquePMIDVariants" << output_delimiter
+           << "PMIDCitedVariants" << output_delimiter;
+
+  ethnic_citation_.writeHeader(genome_aux_data, out_file, output_delimiter);
+
+  out_file << "SpanVariantCount" << output_delimiter;
 
   for (auto const& [upper_population, upper_tail] : upper_tail_) {
 

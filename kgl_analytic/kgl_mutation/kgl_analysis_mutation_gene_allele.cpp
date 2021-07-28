@@ -15,7 +15,13 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::GenerateGeneAllele::addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
-  sorted_allele_map_.merge(sorted_variants->filterEnsembl(ensembl_gene_list_));
+  auto filtered_variants = sorted_variants->filterEnsembl(ensembl_gene_list_);
+
+  for (auto const& [ensembl_id, variant_ptr] : filtered_variants) {
+
+    sorted_allele_map_.emplace(ensembl_id, variant_ptr);
+
+  }
 
 }
 
@@ -60,7 +66,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "Offset" << delimiter
           << "Reference" << delimiter
           << "Alternate" << delimiter
-          << "Citations" << delimiter
+          << "CiteCount" << delimiter
           << "GlobalFreq" << delimiter
           << "AFRFreq"  << delimiter;
 
@@ -75,7 +81,8 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "AFRCount" << delimiter
           << "AFRAltCount" << delimiter
           << "AFR_Freq%" << delimiter
-          << "NonAFR_Freq%" << '\n';
+          << "NonAFR_Freq%" << delimiter
+          << "Citations" << '\n';
 
 }
 
@@ -189,13 +196,47 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
     if (non_afr_count  > 0) {
 
       double non_afr_percent = ((static_cast<double>(alt_allele_count)-static_cast<double>(afr_alt_allele_count)) / static_cast<double>(non_afr_count)) * 100.0;
-      out_file << non_afr_percent  << '\n';
+      out_file << non_afr_percent  << delimiter;
 
     } else {
 
-      out_file << 0 << '\n';
+      out_file << 0 << delimiter;
 
     }
+
+    if (not variant_ptr->identifier().empty()) {
+
+      auto find_result = allele_citation_ptr_->citationMap().find(variant_ptr->identifier());
+      if (find_result != allele_citation_ptr_->citationMap().end()) {
+
+        auto const& [rsid, citations] = *find_result;
+        std::string cite_string;
+        for (auto const& cite : citations) {
+
+          cite_string += cite;
+          if (cite != citations.back()) {
+
+            cite_string += CONCATENATE_VEP_FIELDS_;
+
+          }
+
+        }
+
+        out_file << cite_string;
+
+      } else {
+
+        out_file << "";
+
+      }
+
+    } else {
+
+      out_file << "";
+
+    }
+
+    out_file << '\n';
 
   }
 

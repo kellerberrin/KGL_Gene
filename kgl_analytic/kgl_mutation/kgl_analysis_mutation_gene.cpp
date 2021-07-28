@@ -104,9 +104,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
       GeneMutation mutation;
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(genome_aux_data);
-      mutation.gene_variants.updateLofEthnicity().updatePopulations(genome_aux_data);
-      mutation.gene_variants.updateHighEthnicity().updatePopulations(genome_aux_data);
-      mutation.gene_variants.updateModerateEthnicity().updatePopulations(genome_aux_data);
+      mutation.gene_variants.initializeEthnic(genome_aux_data);
       mutation.ontology.processOntologyStats(mutation.gene_characteristic.geneId(), ontology_cache);
       gene_vector_.push_back(mutation);
 

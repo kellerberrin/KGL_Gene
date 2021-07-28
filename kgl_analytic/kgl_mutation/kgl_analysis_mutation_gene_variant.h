@@ -52,19 +52,15 @@ class GeneVariants {
 
 public:
 
-  GeneVariants() {
-
-    ethnic_lof_.setDisplay("LOF_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
-    ethnic_high_.setDisplay("HIGH_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
-    ethnic_moderate_.setDisplay("MOD_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
-
-  }
-
+  GeneVariants() = default;
   ~GeneVariants() = default;
 
   GeneVariants(const GeneVariants &) = default;
 
   GeneVariants &operator=(const GeneVariants &) = default;
+
+  // Must be called before updating object.
+  void initializeEthnic(const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
 
   void writeVariantHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                            std::ostream &out_file,
@@ -86,13 +82,10 @@ public:
 
   void initializeSummaryStatistics( const GeneEthnicitySex& ethnic_statistics);
 
-  [[nodiscard]] GeneEthnicitySex& updateLofEthnicity() { return ethnic_lof_; }
-  [[nodiscard]] GeneEthnicitySex& updateHighEthnicity() { return ethnic_high_; }
-  [[nodiscard]] GeneEthnicitySex& updateModerateEthnicity() { return ethnic_moderate_; }
 
 private:
 
-  size_t unique_variants_{0};
+  std::set<std::string> unique_variants_;
   size_t span_variant_count_{0};
   size_t variant_count_{0};
   size_t all_lof_{0};            // All lof variants;
@@ -105,6 +98,8 @@ private:
   size_t hom_moderate_effect_{0};
   GeneEthnicitySex ethnic_moderate_;
   size_t citation_count_{0};
+  std::set<std::string> unique_citations_;
+  GeneEthnicitySex ethnic_citation_;
   size_t genome_count_{0};   // Total number of genomes.
   size_t genome_variant_{0};  // Number of genomes that contain variants for this gene.
 
