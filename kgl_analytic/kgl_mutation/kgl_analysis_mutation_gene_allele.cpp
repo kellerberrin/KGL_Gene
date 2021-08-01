@@ -13,9 +13,43 @@
 namespace kgl = kellerberrin::genome;
 
 
+void kgl::GenerateGeneAllele::initialize(const std::vector<std::string>& symbol_gene_list,
+                const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                const std::shared_ptr<const CitationResource>& allele_citation_ptr) {
+
+
+  for (auto const& symbol : symbol_gene_list) {
+
+    auto ensembl_symbol_list = uniprot_nomenclature_ptr->symbolToEnsembl(symbol);
+    for (auto const& ensembl :  ensembl_symbol_list) {
+
+      auto [iter, insert_result] = ensembl_symbol_map_.try_emplace(ensembl, symbol);
+      if (not insert_result) {
+
+        ExecEnv::log().error("GenerateGeneAllele::initialize; could not add (duplicate) gene ensembl code: {} for gene symbol: {}", ensembl, symbol);
+
+      }
+
+    }
+
+  }
+
+  sorted_allele_map_.clear();
+  allele_citation_ptr_ = allele_citation_ptr;
+
+}
+
+
 void kgl::GenerateGeneAllele::addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
-  auto filtered_variants = sorted_variants->filterEnsembl(ensembl_gene_list_);
+  std::vector<std::string> ensembl_list;
+  for (auto const& [ensembl, symbol] : ensembl_symbol_map_) {
+
+    ensembl_list.push_back(ensembl);
+
+  }
+
+  auto filtered_variants = sorted_variants->filterEnsembl(ensembl_list);
 
   for (auto const& [ensembl_id, variant_ptr] : filtered_variants) {
 
@@ -60,7 +94,8 @@ void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const 
 
 void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char delimiter) {
 
-  outfile << "EnsemblGeneId" << delimiter
+  outfile << "SymbolGeneId" << delimiter
+          << "EnsemblGeneId" << delimiter
           << "VariantId" << delimiter
           << "ContigId" << delimiter
           << "Offset" << delimiter
@@ -101,6 +136,18 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
   writeHeader(out_file, delimiter);
 
   for (auto const& [ensembl_id, variant_ptr] : sorted_allele_map_) {
+
+    auto find_result = ensembl_symbol_map_.find(ensembl_id);
+    if (find_result == ensembl_symbol_map_.end()) {
+
+      out_file << "Error:Unknown" << delimiter;
+
+    } else {
+
+      auto const& [ensembl, symbol] = *find_result;
+      out_file << symbol << delimiter;
+
+    }
 
     out_file << ensembl_id << delimiter
              << variant_ptr->identifier() << delimiter

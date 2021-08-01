@@ -8,7 +8,6 @@
 #include <string>
 #include <memory>
 #include "kel_logging.h"
-#include "kel_mem_alloc.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Singleton. This class sets up the application runtime environment as a series of static variables

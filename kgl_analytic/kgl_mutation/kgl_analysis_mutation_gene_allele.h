@@ -22,14 +22,10 @@ public:
   GenerateGeneAllele() = default;
   ~GenerateGeneAllele() = default;
 
-  void initialize(const std::vector<std::string>& ensembl_gene_list,
-                  const std::shared_ptr<const CitationResource>& allele_citation_ptr) {
+  void initialize(const std::vector<std::string>& symbol_gene_list,
+                  const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                  const std::shared_ptr<const CitationResource>& allele_citation_ptr);
 
-    ensembl_gene_list_ = ensembl_gene_list;
-    sorted_allele_map_.clear();
-    allele_citation_ptr_ = allele_citation_ptr;
-
-  }
   void filterAlleleMap(const double ALL_frequency, const double AFR_frequency);
   void writeOutput(const std::string& output_file, const char delimiter) const;
   void addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
@@ -40,9 +36,9 @@ private:
   const static constexpr char *AFR_SUPER_POP_{"AFR"};
   const static constexpr char *ALL_SUPER_POP_{"ALL"};
 
-  std::vector<std::string> ensembl_gene_list_;
   EnsemblIndexMap sorted_allele_map_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
+  std::map<std::string, std::string> ensembl_symbol_map_;
 
   static void writeHeader(std::ofstream& outfile, const char delimiter);
 
