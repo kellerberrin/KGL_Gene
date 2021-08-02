@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_GENE_H
 
 #include "kgl_genome_genome.h"
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
 #include "kgl_citation_parser.h"
 #include "kgl_variant_sort.h"

@@ -44,6 +44,14 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadCitationResource(resource_ident, resource_ptr);
         break;
 
+      case RuntimeResourceType::ENTREZ_GENE:
+        loadEntrezGeneResource(resource_ident, resource_ptr);
+        break;
+
+      case RuntimeResourceType::BIO_PMID:
+        loadPMIDBioResource(resource_ident, resource_ptr);
+        break;
+
       default:
         ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type, resource ident: {}.",
                                 package.packageIdentifier(), resource_ident);
@@ -249,5 +257,49 @@ void kgl::ExecutePackage::loadCitationResource(const std::string& citation_ident
   std::shared_ptr<CitationResource> citation_ptr(std::make_shared<CitationResource>(citation_resource_ptr->citationIdentifier(), citation_parser.getCitationMap()));
 
   resource_ptr->addResource(citation_ptr);
+
+}
+
+
+void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(entrez_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource, Entrez Gene Database: {}, not defined", entrez_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto entrez_resource_ptr = std::dynamic_pointer_cast<const EntrezGeneResource>(resource_base_ptr);
+
+  if (not entrez_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource, Resource: {} is not an Entrez Gene Resource", resource_ident);
+
+  }
+
+
+
+}
+
+
+void kgl::ExecutePackage::loadPMIDBioResource(const std::string& bio_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(bio_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource, PMID Bio Database: {}, not defined", bio_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto bio_resource_ptr = std::dynamic_pointer_cast<const BioPMIDResource>(resource_base_ptr);
+
+  if (not bio_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource, Resource: {} is not an PMID Bio Resource", resource_ident);
+
+  }
 
 }

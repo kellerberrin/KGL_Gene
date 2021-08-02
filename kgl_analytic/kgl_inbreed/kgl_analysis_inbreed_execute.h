@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_INBREED_EXECUTE_H
 
 
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 #include "kgl_analysis_inbreed_calc.h"
 #include "kgl_analysis_inbreed_args.h"
 #include "kgl_analysis_inbreed_output.h"

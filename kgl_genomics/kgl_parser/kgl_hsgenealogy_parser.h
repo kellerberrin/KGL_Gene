@@ -6,7 +6,7 @@
 #define KGL_HSGENEALOGY_PARSER_H
 
 
-#include "kgl_Hsgenome_aux.h"
+#include "kgl_hsgenome_aux.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

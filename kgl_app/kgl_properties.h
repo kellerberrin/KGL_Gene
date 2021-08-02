@@ -132,7 +132,15 @@ private:
   constexpr static const char* CITATION_DATABASE_ = "alleleCitation";
   constexpr static const char* CITATION_IDENT_ = "citationIdent";
   constexpr static const char* CITATION_FILE_ = "citationFile";
-  // Contig/Chromosome Alias categories.
+  // Human Entrez Gene Infomation; this is a resource database.
+  constexpr static const char* ENTREZ_DATABASE_ = "entrezGene";
+  constexpr static const char* ENTREZ_IDENT_ = "entrezIdent";
+  constexpr static const char* ENTREZ_FILE_ = "entrezFile";
+  // Literature PMID linked to BioConcepts (Gene, Disease, etc); this is a resource database.
+  constexpr static const char* PMID_BIO_DATABASE_ = "bioPMID";
+  constexpr static const char* PMID_BIO_IDENT_ = "bioPMIDIdent";
+  constexpr static const char* PMID_BIO_FILE_ = "bioPMIDFile";
+   // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";
   constexpr static const char* ALIAS_TYPE_ = "chromosomeType";

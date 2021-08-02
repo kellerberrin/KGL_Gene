@@ -8,7 +8,7 @@
 
 #include "kgl_resource_db.h"
 #include "kgl_square_parser.h"
-#include "kgl_Json_parser.h"
+#include "kgl_json_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

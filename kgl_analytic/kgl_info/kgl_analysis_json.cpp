@@ -3,7 +3,7 @@
 //
 
 #include "kgl_analysis_json.h"
-#include "kgl_Json_parser.h"
+#include "kgl_json_parser.h"
 
 namespace kgl = kellerberrin::genome;
 

@@ -165,6 +165,14 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
           resources.emplace_back(RuntimeResourceType::ALLELE_CITATION, resource_identifier);
 
+        } else if (resource_type == ENTREZ_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::ENTREZ_GENE, resource_identifier);
+
+        }  else if (resource_type == PMID_BIO_DATABASE_) {
+
+          resources.emplace_back(RuntimeResourceType::BIO_PMID, resource_identifier);
+
         }
 
       }
@@ -499,6 +507,64 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
       if (not result) {
 
         ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Allele Citation ident: {} to map (duplicate)", citation_ident);
+
+      }
+
+    } else if (tree_type == ENTREZ_DATABASE_) {
+
+      key = std::string(ENTREZ_IDENT_);
+      std::string entrez_ident;
+      if (not sub_tree.getProperty(key, entrez_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Entrez Gene Identifier.");
+        continue;
+
+      }
+
+      key = std::string(ENTREZ_FILE_);
+      std::string entrez_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), entrez_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Entrez Gene file name information, ident: {}", entrez_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const EntrezGeneResource>(entrez_ident, entrez_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(entrez_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Entrez Gene ident: {} to map (duplicate)", entrez_ident);
+
+      }
+
+    } else if (tree_type == PMID_BIO_DATABASE_) {
+
+      key = std::string(PMID_BIO_IDENT_);
+      std::string bio_ident;
+      if (not sub_tree.getProperty(key, bio_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No PMID Bio Gene Identifier.");
+        continue;
+
+      }
+
+      key = std::string(PMID_BIO_FILE_);
+      std::string bio_file_name;
+      if (not sub_tree.getFileProperty(key, workDirectory(), bio_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No PMID Bio file name information, ident: {}", bio_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const BioPMIDResource>(bio_ident, bio_file_name);
+
+      auto const [iter, result] = resource_map.try_emplace(bio_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add PMID Bio ident: {} to map (duplicate)", bio_ident);
 
       }
 

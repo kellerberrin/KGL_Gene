@@ -2,7 +2,7 @@
 // Created by kellerberrin on 9/1/21.
 //
 
-#include "kgl_Pf3k_COI.h"
+#include "kgl_pf3k_coi.h"
 
 
 namespace kgl = kellerberrin::genome;

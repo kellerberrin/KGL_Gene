@@ -85,7 +85,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
   // Construct the hash map.
   for (auto const& variant_ptr : variant_vector_) {
 
-    std::string variant_hash = variant_ptr->variantHash();
+    std::string variant_hash = variant_ptr->HGVS();
     auto result = hash_map.find(variant_hash);
     if (result != hash_map.end()) {
 
@@ -158,7 +158,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
     // look for complementary phases.
     bool first_pass = true;
-    std::string first_hash = filtered_variants.front()->variantPhaseHash();
+    std::string first_hash = filtered_variants.front()->HGVS_Phase();
     OffsetDBArray phase_subset;
     for (auto& variant_ptr :  filtered_variants) {
 
@@ -170,7 +170,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituDiploid() {
 
       }
 
-      if (variant_ptr->variantPhaseHash() != first_hash) {
+      if (variant_ptr->HGVS_Phase() != first_hash) {
 
         phase_subset.push_back(variant_ptr);
         break;

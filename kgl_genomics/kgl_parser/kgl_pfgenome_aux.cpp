@@ -4,7 +4,7 @@
 
 
 #include <fstream>
-#include "kgl_Pfgenome_aux.h"
+#include "kgl_pfgenome_aux.h"
 #include "kel_exec_env.h"
 
 

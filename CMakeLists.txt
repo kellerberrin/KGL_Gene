@@ -108,7 +108,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_types.h
         kgl_genomics/kgl_database/kgl_gff_fasta.h
         kgl_genomics/kgl_database/kgl_gff_fasta.cpp
-        kgl_app/kgl_resource_db.h
         kgl_genomics/kgl_database/kgl_genome_feature.h
         kgl_genomics/kgl_database/kgl_genome_feature.cpp
         kgl_genomics/kgl_database/kgl_variant.h
@@ -169,8 +168,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_vcf_parse_cigar.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_record_vcf_impl.cpp
-        kgl_genomics/kgl_parser/kgl_Pfgenome_aux.h
-        kgl_genomics/kgl_parser/kgl_Pfgenome_aux.cpp
+        kgl_genomics/kgl_parser/kgl_pfgenome_aux.h
+        kgl_genomics/kgl_parser/kgl_pfgenome_aux.cpp
         kgl_genomics/kgl_database/kgl_variant_db_genome.h
         kgl_genomics/kgl_database/kgl_variant_db_population.h
         kgl_genomics/kgl_database/kgl_genome_contig_feature.h
@@ -208,8 +207,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_offset.h
         kgl_genomics/kgl_database/kgl_variant_db_contig.h
         kgl_genomics/kgl_database/kgl_variant_db_mutation.h
-        kgl_genomics/kgl_parser/kgl_Hsgenealogy_parser.h
-        kgl_genomics/kgl_parser/kgl_Hsgenealogy_parser.cpp
+        kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.h
+        kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_gnomad_impl.h
@@ -220,8 +219,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_type.h
         kgl_genomics/kgl_database/kgl_genome_contig.h
         kgl_genomics/kgl_database/kgl_variant_db_type.cpp
-        kgl_genomics/kgl_parser/kgl_Pf3k_COI.cpp
-        kgl_genomics/kgl_parser/kgl_Pf3k_COI.h
+        kgl_genomics/kgl_parser/kgl_pf3k_coi.cpp
+        kgl_genomics/kgl_parser/kgl_pf3k_coi.h
         kgl_genomics/kgl_database/kgl_genome_genome.h
         kgl_genomics/kgl_parser/kgl_square_parser.cpp
         kgl_genomics/kgl_parser/kgl_square_parser.h
@@ -236,16 +235,20 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_collection.cpp
         kgl_genomics/kgl_database/kgl_variant_sort.cpp
         kgl_genomics/kgl_database/kgl_variant_sort.h
-        kgl_genomics/kgl_parser/kgl_Hsgenome_aux.cpp
-        kgl_genomics/kgl_parser/kgl_Hsgenome_aux.h
+        kgl_genomics/kgl_parser/kgl_hsgenome_aux.cpp
+        kgl_genomics/kgl_parser/kgl_hsgenome_aux.h
         kgl_genomics/kgl_parser/kgl_uniprot_parser.cpp
         kgl_genomics/kgl_parser/kgl_uniprot_parser.h
         kgl_genomics/kgl_database/kgl_variant_sort_analysis.cpp
         kgl_genomics/kgl_database/kgl_variant_sort_analysis.h
-        kgl_genomics/kgl_parser/kgl_Json_parser.cpp
-        kgl_genomics/kgl_parser/kgl_Json_parser.h
+        kgl_genomics/kgl_parser/kgl_json_parser.cpp
+        kgl_genomics/kgl_parser/kgl_json_parser.h
         kgl_genomics/kgl_parser/kgl_citation_parser.cpp
-        kgl_genomics/kgl_parser/kgl_citation_parser.h)
+        kgl_genomics/kgl_parser/kgl_citation_parser.h
+        kgl_genomics/kgl_database/kgl_variant_db_freq.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_freq.h
+        kgl_genomics/kgl_parser/kgl_entrez_parser.cpp
+        kgl_genomics/kgl_parser/kgl_entrez_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -428,8 +431,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_verify/kgl_analysis_verify.cpp
         kgl_analytic/kgl_verify/kgl_analysis_verify.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_freq.h
-        kgl_genomics/kgl_database/kgl_variant_db_freq.cpp
-        kgl_genomics/kgl_database/kgl_variant_db_freq.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.h
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.cpp
         kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.h
@@ -462,7 +463,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp kgl_analytic/kgl_info/kgl_analysis_json.cpp kgl_analytic/kgl_info/kgl_analysis_json.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp
+        kgl_analytic/kgl_info/kgl_analysis_json.cpp
+        kgl_analytic/kgl_info/kgl_analysis_json.h)
 
 # Deconvolution and mixture files.
 
@@ -490,7 +493,9 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp
         kgl_app/kgl_runtime_config.h
-        kgl_app/kgl_package_resources.cpp kgl_app/kgl_resource_db.cpp)
+        kgl_app/kgl_package_resources.cpp
+        kgl_app/kgl_resource_db.h
+        kgl_app/kgl_resource_db.cpp)
 
 
 

@@ -93,7 +93,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 
     for (auto const& variant_ptr : variant_array) {
 
-      unique_variants_.insert(variant_ptr->variantHash());
+      unique_variants_.insert(variant_ptr->HGVS());
 // count variants with citations.
       if (not variant_ptr->identifier().empty()) {
 

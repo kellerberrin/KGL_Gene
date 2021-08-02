@@ -7,7 +7,7 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
 #include "kgl_variant_sort_analysis.h"
 #include "kgl_analysis_mutation_gene.h"

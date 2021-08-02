@@ -2,7 +2,7 @@
 // Created by kellerberrin on 29/6/21.
 //
 
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 
 
 namespace kgl = kellerberrin::genome;

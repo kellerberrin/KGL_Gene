@@ -334,7 +334,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
         for (auto const& offset_variant : offset_opt.value()) {
 
-          if (offset_variant->variantHash() == variant_ptr->variantHash()) {
+          if (offset_variant->HGVS() == variant_ptr->HGVS()) {
 
             // Add the unphased population ptr. Note that this loses phasing information (if present)
             // The problem is that the currently (2021) the gnomad 3.1 files have damaged vep fields.
@@ -410,7 +410,7 @@ void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_
 
       }
 
-      ensembl_hash_map.emplace(variant_ptr->variantHash(), variant_ptr);
+      ensembl_hash_map.emplace(variant_ptr->HGVS(), variant_ptr);
 
       ++lower_iterator;
 
@@ -435,7 +435,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblAlt( con
     for (auto const& variant_ptr :  offset_db_ptr->getVariantArray()) {
 
       ++var_checked_count_;
-      auto result = ensembl_hash_map.find(variant_ptr->variantHash());
+      auto result = ensembl_hash_map.find(variant_ptr->HGVS());
       if (result != ensembl_hash_map.end()) {
 
         auto const& [hash, ensembl_variant_ptr] = *result;

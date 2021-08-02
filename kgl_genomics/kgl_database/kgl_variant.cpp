@@ -187,16 +187,18 @@ size_t kgl::Variant::alternateSize(size_t reference_size) const {
 
 
 // Unique upto phase.
-std::string kgl::Variant::variantHash() const {
+std::string kgl::Variant::HGVS() const {
 
-  return contigId() + ":"  + std::to_string(offset()) + ":" + reference().getSequenceAsString() + ":" + alternate().getSequenceAsString();
+  // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
+  return contigId() + ":g."  + std::to_string(referenceOffset() + 1) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
 
 }
 
 // Phase specific hash
-std::string kgl::Variant::variantPhaseHash() const {
+std::string kgl::Variant::HGVS_Phase() const {
 
-  return contigId() + ":"  + std::to_string(offset()) + ":" + reference().getSequenceAsString() +
-         ":" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
+  // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
+  return contigId() + ":g."  + std::to_string(referenceOffset() + 1) + reference().getSequenceAsString() +
+         ">" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
 
 }

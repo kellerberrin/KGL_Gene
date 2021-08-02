@@ -333,7 +333,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
       std::unordered_set<std::string> search_hash;
       for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-        search_hash.insert(variant_ptr->variantHash());
+        search_hash.insert(variant_ptr->HGVS());
 
       }
 
@@ -341,7 +341,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
       auto const& [this_offset, this_offset_ptr] = *result;
       for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
-        auto result = search_hash.find(this_variant_ptr->variantHash());
+        auto result = search_hash.find(this_variant_ptr->HGVS());
         if (result != search_hash.end()) {
 
           if (not found_contig_ptr->addVariant(this_variant_ptr)) {

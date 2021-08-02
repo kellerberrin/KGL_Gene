@@ -111,18 +111,20 @@ public:
 
   // Location specific parameters.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  // Actual offset of the allele. For SNPs offset() == referenceOffset(). For indels (generally) offset() == referenceOffset() + 1
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_ + contig_allele_offset_; }
+  // The zero based offset of the allele. This is NOT the 1 based offset used in Gffs etc.
   [[nodiscard]] ContigOffset_t referenceOffset() const { return contig_reference_offset_; }
   [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
-  // Unique upto phase (not phase specific).
-  [[nodiscard]] std::string variantHash() const;
-  // Phase specific hash
-  [[nodiscard]] std::string variantPhaseHash() const;
+  // A string hash unique upto phase (not phase specific). In HGVS format.
+  [[nodiscard]] std::string HGVS() const;
+  // Phase specific hash. In HGVS format plus the variant phase (if applicable - may be unphased) in the format ":B".
+  [[nodiscard]] std::string HGVS_Phase() const;
   // Equality hash.
-  [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? variantPhaseHash() : variantHash(); }
+  [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? HGVS_Phase() : HGVS(); }
 
   [[nodiscard]] bool equality(const Variant& cmp, VariantEquality type) const { return equalityHash(type) == cmp.equalityHash(type); }
 
@@ -132,7 +134,7 @@ public:
 
   [[nodiscard]] bool analogous(const Variant& cmp_var) const { return equality(cmp_var, VariantEquality::UNPHASED); }
 
-  [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return variantPhaseHash() < cmp_var.variantPhaseHash(); }
+  [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return HGVS_Phase() < cmp_var.HGVS_Phase(); }
 
   [[nodiscard]] static size_t objectCount() { return object_count_; }
 

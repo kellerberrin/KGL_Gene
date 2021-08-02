@@ -301,6 +301,65 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Allele Citation information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class EntrezGeneResource : public RuntimeResource {
+
+public:
+
+  EntrezGeneResource( std::string entrez_identifier,
+                      std::string entrez_file_name)
+                          : entrez_identifier_(std::move(entrez_identifier)),
+                            entrez_file_name_(std::move(entrez_file_name)) {}
+  EntrezGeneResource() = delete;
+  EntrezGeneResource(const EntrezGeneResource&) = default;
+  ~EntrezGeneResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ENTREZ_GENE; }
+
+  [[nodiscard]] const std::string& entrezIdentifier() const { return entrez_identifier_; }
+  [[nodiscard]] const std::string& entrezFileName() const { return entrez_file_name_; }
+
+private:
+
+  std::string entrez_identifier_;   // A unique short string to identify this resource
+  std::string entrez_file_name_;
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Allele Citation information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class BioPMIDResource : public RuntimeResource {
+
+public:
+
+  BioPMIDResource( std::string bio_identifier,
+                   std::string bio_file_name)
+                      : bio_identifier_(std::move(bio_identifier)),
+                        bio_file_name_(std::move(bio_file_name)) {}
+  BioPMIDResource() = delete;
+  BioPMIDResource(const BioPMIDResource&) = default;
+  ~BioPMIDResource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::BIO_PMID; }
+
+  [[nodiscard]] const std::string& bioIdentifier() const { return bio_identifier_; }
+  [[nodiscard]] const std::string& boiFileName() const { return bio_file_name_; }
+
+private:
+
+  std::string bio_identifier_;   // A unique short string to identify this resource
+  std::string bio_file_name_;
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold Genome aux population information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

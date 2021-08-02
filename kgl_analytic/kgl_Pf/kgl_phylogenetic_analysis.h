@@ -12,7 +12,7 @@
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
-#include "kgl_Pfgenome_aux.h"
+#include "kgl_pfgenome_aux.h"
 #include "kgl_sequence_compare_impl.h"
 
 

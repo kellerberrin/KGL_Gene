@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_genome.h"
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 #include "kgl_variant_db_population.h"
 
 

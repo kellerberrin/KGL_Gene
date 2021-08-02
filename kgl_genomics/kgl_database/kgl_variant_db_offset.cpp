@@ -114,7 +114,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituHomozygous() {
 
   if (offset_count.first == 2) {
 
-    if (variant_vector_[0]->variantHash() == variant_vector_[0]->variantHash()) {
+    if (variant_vector_[0]->HGVS() == variant_vector_[0]->HGVS()) {
 
       offset_count.second = offset_count.first;
       return offset_count;
@@ -143,7 +143,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const VariantFilter &filte
 
   for (auto const &variant_ptr : variant_vector_) {
 
-    auto variant_hash = unique_phased ? variant_ptr->variantPhaseHash() : variant_ptr->variantHash();
+    auto variant_hash = unique_phased ? variant_ptr->HGVS_Phase() : variant_ptr->HGVS();
     auto const &result = hash_set.find(variant_hash);
     if (result == hash_set.end()) {
 
@@ -153,7 +153,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const VariantFilter &filte
       if (not insert_result) {
 
         ExecEnv::log().error("OffsetDB::inSituUnique; variant hash: {} cannot be inserted",
-                             (unique_phased ? variant_ptr->variantPhaseHash() : variant_ptr->variantHash()));
+                             (unique_phased ? variant_ptr->HGVS_Phase() : variant_ptr->HGVS()));
 
       }
 

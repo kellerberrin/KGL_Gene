@@ -2,7 +2,7 @@
 // Created by kellerberrin on 2/8/20.
 //
 
-#include "kgl_Hsgenealogy_parser.h"
+#include "kgl_hsgenealogy_parser.h"
 #include "kel_utility.h"
 
 #include <set>
