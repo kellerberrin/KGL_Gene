@@ -235,3 +235,25 @@ const std::vector<std::string> kgl::MutationAnalysisData::ontology_derived_gene_
 
 };
 
+const std::vector<std::string> kgl::MutationAnalysisData::malaria_MeSH_list_{
+
+  "MESH:D008288",  // Malaria (Main Subject).
+  "MESH:D016779",  // Cerebral Malaria
+  "MESH:D016778",   // Malaria Falciparum
+  "MESH:D016780",  // Malaria Vivax
+  "MESH:D008289",  // Malaria Avian
+  "MESH:D010965",  // Plasmodium Malariae
+  "MESH:D017780",  // Malaria Vaccines
+  "MESH:D001742",  // Blackwater Fever.
+  "MESH:D010922",  // Placental Infection
+  "MESH:D007239",  // Malarial infection
+  "MESH:D018512",  // Malaria parasitemias|asexual parasitemia versus gametocytemia|parasitemia
+  "MESH:D000740",  // Parasitaemia and anaemia|anemia|anaemia|malarial anaemia|anaemia - Anaemia
+  "MESH:D031261",	 // Malarial mortality
+  "MESH:D010272",	 // Malarial parasites
+  "MESH:D007022",	 // Blood-stage malarial infection
+  "MESH:D011488",	 // Malarial proteins
+  "MESH:D014397",	 // malarial drug consumption|malarial consumption
+  "MESH:C531736"	 // acute malaria coinfection|acute malaria
+
+};

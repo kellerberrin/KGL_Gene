@@ -50,6 +50,10 @@ public:
   // problem in a code re-design.
   [[nodiscard]] static const std::vector<std::string> adHocAltLILRB1GeneSymbol() { return alt_LILRB1_ensembl_symbol_; }
 
+  // The MeSH disease codes for malaria.
+  [[nodiscard]] static const std::vector<std::string> malariaMeSHList() { return malaria_MeSH_list_; }
+
+
 private:
 
   // From the OMIM entry #611162 available at https://www.omim.org/entry/611162
@@ -72,6 +76,8 @@ private:
   // problem in a code re-design.
   static const std::vector<std::string> alt_LILRB1_ensembl_symbol_;
 
+  // The MeSH disease codes for malaria.
+  static const std::vector<std::string> malaria_MeSH_list_;
 
 };
 

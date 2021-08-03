@@ -72,6 +72,7 @@ private:
   std::shared_ptr<const EntrezResource> entrez_gene_ptr_;
   std::shared_ptr<const BioPMIDResource> bio_pmid_ptr_;
 
+  std::set<std::string> malaria_pmid_;
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
   // By Span is all variants with in intron+exon span of the gene

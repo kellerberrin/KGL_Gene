@@ -21,10 +21,20 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 struct BioPMIDRecord {
 
+  BioPMIDRecord() = default;
+  BioPMIDRecord(const BioPMIDRecord& record);
+  BioPMIDRecord(  std::string&& pmid_id,
+                  std::string&& bio_type,
+                  std::string&& bio_id,
+                  std::string&& bio_text) noexcept;
+  BioPMIDRecord(BioPMIDRecord&& record) noexcept;
+  BioPMIDRecord& operator=(BioPMIDRecord&& record) noexcept;
+
   std::string pmid_id;
   std::string bio_type;
   std::string bio_id;
   std::string bio_text;
+
 
 };
 
@@ -48,8 +58,8 @@ public:
 
 private:
 
-  const BioPMIDMap disease_pmid_map_;
-  const BioPMIDMap entrez_pmid_map_;
+  BioPMIDMap disease_pmid_map_;
+  BioPMIDMap entrez_pmid_map_;
 
 };
 

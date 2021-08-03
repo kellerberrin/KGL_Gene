@@ -44,6 +44,19 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   ExecEnv::log().info("********* Bio PMID Disease Map Size: {}", bio_pmid_ptr_->diseaseMeSHMap().size());
   ExecEnv::log().info("********* Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr_->entrezMap().size());
 
+  for (auto const& mesh_term : MutationAnalysisData::malariaMeSHList()) {
+
+    auto pmid_vector = bio_pmid_ptr_->diseaseMeSHPMID(mesh_term);
+    for (auto const& pmid : pmid_vector) {
+
+      malaria_pmid_.insert(pmid);
+
+    }
+
+  }
+  ExecEnv::log().info("********* Bio PMID Malaria PMID Identifiers: {}", malaria_pmid_.size());
+
+
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
                                  ref_genome_ptr_,

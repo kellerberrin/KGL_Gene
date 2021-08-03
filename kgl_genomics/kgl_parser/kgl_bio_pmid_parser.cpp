@@ -9,6 +9,51 @@
 
 namespace kgl = kellerberrin::genome;
 
+kgl::BioPMIDRecord::BioPMIDRecord(const BioPMIDRecord& record) {
+
+  pmid_id = record.pmid_id;
+  bio_type = record.bio_type;
+  bio_id = record.bio_id;
+  bio_text = record.bio_text;
+
+}
+
+
+// Efficent move/copy operations for the Bio PMID record.
+
+kgl::BioPMIDRecord::BioPMIDRecord(  std::string&& pmid_id_rval,
+                                    std::string&& bio_type_rval,
+                                    std::string&& bio_id_rval,
+                                    std::string&& bio_text_rval) noexcept {
+
+  pmid_id = pmid_id_rval;
+  bio_type = bio_type_rval;
+  bio_id = bio_id_rval;
+  bio_text = bio_text_rval;
+
+}
+
+
+
+kgl::BioPMIDRecord::BioPMIDRecord(BioPMIDRecord&& record) noexcept {
+
+  pmid_id = std::move(record.pmid_id);
+  bio_type = std::move(record.bio_type);
+  bio_id = std::move(record.bio_id);
+  bio_text = std::move(record.bio_text);
+
+}
+
+kgl::BioPMIDRecord& kgl::BioPMIDRecord::operator=(BioPMIDRecord&& record) noexcept {
+
+  pmid_id = std::move(record.pmid_id);
+  bio_type = std::move(record.bio_type);
+  bio_id = std::move(record.bio_id);
+  bio_text = std::move(record.bio_text);
+
+  return *this;
+
+}
 
 
 
@@ -77,46 +122,36 @@ bool kgl::ParseBioPMID::parseBioPMIDFile(const std::string& file_name) {
 
   ExecEnv::log().info("Begin Parsing BIO PMID Resource for file: {}", file_name);
 
-  for (const auto& row_vector :  parsed_record_ptr->getRowVector()) {
+  for (auto&& row_vector :  parsed_record_ptr->getRowVector()) {
 
-    std::string bio_type = Utility::trimEndWhiteSpace(row_vector[BIO_TYPE_OFFSET_]);
+    std::string bio_type = std::move(row_vector[BIO_TYPE_OFFSET_]);
     if (bio_type == DISEASE_TAG) {
 
-      BioPMIDRecord bio_pmid_record;
-      bio_pmid_record.pmid_id = Utility::trimEndWhiteSpace(row_vector[PMID_OFFSET_]);
-      bio_pmid_record.bio_type = std::move(bio_type);
-      std::string bio_id = Utility::trimEndWhiteSpace(row_vector[BIO_ID_OFFSET_]);
-
+      std::string bio_id = std::move(row_vector[BIO_ID_OFFSET_]);
       if (bio_id.empty()) {
 
-        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty, PMID {} Type: {}",
-                            bio_pmid_record.pmid_id , bio_pmid_record.bio_type);
+        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty");
+        continue;
 
       }
 
-      bio_pmid_record.bio_id = bio_id;
-      bio_pmid_record.bio_text = Utility::trimEndWhiteSpace(row_vector[BIO_TEXT_OFFSET_]);
-
-      disease_pmid_map_.emplace(std::move(bio_id), std::move(bio_pmid_record));
+      std::string bio_key = bio_id;
+      BioPMIDRecord bio_pmid_record(std::move(row_vector[PMID_OFFSET_]), std::move(bio_type), std::move(bio_id), std::move(row_vector[BIO_TEXT_OFFSET_]));
+      disease_pmid_map_.emplace(std::move(bio_key), std::move(bio_pmid_record));
 
     } else if (bio_type == ENTREZ_GENE_TAG) {
 
-      BioPMIDRecord bio_pmid_record;
-      bio_pmid_record.pmid_id = Utility::trimEndWhiteSpace(row_vector[PMID_OFFSET_]);
-      bio_pmid_record.bio_type = std::move(bio_type);
-      std::string bio_id = Utility::trimEndWhiteSpace(row_vector[BIO_ID_OFFSET_]);
-
+      std::string bio_id = std::move(row_vector[BIO_ID_OFFSET_]);
       if (bio_id.empty()) {
 
-        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty, PMID {} Type: {}",
-                            bio_pmid_record.pmid_id , bio_pmid_record.bio_type);
+        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty");
+        continue;
 
       }
 
-      bio_pmid_record.bio_id = bio_id;
-      bio_pmid_record.bio_text = Utility::trimEndWhiteSpace(row_vector[BIO_TEXT_OFFSET_]);
-
-      entrez_pmid_map_.emplace(std::move(bio_id), std::move(bio_pmid_record));
+      std::string bio_key = bio_id;
+      BioPMIDRecord bio_pmid_record(std::move(row_vector[PMID_OFFSET_]), std::move(bio_type), std::move(bio_id), std::move(row_vector[BIO_TEXT_OFFSET_]));
+      entrez_pmid_map_.emplace(std::move(bio_key), std::move(bio_pmid_record));
 
     }
 
