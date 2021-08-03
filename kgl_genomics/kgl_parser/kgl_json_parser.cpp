@@ -3,6 +3,7 @@
 //
 
 #include "kgl_json_parser.h"
+
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/writer.h"
@@ -12,26 +13,6 @@
 
 
 namespace kgl = kellerberrin::genome;
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bool kgl::DBCitation::insertCitations(const std::string& allele_rsid, const std::vector<std::string>& pmid_citations) {
-
-  auto [iter, result] = citation_map_.try_emplace(allele_rsid, pmid_citations);
-
-  if (not result) {
-
-    ExecEnv::log().error("DBCitation::insertCitations; allele rsid: {} (duplicate) cannot insert PMID citations: {}",
-                         allele_rsid, pmid_citations.size());
-
-  }
-
-  return result;
-
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +78,7 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
     IOLineRecord line_record = file_data_.readIORecord();
     if (not line_record) { // check for EOF condition.
 
-      // Push the EOF marker back on the queue.
+      // Push the EOF marker back on the queue for other threads.
       file_data_.enqueueEOF();
       break;
 
@@ -145,17 +126,6 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
           rapidjson::Value& pmid = cite_array[idx];
           size_t pmid_cite = pmid.GetInt64();
           cite_string_array.emplace_back(std::to_string(pmid_cite));
-
-        }
-        std::string cite_string;
-        for (auto const& cite : cite_string_array) {
-
-          cite_string += cite;
-          if (cite != cite_string_array.back()) {
-
-            cite_string += ", ";
-
-          }
 
         }
 

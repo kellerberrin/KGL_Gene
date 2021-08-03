@@ -23,11 +23,12 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This DB object is passed back to the requesting package for further processing (typically written to a file).
+// This DB object is passed back to the requesting package for further processing.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using DBCitationMap = std::map<GenomeId_t, std::vector<std::string>>;
+// The map is sorted by variant key=rsid, value=pmid (Pubmed article identifier)
+using DBCitationMap = std::map<std::string, std::vector<std::string>>;
 
 class DBCitation : public DataDB {
 
@@ -38,7 +39,6 @@ public:
 
   [[nodiscard]] const DBCitationMap& citationMap() const { return citation_map_; }
   [[nodiscard]] DBCitationMap& citationMap() { return citation_map_; }
-  [[nodiscard]] bool insertCitations(const std::string& allele_rsid, const std::vector<std::string>& pmid_citations);
   [[nodiscard]] const std::string& fileId() const override { return file_name_; }
 
 private:
@@ -63,8 +63,8 @@ public:
   JSONInfoParser() = default;
   ~JSONInfoParser() = default;
 
-  bool parseFile(const std::string& json_file_name, const std::shared_ptr<DBCitation>& db_citation_ptr);
-  bool parseFile(const std::string& json_file_name, DBCitationMap& citation_map);
+  [[nodiscard]] bool parseFile(const std::string& json_file_name, const std::shared_ptr<DBCitation>& db_citation_ptr);
+  [[nodiscard]] bool parseFile(const std::string& json_file_name, DBCitationMap& citation_map);
 
   [[nodiscard]] const std::string& getFileName() const { return file_data_.fileName(); }
 

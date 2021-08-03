@@ -37,6 +37,12 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_UNIPROTID);
   ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
+  entrez_gene_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
+  bio_pmid_ptr_ = resource_ptr->getSingleResource<const BioPMIDResource>(RuntimeResourceType::BIO_PMID);
+
+  ExecEnv::log().info("********* Entrez Gene Map Size: {}", entrez_gene_ptr_->getEntrezMap().size());
+  ExecEnv::log().info("********* Bio PMID Disease Map Size: {}", bio_pmid_ptr_->diseaseMeSHMap().size());
+  ExecEnv::log().info("********* Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr_->entrezMap().size());
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),

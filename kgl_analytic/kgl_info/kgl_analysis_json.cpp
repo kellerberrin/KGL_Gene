@@ -117,7 +117,11 @@ std::shared_ptr<const kgl::DBCitationMap> kgl::JsonAnalysis::parseJsonFile(std::
   std::shared_ptr<DBCitationMap> citation_map_ptr(std::make_shared<DBCitationMap>());
 
   JSONInfoParser reader;
-  reader.parseFile(json_file, *citation_map_ptr);
+  if (not reader.parseFile(json_file, *citation_map_ptr)) {
+
+    ExecEnv::log().error("JsonAnalysis::parseJsonFile, error parsing Json file: {}", json_file);
+
+  }
 
   return citation_map_ptr;
 

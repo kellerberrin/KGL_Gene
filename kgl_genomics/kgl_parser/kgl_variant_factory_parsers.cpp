@@ -79,7 +79,11 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
   // An rsid indexed map of PMID citation identifiers.
   std::shared_ptr<DBCitation> db_citation_ptr(std::make_shared<DBCitation>(data_source, file_info->fileName()));
 
-  JSONInfoParser().parseFile(file_info->fileName(), db_citation_ptr);
+  if (not JSONInfoParser().parseFile(file_info->fileName(), db_citation_ptr)) {
+
+    ExecEnv::log().critical("ParserSelection::readJSONdbSNP; Error parsing Json file: {} - unrecoverable", file_info->fileName());
+
+  }
 
   return db_citation_ptr;   // return the citation DB object.
 

@@ -119,7 +119,6 @@ public:
 
 private:
 
-  FileDataIO file_io_;
   constexpr static const char COMMENT_{'#'}; // If first character then line ignored.
 
 };

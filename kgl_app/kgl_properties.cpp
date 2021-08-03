@@ -530,7 +530,7 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const EntrezGeneResource>(entrez_ident, entrez_file_name);
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeEntrezResource>(entrez_ident, entrez_file_name);
 
       auto const [iter, result] = resource_map.try_emplace(entrez_ident, resource_ptr);
       if (not result) {
@@ -559,7 +559,7 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const BioPMIDResource>(bio_ident, bio_file_name);
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimeBioPMIDResource>(bio_ident, bio_file_name);
 
       auto const [iter, result] = resource_map.try_emplace(bio_ident, resource_ptr);
       if (not result) {

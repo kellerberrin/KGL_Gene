@@ -13,6 +13,8 @@
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_analysis_mutation_gene_allele.h"
 #include "kgl_citation_parser.h"
+#include "kgl_entrez_parser.h"
+#include "kgl_bio_pmid_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -67,6 +69,8 @@ private:
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const EnsemblHGNCResource> ensembl_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
+  std::shared_ptr<const EntrezResource> entrez_gene_ptr_;
+  std::shared_ptr<const BioPMIDResource> bio_pmid_ptr_;
 
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};

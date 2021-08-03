@@ -248,7 +248,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_freq.cpp
         kgl_genomics/kgl_database/kgl_variant_db_freq.h
         kgl_genomics/kgl_parser/kgl_entrez_parser.cpp
-        kgl_genomics/kgl_parser/kgl_entrez_parser.h)
+        kgl_genomics/kgl_parser/kgl_entrez_parser.h kgl_genomics/kgl_parser/kgl_bio_pmid_parser.cpp kgl_genomics/kgl_parser/kgl_bio_pmid_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

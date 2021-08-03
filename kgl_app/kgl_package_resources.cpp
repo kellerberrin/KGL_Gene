@@ -7,9 +7,12 @@
 #include "kgl_ontology_database.h"
 #include "kgl_uniprot_parser.h"
 #include "kgl_citation_parser.h"
+#include "kgl_entrez_parser.h"
+#include "kgl_bio_pmid_parser.h"
+
+
 
 namespace kgl = kellerberrin::genome;
-
 
 
 std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResources(const RuntimePackage& package) const {
@@ -271,7 +274,7 @@ void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident
   }
 
   auto const& [resource_ident, resource_base_ptr] = *result;
-  auto entrez_resource_ptr = std::dynamic_pointer_cast<const EntrezGeneResource>(resource_base_ptr);
+  auto entrez_resource_ptr = std::dynamic_pointer_cast<const RuntimeEntrezResource>(resource_base_ptr);
 
   if (not entrez_resource_ptr) {
 
@@ -279,7 +282,16 @@ void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident
 
   }
 
+  ParseEntrez entrez_parser;
+  if (not entrez_parser.parseEntrezFile(entrez_resource_ptr->entrezFileName())) {
 
+    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource; failed to create Entrez resource from file: {}", entrez_resource_ptr->entrezFileName());
+
+  }
+
+  std::shared_ptr<EntrezResource> entrez_ptr(std::make_shared<EntrezResource>(entrez_resource_ptr->entrezIdentifier(), entrez_parser.getEntrezVector()));
+
+  resource_ptr->addResource(entrez_ptr);
 
 }
 
@@ -294,12 +306,25 @@ void kgl::ExecutePackage::loadPMIDBioResource(const std::string& bio_ident, cons
   }
 
   auto const& [resource_ident, resource_base_ptr] = *result;
-  auto bio_resource_ptr = std::dynamic_pointer_cast<const BioPMIDResource>(resource_base_ptr);
+  auto bio_resource_ptr = std::dynamic_pointer_cast<const RuntimeBioPMIDResource>(resource_base_ptr);
 
   if (not bio_resource_ptr) {
 
     ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource, Resource: {} is not an PMID Bio Resource", resource_ident);
 
   }
+
+  ParseBioPMID bio_pmid_parser;
+  if (not bio_pmid_parser.parseBioPMIDFile(bio_resource_ptr->bioFileName())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource; failed to create Bio PMID resource from file: {}", bio_resource_ptr->bioFileName());
+
+  }
+
+  std::shared_ptr<BioPMIDResource> bio_pmid_ptr(std::make_shared<BioPMIDResource>(bio_resource_ptr->bioIdentifier(),
+                                                                                  bio_pmid_parser.moveDiseasePMIDMap(),
+                                                                                  bio_pmid_parser.moveEntrezPMIDMap()));
+
+  resource_ptr->addResource(bio_pmid_ptr);
 
 }

@@ -305,17 +305,17 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class EntrezGeneResource : public RuntimeResource {
+class RuntimeEntrezResource : public RuntimeResource {
 
 public:
 
-  EntrezGeneResource( std::string entrez_identifier,
-                      std::string entrez_file_name)
+  RuntimeEntrezResource(std::string entrez_identifier,
+                        std::string entrez_file_name)
                           : entrez_identifier_(std::move(entrez_identifier)),
                             entrez_file_name_(std::move(entrez_file_name)) {}
-  EntrezGeneResource() = delete;
-  EntrezGeneResource(const EntrezGeneResource&) = default;
-  ~EntrezGeneResource() override = default;
+  RuntimeEntrezResource() = delete;
+  RuntimeEntrezResource(const RuntimeEntrezResource&) = default;
+  ~RuntimeEntrezResource() override = default;
 
   [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ENTREZ_GENE; }
 
@@ -334,22 +334,22 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class BioPMIDResource : public RuntimeResource {
+class RuntimeBioPMIDResource : public RuntimeResource {
 
 public:
 
-  BioPMIDResource( std::string bio_identifier,
-                   std::string bio_file_name)
+  RuntimeBioPMIDResource(std::string bio_identifier,
+                         std::string bio_file_name)
                       : bio_identifier_(std::move(bio_identifier)),
                         bio_file_name_(std::move(bio_file_name)) {}
-  BioPMIDResource() = delete;
-  BioPMIDResource(const BioPMIDResource&) = default;
-  ~BioPMIDResource() override = default;
+  RuntimeBioPMIDResource() = delete;
+  RuntimeBioPMIDResource(const RuntimeBioPMIDResource&) = default;
+  ~RuntimeBioPMIDResource() override = default;
 
   [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::BIO_PMID; }
 
   [[nodiscard]] const std::string& bioIdentifier() const { return bio_identifier_; }
-  [[nodiscard]] const std::string& boiFileName() const { return bio_file_name_; }
+  [[nodiscard]] const std::string& bioFileName() const { return bio_file_name_; }
 
 private:
 
