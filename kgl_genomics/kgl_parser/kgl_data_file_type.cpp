@@ -2,7 +2,7 @@
 // Created by kellerberrin on 9/1/21.
 //
 
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 
 namespace kgl = kellerberrin::genome;
 

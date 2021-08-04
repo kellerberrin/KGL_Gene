@@ -36,26 +36,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(RuntimeResourceType::GENOME_AUX_INFO);
   uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_UNIPROTID);
   ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);
+  entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
-  entrez_gene_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
-  bio_pmid_ptr_ = resource_ptr->getSingleResource<const BioPMIDResource>(RuntimeResourceType::BIO_PMID);
-
-  ExecEnv::log().info("********* Entrez Gene Map Size: {}", entrez_gene_ptr_->getEntrezMap().size());
-  ExecEnv::log().info("********* Bio PMID Disease Map Size: {}", bio_pmid_ptr_->diseaseMeSHMap().size());
-  ExecEnv::log().info("********* Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr_->entrezMap().size());
-
-  for (auto const& mesh_term : MutationAnalysisData::malariaMeSHList()) {
-
-    auto pmid_vector = bio_pmid_ptr_->diseaseMeSHPMID(mesh_term);
-    for (auto const& pmid : pmid_vector) {
-
-      malaria_pmid_.insert(pmid);
-
-    }
-
-  }
-  ExecEnv::log().info("********* Bio PMID Malaria PMID Identifiers: {}", malaria_pmid_.size());
-
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
@@ -63,7 +45,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                  genome_aux_ptr_,
                                  ontology_db_ptr_,
                                  uniprot_nomenclature_ptr_,
-                                 ensembl_nomenclature_ptr_);
+                                 ensembl_nomenclature_ptr_,
+                                 entrez_nomenclature_ptr_);
 
 
   // Initialize the gene allele analysis object.
@@ -177,7 +160,31 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       }
 
+    } else {
+
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis unknown file type: {}", file_characteristic.source_text);
+
     }
+
+  } else if (file_characteristic.data_source == DataSourceEnum::BioPMID) {
+
+    auto bio_pmid_ptr = std::dynamic_pointer_cast<const BioPMIDFileData>(data_ptr);
+
+    if (not bio_pmid_ptr) {
+
+      ExecEnv::log().critical("MutationAnalysis::fileReadAnalysis; Unable to cast data file to Bio PMID object, severe error.");
+
+    }
+
+    if (not gene_mutation_.updatePMIDStatistics(bio_pmid_ptr)) {
+
+      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis; Problem updating Entrez Bio concept PMID entries");
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("MutationAnalysis::fileReadAnalysis unknown file type: {}", file_characteristic.source_text);
 
   }
 
@@ -212,7 +219,8 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
   } else {
 
-    ExecEnv::log().critical("MutationAnalysis::iterationAnalysis; Cannot recover. Necessary data files not defined for analysis");
+    ExecEnv::log().warn("MutationAnalysis::iterationAnalysis; unknown file type.");
+//    ExecEnv::log().critical("MutationAnalysis::iterationAnalysis; Cannot recover. Necessary data files not defined for analysis");
 
   }
 

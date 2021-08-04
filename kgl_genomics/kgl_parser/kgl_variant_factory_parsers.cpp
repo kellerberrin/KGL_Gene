@@ -9,6 +9,7 @@
 #include "kgl_variant_factory_1000_impl.h"
 #include "kgl_variant_factory_gnomad_impl.h"
 #include "kgl_json_parser.h"
+#include "kgl_bio_pmid_parser.h"
 
 
 #include "kgl_variant_factory_parsers.h"
@@ -64,6 +65,9 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
     case ParserTypeEnum::FilenameOnly:
       return std::make_shared<FilenameDataDB>(data_source, file_info_ptr->fileName()); // Just return file type and file name.
 
+    case ParserTypeEnum::ParseBioPMID:
+      return readBioPMID(file_info_ptr, data_source);
+
     default:
       ExecEnv::log().critical("ParserSelection::parseData; Unknown data file: {} specified - unrecoverable", file_info_ptr->fileName());
       return readVCF<GenomeGnomadVCFImpl>(resource_ptr, file_info_ptr, evidence_map, contig_alias, data_source); // never reached.
@@ -86,6 +90,23 @@ std::shared_ptr<kgl::DataDB> kgl::ParserSelection::parseData(const std::shared_p
   }
 
   return db_citation_ptr;   // return the citation DB object.
+
+}
+
+
+[[nodiscard]] std::shared_ptr<kgl::DataDB> kgl::ParserSelection::readBioPMID( const std::shared_ptr<const BaseFileInfo>& file_info,
+                                                                              DataSourceEnum /* data_source */) {
+
+  // Parses a file containing Pubmed PMIDs indexed by Disease (all) and Entrez Gene ids (all species)
+  ParseBioPMID bio_pmid_parser;
+  if (not bio_pmid_parser.parseBioPMIDRecords(file_info->fileName())) {
+
+    ExecEnv::log().critical("ParserSelection::readBioPMID; Error parsing Bio concepts PMID file: {} - unrecoverable", file_info->fileName());
+
+  }
+  std::shared_ptr<BioPMIDFileData> bio_pmid_ptr(std::make_shared<BioPMIDFileData>(file_info->fileName(), bio_pmid_parser.moveDiseasePMIDMap(), bio_pmid_parser.moveEntrezPMIDMap()));
+
+  return bio_pmid_ptr;   // return the Bio PMID object.
 
 }
 

@@ -315,7 +315,7 @@ void kgl::ExecutePackage::loadPMIDBioResource(const std::string& bio_ident, cons
   }
 
   ParseBioPMID bio_pmid_parser;
-  if (not bio_pmid_parser.parseBioPMIDFile(bio_resource_ptr->bioFileName())) {
+  if (not bio_pmid_parser.parseBioPMIDRecords(bio_resource_ptr->bioFileName())) {
 
     ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource; failed to create Bio PMID resource from file: {}", bio_resource_ptr->bioFileName());
 

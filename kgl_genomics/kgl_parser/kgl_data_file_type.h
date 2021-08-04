@@ -40,6 +40,7 @@ enum class DataSourceEnum { Genome1000,
                             Clinvar,
                             dbSNP,
                             JSONdbSNP,
+                            BioPMID,
                             NotImplemented};   // Data source is not specified.
 
 // Parsers available for genetic sources.
@@ -49,6 +50,7 @@ enum class ParserTypeEnum { DiploidPhased,
                             MonoGenomeUnphased,
                             MonoDBSNPUnphased,
                             MonoJSONdbSNPUnphased,
+                            ParseBioPMID,
                             FilenameOnly};  // File name is passed to the requesting package - no parsing performed.
 
 // The conceptual structure of the genetic information.
@@ -56,10 +58,11 @@ enum class DataStructureEnum { DiploidPhased,   // Phased Diploid Genome1000 onl
                                DiploidUnphased,  // Unphased Diploid GnomadGenome3_1 (PopulationDB)
                                UnphasedMonoGenome,
                                CitationMap,
+                               BioPMIDMap,
                                NoStructure}; // No data passed to the requesting package (only the file name)
 
 // The actual C++ implementation of the data type. Used for casting from the DataDB class.
-enum class DataImplEnum { PopulationVariant, PMIDCitationMap, FileName };
+enum class DataImplEnum { PopulationVariant, PMIDCitationMap, PMIDBioMap, FileName };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +131,7 @@ inline const std::vector<DataCharacteristic>  DataDB::data_characteristics_ = {
     { "dbSNP", DataSourceEnum::dbSNP, ParserTypeEnum::MonoDBSNPUnphased, DataStructureEnum::UnphasedMonoGenome, DataImplEnum::PopulationVariant,                      DataOrganism::HomoSapien },
     { "JSONdbSNP", DataSourceEnum::JSONdbSNP, ParserTypeEnum::MonoJSONdbSNPUnphased, DataStructureEnum::CitationMap, DataImplEnum::PMIDCitationMap,                   DataOrganism::HomoSapien },
     { "FileNameOnly", DataSourceEnum::NotImplemented, ParserTypeEnum::FilenameOnly, DataStructureEnum::NoStructure, DataImplEnum::FileName,                           DataOrganism::NoOrganism},
+    { "BioPMID", DataSourceEnum::BioPMID, ParserTypeEnum::ParseBioPMID, DataStructureEnum::BioPMIDMap, DataImplEnum::PMIDBioMap,                                      DataOrganism::NoOrganism},
 
 };
 

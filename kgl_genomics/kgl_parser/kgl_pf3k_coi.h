@@ -6,7 +6,7 @@
 #define KGL_COI_PF3K_H
 
 
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 #include "kgl_data_file_impl.h"
 #include "kgl_square_parser.h"
 

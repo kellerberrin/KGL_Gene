@@ -8,7 +8,7 @@
 
 #include "kgl_variant_db_genome.h"
 #include "kgl_variant_filter.h"
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 #include "kel_thread_pool.h"
 
 

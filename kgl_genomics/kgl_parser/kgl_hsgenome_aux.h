@@ -6,7 +6,7 @@
 #define KGL_HSGENOME_AUX_H
 
 
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 #include "kgl_square_parser.h"
 #include "kgl_resource_db.h"
 

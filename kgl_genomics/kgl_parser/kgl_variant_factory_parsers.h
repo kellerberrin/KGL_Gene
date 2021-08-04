@@ -35,9 +35,12 @@ public:
 
 private:
 
-  // Read and parse a package specified VCF file.
+  // Read and parse different file types for requesting packages.
   [[nodiscard]] static std::shared_ptr<DataDB> readJSONdbSNP( const std::shared_ptr<const BaseFileInfo>& file_info,
                                                               DataSourceEnum data_source);
+
+  [[nodiscard]] static std::shared_ptr<DataDB> readBioPMID( const std::shared_ptr<const BaseFileInfo>& file_info,
+                                                            DataSourceEnum data_source);
 
   // Read and parse a package specified VCF file.
   template<class VCFParser>

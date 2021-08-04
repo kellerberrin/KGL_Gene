@@ -216,9 +216,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_contig.cpp
         kgl_genomics/kgl_database/kgl_variant_db_genome.cpp
         kgl_genomics/kgl_database/kgl_variant_db_population.cpp
-        kgl_genomics/kgl_database/kgl_variant_db_type.h
+        kgl_genomics/kgl_parser/kgl_data_file_type.h
         kgl_genomics/kgl_database/kgl_genome_contig.h
-        kgl_genomics/kgl_database/kgl_variant_db_type.cpp
+        kgl_genomics/kgl_parser/kgl_data_file_type.cpp
         kgl_genomics/kgl_parser/kgl_pf3k_coi.cpp
         kgl_genomics/kgl_parser/kgl_pf3k_coi.h
         kgl_genomics/kgl_database/kgl_genome_genome.h

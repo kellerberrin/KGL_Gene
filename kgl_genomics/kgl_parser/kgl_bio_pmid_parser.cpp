@@ -3,6 +3,7 @@
 //
 
 #include "kgl_bio_pmid_parser.h"
+#include "kgl_data_file_impl.h"
 #include "kel_utility.h"
 
 
@@ -55,11 +56,13 @@ kgl::BioPMIDRecord& kgl::BioPMIDRecord::operator=(BioPMIDRecord&& record) noexce
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+std::set<std::string> kgl::BioPMIDMaps::entrezPMID(const std::string& entrez_id) const {
 
-std::vector<std::string> kgl::BioPMIDResource::entrezPMID(const std::string& entrez_id) const {
-
-  std::vector<std::string> pmid_vector;
+  std::set<std::string> pmid_set;
 
   auto [lower_bound, upper_bound] = entrez_pmid_map_.equal_range(entrez_id);
 
@@ -67,20 +70,20 @@ std::vector<std::string> kgl::BioPMIDResource::entrezPMID(const std::string& ent
 
     auto const& [entrez_key, pmid_record] = *lower_bound;
 
-    pmid_vector.push_back(pmid_record.pmid_id);
+    pmid_set.insert(pmid_record.pmid_id);
 
     ++lower_bound;
 
   }
 
-  return pmid_vector;
+  return pmid_set;
 
 }
 
 
-std::vector<std::string> kgl::BioPMIDResource::diseaseMeSHPMID(const std::string& disease_mesh_id) const {
+std::set<std::string> kgl::BioPMIDMaps::diseaseMeSHPMID(const std::string& disease_mesh_id) const {
 
-  std::vector<std::string> pmid_vector;
+  std::set<std::string> pmid_set;
 
   auto [lower_bound, upper_bound] = disease_pmid_map_.equal_range(disease_mesh_id);
 
@@ -88,77 +91,112 @@ std::vector<std::string> kgl::BioPMIDResource::diseaseMeSHPMID(const std::string
 
     auto const& [mesh_key, pmid_record] = *lower_bound;
 
-    pmid_vector.push_back(pmid_record.pmid_id);
+    pmid_set.insert(pmid_record.pmid_id);
 
     ++lower_bound;
 
   }
 
-  return pmid_vector;
+  return pmid_set;
 
 }
 
 
-bool kgl::ParseBioPMID::parseBioPMIDFile(const std::string& file_name) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
-  auto parsed_record_ptr = parseFlatFile(file_name, SquareTextParser::DELIMITER_TSV);
+  FileDataIO file_io;
+  size_t counter = 0;
 
-  if (parsed_record_ptr->getRowVector().size() < MINIMUM_ROW_COUNT_) {
+  if (not file_io.commenceIO(file_name)) {
 
-    ExecEnv::log().error("ParseBioPMID::parseBioPMIDFile; Row count: {} for file: {} is below minimum",
-                         parsed_record_ptr->getRowVector().size(), file_name);
+    ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; I/O error; could not open file: {}", file_name);
     return false;
 
   }
 
-  if (not parsed_record_ptr->checkRowSize(COLUMN_COUNT_)) {
+  while (true) {
 
-    ExecEnv::log().error("ParseBioPMID::parseBioPMIDFile; Not all rows have expected column count: {} for file: {}",
-                         COLUMN_COUNT_, file_name);
-    return false;
+    auto line_record = file_io.readIORecord();
+    if (not line_record) {
 
-  }
+      break; // EOF reached.
 
-  ExecEnv::log().info("Begin Parsing BIO PMID Resource for file: {}", file_name);
+    }
 
-  for (auto&& row_vector :  parsed_record_ptr->getRowVector()) {
+    auto const& [line_count, line_ptr] = line_record.value();
 
-    std::string bio_type = std::move(row_vector[BIO_TYPE_OFFSET_]);
-    if (bio_type == DISEASE_TAG) {
+    const std::string& record_str = *line_ptr;
 
-      std::string bio_id = std::move(row_vector[BIO_ID_OFFSET_]);
-      if (bio_id.empty()) {
+    if (not record_str.empty()) {
 
-        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty");
-        continue;
+      if (record_str[0] == COMMENT_) {
+
+        continue;  // Skip comment lines.
 
       }
 
-      std::string bio_key = bio_id;
-      BioPMIDRecord bio_pmid_record(std::move(row_vector[PMID_OFFSET_]), std::move(bio_type), std::move(bio_id), std::move(row_vector[BIO_TEXT_OFFSET_]));
-      disease_pmid_map_.emplace(std::move(bio_key), std::move(bio_pmid_record));
+    }
 
-    } else if (bio_type == ENTREZ_GENE_TAG) {
+    std::vector<std::string_view> row_fields = Utility::view_tokenizer(record_str, DELIMITER_);
 
-      std::string bio_id = std::move(row_vector[BIO_ID_OFFSET_]);
-      if (bio_id.empty()) {
+    if (row_fields.size() != COLUMN_COUNT_) {
 
-        ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty");
-        continue;
+      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Incorrect field count: {}, expected: {}, line: {}", row_fields.size(), COLUMN_COUNT_, line_count);
+      continue;
 
-      }
+    }
 
-      std::string bio_key = bio_id;
-      BioPMIDRecord bio_pmid_record(std::move(row_vector[PMID_OFFSET_]), std::move(bio_type), std::move(bio_id), std::move(row_vector[BIO_TEXT_OFFSET_]));
-      entrez_pmid_map_.emplace(std::move(bio_key), std::move(bio_pmid_record));
+    if (not parseFields(row_fields)) {
+
+      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Problem parsing line: {}", line_count);
+
+    }
+
+    ++counter;
+
+    if (counter % REPORT_INTERVAL_ == 0) {
+
+      ExecEnv::log().info("Parsed Bio concept Pubmed PMID Records: {}", counter);
 
     }
 
   }
 
-  ExecEnv::log().info("ParseBioPMID::parseBioPMIDFile; Parsed: {} [PMID, Disease], Parsed: {} [PMID, Entrez_Gene] records from file: {}",
-                      disease_pmid_map_.size() , entrez_pmid_map_.size(), file_name);
+  ExecEnv::log().info("Parsed: {} lines from text file: {}", counter, file_io.fileName());
+  return true;
+
+}
+
+
+bool kgl::ParseBioPMID::parseFields(const std::vector<std::string_view>& field_views) {
+
+  if (field_views[BIO_ID_OFFSET_].empty()) {
+
+    ExecEnv::log().warn("ParseBioPMID::parseBioPMIDFile; Bio ID key empty");
+    return false;
+
+  }
+
+  if (field_views[BIO_TYPE_OFFSET_] == DISEASE_TAG) {
+
+
+    disease_pmid_map_.emplace(std::string(field_views[BIO_ID_OFFSET_]), BioPMIDRecord( std::string(field_views[PMID_OFFSET_]),
+                                                                                       std::string(field_views[BIO_TYPE_OFFSET_]),
+                                                                                       std::string(field_views[BIO_ID_OFFSET_]),
+                                                                                       std::string(field_views[BIO_TEXT_OFFSET_])));
+
+  } else if (field_views[BIO_TYPE_OFFSET_] == ENTREZ_GENE_TAG) {
+
+    entrez_pmid_map_.emplace(std::string(field_views[BIO_ID_OFFSET_]), BioPMIDRecord( std::string(field_views[PMID_OFFSET_]),
+                                                                                      std::string(field_views[BIO_TYPE_OFFSET_]),
+                                                                                      std::string(field_views[BIO_ID_OFFSET_]),
+                                                                                      std::string(field_views[BIO_TEXT_OFFSET_])));
+
+  }
 
   return true;
 

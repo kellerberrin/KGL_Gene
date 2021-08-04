@@ -66,6 +66,7 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
 
   out_file << genome_ << output_delimiter
            << contig_ << output_delimiter
+           << entrez_id_ << output_delimiter
            << HGNC_id_ << output_delimiter;
 
   std::string ensembl_text;
@@ -81,11 +82,13 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
   }
 
   out_file << ensembl_text << output_delimiter
-      << gene_name_ << output_delimiter
-      << description_ << output_delimiter
-      << biotype_ << output_delimiter
-      << (valid_protein_ ? "Valid" : "Invalid") << output_delimiter
-      << gaf_id_ << output_delimiter;
+           << uniprotKB_id_ << output_delimiter
+           << symbol_id_ << output_delimiter
+           << description_ << output_delimiter
+           << citations_ << output_delimiter
+           << malaria_cites_ << output_delimiter
+           << biotype_ << output_delimiter
+           << (valid_protein_ ? "Valid" : "Invalid") << output_delimiter;
 
   out_file << gene_begin_ << output_delimiter
       << gene_end_ << output_delimiter
@@ -106,13 +109,16 @@ void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char outpu
 
   out_file << "Genome" << output_delimiter
            << "Contig" << output_delimiter
+           << "Entrez_id" << output_delimiter
            << "HGNC_id" << output_delimiter
-           << "Ensembl_Id" << output_delimiter
-           << "Name" << output_delimiter
+           << "Ensembl_id" << output_delimiter
+           << "UniProtKB_id" <<  output_delimiter
+           << "Symbol_id" << output_delimiter
            << "Description" << output_delimiter
+           << "Citations" << output_delimiter
+           << "MalariaCites" << output_delimiter
            << "BioType" << output_delimiter
            << "ValidProtein" << output_delimiter
-           << "GafId" <<  output_delimiter
            << "Begin" << output_delimiter
            << "End" << output_delimiter
            << "Span" << output_delimiter

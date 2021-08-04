@@ -40,7 +40,8 @@ public:
                        const std::string& name,
                        const std::string& hgnc_id,
                        const std::vector<std::string>& ensembl_ids,
-                       const std::string& uniprot_id);
+                       const std::string& uniprot_id,
+                       const std::string& entrez_id);
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& genePtr() const { return gene_ptr_; }
@@ -49,9 +50,12 @@ public:
   [[nodiscard]] ContigSize_t nucleotides() const { return nucleotides_; }
   [[nodiscard]] ContigSize_t geneSpan() const { return gene_span_; }
   [[nodiscard]] const std::vector<std::string>& ensemblIds() const { return ensembl_ids_; }
-  [[nodiscard]] const std::string& gafId() const { return gaf_id_; }
-  [[nodiscard]] const std::string& geneId() const { return gene_name_; }
+  [[nodiscard]] const std::string& gafId() const { return uniprotKB_id_; }
+  [[nodiscard]] const std::string& geneId() const { return symbol_id_; }
+  [[nodiscard]] const std::string& entrezId() const { return entrez_id_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
+
+  void update_pmid(size_t all_pmid, size_t malaria_pmid) { citations_ = all_pmid;  malaria_cites_ = malaria_pmid; }
 
 private:
 
@@ -60,14 +64,17 @@ private:
   GenomeId_t genome_;
   ContigId_t contig_;
   FeatureIdent_t gene_id_;
-  std::string gene_name_;
+  std::string symbol_id_;
   std::string description_;
   std::string biotype_;
   bool valid_protein_{false};
-  std::string gaf_id_;
+  std::string uniprotKB_id_;
   std::set<std::string> GO_set_;
+  std::string entrez_id_;
   std::string HGNC_id_;
   std::vector<std::string> ensembl_ids_;
+  size_t citations_{0};
+  size_t malaria_cites_{0};
   ContigOffset_t gene_begin_{0};
   ContigOffset_t gene_end_{0};
   ContigSize_t gene_span_{0};

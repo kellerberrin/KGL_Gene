@@ -8,7 +8,9 @@
 #include "kgl_genome_genome.h"
 #include "kgl_hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
+#include "kgl_entrez_parser.h"
 #include "kgl_citation_parser.h"
+#include "kgl_bio_pmid_parser.h"
 #include "kgl_variant_sort.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_mutation_gene_stats.h"
@@ -79,7 +81,8 @@ public:
                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                        const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
                        const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                       const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr);
+                       const std::shared_ptr<const EnsemblHGNCResource>& ensembl_nomenclature_ptr,
+                       const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr);
 
   // Then this analysis.
   bool variantAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -92,6 +95,8 @@ public:
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data, const std::string& out_file, char output_delimiter) const;
 
+
+  bool updatePMIDStatistics(const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
 
 private:
 

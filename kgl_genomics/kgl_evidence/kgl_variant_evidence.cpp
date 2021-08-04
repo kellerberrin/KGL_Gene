@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_evidence.h"
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 
 namespace kgl = kellerberrin::genome;
 

@@ -15,7 +15,8 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
                                               const std::string& name,
                                               const std::string& hgnc_id,
                                               const std::vector<std::string>& ensembl_ids,
-                                              const std::string& uniprot_id)
+                                              const std::string& uniprot_id,
+                                              const std::string& entrez_id)
 {
 
   std::vector<std::string> description_vec;
@@ -30,7 +31,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   contig_ = gene_ptr->contig()->contigId();
   gene_ptr_ = gene_ptr;
   gene_id_ = gene_ptr->id();
-  gene_name_ = name;
+  symbol_id_ = name;
   description_ = description_str;
   biotype_ = biotype_str;
   valid_protein_ = ContigReference::verifyGene(gene_ptr);
@@ -72,9 +73,10 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   concat_attributes += "\"";
   attributes_ = concat_attributes;
 
-  gaf_id_ = uniprot_id;
+  uniprotKB_id_ = uniprot_id;
   ensembl_ids_ = ensembl_ids;
   HGNC_id_ = hgnc_id;
+  entrez_id_ = entrez_id;
 
   return true;
 

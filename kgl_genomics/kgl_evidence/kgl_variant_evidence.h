@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_types.h"
-#include "kgl_variant_db_type.h"
+#include "kgl_data_file_type.h"
 #include "kgl_variant_factory_vcf_evidence.h"
 
 #include <sstream>
