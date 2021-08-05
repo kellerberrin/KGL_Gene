@@ -63,6 +63,12 @@ public:
   [[nodiscard]] const BioPMIDMap& entrezMap() const { return entrez_pmid_map_; }
   [[nodiscard]] const BioPMIDMap& diseaseMeSHMap() const { return disease_pmid_map_; }
 
+  // Selects all pmids in the or MeSH list that also are present in the and list.
+  // The and list defaults to empty.
+  std::set<std::string> selectDiseaseBioPMID( const std::vector<std::string>& or_MeSHlist,
+                                              const std::vector<std::string>& and_MeSHlist = std::vector<std::string>()) const;
+
+
 private:
 
   BioPMIDMap disease_pmid_map_;
@@ -92,6 +98,13 @@ public:
   // Only want unique pmid identifiers.
   [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const { return pmid_maps_.entrezPMID(entrez_id); }
   [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const { return pmid_maps_.diseaseMeSHPMID(disease_mesh_id); }
+
+  [[nodiscard]] std::set<std::string> selectDiseaseBioPMID( const std::vector<std::string>& or_MeSHlist,
+                                                            const std::vector<std::string>& and_MeSHlist = std::vector<std::string>()) const {
+
+    return pmid_maps_.selectDiseaseBioPMID(or_MeSHlist, and_MeSHlist);
+
+  }
 
   [[nodiscard]] const BioPMIDMap& entrezMap() const { return pmid_maps_.entrezMap(); }
   [[nodiscard]] const BioPMIDMap& diseaseMeSHMap() const { return pmid_maps_.diseaseMeSHMap(); }
@@ -123,6 +136,13 @@ public:
   // Only want unique pmid identifiers.
   [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const { return pmid_maps_.entrezPMID(entrez_id); }
   [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const { return pmid_maps_.diseaseMeSHPMID(disease_mesh_id); }
+
+  [[nodiscard]] std::set<std::string> selectDiseaseBioPMID( const std::vector<std::string>& or_MeSHlist,
+                                                            const std::vector<std::string>& and_MeSHlist = std::vector<std::string>()) const {
+
+    return pmid_maps_.selectDiseaseBioPMID(or_MeSHlist, and_MeSHlist);
+
+  }
 
   [[nodiscard]] const BioPMIDMap& entrezMap() const { return pmid_maps_.entrezMap(); }
   [[nodiscard]] const BioPMIDMap& diseaseMeSHMap() const { return pmid_maps_.diseaseMeSHMap(); }

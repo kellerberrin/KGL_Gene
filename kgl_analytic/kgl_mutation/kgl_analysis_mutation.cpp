@@ -176,11 +176,12 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
     }
 
-    if (not gene_mutation_.updatePMIDStatistics(bio_pmid_ptr)) {
+    ExecEnv::log().info("Bio PMID MeSH Disease Map Size: {}", bio_pmid_ptr->diseaseMeSHMap().size());
+    ExecEnv::log().info("Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr->entrezMap().size());
 
-      ExecEnv::log().error("MutationAnalysis::fileReadAnalysis; Problem updating Entrez Bio concept PMID entries");
-
-    }
+    auto const disease_pmid_set = bio_pmid_ptr->selectDiseaseBioPMID(MutationAnalysisData::malariaMeSHList());
+    gene_allele_.addDiseaseCitations(disease_pmid_set);
+    gene_mutation_.updatePMIDStatistics(disease_pmid_set, bio_pmid_ptr);
 
   } else {
 
@@ -217,11 +218,6 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     // Add the sorted variants to the gene allele anlysis.
     gene_allele_.addSortedVariants(sorted_variants_ptr);
 
-  } else {
-
-    ExecEnv::log().warn("MutationAnalysis::iterationAnalysis; unknown file type.");
-//    ExecEnv::log().critical("MutationAnalysis::iterationAnalysis; Cannot recover. Necessary data files not defined for analysis");
-
   }
 
   std::pair<size_t, size_t> mem_pair = Utility::process_mem_usage2(); // pair.first is process vm_usage, pair.second is resident memory set.
@@ -253,4 +249,5 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
   return true;
 
 }
+
 

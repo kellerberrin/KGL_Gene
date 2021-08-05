@@ -96,7 +96,7 @@ public:
   bool writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data, const std::string& out_file, char output_delimiter) const;
 
 
-  bool updatePMIDStatistics(const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
+  void updatePMIDStatistics(const std::set<std::string>& pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
 
 private:
 

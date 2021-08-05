@@ -92,6 +92,50 @@ void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const 
 }
 
 
+std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
+
+  std::set<std::string> allele_pmid_set;
+  if (not rs_identifier.empty()) {
+
+    auto find_result = allele_citation_ptr_->citationMap().find(rs_identifier);
+    if (find_result != allele_citation_ptr_->citationMap().end()) {
+
+      auto const& [rsid, citations] = *find_result;
+      std::string cite_string;
+      for (auto const& cite : citations) {
+
+        allele_pmid_set.insert(cite);
+
+      }
+
+    }
+
+  }
+
+  return allele_pmid_set;
+
+}
+
+std::set<std::string> kgl::GenerateGeneAllele::getDiseaseCitations(const std::string& rs_identifier) const {
+
+  std::set<std::string> allele_disease_set;
+  auto rs_pmid_set = getCitations(rs_identifier);
+
+  for (auto const& pmid : rs_pmid_set) {
+
+    if (disease_citations_.contains(pmid)) {
+
+      allele_disease_set.insert(pmid);
+
+    }
+
+  }
+
+  return allele_disease_set;
+
+}
+
+
 void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char delimiter) {
 
   outfile << "SymbolGeneId" << delimiter
@@ -102,6 +146,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "Reference" << delimiter
           << "Alternate" << delimiter
           << "CiteCount" << delimiter
+          << "DiseaseCites" << delimiter
           << "GlobalFreq" << delimiter
           << "AFRFreq"  << delimiter;
 
@@ -117,7 +162,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
           << "AFRAltCount" << delimiter
           << "AFR_Freq%" << delimiter
           << "NonAFR_Freq%" << delimiter
-          << "Citations" << '\n';
+          << "DiseasePMIDs" << '\n';
 
 }
 
@@ -156,25 +201,11 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
              << variant_ptr->reference().getSequenceAsString() << delimiter
              << variant_ptr->alternate().getSequenceAsString() << delimiter;
 
-    if (not variant_ptr->identifier().empty()) {
+    auto pmid_set = getCitations(variant_ptr->identifier());
+    out_file << pmid_set.size() << delimiter;
 
-      auto find_result = allele_citation_ptr_->citationMap().find(variant_ptr->identifier());
-      if (find_result != allele_citation_ptr_->citationMap().end()) {
-
-        auto const& [rsid, citations] = *find_result;
-        out_file << citations.size() << delimiter;
-
-      } else {
-
-        out_file << 0 << delimiter;
-
-      }
-
-    } else {
-
-      out_file << 0 << delimiter;
-
-    }
+    auto disease_pmid_set = getDiseaseCitations(variant_ptr->identifier());
+    out_file << disease_pmid_set.size() << delimiter;
 
     double global_freq{0.0};
     auto frequency_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, ALL_SUPER_POP_);
@@ -251,39 +282,18 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
 
     }
 
-    if (not variant_ptr->identifier().empty()) {
+    std::string disease_cite_string;
+    for (auto const& pmid : disease_pmid_set) {
 
-      auto find_result = allele_citation_ptr_->citationMap().find(variant_ptr->identifier());
-      if (find_result != allele_citation_ptr_->citationMap().end()) {
+      disease_cite_string += pmid;
+      if (pmid != *pmid_set.rbegin()) {
 
-        auto const& [rsid, citations] = *find_result;
-        std::string cite_string;
-        for (auto const& cite : citations) {
-
-          cite_string += cite;
-          if (cite != citations.back()) {
-
-            cite_string += CONCATENATE_VEP_FIELDS_;
-
-          }
-
-        }
-
-        out_file << cite_string;
-
-      } else {
-
-        out_file << "";
+        disease_cite_string += CONCATENATE_VEP_FIELDS_;
 
       }
 
-    } else {
-
-      out_file << "";
-
     }
-
-    out_file << '\n';
+    out_file << disease_cite_string << '\n';
 
   }
 

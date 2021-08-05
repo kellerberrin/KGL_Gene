@@ -236,10 +236,12 @@ const std::vector<std::string> kgl::MutationAnalysisData::ontology_derived_gene_
 };
 
 const std::vector<std::string> kgl::MutationAnalysisData::malaria_MeSH_list_{
-
+/*
   "MESH:D008288",  // Malaria (Main Subject).
   "MESH:D016779",  // Cerebral Malaria
+*/
   "MESH:D016778",   // Malaria Falciparum
+/*
   "MESH:D016780",  // Malaria Vivax
   "MESH:D008289",  // Malaria Avian
   "MESH:D010965",  // Plasmodium Malariae
@@ -255,5 +257,5 @@ const std::vector<std::string> kgl::MutationAnalysisData::malaria_MeSH_list_{
   "MESH:D011488",	 // Malarial proteins
   "MESH:D014397",	 // malarial drug consumption|malarial consumption
   "MESH:C531736"	 // acute malaria coinfection|acute malaria
-
+*/
 };

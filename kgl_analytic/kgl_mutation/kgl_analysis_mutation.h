@@ -94,7 +94,6 @@ private:
 
   bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
 
-
 };
 
 

@@ -81,6 +81,55 @@ std::set<std::string> kgl::BioPMIDMaps::entrezPMID(const std::string& entrez_id)
 }
 
 
+std::set<std::string> kgl::BioPMIDMaps::selectDiseaseBioPMID( const std::vector<std::string>& or_MeSHlist,
+                                                              const std::vector<std::string>& and_MeSHlist) const {
+
+  std::set<std::string> or_pmid_set;
+  for (auto const& mesh_term : or_MeSHlist) {
+
+    auto pmid_set = diseaseMeSHPMID(mesh_term);
+    for (auto const& pmid : pmid_set) {
+
+      or_pmid_set.insert(pmid);
+
+    }
+
+  }
+
+  if (and_MeSHlist.empty()) {
+
+    return or_pmid_set;
+
+  }
+
+  std::set<std::string> and_pmid_set;
+  for (auto const& mesh_term : and_MeSHlist) {
+
+    auto pmid_set = diseaseMeSHPMID(mesh_term);
+    for (auto const& pmid : pmid_set) {
+
+      and_pmid_set.insert(pmid);
+
+    }
+
+  }
+
+  std::set<std::string> result_set;
+  for (const auto& pmid : or_pmid_set) {
+
+    if (and_pmid_set.contains(pmid)) {
+
+      result_set.insert(pmid);
+
+    }
+
+  }
+
+  return result_set;
+
+}
+
+
 std::set<std::string> kgl::BioPMIDMaps::diseaseMeSHPMID(const std::string& disease_mesh_id) const {
 
   std::set<std::string> pmid_set;

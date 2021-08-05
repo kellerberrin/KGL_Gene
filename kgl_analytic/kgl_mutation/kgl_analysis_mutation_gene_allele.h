@@ -29,6 +29,7 @@ public:
   void filterAlleleMap(const double ALL_frequency, const double AFR_frequency);
   void writeOutput(const std::string& output_file, const char delimiter) const;
   void addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
+  void addDiseaseCitations(std::set<std::string> disease_citations) { disease_citations_ = disease_citations; }
 
 private:
 
@@ -39,6 +40,7 @@ private:
   EnsemblIndexMap sorted_allele_map_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
   std::map<std::string, std::string> ensembl_symbol_map_;
+  std::set<std::string> disease_citations_;
 
   static void writeHeader(std::ofstream& outfile, const char delimiter);
 
@@ -64,6 +66,9 @@ private:
 
   static std::map<std::string, std::string> retrieveVepFields( const std::shared_ptr<const Variant>& variant_ptr,
                                                                const std::vector<std::string>& field_list);
+
+  std::set<std::string> getCitations(const std::string& rs_code) const;
+  std::set<std::string> getDiseaseCitations(const std::string& rs_code) const;
 
 };
 

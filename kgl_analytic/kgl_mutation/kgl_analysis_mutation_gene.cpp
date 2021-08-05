@@ -7,7 +7,6 @@
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_variant_mutation.h"
 #include "kgl_variant_sort.h"
-#include "kgl_analysis_mutation_data.h"
 
 
 
@@ -120,48 +119,34 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 
 }
 
-bool kgl::GenomeMutation::updatePMIDStatistics(const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
-
-
-  std::set<std::string> malaria_pmid;
-
-  ExecEnv::log().info("Bio PMID Disease Map Size: {}", bio_pmid_ptr->diseaseMeSHMap().size());
-  ExecEnv::log().info("Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr->entrezMap().size());
-
-  for (auto const& mesh_term : MutationAnalysisData::malariaMeSHList()) {
-
-    auto pmid_vector = bio_pmid_ptr->diseaseMeSHPMID(mesh_term);
-    for (auto const& pmid : pmid_vector) {
-
-      malaria_pmid.insert(pmid);
-
-    }
-
-  }
-
-  ExecEnv::log().info("Bio PMID Malaria PMID Identifiers: {}", malaria_pmid.size());
+void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
 
   for (auto& gene_data : gene_vector_) {
 
     const std::string& entrez_id = gene_data.gene_characteristic.entrezId();
+
+    if (entrez_id.empty()) {
+
+      continue;
+
+    }
+
     auto const entrez_pmid = bio_pmid_ptr->entrezPMID(entrez_id);
 
-    size_t malaria_pmid_count{0};
+    size_t pmid_count{0};
     for (auto const& pmid : entrez_pmid) {
 
-      if (malaria_pmid.contains(pmid)) {
+      if (pmid_set.contains(pmid)) {
 
-        ++malaria_pmid_count;
+        ++pmid_count;
 
       }
 
     }
 
-    gene_data.gene_characteristic.update_pmid(entrez_pmid.size(), malaria_pmid_count);
+    gene_data.gene_characteristic.update_pmid(entrez_pmid.size(), pmid_count);
 
   }
-
-  return true;
 
 }
 

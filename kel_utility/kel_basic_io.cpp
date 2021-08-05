@@ -234,12 +234,12 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     std::unique_ptr<BaseStreamIO> gz_stream;
     if (BGZReader::verify(file_name)) { // Check if block gzipped.
 
-      ExecEnv::log().info("File structure verified as bgz compliant, parser uses bgz reader.");
+      ExecEnv::log().info("File structure verified as bgz format, parser uses bgz reader.");
       gz_stream = std::make_unique<BGZReader>();
 
     } else {
 
-      ExecEnv::log().info("File structure is not bgz compliant, parser uses general purpose gz reader.");
+      ExecEnv::log().info("File structure is not in bgz format, parser uses a general purpose gzip reader.");
       gz_stream = std::make_unique<GZStreamIO>();
 
     }
