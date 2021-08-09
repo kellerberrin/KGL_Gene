@@ -116,6 +116,25 @@ void kgl::VariantSort::ensemblAddIndex(const std::shared_ptr<const PopulationDB>
 }
 
 
+size_t kgl::VariantSort::nonEnsemblIdentifiers(const EnsemblIndexMap& index_map) {
+
+  size_t non_ensembl_identifiers{0};
+
+  for (auto const& [ident, variant_ptr] : index_map) {
+
+    if (ident.find(ENSEMBL_PREFIX_) == std::string::npos) {
+
+      ++non_ensembl_identifiers;
+
+    }
+
+  }
+
+  return non_ensembl_identifiers;
+
+}
+
+
 // Index by variant Id.
 std::shared_ptr<kgl::VariantIdIndexMap> kgl::VariantSort::variantIdIndex(const std::shared_ptr<const PopulationDB>& population_ptr) {
 

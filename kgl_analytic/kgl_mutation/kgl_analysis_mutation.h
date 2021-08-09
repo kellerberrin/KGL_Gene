@@ -80,15 +80,19 @@ private:
   constexpr static const double FREQ_AFR_{0.0};
   constexpr static const double FREQ_ALL_{0.0};
 
-  // Allele Specific Analysis.
-  GenerateGeneAllele gene_allele_;
+  // Gene Allele Specific Analysis.
+  GenerateGeneAllele gene_alleles_;
+  // All Alleles With a Pubmed PMID identifier.
+  GenerateGeneAllele all_pmid_alleles_;
 
   // Parameters and output files.
   std::string output_file_name_;
-  std::string allele_output_file_name_;
+  std::string gene_allele_file_;
+  std::string all_allele_file_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
-  constexpr static const char* ALLELE_OUTPUT_FILE_ = "AlleleOut";
+  constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "GeneAlleleOut";
+  constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "AllAlleleOut";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 

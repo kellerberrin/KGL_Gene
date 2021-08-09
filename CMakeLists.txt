@@ -101,7 +101,9 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_bzip.h
         kel_utility/kel_bound_queue.h
         kel_utility/kel_mem_alloc.h
-        kel_utility/kel_mem_alloc.cpp)
+        kel_utility/kel_mem_alloc.cpp
+        kel_utility/kel_rest_api.cpp
+        kel_utility/kel_rest_api.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -248,10 +250,12 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_freq.cpp
         kgl_genomics/kgl_database/kgl_variant_db_freq.h
         kgl_genomics/kgl_parser/kgl_entrez_parser.cpp
-        kgl_genomics/kgl_parser/kgl_entrez_parser.h kgl_genomics/kgl_parser/kgl_bio_pmid_parser.cpp kgl_genomics/kgl_parser/kgl_bio_pmid_parser.h)
+        kgl_genomics/kgl_parser/kgl_entrez_parser.h
+        kgl_genomics/kgl_parser/kgl_bio_pmid_parser.cpp
+        kgl_genomics/kgl_parser/kgl_bio_pmid_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -295,10 +299,10 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SimilarityInterface.h
         kol_ontology/kol_SimilarityWriter.h
         kol_ontology/kol_SimilarityCache.h
-        kol_ontology/xml/rapidxml.h
-        kol_ontology/xml/rapidxml_iterators.h
-        kol_ontology/xml/rapidxml_print.h
-        kol_ontology/xml/rapidxml_utils.h
+        contrib/rapidxml/rapidxml.h
+        contrib/rapidxml/rapidxml_iterators.h
+        contrib/rapidxml/rapidxml_print.h
+        contrib/rapidxml/rapidxml_utils.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
         kol_ontology/kol_GoGraph.cpp
         kol_ontology/kol_InformationFrontier.cpp
@@ -515,7 +519,7 @@ target_link_libraries(kgl_analysis kgl_genomics kel_utility )
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 

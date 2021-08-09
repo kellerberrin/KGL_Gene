@@ -51,6 +51,8 @@ public:
                                const std::vector<std::string>& ensembl_gene_list,
                                std::shared_ptr<EnsemblIndexMap>& indexMap);
 
+  [[nodiscard]] static size_t nonEnsemblIdentifiers(const EnsemblIndexMap& index_map);
+
   // A population of variants indexed by variant id.
   [[nodiscard]] static std::shared_ptr<VariantIdIndexMap> variantIdIndex(const std::shared_ptr<const PopulationDB>& population_ptr);
 
@@ -64,7 +66,7 @@ private:
 
   constexpr static const char* VEP_ENSEMBL_FIELD_ = "Gene";
   constexpr static const size_t PMR_BUFFER_SIZE_ = 4096;
-
+  constexpr static const char* ENSEMBL_PREFIX_ = "ENSG";
 
 };
 

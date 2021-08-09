@@ -6,8 +6,8 @@
 #include <vector>
 #include <string>
 
-#include <xml/rapidxml_utils.h>
-#include <xml/rapidxml.h>
+#include "../contrib/rapidxml/rapidxml_utils.h"
+#include "../contrib/rapidxml/rapidxml.h"
 
 #include "kol_ParserGoRapidXml.h"
 

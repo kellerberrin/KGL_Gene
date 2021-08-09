@@ -90,7 +90,7 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
     chars_processed += line_length;
     ++lines_processed;
 
-    if (lines_processed % REPORT_INTERVAL == 0) {
+    if (lines_processed % REPORT_INTERVAL_ == 0) {
 
       ExecEnv::log().info("JSONInfoParser processed line count: {}, text bytes: {}, file: {}",
                           line_count, chars_processed, getFileName());

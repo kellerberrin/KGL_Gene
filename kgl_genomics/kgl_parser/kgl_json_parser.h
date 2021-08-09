@@ -73,7 +73,7 @@ private:
   // The upstream queue of line records.
   FileDataIO file_data_;
 
-  static const constexpr size_t REPORT_INTERVAL{100000}; // Parser progress messages.
+  static const constexpr size_t REPORT_INTERVAL_{100000}; // Parser progress messages.
 
   // Begin reading IO records, spawns threads.
   [[nodiscard]] bool commenceJSONIO(const std::string& json_file_name);

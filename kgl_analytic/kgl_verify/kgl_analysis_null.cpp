@@ -32,6 +32,31 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   work_directory_ = work_directory;
 
+  std::string pubmed_efetch_url{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"};
+  std::string pubmed_pmid_args{"db=pubmed&id=19281305"};
+
+  std::string pubmed_elink_url{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"};
+  std::string pubmed_citations_args{"dbfrom=pubmed&linkname=pubmed_pubmed_citedin&id=19281305"};
+
+  auto [summary_result, summary_text] = test_rest_api_.synchronousRequest(pubmed_efetch_url, pubmed_pmid_args);
+  auto [citation_result, citation_text] = test_rest_api_.synchronousRequest(pubmed_elink_url, pubmed_citations_args);
+
+  if (not citation_result) {
+
+    ExecEnv::log().error("NullAnalysis::initializeAnalysis; problem with Pubmed API: {}", citation_text);
+
+  } else {
+
+    ExecEnv::log().info("NullAnalysis::initializeAnalysis; executed request, result: {}", citation_text);
+
+  }
+
+  // Sleep.
+  const size_t seconds = 10;
+  ExecEnv::log().info("*********** Sleep for seconds: {} ******************", seconds);
+  std::chrono::seconds timespan(seconds); // or whatever
+  std::this_thread::sleep_for(timespan);
+
   return true;
 
 }

@@ -44,7 +44,7 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
 
-
+  [[nodiscard]] std::vector<std::string> ensemblToSymbol(const std::string& ensembl) const { return lookupInfo( ensembl, ensembl_index_, GENE_NAME); }
   [[nodiscard]] std::vector<std::string> symbolToEnsembl(const std::string& symbol) const { return lookupInfo( symbol, symbol_index_, ENSEMBL_FIELD); }
   [[nodiscard]] std::vector<std::string> symbolVectorToEnsembl(const std::vector<std::string>& symbols) const { return vectorConvert(&UniprotResource::symbolToEnsembl, symbols); }
 
@@ -62,10 +62,15 @@ private:
 
   const UniprotIDMap uniprot_map_;
   std::multimap<std::string, std::string> uniprot_index_;
+  // key = entrez, value = uniprot_id
   std::multimap<std::string, std::string> entrez_index_;
+  // key = symbol, value = uniprot_id
   std::multimap<std::string, std::string> symbol_index_;
+  // key = symbol_synonym, value = uniprot_id
   std::multimap<std::string, std::string> synonym_index_;
+  // key = ensembl, value = uniprot_id
   std::multimap<std::string, std::string> ensembl_index_;
+  // key = HGNC, value = uniprot_id
   std::multimap<std::string, std::string> hgnc_index_;
 
   void createIndexes();

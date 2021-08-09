@@ -18,9 +18,12 @@ void kgl::GenerateGeneAllele::initialize(const std::vector<std::string>& symbol_
                 const std::shared_ptr<const CitationResource>& allele_citation_ptr) {
 
 
+  uniprot_nomenclature_ptr_ = uniprot_nomenclature_ptr;
+  allele_citation_ptr_ = allele_citation_ptr;
+
   for (auto const& symbol : symbol_gene_list) {
 
-    auto ensembl_symbol_list = uniprot_nomenclature_ptr->symbolToEnsembl(symbol);
+    auto ensembl_symbol_list = uniprot_nomenclature_ptr_->symbolToEnsembl(symbol);
     for (auto const& ensembl :  ensembl_symbol_list) {
 
       auto [iter, insert_result] = ensembl_symbol_map_.try_emplace(ensembl, symbol);
@@ -34,13 +37,12 @@ void kgl::GenerateGeneAllele::initialize(const std::vector<std::string>& symbol_
 
   }
 
-  sorted_allele_map_.clear();
-  allele_citation_ptr_ = allele_citation_ptr;
+  cited_allele_map_.clear();
 
 }
 
 
-void kgl::GenerateGeneAllele::addSortedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
+void kgl::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
   std::vector<std::string> ensembl_list;
   for (auto const& [ensembl, symbol] : ensembl_symbol_map_) {
@@ -53,43 +55,31 @@ void kgl::GenerateGeneAllele::addSortedVariants(const std::shared_ptr<const Sort
 
   for (auto const& [ensembl_id, variant_ptr] : filtered_variants) {
 
-    sorted_allele_map_.emplace(ensembl_id, variant_ptr);
+    if (not getCitations(variant_ptr->identifier()).empty()) {
 
-  }
-
-}
-
-void kgl::GenerateGeneAllele::filterAlleleMap(const double ALL_frequency, const double AFR_frequency) {
-
-  EnsemblIndexMap freq_sorted_allele_map;
-
-  for (auto const& [ensembl_id, variant_ptr] : sorted_allele_map_) {
-
-    auto frequency_AFR_opt = FrequencyDatabaseRead::superPopFrequency(*variant_ptr, AFR_SUPER_POP_);
-    auto frequency_ALL_opt =  FrequencyDatabaseRead::superPopFrequency(*variant_ptr, ALL_SUPER_POP_);
-
-    if (frequency_AFR_opt and frequency_ALL_opt) {
-
-      double afr_frequency = frequency_AFR_opt.value();
-      double all_frequency = frequency_ALL_opt.value();
-
-      if (afr_frequency >= AFR_frequency and all_frequency >= ALL_frequency) {
-
-        freq_sorted_allele_map.emplace(ensembl_id, variant_ptr);
-
-      }
+      cited_allele_map_.emplace(ensembl_id, variant_ptr);
 
     }
 
   }
 
-  ExecEnv::log().info("Allele map filtered for ALL Freq >= {}, AFR Freq >= {}, unfiltered size: {}, filtered size: {}",
-                      ALL_frequency, AFR_frequency, sorted_allele_map_.size(), freq_sorted_allele_map.size());
+}
 
+void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
-  sorted_allele_map_ = std::move(freq_sorted_allele_map);
+  // To save space only add citations that are relevant to the disease MeSH code.
+  for (auto const& [ensembl_id, variant_ptr] : *(sorted_variants->ensemblMap())) {
+
+    if (not getDiseaseCitations(variant_ptr->identifier()).empty()) {
+
+      cited_allele_map_.emplace(ensembl_id, variant_ptr);
+
+    }
+
+  }
 
 }
+
 
 
 std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
@@ -136,7 +126,7 @@ std::set<std::string> kgl::GenerateGeneAllele::getDiseaseCitations(const std::st
 }
 
 
-void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char delimiter) {
+void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, char delimiter) {
 
   outfile << "SymbolGeneId" << delimiter
           << "EnsemblGeneId" << delimiter
@@ -167,7 +157,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, const char del
 }
 
 
-void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const char delimiter) const {
+void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char delimiter) const {
 
   std::ofstream out_file(output_file);
 
@@ -178,14 +168,25 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, const 
 
   }
 
+  ExecEnv::log().info("Writing VEP, PMID information for {} variants to file: {}", cited_allele_map_.size(), output_file);
+
   writeHeader(out_file, delimiter);
 
-  for (auto const& [ensembl_id, variant_ptr] : sorted_allele_map_) {
+  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
 
     auto find_result = ensembl_symbol_map_.find(ensembl_id);
     if (find_result == ensembl_symbol_map_.end()) {
 
-      out_file << "Error:Unknown" << delimiter;
+      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+      if (not symbol_vector.empty()) {
+
+        out_file << symbol_vector.front() << delimiter;
+
+      } else {
+
+        out_file << "Error:Unknown" << delimiter;
+
+      }
 
     } else {
 

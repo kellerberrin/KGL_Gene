@@ -24,22 +24,27 @@ void kgl::UniprotResource::createIndexes() {
 
       if (field_id == GENE_NAME ) {
 
+        // key = symbol, value = uniprot_id
         symbol_index_.emplace(field_value, uniprot_id);
 
       } else if (field_id == GENE_SYNONYM) {
 
+        // key = symbol_synonym, value = uniprot_id
         synonym_index_.emplace(field_value, uniprot_id);
 
       }  else if (field_id == ENSEMBL_FIELD) {
 
+        // key = ensembl, value = uniprot_id
         ensembl_index_.emplace(field_value, uniprot_id);
 
       }  else if (field_id == HGNC_FIELD) {
 
+        // key = HGNC, value = uniprot_id
         hgnc_index_.emplace(field_value, uniprot_id);
 
       }  else if (field_id == ENTREZ_GENE) {
 
+        // key = entrez, value = uniprot_id
         entrez_index_.emplace(field_value, uniprot_id);
 
       }

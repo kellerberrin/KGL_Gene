@@ -50,7 +50,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
   // Initialize the gene allele analysis object.
-  gene_allele_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_);
+  gene_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_);
+  all_pmid_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_);
 
   return true;
 
@@ -97,8 +98,11 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
   }
 
-  allele_output_file_name_ = std::string(ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
-  allele_output_file_name_ = Utility::filePath(allele_output_file_name_, work_directory);
+  gene_allele_file_ = std::string(GENE_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  gene_allele_file_ = Utility::filePath(gene_allele_file_, work_directory);
+
+  all_allele_file_ = std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  all_allele_file_ = Utility::filePath(all_allele_file_, work_directory);
 
   return true;
 
@@ -180,7 +184,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
     ExecEnv::log().info("Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr->entrezMap().size());
 
     auto const disease_pmid_set = bio_pmid_ptr->selectDiseaseBioPMID(MutationAnalysisData::malariaMeSHList());
-    gene_allele_.addDiseaseCitations(disease_pmid_set);
+    gene_alleles_.addDiseaseCitations(disease_pmid_set);
+    all_pmid_alleles_.addDiseaseCitations(disease_pmid_set);
     gene_mutation_.updatePMIDStatistics(disease_pmid_set, bio_pmid_ptr);
 
   } else {
@@ -208,6 +213,8 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
     // Sort variants by Gene Ensembl Code
     auto sorted_variants_ptr = std::make_shared<SortedVariantAnalysis>(unphased_population_ptr_);
+    ExecEnv::log().info("Unphased Variants Sorted by VEP Gene Identifier: {}, number sorted by non-ensembl identifier: {}",
+                        sorted_variants_ptr->ensemblMap()->size(), VariantSort::nonEnsemblIdentifiers(*(sorted_variants_ptr->ensemblMap())));
     // Perform the analysis
     gene_mutation_.variantAnalysis( population_ptr_,
                                     unphased_population_ptr_,
@@ -216,7 +223,8 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
                                     allele_citation_ptr_,
                                     sorted_variants_ptr->ensemblMap());
     // Add the sorted variants to the gene allele anlysis.
-    gene_allele_.addSortedVariants(sorted_variants_ptr);
+    gene_alleles_.addGeneCitedVariants(sorted_variants_ptr);
+    all_pmid_alleles_.addDiseaseCitedVariants(sorted_variants_ptr);
 
   }
 
@@ -239,12 +247,11 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::MutationAnalysis::finalizeAnalysis() {
 
-  gene_allele_.filterAlleleMap(FREQ_ALL_, FREQ_AFR_);
-
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   gene_mutation_.writeOutput(genome_aux_ptr_, output_file_name_, OUTPUT_DELIMITER_);
-  gene_allele_.writeOutput(allele_output_file_name_, OUTPUT_DELIMITER_);
+  gene_alleles_.writeOutput(gene_allele_file_, OUTPUT_DELIMITER_);
+  all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
 
   return true;
 
