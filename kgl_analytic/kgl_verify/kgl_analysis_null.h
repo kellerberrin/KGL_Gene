@@ -7,7 +7,7 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kel_rest_api.h"
+#include "kgl_pubmed_api.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -43,7 +43,7 @@ public:
 private:
 
   std::string work_directory_;
-  RestAPI test_rest_api_;
+  PubmedRequester test_api_;
 
   void investigateVepFields(const std::shared_ptr<const PopulationDB>& population);
   void genomeIdIndex(const std::shared_ptr<const PopulationDB>& population);
