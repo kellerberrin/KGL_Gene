@@ -30,6 +30,7 @@ struct PubMedPublicationDetails {
   std::string publication_date;
   std::string journal;
   std::string journal_issue;
+  std::string journal_volume;
   std::string doi;
   std::string title;
   std::string abstract;
