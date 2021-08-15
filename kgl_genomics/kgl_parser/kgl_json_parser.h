@@ -27,7 +27,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// The map is sorted by variant key=rsid, value=pmid (Pubmed article identifier)
+// The map is sorted by variant key=rsid, value=pmid_ (Pubmed article identifier)
 using DBCitationMap = std::map<std::string, std::vector<std::string>>;
 
 class DBCitation : public DataDB {

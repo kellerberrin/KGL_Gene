@@ -10,6 +10,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <set>
 #include <vector>
 #include <chrono>
 
@@ -24,26 +25,62 @@ namespace kellerberrin::genome {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-struct PubMedPublicationDetails {
+class PubMedPublicationSummary {
 
-  std::string pmid;
-  std::string publication_date;
-  std::string journal;
-  std::string journal_issue;
-  std::string journal_volume;
-  std::string doi;
-  std::string title;
-  std::string abstract;
-  std::vector<std::string> authors;
-  std::vector<std::string> MeSHcodes;
-  std::vector<std::string> cited_by_articles;
-  std::vector<std::string> references;
+public:
+
+  PubMedPublicationSummary() = default;
+  ~PubMedPublicationSummary() = default;
+
+  // Getters
+  [[nodiscard]] const std::string& pmid() const { return pmid_; }
+  [[nodiscard]] const std::string& publicationDate() const { return publication_date_; } // DD-MM-YYYY or MM-YYYY
+  [[nodiscard]] const std::string& journal() const { return journal_; }
+  [[nodiscard]] const std::string& journalIssue() const { return journal_issue_;  } // may be empty
+  [[nodiscard]] const std::string& journalVolume() const { return journal_volume_; }  // may be empty
+  [[nodiscard]] const std::string& doi() const { return doi_; }
+  [[nodiscard]] const std::string& title() const { return title_; }
+  [[nodiscard]] const std::string& abstract() const { return abstract_; }
+  [[nodiscard]] const std::vector<std::string>& authors() const { return authors_; }  // surname, initials
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& chemicals() const { return chemicals_; }  // .first is MeshCode .second is description
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& MeshCodes() const { return MeSHcodes_; }  // .first is MeshCode .second is description
+  [[nodiscard]] const std::set<std::string>& citedBy() const { return cited_by_articles_; } // pmids only.
+  [[nodiscard]] const std::set<std::string>& reference() const { return references_;  } // pmids only.
+
+  // Setters
+  void pmid(const std::string& id) { pmid_ = id; }
+  void publicationDate(const std::string& pub_date) { publication_date_ = pub_date; } // DD-MM-YYYY or MM-YYYY
+  void journal(const std::string& name) { journal_ = name; }
+  void journalIssue(const std::string& issue) { journal_issue_ = issue;  } // may be empty
+  void journalVolume(const std::string& volume) { journal_volume_ = volume; }  // may be empty
+  void doi(const std::string& id) { doi_ = id; }
+  void title(const std::string& text) { title_ = text; }
+  void abstract(const std::string& text) { abstract_ = text; }
+  void authors(const std::vector<std::string>& author_list) { authors_ = author_list; }  // surname, initials
+  void  chemicals(const std::vector<std::pair<std::string, std::string>>& chem_list) { chemicals_ = chem_list; }  // .first is MeshCode .second is description
+  void MeshCodes(const std::vector<std::pair<std::string, std::string>>& mesh_list) { MeSHcodes_ = mesh_list; }  // .first is MeshCode .second is description
+  void citedBy(const std::set<std::string>& cite_set) { cited_by_articles_ = cite_set; } // pmids only.
+  void reference(const std::set<std::string>& ref_set) { references_ = ref_set;  } // pmids only.
+
+  std::string pmid_;
+  std::string publication_date_;  // DD-MM-YYYY or MM-YYYY
+  std::string journal_;
+  std::string journal_issue_;  // may be empty
+  std::string journal_volume_;  // may be empty
+  std::string doi_;
+  std::string title_;
+  std::string abstract_;
+  std::vector<std::string> authors_;  // surname, initials
+  std::vector<std::pair<std::string, std::string>> chemicals_;   // .first is MeshCode .second is description
+  std::vector<std::pair<std::string, std::string>> MeSHcodes_;   // .first is MeshCode .second is description
+  std::set<std::string> cited_by_articles_;  // pmids only.
+  std::set<std::string> references_;   // pmids only.
 
 };
-// key = pmid, value = publication details.
-using LitPublicationMap = std::map<std::string, PubMedPublicationDetails>;
+// key = pmid_, value = publication details.
+using LitPublicationMap = std::map<std::string, PubMedPublicationSummary>;
 
-// key = pmid, value = vector of pmids that cite, or are referenced by, the key pmid.
+// key = pmid_, value = vector of pmids that cite, or are referenced by, the key pmid_.
 using LitCitationMap = std::map<std::string, std::vector<std::string>>;
 
 class PubmedRequester {

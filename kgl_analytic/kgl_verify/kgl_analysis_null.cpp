@@ -79,7 +79,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
     }
 
-    ExecEnv::log().info("pmid: {}, citations: {}, cite list: {}", pmid, citations.size(), citations_list);
+    ExecEnv::log().info("pmid_: {}, citations: {}, cite list: {}", pmid, citations.size(), citations_list);
 
   }
 
@@ -99,7 +99,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
     }
 
-    ExecEnv::log().info("pmid: {}, reference: {}, reference list: {}", pmid, citations.size(), citations_list);
+    ExecEnv::log().info("pmid_: {}, reference: {}, reference list: {}", pmid, citations.size(), citations_list);
 
   }
 

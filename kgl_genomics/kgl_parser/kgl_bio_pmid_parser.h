@@ -56,7 +56,7 @@ public:
   BioPMIDMaps(BioPMIDMap&& disease_pmid_map, BioPMIDMap&& entrez_gene_map) : disease_pmid_map_(disease_pmid_map), entrez_pmid_map_(entrez_gene_map) {}
   ~BioPMIDMaps() = default;
 
-  // Only want unique pmid identifiers.
+  // Only want unique pmid_ identifiers.
   [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const;   // In the form of an entrez gene identifier.
   [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const; // In the form of a mesh identifier, e.g. "MESH:D004487" (oedema).
 
@@ -95,7 +95,7 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::BIO_PMID; }
 
-  // Only want unique pmid identifiers.
+  // Only want unique pmid_ identifiers.
   [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const { return pmid_maps_.entrezPMID(entrez_id); }
   [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const { return pmid_maps_.diseaseMeSHPMID(disease_mesh_id); }
 
@@ -133,7 +133,7 @@ public:
 
   [[nodiscard]] const std::string& fileId() const override { return file_name_; }
 
-  // Only want unique pmid identifiers.
+  // Only want unique pmid_ identifiers.
   [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const { return pmid_maps_.entrezPMID(entrez_id); }
   [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const { return pmid_maps_.diseaseMeSHPMID(disease_mesh_id); }
 
@@ -157,7 +157,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Parse a pmid bio resource.
+// Parse a pmid_ bio resource.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -10,6 +10,7 @@
 #include <set>
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -185,7 +186,7 @@ kgl::LitCitationMap kgl::PubmedRequester::parseCitationXML(const std::string& ci
           auto [iter, result] = citation_map.try_emplace(pmid_node->value(), citation_pmid_vector);
           if (not result) {
 
-            ExecEnv::log().error("PubmedRequester::parseCitationXML; expected duplicate for pmid: {}", pmid_node->value());
+            ExecEnv::log().error("PubmedRequester::parseCitationXML; expected duplicate for pmid_: {}", pmid_node->value());
 
           }
 
@@ -339,27 +340,74 @@ public:
   ParsePublicationXMLImpl() = delete;
   ~ParsePublicationXMLImpl() = delete;
 
-  static kgl::PubMedPublicationDetails parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node);
+  static kgl::PubMedPublicationSummary parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node);
 
 
 private:
 
-  inline static const std::string MEDLINE_NODE_{"MedlineCitation"};
-  inline static const std::string PMID_NODE_{"PMID"};
-  inline static const std::string ARTICLE_NODE_{"Article"};
+  // Article XML nodes
+  constexpr static const char* MEDLINE_NODE_{"MedlineCitation"};
+  constexpr static const char* PMID_NODE_{"PMID"};
+  constexpr static const char* ARTICLE_NODE_{"Article"};
+  constexpr static const char* PUBMED_NODE_{"PubmedData"};
+
+  // Article field nodes
+  constexpr static const char* ABSTRACT_NODE_{"Abstract"};
+  constexpr static const char* ABSTRACT_TEXT_NODE_{"AbstractText"};
+  constexpr static const char* ARTICLE_TITLE_NODE_{"ArticleTitle"};
+
+  // Author field nodes
+  constexpr static const char* AUTHOR_LIST_NODE_{"AuthorList"};
+  constexpr static const char* AUTHOR_NODE_{"Author"};
+  constexpr static const char* AUTHOR_SURNAME_NODE_{"LastName"};
+  constexpr static const char* AUTHOR_INITIALS_NODE_{"Initials"};
+
   // Journal XML nodes.
-  inline static const char* JOURNAL_NODE_{"Journal"};
-  inline static const char* JOURNAL_ISSUE_NODE_{"JournalIssue"};
-  inline static const char* VOLUME_NODE_{"Volume"};
-  inline static const char* ISSUE_NODE_{"Issue"};
-  inline static const char* PUB_DATE_NODE_{"PubDate"};
-  inline static const char* JOURNAL_TITLE_NODE_{"Title"};
+  constexpr static const char* JOURNAL_NODE_{"Journal"};
+  constexpr static const char* JOURNAL_ISSUE_NODE_{"JournalIssue"};
+  constexpr static const char* VOLUME_NODE_{"Volume"};
+  constexpr static const char* ISSUE_NODE_{"Issue"};
+  constexpr static const char* PUB_DATE_NODE_{"PubDate"};
+  constexpr static const char* JOURNAL_TITLE_NODE_{"Title"};
+
+  // Chemical XML Nodes.
+  constexpr static const char* CHEMICAL_LIST_NODE_{"ChemicalList"};
+  constexpr static const char* CHEMICAL_NODE_{"Chemical"};
+  constexpr static const char* NAME_SUBSTANCE_NODE_{"NameOfSubstance"};
+
+  // MeSH XML Nodes.
+  constexpr static const char* MESH_LIST_NODE_{"MeshHeadingList"};
+  constexpr static const char* MESH_NODE_{"MeshHeading"};
+  constexpr static const char* MESH_ID_ATTRIBUTE_{"UI"};
+  constexpr static const char* MESH_DESCRIPTOR_NODE_{"DescriptorName"};
+
+  // Reference XML Nodes.
+  constexpr static const char* REFERENCE_LIST_NODE_{"ReferenceList"};
+  constexpr static const char* REFERENCE_NODE_{"Reference"};
+  constexpr static const char* ARTICLE_ID_LIST_{"ArticleIdList"};
+  constexpr static const char* ARTICLE_ID_{"ArticleId"};
+  constexpr static const char* ARTICLE_ID_ATTRIBUTE_{"IdType"};
+  constexpr static const char* ARTICLE_ID_ATTRIBUTE_VALUE_{"pubmed"};
 
 
-  static void parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node, kgl::PubMedPublicationDetails& publication_details);
-  static std::string parseXMLDate(rapidxml::xml_node<> * date_node);
-  static rapidxml::xml_node<> * validSubNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid);
-  static std::string validOptionalNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name);
+  // Date XML nodes
+  constexpr static const char* YEAR_NODE_{"Year"};
+  constexpr static const char* MONTH_NODE_{"Month"};
+  constexpr static const char* DAY_NODE_{"Day"};
+
+  // Parse publication sub-sections.
+  static void parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node, kgl::PubMedPublicationSummary& publication_details);
+  static void parseArticleFieldsXML(rapidxml::xml_node<> * journal_article_node, kgl::PubMedPublicationSummary& publication);
+  static void parseAuthorsXML(rapidxml::xml_node<> * journal_article_node, kgl::PubMedPublicationSummary& publication);
+  static void parseChemicalsXML( rapidxml::xml_node<> * medline_node, kgl::PubMedPublicationSummary& publication);
+  static void parseMeSHXML( rapidxml::xml_node<> * medline_node, kgl::PubMedPublicationSummary& publication);
+  static void parseReferencesXML( rapidxml::xml_node<> * pubmed_node, kgl::PubMedPublicationSummary& publication);
+
+  // Utility routines.
+  [[nodiscard]] static std::string parseXMLDate(rapidxml::xml_node<> * date_node, const std::string& pmid);
+  [[nodiscard]] static rapidxml::xml_node<> * validSubNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid);
+  [[nodiscard]] static rapidxml::xml_attribute<> * validAttribute(rapidxml::xml_node<> * node_ptr, const char* attribute, const std::string& pmid);
+  [[nodiscard]] static std::string validOptionalNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name);
 
 };
 
@@ -392,17 +440,17 @@ kgl::LitPublicationMap kgl::PubmedRequester::parsePublicationXML(const std::stri
     while (article_node != nullptr) {
 
       auto publication = ParsePublicationXMLImpl::parsePubmedArticleXML(article_node);
-      if (publication.pmid.empty()) {
+      if (publication.pmid_.empty()) {
 
-        std::string error_message = "publication Pubmed pmid not defined";
+        std::string error_message = "publication Pubmed pmid_ not defined";
         throw std::runtime_error(error_message);
 
       }
 
-      auto [iter, result] = publication_map.try_emplace(publication.pmid, publication);
+      auto [iter, result] = publication_map.try_emplace(publication.pmid_, publication);
       if (not result) {
 
-        std::string error_message = "cannot add duplicate publication: " + publication.pmid;
+        std::string error_message = "cannot add duplicate publication: " + publication.pmid_;
         throw std::runtime_error(error_message);
 
       }
@@ -426,70 +474,228 @@ kgl::LitPublicationMap kgl::PubmedRequester::parsePublicationXML(const std::stri
 }
 
 
-kgl::PubMedPublicationDetails ParsePublicationXMLImpl::parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node) {
+kgl::PubMedPublicationSummary ParsePublicationXMLImpl::parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node) {
 
-  kgl::PubMedPublicationDetails publication;
+  kgl::PubMedPublicationSummary publication;
 
-  rapidxml::xml_node<>* medline_node = pubmed_article_node->first_node(MEDLINE_NODE_.c_str());
+  rapidxml::xml_node<>* medline_node = pubmed_article_node->first_node(MEDLINE_NODE_);
   if (medline_node == nullptr) {
 
-    std::string error_message = "Publication Node: " + MEDLINE_NODE_ + " not found";
+    std::string error_message = "Publication Node: " + std::string(MEDLINE_NODE_) + " not found";
     throw std::runtime_error(error_message);
 
   }
 
-  rapidxml::xml_node<>* pmid_node = medline_node->first_node(PMID_NODE_.c_str());
+  rapidxml::xml_node<>* pmid_node = medline_node->first_node(PMID_NODE_);
   if (pmid_node == nullptr) {
 
-    std::string error_message = "Publication Node: " + PMID_NODE_ + " not found";
+    std::string error_message = "Publication Node: " + std::string(PMID_NODE_) + " not found";
     throw std::runtime_error(error_message);
 
   }
+
 
   std::string pmid = pmid_node->value();
-  publication.pmid = pmid;
+  publication.pmid_ = pmid;
 
-  rapidxml::xml_node<>* journal_article_node = medline_node->first_node(ARTICLE_NODE_.c_str());
-  if (journal_article_node == nullptr) {
+  parseChemicalsXML( medline_node, publication);
+  parseMeSHXML( medline_node, publication);
 
-    std::string error_message = "Publication Node: " + ARTICLE_NODE_ + " not found";
+  auto journal_article_node = validSubNode(medline_node, ARTICLE_NODE_, publication.pmid_);
+  parseArticleFieldsXML(journal_article_node, publication);
+  parseJournalArticleXML(journal_article_node, publication);
+  parseAuthorsXML(journal_article_node, publication);
+
+  rapidxml::xml_node<>* pubmed_node = pubmed_article_node->first_node(PUBMED_NODE_);
+  if (pubmed_node == nullptr) {
+
+    std::string error_message = "Publication Node: " + std::string(PUBMED_NODE_) + " not found";
     throw std::runtime_error(error_message);
 
   }
 
-  parseJournalArticleXML(journal_article_node, publication);
-
+  parseReferencesXML(pubmed_node, publication);
 
   return publication;
 
 }
 
-// Unpack the various XML tags to define the Publication Journal
-void ParsePublicationXMLImpl::parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node,
-                                                     kgl::PubMedPublicationDetails& publication) {
+// Unpack the various XML tags for the article.
+void ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journal_article_node,
+                                               kgl::PubMedPublicationSummary& publication) {
 
-  auto journal_node = validSubNode(journal_article_node, JOURNAL_NODE_, publication.pmid);
+  auto author_list_node = validSubNode(journal_article_node, AUTHOR_LIST_NODE_, publication.pmid_);
+  auto author_node = author_list_node->first_node(AUTHOR_NODE_);
+  while(author_node != nullptr)  {
 
-  auto journal_title = validSubNode(journal_node, JOURNAL_TITLE_NODE_, publication.pmid);
+    auto surname = validSubNode(author_node, AUTHOR_SURNAME_NODE_, publication.pmid_);
+    auto initials = validSubNode(author_node, AUTHOR_INITIALS_NODE_, publication.pmid_);
 
-  publication.journal = journal_title->value();
+    std::string author_name = surname->value() + std::string(", ") + initials->value();
+    publication.authors_.push_back(author_name);
 
-  auto journal_issue = validSubNode(journal_node, JOURNAL_ISSUE_NODE_, publication.pmid);
+    // Next author.
+    author_node = author_node->next_sibling();
 
-  publication.journal_issue = validOptionalNode(journal_issue, ISSUE_NODE_);
-
-  publication.journal_volume = validOptionalNode(journal_issue, VOLUME_NODE_);
-
-  auto pub_date = validSubNode(journal_issue, PUB_DATE_NODE_, publication.pmid);
-
-  publication.publication_date = parseXMLDate(pub_date);
+  }
 
 }
 
-std::string ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * date_node) {
+
+// Unpack the various XML tags for the article.
+void ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * journal_article_node,
+                                                    kgl::PubMedPublicationSummary& publication) {
+
+  auto abstract_node = validSubNode(journal_article_node, ABSTRACT_NODE_, publication.pmid_);
+
+  auto abtract_text = validSubNode(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid_);
+
+  publication.abstract_ = abtract_text->value();
+
+  auto article_title = validSubNode(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid_);
+
+  publication.title_ = article_title->value();
+
+}
+
+
+// Unpack the various XML tags to define the Publication Journal
+void ParsePublicationXMLImpl::parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node,
+                                                     kgl::PubMedPublicationSummary& publication) {
+
+  auto journal_node = validSubNode(journal_article_node, JOURNAL_NODE_, publication.pmid_);
+
+  auto journal_title = validSubNode(journal_node, JOURNAL_TITLE_NODE_, publication.pmid_);
+
+  publication.journal_ = journal_title->value();
+
+  auto journal_issue = validSubNode(journal_node, JOURNAL_ISSUE_NODE_, publication.pmid_);
+
+  publication.journal_issue_ = validOptionalNode(journal_issue, ISSUE_NODE_);
+
+  publication.journal_volume_ = validOptionalNode(journal_issue, VOLUME_NODE_);
+
+  auto pub_date = validSubNode(journal_issue, PUB_DATE_NODE_, publication.pmid_);
+
+  publication.publication_date_ = parseXMLDate(pub_date, publication.pmid_);
+
+}
+
+// Unpack the various XML tags for chemicals_.
+void ParsePublicationXMLImpl::parseChemicalsXML( rapidxml::xml_node<> * medline_node,
+                                                 kgl::PubMedPublicationSummary& publication) {
+
+  auto chem_list_node = medline_node->first_node(CHEMICAL_LIST_NODE_);
+  if (chem_list_node == nullptr) {
+
+    return;
+
+  }
+  auto chem_node = chem_list_node->first_node(CHEMICAL_NODE_);
+  while(chem_node != nullptr)  {
+
+    auto desc_node = validSubNode(chem_node, NAME_SUBSTANCE_NODE_, publication.pmid_);
+
+    std::string chemical_description = desc_node->value();
+    auto mesh_attr = validAttribute(desc_node, MESH_ID_ATTRIBUTE_, publication.pmid_);
+    std::string mesh_id = mesh_attr->name();
+
+    publication.chemicals_.emplace_back(mesh_id, chemical_description);
+
+    // Next chemical.
+    chem_node = chem_node->next_sibling();
+
+  }
+
+}
+
+
+// Unpack the various XML tags for MeSH descriptors.
+void ParsePublicationXMLImpl::parseMeSHXML( rapidxml::xml_node<> * medline_node,
+                                            kgl::PubMedPublicationSummary& publication) {
+
+  auto mesh_list_node = medline_node->first_node(MESH_LIST_NODE_);
+  if (mesh_list_node == nullptr) {
+
+    return;
+
+  }
+  auto mesh_node = mesh_list_node->first_node(MESH_NODE_);
+  while(mesh_node != nullptr)  {
+
+    auto desc_node = validSubNode(mesh_node, MESH_DESCRIPTOR_NODE_, publication.pmid_);
+
+    std::string mesh_description = desc_node->value();
+    auto mesh_attr = validAttribute(desc_node, MESH_ID_ATTRIBUTE_, publication.pmid_);
+    std::string mesh_id = mesh_attr->name();
+
+    publication.MeSHcodes_.emplace_back(mesh_id, mesh_description);
+
+    // Next chemical.
+    mesh_node = mesh_node->next_sibling();
+
+  }
+
+}
+
+
+void ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pubmed_node,
+                                                  kgl::PubMedPublicationSummary& publication) {
+
+  auto reference_list_node = pubmed_node->first_node(REFERENCE_LIST_NODE_);
+  if (reference_list_node == nullptr) {
+
+    return;
+
+  }
+  auto reference_node = reference_list_node->first_node(REFERENCE_NODE_);
+  while(reference_node != nullptr)  {
+
+    auto article_list_node = validSubNode(reference_node, ARTICLE_ID_LIST_, publication.pmid_);
+    auto id_node = validSubNode(article_list_node, ARTICLE_ID_, publication.pmid_);
+    auto id_attrib = validAttribute(id_node, ARTICLE_ID_ATTRIBUTE_, publication.pmid_);
+    std::string id_type = id_attrib->value();
+    if (id_type != ARTICLE_ID_ATTRIBUTE_VALUE_) {
+
+      kel::ExecEnv::log().warn("ParsePublicationXMLImpl::parseReferencesXML; publication pmid_: {} has reference id type: {}",
+                               publication.pmid_, id_type);
+
+    }
+
+    std::string reference_pmid = id_node->value();
+
+    auto [iter, result] = publication.references_.insert(reference_pmid);
+    if (not result) {
+
+      kel::ExecEnv::log().warn("ParsePublicationXMLImpl::parseReferencesXML; publication pmid_: {} has duplicate reference: {}",
+                               publication.pmid_, reference_pmid);
+
+    }
+
+    // Next reference.
+    reference_node = reference_node->next_sibling();
+
+  }
+
+}
+
+
+std::string ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * date_node, const std::string& pmid) {
+
+  auto year = validSubNode(date_node, YEAR_NODE_, pmid);
+  auto month = validSubNode(date_node, MONTH_NODE_, pmid);
+  auto day =  validOptionalNode(date_node, DAY_NODE_);
 
   std::string date_string;
+  if (not day.empty()) {
 
+    date_string = day + "-" + std::string(month->value()) + "-" + std::string(year->value());
+
+  } else {
+
+    date_string = std::string(month->value()) + "-" + std::string(year->value());
+
+  }
 
   return date_string;
 
@@ -508,6 +714,21 @@ rapidxml::xml_node<> * ParsePublicationXMLImpl::validSubNode(rapidxml::xml_node<
   return sub_node_ptr;
 
 }
+
+rapidxml::xml_attribute<> * ParsePublicationXMLImpl::validAttribute(rapidxml::xml_node<> * node_ptr, const char* attribute, const std::string& pmid) {
+
+  rapidxml::xml_attribute<>* attrib_ptr = node_ptr->first_attribute(attribute);
+  if (attrib_ptr == nullptr) {
+
+    std::string error_message = "Pmid: " + pmid + " Attribute: '" + attribute + "' not found";
+    throw std::runtime_error(error_message);
+
+  }
+
+  return attrib_ptr;
+
+}
+
 
 std::string ParsePublicationXMLImpl::validOptionalNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name) {
 
