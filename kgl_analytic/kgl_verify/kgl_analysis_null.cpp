@@ -62,7 +62,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 */
 
   std::vector<std::string> pmidids{ "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
-
+/*
   auto citation_map = test_api_.getCitations(pmidids);
 
   for (auto const& [pmid, citations] : citation_map) {
@@ -71,7 +71,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
     for(auto const& cite : citations) {
 
       citations_list += cite;
-      if (cite != citations.back()) {
+      if (cite != *citations.rbegin()) {
 
         citations_list += "&";
 
@@ -91,7 +91,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
     for(auto const& cite : citations) {
 
       citations_list += cite;
-      if (cite != citations.back()) {
+      if (cite != *citations.rbegin()) {
 
         citations_list += "&";
 
@@ -102,8 +102,15 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
     ExecEnv::log().info("pmid_: {}, reference: {}, reference list: {}", pmid, citations.size(), citations_list);
 
   }
-
+*/
   auto publication_map = test_api_.getPublicationDetails(pmidids);
+  for (auto const& [pmid, publication] : publication_map) {
+
+    std::stringstream out_str;
+    publication.output(out_str, '|');
+    ExecEnv::log().info("\n{}", out_str.str());
+
+  }
 
   return true;
 
