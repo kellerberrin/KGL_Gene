@@ -148,6 +148,9 @@ kgl::LitPublicationMap kgl::ParsePublicationXMLImpl::parsePublicationXML(const s
 
       // Issue an error message and skip to the next article.
       ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing XML Pubmed Article; {}", e.what());
+      // Comment out after testing.
+      ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
+
 
     }
 
@@ -194,7 +197,6 @@ kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXM
   parseArticleFieldsXML(journal_article_node, publication);
   parseJournalArticleXML(journal_article_node, publication);
   parseAuthorsXML(journal_article_node, publication);
-  parseDoiXML(journal_article_node, publication);
 
   rapidxml::xml_node<>* pubmed_node = pubmed_article_node->first_node(PUBMED_NODE_);
   if (pubmed_node == nullptr) {
@@ -205,6 +207,8 @@ kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXM
   }
 
   parseReferencesXML(pubmed_node, publication);
+  parseDoiXML(journal_article_node, pubmed_node, publication);
+  parseXMLDate(journal_article_node, pubmed_node, publication);
 
   return publication;
 
@@ -218,11 +222,20 @@ void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journ
   auto author_node = author_list_node->first_node(AUTHOR_NODE_);
   while(author_node != nullptr)  {
 
-    auto surname = validSubNode(author_node, AUTHOR_SURNAME_NODE_, publication.pmid());
-    auto initials = validSubNode(author_node, AUTHOR_INITIALS_NODE_, publication.pmid());
+    auto surname = author_node->first_node(AUTHOR_SURNAME_NODE_);
+    if (surname != nullptr) {
 
-    std::string author_name = surname->value() + std::string("&") + initials->value();
-    publication.addAuthor(author_name);
+      auto initials = validSubNode(author_node, AUTHOR_INITIALS_NODE_, publication.pmid());
+      std::string author_name = surname->value() + std::string("&") + initials->value();
+      publication.addAuthor(author_name);
+
+    } else {
+
+      auto collective = validSubNode(author_node, AUTHOR_COLLECTIVE_NODE_, publication.pmid());
+      std::string collective_name = collective->value() + std::string("&");
+      publication.addAuthor(collective_name);
+
+    }
 
     // Next author.
     author_node = author_node->next_sibling();
@@ -236,11 +249,17 @@ void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journ
 void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML( rapidxml::xml_node<> * journal_article_node,
                                                           kgl::PubMedPublicationSummary& publication) {
 
-  auto abstract_node = validSubNode(journal_article_node, ABSTRACT_NODE_, publication.pmid());
+  auto abstract_node = journal_article_node->first_node(AUTHOR_SURNAME_NODE_);
+  if (abstract_node != nullptr) {
 
-  auto abtract_text = validSubNode(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
+    auto abtract_text = validSubNode(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
+    publication.abstract(abtract_text->value());
 
-  publication.abstract(abtract_text->value());
+  } else {
+
+    publication.abstract("");
+
+  }
 
   auto article_title = validSubNode(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid());
 
@@ -249,25 +268,41 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML( rapidxml::xml_node<> *
 }
 
 void kgl::ParsePublicationXMLImpl::parseDoiXML( rapidxml::xml_node<> * journal_article_node,
+                                                rapidxml::xml_node<> * pubmed_node,
                                                 PubMedPublicationSummary& publication) {
 
 
   rapidxml::xml_node<>* doi_node = journal_article_node->first_node(DOI_NODE_);
-  if (doi_node == nullptr) {
+  if (doi_node != nullptr) {
 
-    return;
+    auto doi_attr = validAttribute(doi_node, DOI_ATTRIBUTE_, publication.pmid());
+    if (std::string(doi_attr->value()) == std::string(DOI_ATTRIBUTE_VALUE_)) {
 
-  }
-  auto doi_attr = validAttribute(doi_node, DOI_ATTRIBUTE_, publication.pmid());
-  if (std::string(doi_attr->value()) != std::string(DOI_ATTRIBUTE_VALUE_)) {
+      publication.doi(doi_node->value());
+      return;
 
-    ExecEnv::log().warn("ParsePublicationXMLImpl::parseDoiXML; publication pmid: {}, eletronic id : '{}', expected '{}'",
-                        publication.pmid(), doi_attr->value(), DOI_ATTRIBUTE_VALUE_);
-    return;
+    }
 
   }
 
-  publication.doi(doi_node->value());
+  rapidxml::xml_node<>* article_id_node = pubmed_node->first_node(ARTICLE_ID_LIST_);
+  if (article_id_node != nullptr) {
+
+    auto article_id = article_id_node->first_node(ARTICLE_ID_);
+    while(article_id != nullptr) {
+
+      auto doi_attr = validAttribute(article_id, ARTICLE_ID_ATTRIBUTE_, publication.pmid());
+      if (std::string(doi_attr->value()) == std::string(DOI_ATTRIBUTE_VALUE_)) {
+
+        publication.doi(article_id->value());
+
+      }
+
+      article_id = article_id->next_sibling();
+
+    }
+
+  }
 
 }
 
@@ -288,9 +323,6 @@ void kgl::ParsePublicationXMLImpl::parseJournalArticleXML( rapidxml::xml_node<> 
 
   publication.journalVolume(validOptionalNode(journal_issue, VOLUME_NODE_));
 
-  auto pub_date = validSubNode(journal_issue, PUB_DATE_NODE_, publication.pmid());
-
-  publication.publicationDate(parseXMLDate(pub_date, publication.pmid()));
 
 }
 
@@ -391,27 +423,64 @@ void kgl::ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pu
 
 }
 
+void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_article_node,
+                                                rapidxml::xml_node<> * pubmed_node,
+                                                PubMedPublicationSummary& publication) {
 
-std::string kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * date_node, const std::string& pmid) {
 
-  auto year = validSubNode(date_node, YEAR_NODE_, pmid);
-  auto month = validSubNode(date_node, MONTH_NODE_, pmid);
-  auto day =  validOptionalNode(date_node, DAY_NODE_);
+  auto journal_node = validSubNode(journal_article_node, JOURNAL_NODE_, publication.pmid());
+  auto journal_issue = validSubNode(journal_node, JOURNAL_ISSUE_NODE_, publication.pmid());
+  auto pub_date = validSubNode(journal_issue, PUB_DATE_NODE_, publication.pmid());
+
+  auto year = pub_date->first_node(YEAR_NODE_);
+  auto month = pub_date->first_node(MONTH_NODE_);
 
   std::string date_string;
-  if (not day.empty()) {
+  if (year != nullptr and month != nullptr) {
 
-    date_string = day + "-" + std::string(month->value()) + "-" + std::string(year->value());
+    auto day =  validOptionalNode(pub_date, DAY_NODE_);
+
+    if (not day.empty()) {
+
+      date_string = day + "-" + std::string(month->value()) + "-" + std::string(year->value());
+
+    } else {
+
+      date_string = std::string(month->value()) + "-" + std::string(year->value());
+
+    }
 
   } else {
 
-    date_string = std::string(month->value()) + "-" + std::string(year->value());
+    auto history_node = validSubNode(pubmed_node, HISTORY_NODE_, publication.pmid());
+    auto pubmed_date_node = validSubNode(history_node, PUBMED_DATE_NODE_, publication.pmid());
+
+    auto pm_year = pubmed_date_node->first_node(YEAR_NODE_);
+    auto pm_month = pubmed_date_node->first_node(MONTH_NODE_);
+
+    if (pm_year != nullptr and pm_month != nullptr) {
+
+      auto day =  validOptionalNode(pubmed_date_node, DAY_NODE_);
+
+      if (not day.empty()) {
+
+        date_string = day + "-" + std::string(pm_month->value()) + "-" + std::string(pm_year->value());
+
+      } else {
+
+        date_string = std::string(pm_month->value()) + "-" + std::string(pm_year->value());
+
+      }
+
+    }
 
   }
 
-  return date_string;
+  publication.publicationDate(date_string);
 
 }
+
+
 
 rapidxml::xml_node<> * kgl::ParsePublicationXMLImpl::validSubNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid) {
 

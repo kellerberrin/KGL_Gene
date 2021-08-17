@@ -87,6 +87,7 @@ private:
   constexpr static const char* AUTHOR_LIST_NODE_{"AuthorList"};
   constexpr static const char* AUTHOR_NODE_{"Author"};
   constexpr static const char* AUTHOR_SURNAME_NODE_{"LastName"};
+  constexpr static const char* AUTHOR_COLLECTIVE_NODE_{"CollectiveName"};
   constexpr static const char* AUTHOR_INITIALS_NODE_{"Initials"};
 
   // Journal XML nodes.
@@ -94,7 +95,6 @@ private:
   constexpr static const char* JOURNAL_ISSUE_NODE_{"JournalIssue"};
   constexpr static const char* VOLUME_NODE_{"Volume"};
   constexpr static const char* ISSUE_NODE_{"Issue"};
-  constexpr static const char* PUB_DATE_NODE_{"PubDate"};
   constexpr static const char* JOURNAL_TITLE_NODE_{"Title"};
 
   // Chemical XML Nodes.
@@ -122,23 +122,27 @@ private:
   constexpr static const char* ARTICLE_ID_ATTRIBUTE_VALUE_{"pubmed"};
 
   // Date XML nodes
+  constexpr static const char* PUB_DATE_NODE_{"PubDate"};
   constexpr static const char* YEAR_NODE_{"Year"};
   constexpr static const char* MONTH_NODE_{"Month"};
   constexpr static const char* DAY_NODE_{"Day"};
+  constexpr static const char* HISTORY_NODE_{"History"};
+  constexpr static const char* PUBMED_DATE_NODE_{"PubMedPubDate"};
+
 
   // Parse a publication.
   [[nodiscard]] static PubMedPublicationSummary parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node);
   // Parse publication sub-sections.
   static void parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node, PubMedPublicationSummary& publication_details);
   static void parseArticleFieldsXML(rapidxml::xml_node<> * journal_article_node, PubMedPublicationSummary& publication);
-  static void parseDoiXML(rapidxml::xml_node<> * journal_article_node, PubMedPublicationSummary& publication);
+  static void parseDoiXML(rapidxml::xml_node<> * journal_article_node, rapidxml::xml_node<> * pubmed_node,PubMedPublicationSummary& publication);
   static void parseAuthorsXML(rapidxml::xml_node<> * journal_article_node, PubMedPublicationSummary& publication);
   static void parseChemicalsXML( rapidxml::xml_node<> * medline_node, PubMedPublicationSummary& publication);
   static void parseMeSHXML( rapidxml::xml_node<> * medline_node, PubMedPublicationSummary& publication);
   static void parseReferencesXML( rapidxml::xml_node<> * pubmed_node, PubMedPublicationSummary& publication);
+  static void parseXMLDate(rapidxml::xml_node<> * journal_article_node, rapidxml::xml_node<> * pubmed_node, PubMedPublicationSummary& publication);
 
   // Utility routines.
-  [[nodiscard]] static std::string parseXMLDate(rapidxml::xml_node<> * date_node, const std::string& pmid);
   [[nodiscard]] static rapidxml::xml_node<> * validSubNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid);
   [[nodiscard]] static rapidxml::xml_attribute<> * validAttribute(rapidxml::xml_node<> * node_ptr, const char* attribute, const std::string& pmid);
   [[nodiscard]] static std::string validOptionalNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name);

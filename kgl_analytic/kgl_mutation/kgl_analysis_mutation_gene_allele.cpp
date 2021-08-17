@@ -396,7 +396,7 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
 
     if (not variant_ptr->identifier().empty()) {
 
-      auto pmid_set = getCitations(variant_ptr->identifier());
+      auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
       for (auto const& pmid : pmid_set) {
 
         pmid_vector.push_back(pmid);

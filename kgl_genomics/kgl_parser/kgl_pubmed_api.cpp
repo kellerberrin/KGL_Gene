@@ -19,18 +19,18 @@ namespace kgl = kellerberrin::genome;
 
 kgl::LitCitationMap kgl::PubmedRequester::getCitations(const std::vector<std::string>& pmid_vector) const {
 
-  return getCitationArgs(pmid_vector, PUBMED_ARTICLE_CITEDBY_ARGS_);
+  return getCitationReference(pmid_vector, PUBMED_ARTICLE_CITEDBY_ARGS_);
 
 }
 
 kgl::LitCitationMap kgl::PubmedRequester::getReferences(const std::vector<std::string>& pmid_vector) const {
 
-  return getCitationArgs(pmid_vector, PUBMED_ARTICLE_REFERENCES_ARGS_);
+  return getCitationReference(pmid_vector, PUBMED_ARTICLE_REFERENCES_ARGS_);
 
 }
 
 
-kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const {
+kgl::LitCitationMap kgl::PubmedRequester::getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const {
 
   LitCitationMap citation_map;
   std::set<std::string> unique_pmids;
@@ -75,7 +75,7 @@ kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std:
       ++batch_requests;
 
       auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-      ExecEnv::log().info("PubmedRequester::getCitationArgs; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+      ExecEnv::log().info("PubmedRequester::getCitationReference; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                           api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
       batch_pmids.clear();
@@ -114,7 +114,7 @@ kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std:
     ++api_requests;
 
     auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-    ExecEnv::log().info("PubmedRequester::getCitationArgs; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+    ExecEnv::log().info("PubmedRequester::getCitationReference; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                         api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
     batch_pmids.clear();
@@ -142,7 +142,7 @@ kgl::LitCitationMap kgl::PubmedRequester::citationBatch(const std::vector<std::s
 
   if (not citation_result) {
 
-    ExecEnv::log().error("PubmedRequester::getCitationArgs; problem with Pubmed API: {}", citation_text);
+    ExecEnv::log().error("PubmedRequester::getCitationReference; problem with Pubmed API: {}", citation_text);
 
   } else {
 
@@ -209,7 +209,7 @@ kgl::LitPublicationMap kgl::PubmedRequester::getPublicationDetails(const std::ve
       ++batch_requests;
 
       auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-      ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+      ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls/elapsed : {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                           api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
       batch_pmids.clear();
@@ -248,7 +248,7 @@ kgl::LitPublicationMap kgl::PubmedRequester::getPublicationDetails(const std::ve
     ++api_requests;
 
     auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-    ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+    ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                         api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
     batch_pmids.clear();

@@ -67,7 +67,7 @@ private:
   const std::string PUBMED_ARTICLE_CITEDBY_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_citedin"};
   const std::string PUBMED_ARTICLE_REFERENCES_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_refs"};
 
-  [[nodiscard]] LitCitationMap getCitationArgs(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const;
+  [[nodiscard]] LitCitationMap getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const;
   [[nodiscard]] LitCitationMap citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const;
 
   // The publication detail constants.
