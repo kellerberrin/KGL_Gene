@@ -149,7 +149,7 @@ kgl::LitPublicationMap kgl::ParsePublicationXMLImpl::parsePublicationXML(const s
       // Issue an error message and skip to the next article.
       ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing XML Pubmed Article; {}", e.what());
       // Comment out after testing.
-      ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
+      // ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
 
 
     }
@@ -249,7 +249,7 @@ void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journ
 void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML( rapidxml::xml_node<> * journal_article_node,
                                                           kgl::PubMedPublicationSummary& publication) {
 
-  auto abstract_node = journal_article_node->first_node(AUTHOR_SURNAME_NODE_);
+  auto abstract_node = journal_article_node->first_node(ABSTRACT_NODE_);
   if (abstract_node != nullptr) {
 
     auto abtract_text = validSubNode(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());

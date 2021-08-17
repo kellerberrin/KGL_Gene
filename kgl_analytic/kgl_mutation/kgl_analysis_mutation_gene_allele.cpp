@@ -414,11 +414,12 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
   for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
 
     out_file << "******************************************" << '\n';
+    out_file <<  ensembl_id << '\n';
     out_file <<  variant_ptr->identifier() << '\n';
     out_file <<  variant_ptr->HGVS() << '\n';
     out_file << "******************************************" << '\n';
 
-    auto pmid_set = getCitations(variant_ptr->identifier());
+    auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
     for (auto const& pmid : pmid_set) {
 
       auto result = literature_map.find(pmid);

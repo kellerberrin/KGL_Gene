@@ -241,6 +241,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::malaria_MeSH_list_{
   "MESH:D016779",  // Cerebral Malaria
 */
   "MESH:D016778",   // Malaria Falciparum
+  "MESH:D010963",    // Plasmodium falciparum
 /*
   "MESH:D016780",  // Malaria Vivax
   "MESH:D008289",  // Malaria Avian
