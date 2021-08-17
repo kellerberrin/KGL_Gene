@@ -13,8 +13,8 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// A local XML parser implementations to assist in parsing the complex Pubmed publication XML.
-// These objects contain 3rd party rapidxml implemention details and should ONLY be included into the source
+// A local XML parser implementation to assist in parsing the complex Pubmed publication XML.
+// These objects contain 3rd party rapidxml implementation details and should ONLY be included into the source
 // file "kgl_pubmed_api.cpp". Keep it OUT of the general code base.
 // The objects are functional only and cannot be created.
 //
@@ -39,7 +39,7 @@ public:
 
 private:
 
-  // Returned citation/reference XML nodes
+  // Citation/reference XML nodes
   constexpr static const char* CITATION_ROOT_NODE_{"eLinkResult"};
   constexpr static const char* CITATION_RECORD_{"LinkSet"};
   constexpr static const char* CITATION_PMID_{"IdList"};

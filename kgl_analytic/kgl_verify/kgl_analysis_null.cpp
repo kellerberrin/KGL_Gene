@@ -30,80 +30,13 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
+  // Get the pubmed api
+  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
+
   work_directory_ = work_directory;
 
-/*
-  std::string pubmed_efetch_url{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"};
-  std::string pubmed_pmid_args{"db=pubmed&id=19281305"};
-
-  std::string pubmed_elink_url{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"};
-  std::string pubmed_citations_args{"dbfrom=pubmed&linkname=pubmed_pubmed_citedin&id=19281305&id=20401335&id=21029472&id=21790707&id=21867552&id=21929748"};
-
-  std::string api_key {"&api_key=8cd3dde4cbf1eeb71b5ae469ae8a99247609"};
-
-  auto [summary_result, summary_text] = test_rest_api_.synchronousRequest(pubmed_efetch_url, pubmed_pmid_args + api_key);
-  auto [citation_result, citation_text] = test_rest_api_.synchronousRequest(pubmed_elink_url, pubmed_citations_args + api_key);
-
-  if (not citation_result) {
-
-    ExecEnv::log().error("NullAnalysis::initializeAnalysis; problem with Pubmed API: {}", citation_text);
-
-  } else {
-
-    ExecEnv::log().info("NullAnalysis::initializeAnalysis; executed request, result: {}", citation_text);
-
-  }
-
-  // Sleep.
-  const size_t seconds = 10;
-  ExecEnv::log().info("*********** Sleep for seconds: {} ******************", seconds);
-  std::chrono::seconds timespan(seconds); // or whatever
-  std::this_thread::sleep_for(timespan);
-*/
-
-  std::vector<std::string> pmidids{ "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
-/*
-  auto citation_map = test_api_.getCitations(pmidids);
-
-  for (auto const& [pmid, citations] : citation_map) {
-
-    std::string citations_list;
-    for(auto const& cite : citations) {
-
-      citations_list += cite;
-      if (cite != *citations.rbegin()) {
-
-        citations_list += "&";
-
-      }
-
-    }
-
-    ExecEnv::log().info("pmid_: {}, citations: {}, cite list: {}", pmid, citations.size(), citations_list);
-
-  }
-
-  auto reference_map = test_api_.getReferences(pmidids);
-
-  for (auto const& [pmid, citations] : reference_map) {
-
-    std::string citations_list;
-    for(auto const& cite : citations) {
-
-      citations_list += cite;
-      if (cite != *citations.rbegin()) {
-
-        citations_list += "&";
-
-      }
-
-    }
-
-    ExecEnv::log().info("pmid_: {}, reference: {}, reference list: {}", pmid, citations.size(), citations_list);
-
-  }
-*/
-  auto publication_map = test_api_.getPublicationDetails(pmidids);
+  std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
+  auto publication_map = pubmed_requestor_ptr_->getPublicationDetails(pmidids);
   for (auto const& [pmid, publication] : publication_map) {
 
     std::stringstream out_str;

@@ -38,6 +38,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);
   entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
+  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
@@ -50,8 +51,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
   // Initialize the gene allele analysis object.
-  gene_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_);
-  all_pmid_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_);
+  gene_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_, pubmed_requestor_ptr_);
+  all_pmid_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_, pubmed_requestor_ptr_);
 
   return true;
 
@@ -103,6 +104,9 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
   all_allele_file_ = std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
   all_allele_file_ = Utility::filePath(all_allele_file_, work_directory);
+
+  literature_allele_file_ = std::string(LIT_ALLELE_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  literature_allele_file_ = Utility::filePath(literature_allele_file_, work_directory);
 
   return true;
 
@@ -252,6 +256,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
   gene_mutation_.writeOutput(genome_aux_ptr_, output_file_name_, OUTPUT_DELIMITER_);
   gene_alleles_.writeOutput(gene_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
+  all_pmid_alleles_.writeLiteratureSummaries(literature_allele_file_);
 
   return true;
 

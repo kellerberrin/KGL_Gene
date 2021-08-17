@@ -15,11 +15,13 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::GenerateGeneAllele::initialize(const std::vector<std::string>& symbol_gene_list,
                 const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                const std::shared_ptr<const CitationResource>& allele_citation_ptr) {
+                const std::shared_ptr<const CitationResource>& allele_citation_ptr,
+                const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) {
 
 
   uniprot_nomenclature_ptr_ = uniprot_nomenclature_ptr;
   allele_citation_ptr_ = allele_citation_ptr;
+  pubmed_requestor_ptr_ = pubmed_requestor_ptr;
 
   for (auto const& symbol : symbol_gene_list) {
 
@@ -372,5 +374,69 @@ std::map<std::string, std::string> kgl::GenerateGeneAllele::retrieveVepFields( c
   }
 
   return vep_fields;
+
+}
+
+
+void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output_file) {
+
+  std::ofstream out_file(output_file);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; cannot open output file: {}", output_file);
+    return;
+
+  }
+
+  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", cited_allele_map_.size(), output_file);
+
+  std::vector<std::string> pmid_vector;
+  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+
+    if (not variant_ptr->identifier().empty()) {
+
+      auto pmid_set = getCitations(variant_ptr->identifier());
+      for (auto const& pmid : pmid_set) {
+
+        pmid_vector.push_back(pmid);
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("Retrieving literature from pubmed");
+  auto literature_map = pubmed_requestor_ptr_->getPublicationDetails(pmid_vector);
+  ExecEnv::log().info("Completed Retrieving literature from pubmed");
+
+  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+
+    out_file << "******************************************" << '\n';
+    out_file <<  variant_ptr->identifier() << '\n';
+    out_file <<  variant_ptr->HGVS() << '\n';
+    out_file << "******************************************" << '\n';
+
+    auto pmid_set = getCitations(variant_ptr->identifier());
+    for (auto const& pmid : pmid_set) {
+
+      auto result = literature_map.find(pmid);
+      if (result == literature_map.end()) {
+
+        out_file << "\n+++++ literature not found for pmid: " << pmid << '\n';
+
+      } else {
+
+        auto const& [id, literature_summary] = *result;
+        out_file << '\n';
+        literature_summary.output(out_file);
+        out_file << '\n';
+
+      }
+
+    }
+
+  }
 
 }

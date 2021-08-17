@@ -15,6 +15,8 @@
 #include "kgl_citation_parser.h"
 #include "kgl_entrez_parser.h"
 #include "kgl_bio_pmid_parser.h"
+#include "kgl_pubmed_api.h"
+
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -70,6 +72,7 @@ private:
   std::shared_ptr<const EnsemblHGNCResource> ensembl_nomenclature_ptr_;
   std::shared_ptr<const EntrezResource> entrez_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
+  std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
 
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
@@ -89,10 +92,12 @@ private:
   std::string output_file_name_;
   std::string gene_allele_file_;
   std::string all_allele_file_;
+  std::string literature_allele_file_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
   constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "GeneAlleleOut";
   constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "AllAlleleOut";
+  constexpr static const char* LIT_ALLELE_FILE_ = "LitAllAllele";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 

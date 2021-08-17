@@ -55,6 +55,10 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadPMIDBioResource(resource_ident, resource_ptr);
         break;
 
+      case RuntimeResourceType::PUBMED_API:
+        loadPubmedAPIResource(resource_ident, resource_ptr);
+        break;
+
       default:
         ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type, resource ident: {}.",
                                 package.packageIdentifier(), resource_ident);
@@ -326,5 +330,30 @@ void kgl::ExecutePackage::loadPMIDBioResource(const std::string& bio_ident, cons
                                                                                   bio_pmid_parser.moveEntrezPMIDMap()));
 
   resource_ptr->addResource(bio_pmid_ptr);
+
+}
+
+
+void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(api_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Pubmed API Database: {}, not defined", api_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto api_resource_ptr = std::dynamic_pointer_cast<const RuntimePubmedAPIResource>(resource_base_ptr);
+
+  if (not api_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Resource: {} is not a Pubmed API Resource", resource_ident);
+
+  }
+
+  std::shared_ptr<PubmedRequester> pubmed_api_ptr(std::make_shared<PubmedRequester>(api_resource_ptr->apiIdentifier()));
+
+  resource_ptr->addResource(pubmed_api_ptr);
 
 }

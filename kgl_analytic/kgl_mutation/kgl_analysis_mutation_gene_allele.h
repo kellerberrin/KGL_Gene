@@ -8,6 +8,7 @@
 
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_variant_sort_analysis.h"
+#include "kgl_pubmed_api.h"
 
 
 
@@ -24,12 +25,14 @@ public:
 
   void initialize(const std::vector<std::string>& symbol_gene_list,
                   const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                  const std::shared_ptr<const CitationResource>& allele_citation_ptr);
+                  const std::shared_ptr<const CitationResource>& allele_citation_ptr,
+                  const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr);
 
   void writeOutput(const std::string& output_file, char delimiter) const;
   void addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
   void addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
   void addDiseaseCitations(std::set<std::string> disease_citations) { disease_citations_ = std::move(disease_citations); }
+  void writeLiteratureSummaries(const std::string& output_file);
 
 private:
 
@@ -41,6 +44,7 @@ private:
 
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
+  std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
   std::map<std::string, std::string> ensembl_symbol_map_;
   std::set<std::string> disease_citations_;
 

@@ -140,6 +140,9 @@ private:
   constexpr static const char* PMID_BIO_DATABASE_ = "bioPMID";
   constexpr static const char* PMID_BIO_IDENT_ = "bioPMIDIdent";
   constexpr static const char* PMID_BIO_FILE_ = "bioPMIDFile";
+  // The pubmed rest literature API; this is a resource api.
+  constexpr static const char* PUBMED_LIT_API_ = "pubmedApi";
+  constexpr static const char* PUBMED_LIT_IDENT_ = "pubmedApiIdent";
    // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";

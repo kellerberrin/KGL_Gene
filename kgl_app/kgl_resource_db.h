@@ -29,7 +29,8 @@ enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resourc
                                  GENOME_AUX_INFO,       // Genome aux info, sex, population and super-population data (all individual genomes).
                                  ALLELE_CITATION,      // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
                                  ENTREZ_GENE,         // Entrez gene info for H. Sapien
-                                 BIO_PMID };          // Pubmed PMID identifiers tagged with Bio info such as Gene, Disease, etc.
+                                 BIO_PMID,           // Pubmed PMID identifiers tagged with Bio info such as Gene, Disease, etc.
+                                 PUBMED_API };       // Pubmed Literature restful API
 
 class ResourceBase {
 
@@ -115,7 +116,8 @@ private:
       { RuntimeResourceType::GENOME_AUX_INFO, "RuntimeResourceType::GENOME_AUX_INFO"},     // Genome aux info, sex, population and super-population data (all individual genomes).
       { RuntimeResourceType::ALLELE_CITATION, "RuntimeResourceType::ALLELE_CITATION"},     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
       { RuntimeResourceType::ENTREZ_GENE, "RuntimeResourceType::ENTREZ_GENE"},     // Entrez gene info for H. Sapien
-      { RuntimeResourceType::BIO_PMID, "RuntimeResourceType::BIO_PMID"}     // Pubmed PMID identifiers tagged with Bio info such as Gene, Disease, etc.
+      { RuntimeResourceType::BIO_PMID, "RuntimeResourceType::BIO_PMID"},     // Pubmed PMID identifiers tagged with Bio info such as Gene, Disease, etc.
+      { RuntimeResourceType::PUBMED_API, "RuntimeResourceType::PUBMED"}     // Pubmed restful API for literature.
 
   };
 

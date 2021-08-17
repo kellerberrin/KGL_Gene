@@ -49,22 +49,40 @@ kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std:
 
   }
 
+  std::chrono::steady_clock::time_point begin_processing_time = std::chrono::steady_clock::now();
+  auto begin_batch_time = begin_processing_time;
+
   std::vector<std::string> batch_pmids;
-  std::chrono::steady_clock::time_point begin_batch = std::chrono::steady_clock::now();
-  size_t time_period_requests{0};
+  size_t api_requests{0};
+  size_t batch_requests{0};
+  size_t pmid_count{0};
+
   for (auto const& pmid : unique_pmids) {
 
     batch_pmids.push_back(pmid);
     if (batch_pmids.size() >= PMID_PER_REQUEST_) {
 
-      // Get api results.
-      citation_map.merge(citationBatch(batch_pmids, cite_type_args));
-      batch_pmids.clear();
-      ++time_period_requests;
-      if (time_period_requests >= REQUESTS_PER_SECOND_) {
+      std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
+      // Get the results of the api call and add to the citation map.
+      auto citation_batch_map = citationBatch(batch_pmids, cite_type_args);
+      citation_map.merge(citation_batch_map);
 
-        std::chrono::steady_clock::time_point end_batch = std::chrono::steady_clock::now();
-        auto batch_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_batch-begin_batch);
+      std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
+      auto api_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_api_time);
+      auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_processing_time);
+      pmid_count += batch_pmids.size();
+      ++api_requests;
+      ++batch_requests;
+
+      auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
+      ExecEnv::log().info("PubmedRequester::getCitationArgs; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+                          api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
+
+      batch_pmids.clear();
+
+      if (batch_requests >= REQUESTS_PER_SECOND_) {
+
+        auto batch_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_batch_time);
 
         if (batch_milliseconds < BATCH_TIME_INTERVAL_) {
 
@@ -73,8 +91,8 @@ kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std:
 
         }
 
-        time_period_requests = 0;
-        begin_batch = std::chrono::steady_clock::now();
+        begin_batch_time = end_api_time;
+        batch_requests = 0;
 
       }
 
@@ -84,7 +102,21 @@ kgl::LitCitationMap kgl::PubmedRequester::getCitationArgs(const std::vector<std:
 
   if (not batch_pmids.empty()) {
 
-    citation_map.merge(citationBatch(batch_pmids, cite_type_args));
+    std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
+    // Get the results of the api call and add to the citation map.
+    auto citation_batch_map = citationBatch(batch_pmids, cite_type_args);
+    citation_map.merge(citation_batch_map);
+
+    std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
+    auto api_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_api_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_processing_time);
+    pmid_count += batch_pmids.size();
+    ++api_requests;
+
+    auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
+    ExecEnv::log().info("PubmedRequester::getCitationArgs; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+                        api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
+
     batch_pmids.clear();
 
   }
@@ -106,11 +138,7 @@ kgl::LitCitationMap kgl::PubmedRequester::citationBatch(const std::vector<std::s
 
   std::string citation_request = cite_type_args + request_string + API_KEY;
 
-  std::chrono::steady_clock::time_point begin_batch = std::chrono::steady_clock::now();
-
   auto [citation_result, citation_text] = pubmed_rest_api_.synchronousRequest(PUBMED_ELINK_URL_, citation_request);
-
-  std::chrono::steady_clock::time_point end_batch = std::chrono::steady_clock::now();
 
   if (not citation_result) {
 
@@ -121,10 +149,6 @@ kgl::LitCitationMap kgl::PubmedRequester::citationBatch(const std::vector<std::s
     citation_map = ParseCitationXMLImpl::parseCitationXML(citation_text);
 
   }
-
-  auto batch_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_batch - begin_batch);
-
-  ExecEnv::log().info("Batch Execution time: {} (ms)", batch_duration.count());
 
   return citation_map;
 
@@ -159,22 +183,40 @@ kgl::LitPublicationMap kgl::PubmedRequester::getPublicationDetails(const std::ve
 
   }
 
+  std::chrono::steady_clock::time_point begin_processing_time = std::chrono::steady_clock::now();
+  auto begin_batch_time = begin_processing_time;
+
   std::vector<std::string> batch_pmids;
-  std::chrono::steady_clock::time_point begin_batch = std::chrono::steady_clock::now();
-  size_t time_period_requests{0};
+  size_t api_requests{0};
+  size_t batch_requests{0};
+  size_t pmid_count{0};
+
   for (auto const& pmid : unique_pmids) {
 
     batch_pmids.push_back(pmid);
     if (batch_pmids.size() >= PMID_PER_REQUEST_) {
 
-      // Get api results.
-      publication_map.merge(publicationBatch(batch_pmids));
-      batch_pmids.clear();
-      ++time_period_requests;
-      if (time_period_requests >= REQUESTS_PER_SECOND_) {
+      std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
+      // Get the results of the api call and add to the citation map.
+      auto publication_batch_map = publicationBatch(batch_pmids);
+      publication_map.merge(publication_batch_map);
 
-        std::chrono::steady_clock::time_point end_batch = std::chrono::steady_clock::now();
-        auto batch_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_batch-begin_batch);
+      std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
+      auto api_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_api_time);
+      auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_processing_time);
+      pmid_count += batch_pmids.size();
+      ++api_requests;
+      ++batch_requests;
+
+      auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
+      ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+                          api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
+
+      batch_pmids.clear();
+
+      if (batch_requests >= REQUESTS_PER_SECOND_) {
+
+        auto batch_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_batch_time);
 
         if (batch_milliseconds < BATCH_TIME_INTERVAL_) {
 
@@ -183,8 +225,8 @@ kgl::LitPublicationMap kgl::PubmedRequester::getPublicationDetails(const std::ve
 
         }
 
-        time_period_requests = 0;
-        begin_batch = std::chrono::steady_clock::now();
+        begin_batch_time = end_api_time;
+        batch_requests = 0;
 
       }
 
@@ -194,7 +236,21 @@ kgl::LitPublicationMap kgl::PubmedRequester::getPublicationDetails(const std::ve
 
   if (not batch_pmids.empty()) {
 
-    publication_map.merge(publicationBatch(batch_pmids));
+    std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
+    // Get the results of the api call and add to the citation map.
+    auto publication_batch_map = publicationBatch(batch_pmids);
+    publication_map.merge(publication_batch_map);
+
+    std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
+    auto api_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_api_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_api_time - begin_processing_time);
+    pmid_count += batch_pmids.size();
+    ++api_requests;
+
+    auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
+    ExecEnv::log().info("PubmedRequester::getPublicationDetails; api call {}ms;  total api calls: {}/{}ms, average api call {}ms, pmids: {}",
+                        api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
+
     batch_pmids.clear();
 
   }
@@ -244,11 +300,7 @@ kgl::LitPublicationMap kgl::PubmedRequester::publicationBatch(const std::vector<
 
   std::string citation_request = PUBMED_ARTICLE_DETAIL_ARGS_ + request_string + API_KEY;
 
-  std::chrono::steady_clock::time_point begin_batch = std::chrono::steady_clock::now();
-
   auto [publication_result, publication_text] = pubmed_rest_api_.synchronousRequest(PUBMED_EFETCH_URL_, citation_request);
-
-  std::chrono::steady_clock::time_point end_batch = std::chrono::steady_clock::now();
 
   if (not publication_result) {
 
@@ -259,10 +311,6 @@ kgl::LitPublicationMap kgl::PubmedRequester::publicationBatch(const std::vector<
     publication_map = ParsePublicationXMLImpl::parsePublicationXML(publication_text);
 
   }
-
-  auto batch_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_batch - begin_batch);
-
-  ExecEnv::log().info("Batch Execution time: {} (ms)", batch_duration.count());
 
   return publication_map;
 

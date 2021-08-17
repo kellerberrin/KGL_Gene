@@ -63,7 +63,7 @@ public:
   [[nodiscard]] bool addCitation(const std::string& cite_pmid) { auto [iter, result ] = cited_by_articles_.insert(cite_pmid); return result; } // pmids only.
   [[nodiscard]] bool addReference(const std::string& ref_pmid) { auto [iter, result ] = references_.insert(ref_pmid); return result;  } // pmids only.
 
-  // delimites stream output
+  // Output the record to an ostream, one field per line.
   std::ostream& output(std::ostream& out_stream, char delimiter = SV_DELIMITER_) const;
 
 private:
@@ -82,7 +82,7 @@ private:
   std::set<std::string> cited_by_articles_;  // pmids only.
   std::set<std::string> references_;   // pmids only.
 
-  constexpr const static char SV_DELIMITER_{','};
+  constexpr const static char SV_DELIMITER_{'|'};
 
 };
 

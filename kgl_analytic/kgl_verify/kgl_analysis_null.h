@@ -43,7 +43,7 @@ public:
 private:
 
   std::string work_directory_;
-  PubmedRequester test_api_;
+  std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
 
   void investigateVepFields(const std::shared_ptr<const PopulationDB>& population);
   void genomeIdIndex(const std::shared_ptr<const PopulationDB>& population);

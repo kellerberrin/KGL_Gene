@@ -173,6 +173,10 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
           resources.emplace_back(RuntimeResourceType::BIO_PMID, resource_identifier);
 
+        } else if (resource_type == PUBMED_LIT_API_) {
+
+          resources.emplace_back(RuntimeResourceType::PUBMED_API, resource_identifier);
+
         }
 
       }
@@ -565,6 +569,26 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
       if (not result) {
 
         ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add PMID Bio ident: {} to map (duplicate)", bio_ident);
+
+      }
+
+    } else if (tree_type == PUBMED_LIT_API_) {
+
+      key = std::string(PUBMED_LIT_IDENT_);
+      std::string pubmed_api_ident;
+      if (not sub_tree.getProperty(key, pubmed_api_ident)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pubmed API Identifier.");
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>(pubmed_api_ident);
+
+      auto const [iter, result] = resource_map.try_emplace(pubmed_api_ident, resource_ptr);
+      if (not result) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources, Could not add Pubmed APi ident: {} to map (duplicate)", pubmed_api_ident);
 
       }
 
