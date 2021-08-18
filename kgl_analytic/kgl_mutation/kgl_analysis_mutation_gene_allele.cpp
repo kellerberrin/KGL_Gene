@@ -392,6 +392,7 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
   ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", cited_allele_map_.size(), output_file);
 
   std::vector<std::string> pmid_vector;
+  std::map<std::string, std::vector<std::shared_ptr<const Variant>>> pmid_variant_map;
   for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
 
     if (not variant_ptr->identifier().empty()) {
@@ -400,6 +401,19 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
       for (auto const& pmid : pmid_set) {
 
         pmid_vector.push_back(pmid);
+        auto result = pmid_variant_map.find(pmid);
+        if (result == pmid_variant_map.end()) {
+
+          std::vector<std::shared_ptr<const Variant>> variant_vector;
+          variant_vector.push_back(variant_ptr);
+          pmid_variant_map.emplace(pmid, variant_vector);
+
+        } else {
+
+          auto& [pmid_key, variant_vector] = *result;
+          variant_vector.push_back(variant_ptr);
+
+        }
 
       }
 
@@ -411,32 +425,29 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
   auto literature_map = pubmed_requestor_ptr_->getPublicationDetails(pmid_vector);
   ExecEnv::log().info("Completed Retrieving literature from pubmed");
 
-  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+  for (auto const& [pmid, publication] : literature_map) {
 
     out_file << "******************************************" << '\n';
-    out_file <<  ensembl_id << '\n';
-    out_file <<  variant_ptr->identifier() << '\n';
-    out_file <<  variant_ptr->HGVS() << '\n';
-    out_file << "******************************************" << '\n';
+     auto result = pmid_variant_map.find(pmid);
+    if (result == pmid_variant_map.end()) {
 
-    auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
-    for (auto const& pmid : pmid_set) {
+      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; no alleles found for publication pmid: {}", pmid);
 
-      auto result = literature_map.find(pmid);
-      if (result == literature_map.end()) {
+    } else {
 
-        out_file << "\n+++++ literature not found for pmid: " << pmid << '\n';
+      auto [pmid_key, variant_vector] = *result;
+      for (auto const& variant_ptr : variant_vector) {
 
-      } else {
-
-        auto const& [id, literature_summary] = *result;
-        out_file << '\n';
-        literature_summary.output(out_file);
-        out_file << '\n';
+        out_file <<  variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
 
       }
 
     }
+    out_file << "******************************************" << '\n';
+
+    out_file << '\n';
+    publication.output(out_file);
+    out_file << '\n';
 
   }
 

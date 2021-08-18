@@ -117,6 +117,7 @@ private:
   constexpr static const char* REFERENCE_LIST_NODE_{"ReferenceList"};
   constexpr static const char* REFERENCE_NODE_{"Reference"};
   constexpr static const char* ARTICLE_ID_LIST_{"ArticleIdList"};
+  constexpr static const char* REFERENCE_CITATION_NODE_{"Citation"};
   constexpr static const char* ARTICLE_ID_{"ArticleId"};
   constexpr static const char* ARTICLE_ID_ATTRIBUTE_{"IdType"};
   constexpr static const char* ARTICLE_ID_ATTRIBUTE_VALUE_{"pubmed"};

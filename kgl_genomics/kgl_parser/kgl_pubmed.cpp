@@ -21,7 +21,7 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << "AUTHORS" << delimiter;
   for (auto const& author : authors()) {
 
-    out_stream << author;
+    out_stream << author.first << "&" << author.second;
     if (author != authors().back()) {
 
       out_stream << delimiter;
@@ -34,7 +34,7 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << "CHEMICALS" << delimiter;
   for (auto const& [MeSH, desc] : chemicals()) {
 
-    out_stream << MeSH << "&" << desc;
+    out_stream << MeSH << "&" << desc << '\n';
     if (MeSH != chemicals().back().first) {
 
       out_stream << delimiter;
@@ -42,12 +42,11 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
     }
 
   }
-  out_stream << '\n';
 
   out_stream << "MESH" << delimiter;
   for (auto const& [MeSH, desc] : MeshCodes()) {
 
-    out_stream << MeSH << "&" << desc;
+    out_stream << MeSH << "&" << desc << '\n';
     if (MeSH != MeshCodes().back().first) {
 
       out_stream << delimiter;
@@ -55,7 +54,6 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
     }
 
   }
-  out_stream << '\n';
 
   out_stream << "CITED_BY(" << citedBy().size() << ")" << delimiter;
   for (auto const& cites : citedBy()) {
@@ -73,15 +71,26 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << "REFERENCES(" << references().size() << ")" << delimiter;
   for (auto const& ref : references()) {
 
-    out_stream << ref;
+    if (ref.first.empty()) {
+
+      out_stream << "&" << ref.second << '\n';
+
+    } else {
+
+      out_stream << ref.first;
+
+    }
     if (ref != *references().rbegin()) {
 
       out_stream << delimiter;
 
+    } else {
+
+      out_stream << '\n';
+
     }
 
   }
-  out_stream << '\n';
 
   return out_stream;
 
