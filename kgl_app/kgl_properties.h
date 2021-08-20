@@ -143,6 +143,7 @@ private:
   // The pubmed rest literature API; this is a resource api.
   constexpr static const char* PUBMED_LIT_API_ = "pubmedApi";
   constexpr static const char* PUBMED_LIT_IDENT_ = "pubmedApiIdent";
+  constexpr static const char* PUBMED_CACHE_FILE_ = "pubmedCacheFile";
    // Contig/Chromosome Alias categories.
   constexpr static const char* ALIAS_LIST_ = "aliasList";
   constexpr static const char* ALIAS_IDENT_ = "ident";

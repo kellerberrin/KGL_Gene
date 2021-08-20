@@ -389,11 +389,23 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
 
   }
 
-  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", cited_allele_map_.size(), output_file);
+  // Only variants tagged with an "ENSG" Ensembl Gene identifier.
+  std::map<std::string, std::shared_ptr<const Variant>> ensg_prefix_map;
+  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+
+    if (ensembl_id.find_first_of("ENSG") != std::string::npos) {
+
+      ensg_prefix_map.emplace(ensembl_id, variant_ptr);
+
+    }
+
+  }
+
+  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", ensg_prefix_map.size(), output_file);
 
   std::vector<std::string> pmid_vector;
-  std::map<std::string, std::vector<std::shared_ptr<const Variant>>> pmid_variant_map;
-  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+  std::map<std::string, std::vector<std::pair<std::string,std::shared_ptr<const Variant>>>> pmid_variant_map;
+  for (auto const& [ensembl_id, variant_ptr] : ensg_prefix_map) {
 
     if (not variant_ptr->identifier().empty()) {
 
@@ -404,14 +416,14 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
         auto result = pmid_variant_map.find(pmid);
         if (result == pmid_variant_map.end()) {
 
-          std::vector<std::shared_ptr<const Variant>> variant_vector;
-          variant_vector.push_back(variant_ptr);
+          std::vector<std::pair<std::string, std::shared_ptr<const Variant>>> variant_vector;
+          variant_vector.emplace_back(ensembl_id, variant_ptr);
           pmid_variant_map.emplace(pmid, variant_vector);
 
         } else {
 
           auto& [pmid_key, variant_vector] = *result;
-          variant_vector.push_back(variant_ptr);
+          variant_vector.emplace_back(ensembl_id, variant_ptr);
 
         }
 
@@ -421,13 +433,15 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
 
   }
 
+
+
   ExecEnv::log().info("Retrieving literature from pubmed");
   auto literature_map = pubmed_requestor_ptr_->getPublicationDetails(pmid_vector);
   ExecEnv::log().info("Completed Retrieving literature from pubmed");
 
   for (auto const& [pmid, publication] : literature_map) {
 
-    out_file << "******************************************" << '\n';
+    out_file << "\n******************************************" << '\n';
      auto result = pmid_variant_map.find(pmid);
     if (result == pmid_variant_map.end()) {
 
@@ -436,13 +450,37 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
     } else {
 
       auto [pmid_key, variant_vector] = *result;
-      for (auto const& variant_ptr : variant_vector) {
 
-        out_file <<  variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
+      for (auto const& [ensembl_id, variant_ptr] : variant_vector) {
+
+        std::string symbol_id;
+        auto find_result = ensembl_symbol_map_.find(ensembl_id);
+        if (find_result == ensembl_symbol_map_.end()) {
+
+          auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+          if (not symbol_vector.empty()) {
+
+            symbol_id = symbol_vector.front();
+
+          } else {
+
+            symbol_id = "Unknown";
+
+          }
+
+        } else {
+
+          auto const& [ensembl, symbol] = *find_result;
+          symbol_id = symbol;
+
+        }
+
+        out_file <<  symbol_id << "|" << ensembl_id << "|" << variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
 
       }
 
     }
+
     out_file << "******************************************" << '\n';
 
     out_file << '\n';

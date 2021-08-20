@@ -1,5 +1,5 @@
 //
-// Created by kellerberrin on 11/8/21.
+// Created by kellerberrin on 20/8/21.
 //
 
 #ifndef KGL_PUBMED_API_H
@@ -7,7 +7,6 @@
 
 #include "kgl_pubmed.h"
 #include "kel_rest_api.h"
-#include "kgl_resource_db.h"
 
 #include <string>
 #include <memory>
@@ -18,6 +17,7 @@
 
 
 namespace kellerberrin::genome {   //  organization level namespace
+
 
 
 ///////////////////////////////////////////////////////////////?////////////////////////////////////////////////////
@@ -34,22 +34,18 @@ using LitPublicationMap = std::map<std::string, PubMedPublicationSummary>;
 using LitCitationMap = std::map<std::string, std::set<std::string>>;
 
 
-class PubmedRequester : public ResourceBase {
+class PubmedAPIRequester {
 
 public:
 
-  explicit PubmedRequester(const std::string& identifier) : ResourceBase(identifier) {}
-  ~PubmedRequester() override = default;
+  PubmedAPIRequester() = default;
+  ~PubmedAPIRequester() = default;
 
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PUBMED_API;  }
+  [[nodiscard]] LitPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector) const;
 
-  // Only the data for unique pmids is returned, for convenience the requesting array of pmids can contain non-unique pmids.
-  // Large requests are automatically throttled to Pubmed requirements (max 10 api calls a second).
-  // Citation and reference information.
   [[nodiscard]] LitCitationMap getCitations(const std::vector<std::string>& pmid_vector) const;
   [[nodiscard]] LitCitationMap getReferences(const std::vector<std::string>& pmid_vector) const;
-  // Get all publication summary data including citations and references.
-  [[nodiscard]] LitPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector) const;
+
 
 private:
 
@@ -76,7 +72,6 @@ private:
 
   [[nodiscard]] LitPublicationMap publicationBatch(const std::vector<std::string>& pmid_vector) const;
 
-
 };
 
 
@@ -85,4 +80,5 @@ private:
 } // namespace
 
 
-#endif //KGL_PUBMED_API_H
+
+#endif // KGL_PUBMED_API_H

@@ -34,26 +34,29 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << "CHEMICALS" << delimiter;
   for (auto const& [MeSH, desc] : chemicals()) {
 
-    out_stream << MeSH << "&" << desc << '\n';
+    out_stream << MeSH << "&" << desc;
     if (MeSH != chemicals().back().first) {
 
-      out_stream << delimiter;
+      out_stream << delimiter << '\n';
 
     }
 
   }
+  out_stream << '\n';
+
 
   out_stream << "MESH" << delimiter;
   for (auto const& [MeSH, desc] : MeshCodes()) {
 
-    out_stream << MeSH << "&" << desc << '\n';
+    out_stream << MeSH << "&" << desc;
     if (MeSH != MeshCodes().back().first) {
 
-      out_stream << delimiter;
+      out_stream << delimiter << '\n';
 
     }
 
   }
+  out_stream << '\n';
 
   out_stream << "CITED_BY(" << citedBy().size() << ")" << delimiter;
   for (auto const& cites : citedBy()) {

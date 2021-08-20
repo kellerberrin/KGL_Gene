@@ -583,7 +583,16 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>(pubmed_api_ident);
+      key = std::string(PUBMED_CACHE_FILE_);
+      std::string cache_file_name;  // Note that the cache file(s) may not exist.
+      if (not sub_tree.getProperty(key, cache_file_name)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pubmed API Cache file, ident: {}",pubmed_api_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>(pubmed_api_ident, cache_file_name);
 
       auto const [iter, result] = resource_map.try_emplace(pubmed_api_ident, resource_ptr);
       if (not result) {

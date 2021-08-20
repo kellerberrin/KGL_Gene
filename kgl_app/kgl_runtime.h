@@ -368,7 +368,8 @@ class RuntimePubmedAPIResource : public RuntimeResource {
 
 public:
 
-  RuntimePubmedAPIResource(std::string api_identifier) : api_identifier_(std::move(api_identifier)) {}
+  RuntimePubmedAPIResource(std::string api_identifier, std::string cache_file)
+    : api_identifier_(std::move(api_identifier)), cache_file_name_(std::move(cache_file)) {}
   RuntimePubmedAPIResource() = delete;
   RuntimePubmedAPIResource(const RuntimePubmedAPIResource&) = default;
   ~RuntimePubmedAPIResource() override = default;
@@ -377,9 +378,12 @@ public:
 
   [[nodiscard]] const std::string& apiIdentifier() const { return api_identifier_; }
 
+  [[nodiscard]] const std::string& cacheFileName() const { return cache_file_name_; }
+
 private:
 
   std::string api_identifier_;   // A unique short string to identify this resource
+  std::string cache_file_name_;   // Pubmed XML literature request responses are cached here.
 
 };
 

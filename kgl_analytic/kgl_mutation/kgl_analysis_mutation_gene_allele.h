@@ -8,7 +8,7 @@
 
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_variant_sort_analysis.h"
-#include "kgl_pubmed_api.h"
+#include "kgl_pubmed_resource.h"
 
 
 

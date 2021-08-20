@@ -7,7 +7,7 @@
 
 
 #include "kgl_analysis_virtual.h"
-#include "kgl_pubmed_api.h"
+#include "kgl_pubmed_resource.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

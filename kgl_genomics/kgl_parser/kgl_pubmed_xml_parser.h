@@ -5,7 +5,7 @@
 #ifndef KGL_PUBMED_XML_PARSER_H
 #define KGL_PUBMED_XML_PARSER_H
 
-#include "kgl_pubmed_api.h"
+#include "kgl_pubmed_resource.h"
 #include <rapidxml.h>
 
 namespace kellerberrin::genome {   //  organization level namespace
