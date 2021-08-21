@@ -10,21 +10,30 @@ namespace kgl = kellerberrin::genome;
 
 
 
-kgl::LitCitationMap kgl::ParseCitationXMLImpl::parseCitationXML(const std::string& citation_text) {
+std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML(const std::string& citation_text) {
 
   LitCitationMap citation_map;
+  bool parse_result{true};
 
-  // All this raw pointer stuff is very nasty, is rapidxml the right library?
-  rapidxml::xml_document<> doc;
-  std::unique_ptr<char[]> text_buffer_ptr(std::make_unique<char[]>(citation_text.size() + 1));
-  std::memcpy(text_buffer_ptr.get(), citation_text.c_str(), citation_text.size() + 1);
 
-  // Parse the buffer using the xml file parsing library into doc
-  doc.parse<0>(text_buffer_ptr.get());
+  try {
 
-  rapidxml::xml_node<>* root_node = doc.first_node(CITATION_ROOT_NODE_);
 
-  if (root_node != nullptr) {
+    // All this raw pointer stuff is very nasty, is rapidxml the right library?
+    rapidxml::xml_document<> doc;
+    std::unique_ptr<char[]> text_buffer_ptr(std::make_unique<char[]>(citation_text.size() + 1));
+    std::memcpy(text_buffer_ptr.get(), citation_text.c_str(), citation_text.size() + 1);
+
+    // Parse the buffer using the xml file parsing library into doc
+    doc.parse<0>(text_buffer_ptr.get());
+
+    rapidxml::xml_node<>* root_node = doc.first_node(CITATION_ROOT_NODE_);
+    if (root_node == nullptr) {
+
+      ExecEnv::log().error("PubmedRequester::parseCitationXML; Citation root node: {} is null", CITATION_ROOT_NODE_);
+      return {false, citation_map};
+
+    }
 
     rapidxml::xml_node<> * citation_node = root_node->first_node(CITATION_RECORD_);
     while (citation_node != nullptr)
@@ -56,6 +65,7 @@ kgl::LitCitationMap kgl::ParseCitationXMLImpl::parseCitationXML(const std::strin
               } else {
 
                 ExecEnv::log().error("PubmedRequester::parseCitationXML; No citation node found");
+                parse_result = false;
 
               }
 
@@ -69,18 +79,21 @@ kgl::LitCitationMap kgl::ParseCitationXMLImpl::parseCitationXML(const std::strin
           if (not result) {
 
             ExecEnv::log().error("PubmedRequester::parseCitationXML; expected duplicate for pmid_: {}", pmid_node->value());
+            parse_result = false;
 
           }
 
         } else {
 
           ExecEnv::log().error("PubmedRequester::parseCitationXML; Pmid Id Attribute: {} does not exist", CITATION_PMID_);
+          parse_result = false;
 
         }
 
       } else {
 
         ExecEnv::log().error("PubmedRequester::parseCitationXML; Pmid Id Attribute: {} does not exist", CITATION_PMID_);
+        parse_result = false;
 
       }
 
@@ -88,80 +101,94 @@ kgl::LitCitationMap kgl::ParseCitationXMLImpl::parseCitationXML(const std::strin
 
     }
 
-  } else  {
+  } catch(const std::exception& e) {
 
-    ExecEnv::log().error("PubmedRequester::parseCitationXML; Citation root node: {} is null", CITATION_ROOT_NODE_);
+    ExecEnv::log().error("PubmedRequester::parseCitationXML; RapidXML Fails: {}", e.what());
+    ExecEnv::log().info("PubmedRequester::parseCitationXML; Text: \n{}", citation_text);
+    return {false, LitCitationMap() };
 
   }
 
-  return citation_map;
+  return {parse_result, citation_map};
 
 }
 
 
 
-kgl::LitPublicationMap kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
+std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
 
   LitPublicationMap publication_map;
+  bool parse_result{true};
 
-  // Place into a char buffer as rapidxml modifies the contents of the buffer.
-  rapidxml::xml_document<> doc;
-  std::unique_ptr<char[]> text_buffer_ptr(std::make_unique<char[]>(publication_xml_text.size() + 1));
-  std::memcpy(text_buffer_ptr.get(), publication_xml_text.c_str(), publication_xml_text.size() + 1);
+  try {
 
-  // Parse the char buffer,
-  doc.parse<0>(text_buffer_ptr.get());
+    // Place into a char buffer as rapidxml modifies the contents of the buffer.
+    rapidxml::xml_document<> doc;
+    std::unique_ptr<char[]> text_buffer_ptr(std::make_unique<char[]>(publication_xml_text.size() + 1));
+    std::memcpy(text_buffer_ptr.get(), publication_xml_text.c_str(), publication_xml_text.size() + 1);
 
-  // Get the root node.
-  rapidxml::xml_node<>* root_node = doc.first_node(PUBLICATION_ROOT_NODE_);
-  if (root_node == nullptr) {
+    // Parse the char buffer,
+    doc.parse<0>(text_buffer_ptr.get());
 
-    ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing publication Root Node: {}", PUBLICATION_ROOT_NODE_);
-    return publication_map; // Return the empty map.
+    // Get the root node.
+    rapidxml::xml_node<>* root_node = doc.first_node(PUBLICATION_ROOT_NODE_);
+    if (root_node == nullptr) {
 
-  }
-
-  // Get the first article and loop through the articles.
-  rapidxml::xml_node<> * article_node = root_node->first_node(PUBLICATION_NODE_);
-  while (article_node != nullptr) {
-
-    // Parse the article in try/catch block to manage the complex error XML error handling.
-    try {
-
-      auto publication = ParsePublicationXMLImpl::parsePubmedArticleXML(article_node);
-      if (publication.pmid().empty()) {
-
-        std::string error_message = "publication Pubmed pmid not defined";
-        throw std::runtime_error(error_message);
-
-      }
-
-      auto [iter, result] = publication_map.try_emplace(publication.pmid(), publication);
-      if (not result) {
-
-        std::string error_message = "cannot add duplicate publication: " + publication.pmid();
-        throw std::runtime_error(error_message);
-
-      }
-
-    } catch(std::exception& e) {
-
-      // Issue an error message and skip to the next article.
-      ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing XML Pubmed Article; {}", e.what());
-      // Comment out after testing.
-       ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
-
+      ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing publication Root Node: {}", PUBLICATION_ROOT_NODE_);
+      return {false, publication_map}; // Return the empty map.
 
     }
 
-    // Next article.
-    article_node = article_node->next_sibling();
+    // Get the first article and loop through the articles.
+    rapidxml::xml_node<> * article_node = root_node->first_node(PUBLICATION_NODE_);
+    while (article_node != nullptr) {
+
+      // Parse the article in try/catch block to manage the complex error XML error handling.
+      try {
+
+        auto publication = ParsePublicationXMLImpl::parsePubmedArticleXML(article_node);
+        if (publication.pmid().empty()) {
+
+          std::string error_message = "publication Pubmed pmid not defined";
+          throw std::runtime_error(error_message);
+
+        }
+
+        auto [iter, result] = publication_map.try_emplace(publication.pmid(), publication);
+        if (not result) {
+
+          std::string error_message = "cannot add duplicate publication: " + publication.pmid();
+          throw std::runtime_error(error_message);
+
+        }
+
+      } catch(std::exception& e) {
+
+        // Issue an error message and skip to the next article.
+        ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing XML Pubmed Article; {}", e.what());
+        parse_result = false;
+        // Comment out after testing.
+        //       ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
+
+
+      }
+
+      // Next article.
+      article_node = article_node->next_sibling();
+
+    }
+
+  } catch(const std::exception& e) {
+
+    ExecEnv::log().error("PubmedRequester::parsePublicationXML; RapidXML Fails: {}", e.what());
+    ExecEnv::log().info("PubmedRequester::parsePublicationXMLL; Text: \n{}", publication_xml_text);
+    return {false, LitPublicationMap() };
 
   }
 
   ExecEnv::log().info("PubmedRequester::parsePublicationXML; article count {}", publication_map.size());
 
-  return publication_map;
+  return {parse_result, publication_map};
 
 }
 

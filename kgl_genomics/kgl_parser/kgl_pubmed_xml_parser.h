@@ -34,8 +34,8 @@ public:
   ParseCitationXMLImpl() = delete;
   ~ParseCitationXMLImpl() = delete;
 
-  // Parse citations/references.
-  [[nodiscard]] static LitCitationMap parseCitationXML(const std::string& citation_text);
+  // Parse citations/references. Returns false if any parsing problems encountered.
+  [[nodiscard]] static std::pair<bool, LitCitationMap> parseCitationXML(const std::string& citation_text);
 
 private:
 
@@ -62,9 +62,8 @@ public:
   ParsePublicationXMLImpl() = delete;
   ~ParsePublicationXMLImpl() = delete;
 
-  // parse publications
-  [[nodiscard]] static LitPublicationMap parsePublicationXML(const std::string& publication_xml_text);
-
+  // Parse publications. Returns false if any parsing problems encountered.
+  [[nodiscard]] static std::pair<bool, LitPublicationMap> parsePublicationXML(const std::string& publication_xml_text);
 
 private:
 

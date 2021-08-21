@@ -7,6 +7,7 @@
 
 #include "kgl_pubmed.h"
 #include "kel_rest_api.h"
+#include "kgl_pubmed_cache.h"
 
 #include <string>
 #include <memory>
@@ -27,13 +28,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// key = pmid_, value = publication details record.
-using LitPublicationMap = std::map<std::string, PubMedPublicationSummary>;
-
-// key = pmid_, value = unique set of pmids that cite, or are referenced by, the key pmid_.
-using LitCitationMap = std::map<std::string, std::set<std::string>>;
-
-
 class PubmedAPIRequester {
 
 public:
@@ -41,15 +35,29 @@ public:
   PubmedAPIRequester() = default;
   ~PubmedAPIRequester() = default;
 
-  [[nodiscard]] LitPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector) const;
+  // Returns cited publications after making calls for publication details and publication citations.
+  // If write cache flag is set to true then XML records are written to the cache files, no cached entries are returned.
+  [[nodiscard]] LitPublicationMap getPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
-  [[nodiscard]] LitCitationMap getCitations(const std::vector<std::string>& pmid_vector) const;
-  [[nodiscard]] LitCitationMap getReferences(const std::vector<std::string>& pmid_vector) const;
+  // Request Pubmed publications, use cached results when available, else request from Pubmed using the API.
+  // Always writes correctly parsed API results to cache.
+  [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
 
+  // Empty the Pubmed cache files.
+  [[nodiscard]] bool flushCache() const { return pubmed_cache_.flushCache(); }
+
+  // Set the cache file.
+  void setCacheFile(const std::string& cache_file) const { pubmed_cache_.setCacheFile(cache_file); }
+
+  // Make separate api calls.
+  [[nodiscard]] LitPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const;
+  [[nodiscard]] LitCitationMap getCitations(const std::vector<std::string>& pmid_vector, bool write_cache) const;
+  [[nodiscard]] LitCitationMap getReferences(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
 private:
 
   mutable RestAPI pubmed_rest_api_;
+  const pubMedAPICache pubmed_cache_;
 
   // Kellerberrin Pubmed API key.
   const std::string API_KEY {"&api_key=8cd3dde4cbf1eeb71b5ae469ae8a99247609"};
@@ -63,14 +71,14 @@ private:
   const std::string PUBMED_ARTICLE_CITEDBY_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_citedin"};
   const std::string PUBMED_ARTICLE_REFERENCES_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_refs"};
 
-  [[nodiscard]] LitCitationMap getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const;
-  [[nodiscard]] LitCitationMap citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const;
+  [[nodiscard]] LitCitationMap getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args, bool write_cache) const;
+  [[nodiscard]] LitCitationMap citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args, bool write_cache) const;
 
   // The publication detail constants.
   const std::string PUBMED_EFETCH_URL_{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"};
   const std::string PUBMED_ARTICLE_DETAIL_ARGS_{"db=pubmed&retmode=xml"};
 
-  [[nodiscard]] LitPublicationMap publicationBatch(const std::vector<std::string>& pmid_vector) const;
+  [[nodiscard]] LitPublicationMap publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
 };
 

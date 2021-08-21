@@ -436,7 +436,7 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
 
 
   ExecEnv::log().info("Retrieving literature from pubmed");
-  auto literature_map = pubmed_requestor_ptr_->getPublicationDetails(pmid_vector);
+  auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
   ExecEnv::log().info("Completed Retrieving literature from pubmed");
 
   for (auto const& [pmid, publication] : literature_map) {

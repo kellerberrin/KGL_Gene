@@ -25,6 +25,15 @@ namespace kellerberrin::genome {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+class PubMedPublicationSummary;
+// key = pmid_, value = publication details record.
+using LitPublicationMap = std::map<std::string, PubMedPublicationSummary>;
+
+// key = pmid_, value = unique set of pmids that cite, or are referenced by, the key pmid_.
+using LitCitationMap = std::map<std::string, std::set<std::string>>;
+
+
 class PubMedPublicationSummary {
 
 public:

@@ -35,9 +35,13 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   work_directory_ = work_directory;
 
+  // Set the API cache file  spec.
+
+  pubmed_requestor_ptr_->setWorkDirectory(work_directory_);
+
   std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
-// std::vector<std::string> pmidids{ "33191564"};
-  auto publication_map = pubmed_requestor_ptr_->getPublicationDetails(pmidids);
+//  std::vector<std::string> pmidids{ "33191564"};
+  auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmidids);
   for (auto const& [pmid, publication] : publication_map) {
 
     std::stringstream out_str;

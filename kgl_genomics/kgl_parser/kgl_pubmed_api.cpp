@@ -16,8 +16,117 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std::vector<std::string>& pmid_vector) const {
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std::vector<std::string>& pmid_vector) const {
+  // Allow trivial requests.
+  if (pmid_vector.empty()) {
+
+    return LitPublicationMap();
+
+  }
+
+  // For efficiency ensure that all pmids are unique.
+  std::set<std::string> unique_pmids;
+  for (auto const& pmid : pmid_vector) {
+
+    unique_pmids.insert(pmid);
+
+  }
+  std::vector<std::string> unique_pmid_vector;
+  for (auto const& pmid : unique_pmids) {
+
+    unique_pmid_vector.push_back(pmid);
+
+  }
+
+  // Get all cached publications satisfying the request.
+  auto cached_publications = pubmed_cache_.getCachedPublications(unique_pmid_vector);
+
+  // Only retrieve from the Pubmed API publications not found in the cache.
+  std::vector<std::string> unique_uncached_vector;
+  for (auto const& pmid : unique_pmid_vector) {
+
+    if (not cached_publications.contains(pmid)) {
+
+      unique_uncached_vector.push_back(pmid);
+
+    }
+
+  }
+
+  auto api_publications = getPublications(unique_uncached_vector, true);
+
+  ExecEnv::log().info("PubmedAPIRequester::getCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
+                      unique_pmid_vector.size(), cached_publications.size(), api_publications.size());
+
+  // Combine and return.
+  cached_publications.merge(api_publications);
+  return  cached_publications;
+
+}
+
+
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const {
+
+  LitPublicationMap publication_map;
+
+  // Allow trivial requests.
+  if (pmid_vector.empty()) {
+
+    return publication_map;
+
+  }
+
+  // For efficiency ensure that all pmids are unique.
+  std::set<std::string> unique_pmids;
+  for (auto const& pmid : pmid_vector) {
+
+    unique_pmids.insert(pmid);
+
+  }
+  std::vector<std::string> unique_pmid_vector;
+  for (auto const& pmid : unique_pmids) {
+
+    unique_pmid_vector.push_back(pmid);
+
+  }
+
+  publication_map = getPublicationDetails(unique_pmid_vector, write_cache);
+
+  // Get the citations
+  std::vector<std::string> unique_vector;
+  for (auto const& pmid : unique_pmids) {
+
+    unique_vector.push_back(pmid);
+
+  }
+
+  // Merge the citations.
+  auto cite_map = getCitations(unique_vector, write_cache);
+  for (auto& [pmid, publication] : publication_map) {
+
+    auto result = cite_map.find(pmid);
+    if (result == cite_map.end()) {
+
+      ExecEnv::log().warn("PubmedRequester::getPublications; no citations found for publication (pmid): {}", pmid);
+
+    } else {
+
+      auto const& [cite_pmid, cite_set] = *result;
+
+      publication.citations(cite_set);
+
+    }
+
+  }
+
+  return publication_map;
+
+}
+
+
+
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
   LitPublicationMap publication_map;
 
@@ -36,7 +145,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
 
       std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
       // Get the results of the api call and add to the citation map.
-      auto publication_batch_map = publicationBatch(batch_pmids);
+      auto publication_batch_map = publicationBatch(batch_pmids, write_cache);
       publication_map.merge(publication_batch_map);
 
       std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
@@ -47,7 +156,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
       ++batch_requests;
 
       auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-      ExecEnv::log().info("PubmedAPIRequester::getPublicationDetails; api call {}ms;  total api calls/elapsed : {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
+      ExecEnv::log().info("PubmedAPIRequester::getPublications; api call {}ms;  total api calls/elapsed : {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                           api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
       batch_pmids.clear();
@@ -76,7 +185,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
 
     std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
     // Get the results of the api call and add to the citation map.
-    auto publication_batch_map = publicationBatch(batch_pmids);
+    auto publication_batch_map = publicationBatch(batch_pmids, write_cache);
     publication_map.merge(publication_batch_map);
 
     std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
@@ -86,7 +195,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
     ++api_requests;
 
     auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-    ExecEnv::log().info("PubmedAPIRequester::getPublicationDetails; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
+    ExecEnv::log().info("PubmedAPIRequester::getPublications; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                         api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
     batch_pmids.clear();
@@ -98,7 +207,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
 }
 
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vector<std::string>& pmid_vector) const {
+kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
   LitPublicationMap publication_map;
   std::string request_string;
@@ -119,7 +228,18 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vect
 
   } else {
 
-    publication_map = ParsePublicationXMLImpl::parsePublicationXML(publication_text);
+    auto [parse_result, parsed_map] = ParsePublicationXMLImpl::parsePublicationXML(publication_text);
+    if (parse_result and write_cache) {
+
+      if (not pubmed_cache_.writeDetailCache(publication_text)) {
+
+        ExecEnv::log().error("PubmedAPIRequester::publicationBatch; problem writing to publication detail cache");
+
+      }
+
+    }
+
+    publication_map = std::move(parsed_map);
 
   }
 
@@ -134,20 +254,20 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vect
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::LitCitationMap kgl::PubmedAPIRequester::getCitations(const std::vector<std::string>& pmid_vector) const {
+kgl::LitCitationMap kgl::PubmedAPIRequester::getCitations(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
-  return getCitationReference(pmid_vector, PUBMED_ARTICLE_CITEDBY_ARGS_);
-
-}
-
-kgl::LitCitationMap kgl::PubmedAPIRequester::getReferences(const std::vector<std::string>& pmid_vector) const {
-
-  return getCitationReference(pmid_vector, PUBMED_ARTICLE_REFERENCES_ARGS_);
+  return getCitationReference(pmid_vector, PUBMED_ARTICLE_CITEDBY_ARGS_, write_cache);
 
 }
 
+kgl::LitCitationMap kgl::PubmedAPIRequester::getReferences(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
-kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const {
+  return getCitationReference(pmid_vector, PUBMED_ARTICLE_REFERENCES_ARGS_, write_cache);
+
+}
+
+
+kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args, bool write_cache) const {
 
   LitCitationMap citation_map;
   std::set<std::string> unique_pmids;
@@ -181,7 +301,7 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vec
 
       std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
       // Get the results of the api call and add to the citation map.
-      auto citation_batch_map = citationBatch(batch_pmids, cite_type_args);
+      auto citation_batch_map = citationBatch(batch_pmids, cite_type_args, write_cache);
       citation_map.merge(citation_batch_map);
 
       std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
@@ -221,7 +341,7 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vec
 
     std::chrono::steady_clock::time_point begin_api_time = std::chrono::steady_clock::now();
     // Get the results of the api call and add to the citation map.
-    auto citation_batch_map = citationBatch(batch_pmids, cite_type_args);
+    auto citation_batch_map = citationBatch(batch_pmids, cite_type_args, write_cache);
     citation_map.merge(citation_batch_map);
 
     std::chrono::steady_clock::time_point end_api_time = std::chrono::steady_clock::now();
@@ -242,7 +362,7 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vec
 
 }
 
-kgl::LitCitationMap kgl::PubmedAPIRequester::citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args) const {
+kgl::LitCitationMap kgl::PubmedAPIRequester::citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args, bool write_cache) const {
 
   LitCitationMap citation_map;
   std::string request_string;
@@ -263,7 +383,18 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::citationBatch(const std::vector<std
 
   } else {
 
-    citation_map = ParseCitationXMLImpl::parseCitationXML(citation_text);
+     auto [parse_result, parsed_map] = ParseCitationXMLImpl::parseCitationXML(citation_text);
+     if (parse_result and write_cache) {
+
+       if (not pubmed_cache_.writeCitationCache(citation_text)) {
+
+         ExecEnv::log().error("PubmedAPIRequester::getCitationReference; problem writing to citation cache");
+
+       }
+
+     }
+
+     citation_map = std::move(parsed_map);
 
   }
 

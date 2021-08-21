@@ -254,7 +254,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_entrez_parser.h
         kgl_genomics/kgl_parser/kgl_bio_pmid_parser.cpp
         kgl_genomics/kgl_parser/kgl_bio_pmid_parser.h
-        kgl_genomics/kgl_parser/kgl_pubmed_resource.cpp
         kgl_genomics/kgl_parser/kgl_pubmed_resource.h
         kgl_genomics/kgl_parser/kgl_pubmed.cpp
         kgl_genomics/kgl_parser/kgl_pubmed.h
