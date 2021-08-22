@@ -39,6 +39,8 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
   pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
+  // For efficiency, the Pubmed API requestor uses file caches and needs to know the runtime directory structure.
+  pubmed_requestor_ptr_->setWorkDirectory(work_directory);
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
@@ -253,7 +255,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput(genome_aux_ptr_, output_file_name_, OUTPUT_DELIMITER_);
+  gene_mutation_.writeOutput(genome_aux_ptr_, pubmed_requestor_ptr_, output_file_name_, OUTPUT_DELIMITER_);
   gene_alleles_.writeOutput(gene_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeLiteratureSummaries(literature_allele_file_);

@@ -30,12 +30,12 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class pubMedAPICache {
+class PubmedAPICache {
 
 public:
 
-  pubMedAPICache() = default;
-  ~pubMedAPICache() = default;
+  PubmedAPICache() = default;
+  ~PubmedAPICache() = default;
 
   // Empty both cache files.
   [[nodiscard]] bool flushCache() const;
@@ -46,28 +46,36 @@ public:
   // Write publication citation XML records to cache.
   [[nodiscard]] bool writeCitationCache(const std::string& xml_cache_records) const;
 
-  // Return any requested publications found in the caches.
-  [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
+  // Read the cache and return any requested publications found in the caches.
+  [[nodiscard]] LitPublicationMap requestCachedPublications(const std::vector<std::string>& requested_pmid) const;
 
-  // Sets the cache file name, This is a partial file spec.
-  void setCacheFile(const std::string& cache_file) const { cache_file_name_ = cache_file; }
+  // Unconditionally read all cached publications.
+  [[nodiscard]] LitPublicationMap readCachedPublications() const;
+
+  // Sets the cache file location. This is a partial file spec prefixed to the cite and publication files specified below.
+  void setCacheFilePrefix(const std::string& cache_file_prefix) const { cache_file_prefix_ = cache_file_prefix; }
 
 private:
 
-  mutable std::string cache_file_name_;
+  mutable std::string cache_file_prefix_;
 
+  // Literature Cache files.
   constexpr static const char* PUBLICATION_CACHE_{"pub_cache.xml"};
   constexpr static const char* CITATION_CACHE_{"cite_cache.xml"};
 
+  // Pseudo XML to delimit the Pubmed XML text.
   const std::string START_CACHE_NODE_{"<CacheBlock Size="};
   constexpr static const char START_CACHE_NODE_END_{'>'};
   const std::string END_CACHE_NODE_{"</CacheBlock>"};
 
   constexpr static const size_t MAX_CACHE_SIZE_{1000000};
-  constexpr static const size_t MIN_CACHE_SIZE{0};
+  constexpr static const size_t MIN_CACHE_SIZE_{0};
 
-  [[nodiscard]] LitPublicationMap readParseCachedPublications() const;
-  [[nodiscard]] LitCitationMap readParseCachedCitations() const;
+  // Read and parse publication details
+  [[nodiscard]] LitPublicationMap readPublicationCache() const;
+  // Read and parse literature citations.
+  [[nodiscard]] LitCitationMap readCitationCache() const;
+  // Read cached XML text.
   [[nodiscard]] bool readCacheRecord(std::istream& input, std::string& record_string) const;
 
 };

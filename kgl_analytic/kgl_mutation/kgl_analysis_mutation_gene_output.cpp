@@ -16,7 +16,10 @@ namespace kgl = kellerberrin::genome;
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data, const std::string& output_file_name, char output_delimiter) const {
+bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+                                       const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
+                                       const std::string& output_file_name,
+                                       char output_delimiter) const {
 
   std::ofstream out_file(output_file_name);
 
@@ -53,6 +56,23 @@ bool kgl::GenomeMutation::writeOutput(const std::shared_ptr<const HsGenomeAux>& 
 
     gene.clinvar.writeOutput(genome_aux_data, out_file, output_delimiter);
 
+    if (gene.gene_characteristic.symbolId() == "ABO" or gene.gene_characteristic.symbolId() == "NOS2") {
+
+      std::string literature_file = std::string(gene.gene_characteristic.symbolId()) + std::string(".txt");
+      std::ofstream out_file(literature_file);
+
+      if (out_file.good()) {
+
+        gene.gene_characteristic.writeGenePublications(out_file, pubmed_requestor_ptr);
+
+      } else {
+
+        ExecEnv::log().error("GenomeMutation::writeOutput; problem opening file: {}", literature_file);
+
+      }
+
+    }
+
     out_file << '\n';
 
   } // Gene
@@ -86,7 +106,7 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
            << symbol_id_ << output_delimiter
            << description_ << output_delimiter
            << citations_ << output_delimiter
-           << malaria_cites_ << output_delimiter
+           << disease_cites_.size() << output_delimiter
            << biotype_ << output_delimiter
            << (valid_protein_ ? "Valid" : "Invalid") << output_delimiter;
 
@@ -130,6 +150,75 @@ void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char outpu
            << "Attributes";
 
 }
+
+
+void kgl::GeneCharacteristic::writeGenePublications(std::ostream& out_file,
+                                                    const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) const {
+
+
+  const char output_delimiter{'\n'};
+
+  out_file << genome_ << output_delimiter
+  << contig_ << output_delimiter
+  << entrez_id_ << output_delimiter
+  << HGNC_id_ << output_delimiter;
+
+  std::string ensembl_text;
+  for (auto const& ensembl_id : ensembl_ids_) {
+
+    ensembl_text += ensembl_id;
+    if (ensembl_id != ensembl_ids_.back()) {
+
+      ensembl_text += CONCAT_TOKEN_;
+
+    }
+
+  }
+
+  out_file << ensembl_text << output_delimiter
+  << uniprotKB_id_ << output_delimiter
+  << symbol_id_ << output_delimiter
+  << description_ << output_delimiter
+  << citations_ << output_delimiter
+  << disease_cites_.size() << output_delimiter;
+
+  out_file << output_delimiter
+           << "************************************************************************************";
+
+  std::vector<std::string> pmid_vector;
+  for (auto const& pmid  :  disease_cites_) {
+
+    pmid_vector.push_back(pmid);
+
+  }
+
+  ExecEnv::log().info("Retrieving literature from pubmed");
+  auto literature_map = pubmed_requestor_ptr->getCachedPublications(pmid_vector);
+  ExecEnv::log().info("Completed Retrieving literature from pubmed");
+
+  // Resort the literature map by number of citations.
+  std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;
+  for (auto const& [pmid, publication] : literature_map) {
+
+    citation_rank_map.emplace(publication.citedBy().size(), publication);
+
+  }
+
+  // Print most cited articles first.
+  for (auto iter = citation_rank_map.rbegin(); iter != citation_rank_map.rend(); ++iter) {
+
+    auto const& [cites, publication] = *iter;
+
+    out_file << "\n******************************************" << output_delimiter;
+
+    publication.output(out_file);
+
+    out_file << "\n******************************************" << output_delimiter;
+
+  }
+
+}
+
 
 
 // Perform the genetic analysis per iteration.

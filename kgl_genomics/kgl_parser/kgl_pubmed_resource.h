@@ -40,23 +40,20 @@ public:
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PUBMED_API; }
 
   // Only the data for unique pmids is returned, for convenience the requesting array of pmids can contain non-unique pmids.
-  // Large requests are automatically throttled to Pubmed requirements (max 10 api calls a second).
+  // Large requests are automatically throttled to Pubmed requirements (max 10 API calls a second).
   // Citation and reference information. No cache records are written or read.
   // Pubmed publication caching is not used.
-  [[nodiscard]] LitPublicationMap getPublications(const std::vector<std::string>& pmid_vector) const { return pubmed_rest_api_.getPublications(pmid_vector, false); }
+  [[nodiscard]] LitPublicationMap getPublications(const std::vector<std::string>& pmid_vector) const { return pubmed_rest_api_.getAPIPublications(pmid_vector, false); }
 
-  // Same functionality as above but checks if the publications are held on a disk cache before sending API requests
-  // to Pubmed. Any records not found in the cache are requested using the Pubmed API and then written to the cache.
-  [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const { return pubmed_rest_api_.getCachedPublications(pmid_vector); }
+  // Same functionality as above but checks if the publications are held on a disk/memory cache before sending API requests to Pubmed.
+  // Any records not found in the cache are requested using the Pubmed API and then written to the disk/memory cache.
+  [[nodiscard]] const LitPublicationMap& getCachedPublications(const std::vector<std::string>& pmid_vector) const { return pubmed_rest_api_.getCachedPublications(pmid_vector); }
 
-  // Empty the cache files.
+  // Empty the disk and memory publication caches.
   [[nodiscard]] bool flushCache() const { return pubmed_rest_api_.flushCache(); }
 
-  // Return the resource cache file spec;
-  [[nodiscard]] const std::string& cacheFileSpec() const { return cache_file_spec_; }
-
-  // Set the partial file spec for the cache files.
-  void setWorkDirectory(const std::string& directory) const { pubmed_rest_api_.setCacheFile(Utility::filePath(cache_file_spec_, directory)); }
+  // Set the location prefix file spec for the cache files.
+  void setWorkDirectory(const std::string& directory) const { pubmed_rest_api_.setCacheFilePrefix(Utility::filePath(cache_file_spec_, directory)); }
 
 private:
 

@@ -108,7 +108,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
       mutation.gene_characteristic = gene_characteristic;
       mutation.clinvar.updateEthnicity().updatePopulations(genome_aux_data);
       mutation.gene_variants.initializeEthnic(genome_aux_data);
-      mutation.ontology.processOntologyStats(mutation.gene_characteristic.geneId(), ontology_cache);
+      mutation.ontology.processOntologyStats(mutation.gene_characteristic.symbolId(), ontology_cache);
       gene_vector_.push_back(mutation);
 
     } // Gene.
@@ -132,19 +132,18 @@ void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& pmid
     }
 
     auto const entrez_pmid = bio_pmid_ptr->entrezPMID(entrez_id);
-
-    size_t pmid_count{0};
+    std::set<std::string> disease_pmids;
     for (auto const& pmid : entrez_pmid) {
 
       if (pmid_set.contains(pmid)) {
 
-        ++pmid_count;
+        disease_pmids.insert(pmid);
 
       }
 
     }
 
-    gene_data.gene_characteristic.update_pmid(entrez_pmid.size(), pmid_count);
+    gene_data.gene_characteristic.update_pmid(entrez_pmid.size(), disease_pmids);
 
   }
 
@@ -288,10 +287,10 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
     if (not gene_mutation.gene_variants.processSummaryStatistics( population_ptr,
                                                                   ethnic_statistics_,
-                                                                  gene_mutation.gene_characteristic.geneId())) {
+                                                                  gene_mutation.gene_characteristic.symbolId())) {
 
       ExecEnv::log().warn("GenomeMutation::geneSpanAnalysis; problem with processSummaryStatistics, gene: {}",
-                          gene_mutation.gene_characteristic.geneId());
+                          gene_mutation.gene_characteristic.symbolId());
 
     }
 

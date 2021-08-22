@@ -16,14 +16,8 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std::vector<std::string>& pmid_vector) const {
+const kgl::LitPublicationMap& kgl::PubmedAPIRequester::getCachedPublications(const std::vector<std::string>& pmid_vector) const {
 
-  // Allow trivial requests.
-  if (pmid_vector.empty()) {
-
-    return LitPublicationMap();
-
-  }
 
   // For efficiency ensure that all pmids are unique.
   std::set<std::string> unique_pmids;
@@ -39,14 +33,17 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   }
 
-  // Get all cached publications satisfying the request.
-  auto cached_publications = pubmed_cache_.getCachedPublications(unique_pmid_vector);
+  if (not is_cache_initialized_) {
+
+    cached_publications_ = pubmed_cache_.requestCachedPublications(unique_pmid_vector);
+    is_cache_initialized_ = true;
+  }
 
   // Only retrieve from the Pubmed API publications not found in the cache.
   std::vector<std::string> unique_uncached_vector;
   for (auto const& pmid : unique_pmid_vector) {
 
-    if (not cached_publications.contains(pmid)) {
+    if (not cached_publications_.contains(pmid)) {
 
       unique_uncached_vector.push_back(pmid);
 
@@ -54,19 +51,19 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   }
 
-  auto api_publications = getPublications(unique_uncached_vector, true);
+  auto api_publications = getAPIPublications(unique_uncached_vector, true);
 
-  ExecEnv::log().info("PubmedAPIRequester::getCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
-                      unique_pmid_vector.size(), cached_publications.size(), api_publications.size());
+  ExecEnv::log().info("PubmedAPIRequester::requestCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
+                      unique_pmid_vector.size(), cached_publications_.size(), api_publications.size());
 
   // Combine and return.
-  cached_publications.merge(api_publications);
-  return  cached_publications;
+  cached_publications_.merge(api_publications);
+  return  cached_publications_;
 
 }
 
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const {
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getAPIPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
   LitPublicationMap publication_map;
 
@@ -108,7 +105,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublications(const std::vecto
     auto result = cite_map.find(pmid);
     if (result == cite_map.end()) {
 
-      ExecEnv::log().warn("PubmedRequester::getPublications; no citations found for publication (pmid): {}", pmid);
+      ExecEnv::log().warn("PubmedRequester::getAPIPublications; no citations found for publication (pmid): {}", pmid);
 
     } else {
 
@@ -156,7 +153,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
       ++batch_requests;
 
       auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-      ExecEnv::log().info("PubmedAPIRequester::getPublications; api call {}ms;  total api calls/elapsed : {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
+      ExecEnv::log().info("PubmedAPIRequester::getAPIPublications; api call {}ms;  total api calls/elapsed : {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                           api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
       batch_pmids.clear();
@@ -195,7 +192,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
     ++api_requests;
 
     auto av_api_duration = static_cast<double>(total_duration.count()) / static_cast<double>(api_requests);
-    ExecEnv::log().info("PubmedAPIRequester::getPublications; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
+    ExecEnv::log().info("PubmedAPIRequester::getAPIPublications; api call {}ms;  total api calls/elapsed: {}/{}ms, av. api call {:.1f}ms, pmids retrieved: {}",
                         api_duration.count(), api_requests, total_duration.count(), av_api_duration, pmid_count);
 
     batch_pmids.clear();

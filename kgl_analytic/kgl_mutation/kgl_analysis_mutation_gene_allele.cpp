@@ -439,13 +439,24 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
   auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
   ExecEnv::log().info("Completed Retrieving literature from pubmed");
 
+  // Resort the literature map by number of citations.
+  std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;
   for (auto const& [pmid, publication] : literature_map) {
 
+    citation_rank_map.emplace(publication.citedBy().size(), publication);
+
+  }
+
+  // Print most cited articles first.
+  for (auto iter = citation_rank_map.rbegin(); iter != citation_rank_map.rend(); ++iter) {
+
+    auto const& [cites, publication] = *iter;
+
     out_file << "\n******************************************" << '\n';
-     auto result = pmid_variant_map.find(pmid);
+     auto result = pmid_variant_map.find(publication.pmid());
     if (result == pmid_variant_map.end()) {
 
-      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; no alleles found for publication pmid: {}", pmid);
+      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; no alleles found for publication pmid: {}", publication.pmid());
 
     } else {
 

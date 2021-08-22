@@ -8,6 +8,7 @@
 #include "kgl_genome_genome.h"
 #include "kgl_hsgenealogy_parser.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_pubmed_resource.h"
 
 
 
@@ -51,11 +52,13 @@ public:
   [[nodiscard]] ContigSize_t geneSpan() const { return gene_span_; }
   [[nodiscard]] const std::vector<std::string>& ensemblIds() const { return ensembl_ids_; }
   [[nodiscard]] const std::string& gafId() const { return uniprotKB_id_; }
-  [[nodiscard]] const std::string& geneId() const { return symbol_id_; }
+  [[nodiscard]] const std::string& symbolId() const { return symbol_id_; }
   [[nodiscard]] const std::string& entrezId() const { return entrez_id_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
 
-  void update_pmid(size_t all_pmid, size_t malaria_pmid) { citations_ = all_pmid;  malaria_cites_ = malaria_pmid; }
+  void  writeGenePublications( std::ostream& out_file,
+                               const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) const;
+  void update_pmid(size_t all_pmid, std::set<std::string> disease_pmids) { citations_ = all_pmid; disease_cites_ = std::move(disease_pmids); }
 
 private:
 
@@ -74,7 +77,7 @@ private:
   std::string HGNC_id_;
   std::vector<std::string> ensembl_ids_;
   size_t citations_{0};
-  size_t malaria_cites_{0};
+  std::set<std::string> disease_cites_;
   ContigOffset_t gene_begin_{0};
   ContigOffset_t gene_end_{0};
   ContigSize_t gene_span_{0};
