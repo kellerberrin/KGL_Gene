@@ -89,6 +89,8 @@ private:
   GenerateGeneAllele all_pmid_alleles_;
 
   // Parameters and output files.
+  std::string work_directory_;
+
   std::string output_file_name_;
   std::string gene_allele_file_;
   std::string all_allele_file_;

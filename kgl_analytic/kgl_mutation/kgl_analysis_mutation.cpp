@@ -110,6 +110,8 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
   literature_allele_file_ = std::string(LIT_ALLELE_FILE_) + std::string(OUTPUT_FILE_EXT_);
   literature_allele_file_ = Utility::filePath(literature_allele_file_, work_directory);
 
+  work_directory_ = work_directory;
+
   return true;
 
 }
@@ -255,7 +257,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput(genome_aux_ptr_, pubmed_requestor_ptr_, output_file_name_, OUTPUT_DELIMITER_);
+  gene_mutation_.writeOutput(genome_aux_ptr_, pubmed_requestor_ptr_, output_file_name_, work_directory_, OUTPUT_DELIMITER_);
   gene_alleles_.writeOutput(gene_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeLiteratureSummaries(literature_allele_file_);

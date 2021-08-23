@@ -258,7 +258,11 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_pubmed.cpp
         kgl_genomics/kgl_parser/kgl_pubmed.h
         kgl_genomics/kgl_parser/kgl_pubmed_xml_parser.cpp
-        kgl_genomics/kgl_parser/kgl_pubmed_xml_parser.h kgl_genomics/kgl_parser/kgl_pubmed_cache.cpp kgl_genomics/kgl_parser/kgl_pubmed_cache.h kgl_genomics/kgl_parser/kgl_pubmed_api.cpp kgl_genomics/kgl_parser/kgl_pubmed_api.h)
+        kgl_genomics/kgl_parser/kgl_pubmed_xml_parser.h
+        kgl_genomics/kgl_parser/kgl_pubmed_cache.cpp
+        kgl_genomics/kgl_parser/kgl_pubmed_cache.h
+        kgl_genomics/kgl_parser/kgl_pubmed_api.cpp
+        kgl_genomics/kgl_parser/kgl_pubmed_api.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)

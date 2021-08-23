@@ -11,31 +11,6 @@ namespace kgl = kellerberrin::genome;
 
 
 
-kgl::LitPublicationMap kgl::PubmedAPICache::requestCachedPublications(const std::vector<std::string>& requested_pmid) const {
-
-
-  // Re-reads the cache files for each request.
-  auto cached_pub_map = readCachedPublications();
-
-  // Only return requested cached publications.
-  LitPublicationMap found_pub_map;
-  for (auto const& pmid :  requested_pmid) {
-
-    auto result = cached_pub_map.find(pmid);
-    if (result != cached_pub_map.end()) {
-
-      const auto& [pmid_key, publication] = *result;
-      found_pub_map.emplace(pmid, publication);
-
-    }
-
-  }
-
-  return found_pub_map;
-
-}
-
-
 kgl::LitPublicationMap kgl::PubmedAPICache::readCachedPublications() const {
 
   LitPublicationMap cached_pub_map;
@@ -75,7 +50,7 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
 
   if (not detail_xml_file.good()) {
 
-    ExecEnv::log().error("PubmedAPICache::readPublicationCache; unable to open cache file: {}", detail_xml_name);
+    ExecEnv::log().warn("PubmedAPICache::readPublicationCache; unable to open cache file: {}", detail_xml_name);
     return publication_map;
 
   }
@@ -109,7 +84,7 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 
   if (not citation_xml_file.good()) {
 
-    ExecEnv::log().error("PubmedAPICache::readCitationCache; unable to open cache file: {}", citation_xml_name);
+    ExecEnv::log().warn("PubmedAPICache::readCitationCache; unable to open cache file: {}", citation_xml_name);
     return citation_map;
 
   }

@@ -41,7 +41,7 @@ public:
 
   // Request Pubmed publications, use cached results when available, else request from Pubmed using the API.
   // Always writes correctly parsed API results to cache.
-  [[nodiscard]] const LitPublicationMap& getCachedPublications(const std::vector<std::string>& pmid_vector) const;
+  [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
 
   // Empty the Pubmed disk and memory publication caches.
   [[nodiscard]] bool flushCache() const {  cached_publications_.clear(); is_cache_initialized_ = false; return pubmed_cache_.flushCache(); }

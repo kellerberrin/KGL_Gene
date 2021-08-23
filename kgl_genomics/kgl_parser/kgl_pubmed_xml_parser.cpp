@@ -117,6 +117,9 @@ std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML
 
 std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
 
+  // Comment out after testing.
+  // ExecEnv::log().info("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
+
   LitPublicationMap publication_map;
   bool parse_result{true};
 
@@ -167,8 +170,6 @@ std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
         // Issue an error message and skip to the next article.
         ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing XML Pubmed Article; {}", e.what());
         parse_result = false;
-        // Comment out after testing.
-        //       ExecEnv::log().error("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
 
 
       }
@@ -186,7 +187,7 @@ std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
 
   }
 
-  ExecEnv::log().info("PubmedRequester::parsePublicationXML; article count {}", publication_map.size());
+
 
   return {parse_result, publication_map};
 
@@ -245,15 +246,28 @@ kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXM
 void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journal_article_node,
                                                     PubMedPublicationSummary& publication) {
 
-  auto author_list_node = validSubNode(journal_article_node, AUTHOR_LIST_NODE_, publication.pmid());
+//  auto author_list_node = validSubNode(journal_article_node, AUTHOR_LIST_NODE_, publication.pmid());
+  auto author_list_node = journal_article_node->first_node(AUTHOR_LIST_NODE_);
+  if (author_list_node == nullptr) {
+
+    return;
+
+  }
   auto author_node = author_list_node->first_node(AUTHOR_NODE_);
   while(author_node != nullptr)  {
 
     auto surname = author_node->first_node(AUTHOR_SURNAME_NODE_);
     if (surname != nullptr) {
 
-      auto initials = validSubNode(author_node, AUTHOR_INITIALS_NODE_, publication.pmid());
-      publication.addAuthor(surname->value(), initials->value());
+      std::string author_initials;
+      auto initials = author_node->first_node(AUTHOR_INITIALS_NODE_);
+      if (initials != nullptr) {
+
+        author_initials = initials->value();
+
+      }
+
+      publication.addAuthor(surname->value(), author_initials);
 
     } else {
 
@@ -425,17 +439,21 @@ void kgl::ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pu
     rapidxml::xml_node<>* article_list_node = reference_node->first_node(ARTICLE_ID_LIST_);
     if (article_list_node != nullptr) {
 
-      auto id_node = validSubNode(article_list_node, ARTICLE_ID_, publication.pmid());
-      auto id_attrib = validAttribute(id_node, ARTICLE_ID_ATTRIBUTE_, publication.pmid());
-      std::string id_type = id_attrib->value();
-      if (id_type != ARTICLE_ID_ATTRIBUTE_VALUE_) {
+      rapidxml::xml_node<>* id_node = article_list_node->first_node(ARTICLE_ID_);
+      while (id_node != nullptr) {
 
-        ExecEnv::log().warn("ParsePublicationXMLImpl::parseReferencesXML; publication pmid: {} has reference id type: {}",
-                            publication.pmid(), id_type);
+        auto id_attrib = validAttribute(id_node, ARTICLE_ID_ATTRIBUTE_, publication.pmid());
+        std::string id_type = id_attrib->value();
+        if (id_type == ARTICLE_ID_ATTRIBUTE_VALUE_) {
+
+          reference_pmid = id_node->value();
+          break;
+
+        }
+
+        id_node = id_node->next_sibling(ARTICLE_ID_);
 
       }
-
-      reference_pmid = id_node->value();
 
     }
 
@@ -446,7 +464,6 @@ void kgl::ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pu
       citation_text = citation_node->value();
 
     }
-
 
     if (not reference_pmid.empty() or not citation_text.empty()) {
 

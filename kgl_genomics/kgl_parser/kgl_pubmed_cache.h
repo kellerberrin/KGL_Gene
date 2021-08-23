@@ -46,9 +46,6 @@ public:
   // Write publication citation XML records to cache.
   [[nodiscard]] bool writeCitationCache(const std::string& xml_cache_records) const;
 
-  // Read the cache and return any requested publications found in the caches.
-  [[nodiscard]] LitPublicationMap requestCachedPublications(const std::vector<std::string>& requested_pmid) const;
-
   // Unconditionally read all cached publications.
   [[nodiscard]] LitPublicationMap readCachedPublications() const;
 

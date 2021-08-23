@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const kgl::LitPublicationMap& kgl::PubmedAPIRequester::getCachedPublications(const std::vector<std::string>& pmid_vector) const {
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std::vector<std::string>& pmid_vector) const {
 
 
   // For efficiency ensure that all pmids are unique.
@@ -35,8 +35,9 @@ const kgl::LitPublicationMap& kgl::PubmedAPIRequester::getCachedPublications(con
 
   if (not is_cache_initialized_) {
 
-    cached_publications_ = pubmed_cache_.requestCachedPublications(unique_pmid_vector);
+    cached_publications_ = pubmed_cache_.readCachedPublications();
     is_cache_initialized_ = true;
+
   }
 
   // Only retrieve from the Pubmed API publications not found in the cache.
@@ -51,14 +52,33 @@ const kgl::LitPublicationMap& kgl::PubmedAPIRequester::getCachedPublications(con
 
   }
 
-  auto api_publications = getAPIPublications(unique_uncached_vector, true);
+  auto api_publications = getAPIPublications(unique_uncached_vector, true); // Write to cache flag is set.
 
   ExecEnv::log().info("PubmedAPIRequester::requestCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
-                      unique_pmid_vector.size(), cached_publications_.size(), api_publications.size());
+                      unique_pmid_vector.size(), (unique_pmid_vector.size()-api_publications.size()), api_publications.size());
 
-  // Combine and return.
+  // Combine with the cache.
   cached_publications_.merge(api_publications);
-  return  cached_publications_;
+
+  // Cache should now contain all the required publications.
+  LitPublicationMap found_pub_map;
+  for (auto const& pmid :  unique_pmid_vector) {
+
+    auto result = cached_publications_.find(pmid);
+    if (result != cached_publications_.end()) {
+
+      const auto& [pmid_key, publication] = *result;
+      found_pub_map.emplace(pmid, publication);
+
+    } else {
+
+      ExecEnv::log().error("PubmedAPIRequester::requestCachedPublications; requested pmid: {} not found in cache", pmid);
+
+    }
+
+  }
+
+  return found_pub_map;
 
 }
 

@@ -19,6 +19,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                        const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
                                        const std::string& output_file_name,
+                                       const std::string& work_directory,
                                        char output_delimiter) const {
 
   std::ofstream out_file(output_file_name);
@@ -56,9 +57,10 @@ bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>&
 
     gene.clinvar.writeOutput(genome_aux_data, out_file, output_delimiter);
 
-    if (gene.gene_characteristic.symbolId() == "ABO" or gene.gene_characteristic.symbolId() == "NOS2") {
+    if (gene.gene_characteristic.diseasePublications().size() > 10) {
 
-      std::string literature_file = std::string(gene.gene_characteristic.symbolId()) + std::string(".txt");
+      std::string literature_file = std::string("literature/") + std::string(gene.gene_characteristic.symbolId()) + std::string(".txt");
+      literature_file = Utility::filePath(literature_file, work_directory);
       std::ofstream out_file(literature_file);
 
       if (out_file.good()) {

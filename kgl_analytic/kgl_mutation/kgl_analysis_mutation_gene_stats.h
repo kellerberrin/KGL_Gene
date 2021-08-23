@@ -55,6 +55,8 @@ public:
   [[nodiscard]] const std::string& symbolId() const { return symbol_id_; }
   [[nodiscard]] const std::string& entrezId() const { return entrez_id_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
+  [[nodiscard]] const std::set<std::string>& diseasePublications() const { return disease_cites_; }
+
 
   void  writeGenePublications( std::ostream& out_file,
                                const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) const;
