@@ -17,9 +17,7 @@ namespace kgl = kellerberrin::genome;
 
 // Perform the genetic analysis per iteration.
 bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
-                                       const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
                                        const std::string& output_file_name,
-                                       const std::string& work_directory,
                                        char output_delimiter) const {
 
   std::ofstream out_file(output_file_name);
@@ -56,24 +54,6 @@ bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>&
     out_file << output_delimiter;
 
     gene.clinvar.writeOutput(genome_aux_data, out_file, output_delimiter);
-
-    if (gene.gene_characteristic.diseasePublications().size() > 10) {
-
-      std::string literature_file = std::string("literature/") + std::string(gene.gene_characteristic.symbolId()) + std::string(".txt");
-      literature_file = Utility::filePath(literature_file, work_directory);
-      std::ofstream out_file(literature_file);
-
-      if (out_file.good()) {
-
-        gene.gene_characteristic.writeGenePublications(out_file, pubmed_requestor_ptr);
-
-      } else {
-
-        ExecEnv::log().error("GenomeMutation::writeOutput; problem opening file: {}", literature_file);
-
-      }
-
-    }
 
     out_file << '\n';
 

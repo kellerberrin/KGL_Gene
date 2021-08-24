@@ -57,6 +57,27 @@ bool kel::Utility::fileExists(const std::string& file_path) {
 
 }
 
+// Check that the directory exists at the specified path
+bool kel::Utility::directoryExists(const std::string& path) {
+
+  return fileExists(path);
+
+}
+
+// Create directory at the specified path, returns true if directory already exists.
+bool kel::Utility::createDirectory(const std::string& path) {
+
+  boost::system::error_code error_code;
+  fs::create_directory(fs::path(path), error_code);
+  if (error_code.value() != boost::system::errc::success) {
+
+    return false;
+
+  }
+
+  return true;
+
+}
 
 // Returns the filename extension.
 std::string kel::Utility::fileExtension(const std::string& file_name) {

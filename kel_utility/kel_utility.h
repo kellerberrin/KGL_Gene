@@ -23,6 +23,8 @@ public:
   [[nodiscard]] static std::string filePath(const std::string& file_name); // returns "path""
   [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
+  [[nodiscard]] static bool directoryExists(const std::string& path); // Check that the directory exists at the specified path
+  [[nodiscard]] static bool createDirectory(const std::string& path); // Create directory at the specified path
   [[nodiscard]] static std::string fileExtension(const std::string& file_name);
   [[nodiscard]] static std::string fileName(const std::string& file_name);
   [[nodiscard]] static std::string toupper(const std::string& s);

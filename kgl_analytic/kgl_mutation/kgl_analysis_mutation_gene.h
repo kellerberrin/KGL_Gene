@@ -94,9 +94,7 @@ public:
 
   // Finally, output to file.
   bool writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
-                   const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
                    const std::string& out_file,
-                   const std::string& work_directory,
                    char output_delimiter) const;
 
 

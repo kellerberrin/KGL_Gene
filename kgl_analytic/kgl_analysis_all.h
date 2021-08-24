@@ -16,6 +16,7 @@
 #include "kgl_analysis_inbreed.h" // Analysis of Diploid phased population read from the 1000 genomes project.
 #include "kgl_analysis_PfEMP.h"   // Analyze the P. Falciparum protein family for different Pf Genomes.
 #include "kgl_mutation/kgl_analysis_mutation.h"   // Analyze mutations in genes and genomic regions.
+#include "kgl_literature/kgl_analysis_literature.h"   // Analyze Pubmed literature.
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -44,6 +45,7 @@ inline VirtualAnalysisVector getAnalysisVector() {
   analysis_vector.push_back(std::make_unique<PfEMPAnalysis>());
   analysis_vector.push_back(std::make_unique<MutationAnalysis>());
   analysis_vector.push_back(std::make_unique<JsonAnalysis>());
+  analysis_vector.push_back(std::make_unique<LiteratureAnalysis>());
 
   return analysis_vector;
 
