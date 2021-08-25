@@ -73,7 +73,15 @@ public:
   void addReference(const std::string& ref_pmid, const std::string& citation_text) { references_.emplace_back(ref_pmid, citation_text);  } // pmids only.
 
   // Output the record to an ostream, one field per line.
-  std::ostream& output(std::ostream& out_stream, char delimiter = SV_DELIMITER_) const;
+  std::ostream& output(std::ostream& out_stream, bool detail = false, char delimiter = SV_DELIMITER_) const;
+
+  // Filters.
+  [[nodiscard]] bool hasChemical(const std::vector<std::string>& chemical_list) const;
+  [[nodiscard]] bool hasMeSHCode(const std::vector<std::string>& MeSH_list) const;
+  [[nodiscard]] bool hasTitleText(const std::vector<std::string>& search_text) const;
+  [[nodiscard]] bool hasAbstractText(const std::vector<std::string>& search_text) const;
+  // .first = surname/organization, .second is initials, can be blank.
+  [[nodiscard]]bool hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const;
 
 private:
 

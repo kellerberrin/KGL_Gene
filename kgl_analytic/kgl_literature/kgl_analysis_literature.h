@@ -76,6 +76,11 @@ private:
   void updatePMIDStatistics( const std::set<std::string>& disease_pmid_set,
                              const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
 
+  void outputGenePmid(const std::string& literature_directory, size_t pmid_count) const;
+  void outputPmidGene(const std::string& literature_directory, size_t max_genes, size_t min_genes, size_t citations) const;
+  [[nodiscard]] bool filterPublication(const PubMedPublicationSummary& publication) const;
+
+
 };
 
 

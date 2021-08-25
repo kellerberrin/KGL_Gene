@@ -174,9 +174,7 @@ void kgl::GeneCharacteristic::writeGenePublications(std::ostream& out_file,
 
   }
 
-  ExecEnv::log().info("Retrieving literature from pubmed");
   auto literature_map = pubmed_requestor_ptr->getCachedPublications(pmid_vector);
-  ExecEnv::log().info("Completed Retrieving literature from pubmed");
 
   // Resort the literature map by number of citations.
   std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;

@@ -180,23 +180,78 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
+  const size_t minimum_publication_count{10};
+  outputGenePmid(literature_directory_, minimum_publication_count);
+
+  const size_t max_genes{1000000};
+  const size_t min_genes{0};
+  const size_t min_citations{10};
+  outputPmidGene(literature_directory_, max_genes, min_genes, min_citations);
+
+  return true;
+
+}
+
+// Ranks the publications by number of gene references.
+void kgl::LiteratureAnalysis::outputGenePmid(const std::string& literature_directory, size_t pmid_count) const {
+
   size_t gene_lit_count{0};
+  size_t gene_lit_total{0};
   for (auto const& gene : gene_vector_) {
 
-    if (gene.diseasePublications().size() > 10) {
+    if (not gene.diseasePublications().empty()) {
 
-      std::string literature_file = std::string(gene.symbolId()) + std::string(".txt");
-      literature_file = Utility::filePath(literature_file, literature_directory_);
-      std::ofstream out_file(literature_file);
+      ++gene_lit_total;
 
-      if (out_file.good()) {
+      if (gene.diseasePublications().size() >= pmid_count) {
 
-        ++gene_lit_count;
-        gene.writeGenePublications(out_file, pubmed_requestor_ptr_);
+        std::string literature_file = std::string(gene.symbolId()) + std::string(".txt");
+        literature_file = Utility::filePath(literature_file, literature_directory);
+        std::ofstream out_file(literature_file);
+
+
+        if (out_file.good()) {
+
+          ++gene_lit_count;
+          gene.writeGenePublications(out_file, pubmed_requestor_ptr_);
+
+        } else {
+
+          ExecEnv::log().error("LiteratureAnalysis::outputGenePmid; problem opening file: {}", literature_file);
+
+        }
+
+      } // if publications >= pmid_count
+
+    } // if publication
+
+  } // for all genes.
+
+  ExecEnv::log().info("Literature Analysis; Total Genes: {}, Total Lit Gene: {}, Lit Gene Files: {}",
+                      gene_vector_.size(), gene_lit_total, gene_lit_count);
+
+}
+
+// Ranks the publications by number of gene references.
+void kgl::LiteratureAnalysis::outputPmidGene(const std::string& literature_directory,
+                                             size_t max_genes,
+                                             size_t min_genes,
+                                             size_t min_citations) const {
+
+  std::map<std::string, std::set<std::string>> reference_map;
+  for (auto const& gene : gene_vector_) {
+
+    for (auto const& pmid : gene.diseasePublications()) {
+
+      auto result = reference_map.find(pmid);
+      if (result == reference_map.end()) {
+
+        reference_map.emplace(pmid, std::set<std::string>{gene.symbolId()});
 
       } else {
 
-        ExecEnv::log().error("GenomeMutation::writeOutput; problem opening file: {}", literature_file);
+        auto& [pmid_key, gene_set] = *result;
+        gene_set.insert(gene.symbolId());
 
       }
 
@@ -204,11 +259,151 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
 
   }
 
-  ExecEnv::log().info("Literature Analysis Total Genes: {}, Lit Gene Files: {}", gene_vector_.size(), gene_lit_count);
 
-  return true;
+  std::vector<std::string> pmid_vector;
+  for (auto const& [pmid, gene_set] : reference_map) {
+
+    pmid_vector.push_back(pmid);
+
+  }
+
+  // Get all the publications.
+  auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
+
+  std::multimap<size_t, std::string> count_map;
+  size_t fail_filter{0};
+  size_t pass_filter{0};
+  for (auto const& [pmid, gene_set] : reference_map) {
+
+    auto pub_result = publication_map.find(pmid);
+    if (pub_result == publication_map.end()) {
+
+      ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication: {}", pmid);
+      continue;
+
+    }
+
+    auto const& [pub_pmid, publication] = *pub_result;
+
+    if (publication.citedBy().size() >= min_citations) {
+
+      if (gene_set.size() <= max_genes and gene_set.size() >= min_genes) {
+
+
+        bool filter_result = filterPublication(publication);
+
+        if (filter_result) {
+
+          ++pass_filter;
+          count_map.emplace(gene_set.size(), pmid);
+
+        } else {
+
+          ++fail_filter;
+
+        }
+
+      } // if gene count
+
+    } // if citations
+
+  }
+
+  ExecEnv::log().info( "LiteratureAnalysis::outputPmidGene; pass filter: {}, fail filter: {}", pass_filter, fail_filter);
+
+  std::string literature_file{"reference_count.txt"};
+  literature_file = Utility::filePath(literature_file, literature_directory);
+  std::ofstream out_file(literature_file);
+
+  if (out_file.good()) {
+
+    // print the most referenced publications first.
+    for (auto iter = count_map.rbegin(); iter != count_map.rend(); ++iter) {
+
+      auto const& [count, pmid] = *iter;
+
+      auto ref_result = reference_map.find(pmid);
+      if (ref_result == reference_map.end()) {
+
+        ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid reference: {}", pmid);
+        continue;
+
+      }
+
+      auto pub_result = publication_map.find(pmid);
+      if (pub_result == publication_map.end()) {
+
+        ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication: {}", pmid);
+        continue;
+
+      }
+
+      auto const& [pub_pmid, publication] = *pub_result;
+      auto const& [ref_pmid, gene_set] = *ref_result;
+
+      out_file << "*************************************************************\n";
+      out_file << "Gene count: " << count << '\n';
+      const size_t genes_per_line{20};
+      size_t gene_count{0};
+      for (auto const& gene : gene_set) {
+
+        out_file << gene;
+        if (gene != *gene_set.rbegin()) {
+
+          out_file << ", ";
+
+        }
+        ++gene_count;
+        if (gene_count % genes_per_line == 0) {
+
+          out_file << '\n';
+
+        }
+
+      }
+
+      out_file << "\n\n";
+
+      publication.output(out_file);
+
+      out_file << "\n*************************************************************\n";
+
+    }
+
+  } else {
+
+    ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; problem opening file: {}", literature_file);
+
+  }
 
 }
 
+bool kgl::LiteratureAnalysis::filterPublication(const PubMedPublicationSummary& publication) const {
 
+  static const std::vector<std::string> Mesh_codes{ "D010963" /* Plasmodium falciparum */
+                                                   ,"D016778" /*  Malaria, Falciparum */
+                                                   , "D008288" /* Malaria */ };
 
+  static const std::vector<std::string> search_text { "Plasmodium", "plasmodium", "Falciparum",  "falciparum", "Malaria", "malaria" };
+
+  if (publication.hasMeSHCode(Mesh_codes)) {
+
+    return true;
+
+  }
+
+  if (publication.hasTitleText(search_text)) {
+
+    return true;
+
+  }
+
+  if (publication.hasAbstractText(search_text)) {
+
+    return true;
+
+  }
+
+  return false;
+
+}

@@ -8,7 +8,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, char delimiter) const {
+std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, bool detail, char delimiter) const {
 
   out_stream << "PMID" << delimiter << pmid() << '\n';
   out_stream << "PUB_DATE" << delimiter << publicationDate() << '\n'; // DD-MM-YYYY or MM-YYYY
@@ -59,12 +59,16 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << '\n';
 
   out_stream << "CITED_BY(" << citedBy().size() << ")" << delimiter;
-  for (auto const& cites : citedBy()) {
+  if (detail) {
 
-    out_stream << cites;
-    if (cites != *citedBy().rbegin()) {
+    for (auto const& cites : citedBy()) {
 
-      out_stream << delimiter;
+      out_stream << cites;
+      if (cites != *citedBy().rbegin()) {
+
+        out_stream << delimiter;
+
+      }
 
     }
 
@@ -72,29 +76,128 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, ch
   out_stream << '\n';
 
   out_stream << "REFERENCES(" << references().size() << ")" << delimiter;
-  for (auto const& ref : references()) {
+  if (detail) {
 
-    if (ref.first.empty()) {
+    for (auto const& ref : references()) {
 
-      out_stream << "&" << ref.second << '\n';
+      if (ref.first.empty()) {
 
-    } else {
+        out_stream << "&" << ref.second << '\n';
 
-      out_stream << ref.first;
+      } else {
+
+        out_stream << ref.first;
+
+      }
+      if (ref != *references().rbegin()) {
+
+        out_stream << delimiter;
+
+      }
 
     }
-    if (ref != *references().rbegin()) {
 
-      out_stream << delimiter;
+  }
+  out_stream << '\n';
 
-    } else {
+  return out_stream;
 
-      out_stream << '\n';
+}
+
+
+// Filters.
+
+bool kgl::PubMedPublicationSummary::hasChemical(const std::vector<std::string>& chemical_list) const {
+
+  for (auto const& [MeSH_code, description] : chemicals()) {
+
+    for (auto const& find_MeSH : chemical_list) {
+
+      if (MeSH_code == find_MeSH) {
+
+        return true;
+
+      }
 
     }
 
   }
 
-  return out_stream;
+  return false;
+
+}
+
+
+bool kgl::PubMedPublicationSummary::hasMeSHCode(const std::vector<std::string>& MeSH_list) const {
+
+  for (auto const& [MeSH_code, description] : MeshCodes()) {
+
+    for (auto const& find_MeSH : MeSH_list) {
+
+      if (MeSH_code == find_MeSH) {
+
+        return true;
+
+      }
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+bool kgl::PubMedPublicationSummary::hasTitleText(const std::vector<std::string>& search_text) const {
+
+  for (auto const& text : search_text) {
+
+    if (title().find(text) != std::string::npos) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+bool kgl::PubMedPublicationSummary::hasAbstractText(const std::vector<std::string>& search_text) const {
+
+  for (auto const& text : search_text) {
+
+    if (abstract().find(text) != std::string::npos) {
+
+      return true;
+
+    }
+
+  }
+
+  return false;
+
+}
+
+bool kgl::PubMedPublicationSummary::hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const {
+
+  for (auto const& [surname, initials] : author_list) {
+
+    for (auto const& [pub_surname, pub_initials] : authors()) {
+
+      if (pub_surname == surname and (initials.empty() or initials == pub_initials)) {
+
+        return true;
+
+      }
+
+    }
+
+  }
+
+  return false;
 
 }
