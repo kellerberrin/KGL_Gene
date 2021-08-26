@@ -89,7 +89,7 @@ private:
   GenerateGeneAllele all_pmid_alleles_;
 
   // Parameters and output files.
-  std::string work_directory_;
+  std::string ident_work_directory_;
 
   std::string output_file_name_;
   std::string gene_allele_file_;
@@ -103,7 +103,7 @@ private:
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 
-  bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
+  bool getParameters(const ActiveParameterList& named_parameters);
 
 };
 

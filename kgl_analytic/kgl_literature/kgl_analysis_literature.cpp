@@ -16,8 +16,16 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
                                                  const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
 
+  ident_work_directory_ = work_directory + std::string("/") + ident();
+  if (not Utility::createDirectory(ident_work_directory_)) {
+
+    ExecEnv::log().critical("MutationAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+                            ident_work_directory_);
+
+  }
+
   // Get the analysis parameters.
-  ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
+  ExecEnv::log().info("Default Analysis Id: {} initialized with analysis results directory: {}", ident(), ident_work_directory_);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
     ExecEnv::log().info("Default Initialize Analysis Id: {}, initialized with parameter block: {}", ident(), parameter_ident);
@@ -31,18 +39,7 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
   entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
   pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
-  // For efficiency, the Pubmed API requestor uses file caches and needs to know the runtime directory structure.
-  pubmed_requestor_ptr_->setWorkDirectory(work_directory);
-  work_directory_ = work_directory;
-  literature_directory_ = work_directory + LITERATURE_DIRECTORY_;
-  // Create the literature directory if it does not exist.
-  if (not Utility::createDirectory(literature_directory_)) {
-
-    ExecEnv::log().critical( "LiteratureAnalysis::initializeAnalysis, unable to create literature directory: {}",
-                             literature_directory_);
-
-  }
-
+  // Create the gene list.
   defineGenes( ref_genome_ptr_, uniprot_nomenclature_ptr_, entrez_nomenclature_ptr_);
 
   return true;
@@ -181,12 +178,12 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   const size_t minimum_publication_count{10};
-  outputGenePmid(literature_directory_, minimum_publication_count);
+  outputGenePmid(ident_work_directory_, minimum_publication_count);
 
   const size_t max_genes{1000000};
   const size_t min_genes{0};
   const size_t min_citations{10};
-  outputPmidGene(literature_directory_, max_genes, min_genes, min_citations);
+  outputPmidGene(ident_work_directory_, max_genes, min_genes, min_citations);
 
   return true;
 

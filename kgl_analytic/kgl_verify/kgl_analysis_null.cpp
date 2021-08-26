@@ -37,7 +37,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   // Set the API cache file  spec.
 
-  pubmed_requestor_ptr_->setWorkDirectory(work_directory_);
+  pubmed_requestor_ptr_->setCacheFilePrefix(work_directory_);
 
   std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
 // std::vector<std::string> pmidids{ "32838150"};

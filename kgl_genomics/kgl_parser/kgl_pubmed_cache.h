@@ -57,8 +57,8 @@ private:
   mutable std::string cache_file_prefix_;
 
   // Literature Cache files.
-  constexpr static const char* PUBLICATION_CACHE_{"pub_cache.xml"};
-  constexpr static const char* CITATION_CACHE_{"cite_cache.xml"};
+  const std::string PUBLICATION_CACHE_{"pubmed_pub_cache.xml"};
+  const std::string CITATION_CACHE_{"pubmed_cite_cache.xml"};
 
   // Pseudo XML to delimit the Pubmed XML text.
   const std::string START_CACHE_NODE_{"<CacheBlock Size="};

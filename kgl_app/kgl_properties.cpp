@@ -591,6 +591,8 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
         continue;
 
       }
+      // Append the work directory to the file spec.
+      cache_file_name = Utility::filePath(cache_file_name, workDirectory());
 
       std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>(pubmed_api_ident, cache_file_name);
 

@@ -64,10 +64,7 @@ private:
   std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
 
   // Parameters and output files.
-  std::string work_directory_;
-  std::string literature_directory_;
-
-  constexpr static const char* LITERATURE_DIRECTORY_ = "/literature";
+  std::string ident_work_directory_;
 
   void defineGenes( const std::shared_ptr<const GenomeReference>& genome_ptr,
                     const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,

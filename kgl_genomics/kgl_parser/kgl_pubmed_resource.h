@@ -34,7 +34,11 @@ class PubmedRequester : public ResourceBase {
 public:
 
   PubmedRequester(const std::string& identifier, const std::string& cache_file_spec)
-  : ResourceBase(identifier) , cache_file_spec_(cache_file_spec) {}
+  : ResourceBase(identifier) {
+
+    setCacheFilePrefix(cache_file_spec);
+
+  }
   ~PubmedRequester() override = default;
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PUBMED_API; }
@@ -53,12 +57,11 @@ public:
   [[nodiscard]] bool flushCache() const { return pubmed_rest_api_.flushCache(); }
 
   // Set the location prefix file spec for the cache files.
-  void setWorkDirectory(const std::string& directory) const { pubmed_rest_api_.setCacheFilePrefix(Utility::filePath(cache_file_spec_, directory)); }
+  void setCacheFilePrefix(const std::string& directory) const { pubmed_rest_api_.setCacheFilePrefix(directory); }
 
 private:
 
   const PubmedAPIRequester pubmed_rest_api_;
-  const std::string cache_file_spec_;
 
 };
 

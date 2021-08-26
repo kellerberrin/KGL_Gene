@@ -45,8 +45,8 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
 
   LitPublicationMap publication_map;
 
-  std::string detail_xml_name = cache_file_prefix_ + std::string(PUBLICATION_CACHE_);
-  std::ifstream detail_xml_file(detail_xml_name.c_str());
+  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
+  std::ifstream detail_xml_file(detail_xml_name);
 
   if (not detail_xml_file.good()) {
 
@@ -79,8 +79,8 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 
   LitCitationMap citation_map;
 
-  std::string citation_xml_name = cache_file_prefix_ + std::string(CITATION_CACHE_);
-  std::ifstream citation_xml_file(citation_xml_name.c_str());
+  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
+  std::ifstream citation_xml_file(citation_xml_name);
 
   if (not citation_xml_file.good()) {
 
@@ -112,8 +112,8 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 // Physical file operations.
 bool kgl::PubmedAPICache::writeCitationCache(const std::string& xml_cache_record) const {
 
-  std::string citation_xml_name = cache_file_prefix_ + std::string(CITATION_CACHE_);
-  std::ofstream citation_xml_file(citation_xml_name.c_str(), std::ios::app);
+  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
+  std::ofstream citation_xml_file(citation_xml_name, std::ios::app);
 
   if (not citation_xml_file.good()) {
 
@@ -136,8 +136,8 @@ bool kgl::PubmedAPICache::writeCitationCache(const std::string& xml_cache_record
 
 bool kgl::PubmedAPICache::writeDetailCache(const std::string& xml_cache_record) const {
 
-  std::string detail_xml_name = cache_file_prefix_ + std::string(PUBLICATION_CACHE_);
-  std::ofstream detail_xml_file(detail_xml_name.c_str(), std::ios::app);
+  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
+  std::ofstream detail_xml_file(detail_xml_name, std::ios::app);
 
   if (not detail_xml_file.good()) {
 
@@ -253,8 +253,8 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
 // Empty the cache files.
 bool kgl::PubmedAPICache::flushCache() const {
 
-  std::string detail_xml_name = cache_file_prefix_ + std::string(PUBLICATION_CACHE_);
-  std::ofstream detail_xml_file(detail_xml_name.c_str(), std::ios::trunc);
+  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
+  std::ofstream detail_xml_file(detail_xml_name, std::ios::trunc);
 
   if (not detail_xml_file.good()) {
 
@@ -263,8 +263,8 @@ bool kgl::PubmedAPICache::flushCache() const {
 
   }
 
-  std::string citation_xml_name = cache_file_prefix_ + std::string(CITATION_CACHE_);
-  std::ofstream citation_xml_file(citation_xml_name.c_str(), std::ios::trunc);
+  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
+  std::ofstream citation_xml_file(citation_xml_name, std::ios::trunc);
 
   if (not detail_xml_file.good()) {
 

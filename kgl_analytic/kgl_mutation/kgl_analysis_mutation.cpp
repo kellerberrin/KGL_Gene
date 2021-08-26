@@ -15,16 +15,23 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                                const ActiveParameterList& named_parameters,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
+  ident_work_directory_ = work_directory + std::string("/") + ident();
+  if (not Utility::createDirectory(ident_work_directory_)) {
+
+    ExecEnv::log().critical("MutationAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+                            ident_work_directory_);
+
+  }
 
   // Get the analysis parameters.
-  ExecEnv::log().info("Default Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
+  ExecEnv::log().info("Default Analysis Id: {} initialized with analysis results directory: {}", ident(), ident_work_directory_);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
     ExecEnv::log().info("Default Initialize Analysis Id: {}, initialized with parameter block: {}", ident(), parameter_ident);
 
   }
 
-  if (not getParameters(named_parameters, work_directory)) {
+  if (not getParameters(named_parameters)) {
 
     ExecEnv::log().critical("Analysis Id: {}, problem parsing parameters, program ends.", ident());
 
@@ -39,8 +46,6 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
   allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
   pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
-  // For efficiency, the Pubmed API requestor uses file caches and needs to know the runtime directory structure.
-  pubmed_requestor_ptr_->setWorkDirectory(work_directory);
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),
@@ -63,8 +68,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
 
-bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters,
-                                          const std::string& work_directory) {
+bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters) {
 
   for (auto const& named_block : named_parameters.getMap()) {
 
@@ -87,7 +91,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
       if (output_opt) {
 
         output_file_name_ = output_opt.value().front() + std::string(OUTPUT_FILE_EXT_);
-        output_file_name_ = Utility::filePath(output_file_name_, work_directory);
+        output_file_name_ = Utility::filePath(output_file_name_, ident_work_directory_);
         ExecEnv::log().info("Analysis: {} outputfile: {}", ident(), output_file_name_);
 
       } else {
@@ -102,15 +106,13 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
   }
 
   gene_allele_file_ = std::string(GENE_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
-  gene_allele_file_ = Utility::filePath(gene_allele_file_, work_directory);
+  gene_allele_file_ = Utility::filePath(gene_allele_file_, ident_work_directory_);
 
   all_allele_file_ = std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
-  all_allele_file_ = Utility::filePath(all_allele_file_, work_directory);
+  all_allele_file_ = Utility::filePath(all_allele_file_, ident_work_directory_);
 
   literature_allele_file_ = std::string(LIT_ALLELE_FILE_) + std::string(OUTPUT_FILE_EXT_);
-  literature_allele_file_ = Utility::filePath(literature_allele_file_, work_directory);
-
-  work_directory_ = work_directory;
+  literature_allele_file_ = Utility::filePath(literature_allele_file_, ident_work_directory_);
 
   return true;
 
