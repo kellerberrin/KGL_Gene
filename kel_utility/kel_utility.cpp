@@ -15,6 +15,7 @@
 #include <ios>
 #include <string>
 #include <numeric>
+#include <fstream>
 
 
 namespace fs = boost::filesystem;
@@ -56,6 +57,22 @@ bool kel::Utility::fileExists(const std::string& file_path) {
   return file_exists;
 
 }
+
+// Check that a file exists at the file path, creates zero sized file if not.
+bool kel::Utility::fileExistsCreate(const std::string& file_path) {
+
+  if (not fileExists(file_path)) {
+
+    std::ofstream empty_file(file_path);
+
+    return empty_file.good();
+
+  }
+
+  return true;
+
+}
+
 
 // Check that the directory exists at the specified path
 bool kel::Utility::directoryExists(const std::string& path) {
@@ -452,7 +469,7 @@ std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
 // Hide the boost cpu timer in an anonymous namespace.
 namespace {  bt::cpu_timer cpu_timer; }
 
-void kel::Utility::getElapsedTime(double &Clock, double &User, double &System) {
+void kel::Utility::getRuntime(double &Clock, double &User, double &System) {
 
   Clock = 0; User = 0; System = 0;
   bt::cpu_times elapsedtime = cpu_timer.elapsed();

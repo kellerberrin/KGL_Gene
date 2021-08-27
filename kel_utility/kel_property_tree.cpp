@@ -513,6 +513,45 @@ bool kel::PropertyTree::getFileProperty(const std::string& property_name, const 
 }
 
 
+
+bool kel::PropertyTree::getFileCreateProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
+
+  std::string file_name;
+
+  if (not getProperty(property_name, file_name)) {
+
+    ExecEnv::log().warn("PropertyTree::getFileCreateProperty; Requested file property: {} not found. A list of all valid properties follows:",
+                        property_name);
+
+    treeTraversal();
+    return false;
+
+  }
+
+  file_path = Utility::filePath(file_name, work_directory);
+
+  if (Utility::fileExists(file_path)) {
+
+    return true;
+
+  }
+
+  if (Utility::fileExistsCreate(file_path)) {
+
+    ExecEnv::log().info("Requested Property; Created file: {}", file_path);
+    return true;
+
+  } else {
+
+    ExecEnv::log().warn("PropertyTree::getFileCreateProperty; File: {} does not exist and could not be created", file_path);
+    return false;
+
+  }
+
+}
+
+
+
 bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
 
   std::string file_name;

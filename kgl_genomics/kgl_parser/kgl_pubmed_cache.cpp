@@ -33,7 +33,7 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readCachedPublications() const {
 
   }
 
-  ExecEnv::log().info("PubmedAPICache::readCachedPublications; cited publications: {}, publications: {}, citations: {}",
+  ExecEnv::log().info("Cached Pubmed Cited publications: {}, Publications: {}, Citations: {}",
                       cached_pub_map.size(), uncited_pub_map.size(), citation_map.size());
 
   return cached_pub_map;
@@ -45,18 +45,17 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
 
   LitPublicationMap publication_map;
 
-  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
-  std::ifstream detail_xml_file(detail_xml_name);
+  std::ifstream publication_xml_file(publication_cache_file_);
 
-  if (not detail_xml_file.good()) {
+  if (not publication_xml_file.good()) {
 
-    ExecEnv::log().warn("PubmedAPICache::readPublicationCache; unable to open cache file: {}", detail_xml_name);
+    ExecEnv::log().warn("PubmedAPICache::readPublicationCache; unable to open cache file: {}", publication_cache_file_);
     return publication_map;
 
   }
 
   std::string cached_records;
-  while(readCacheRecord(detail_xml_file, cached_records)) {
+  while(readCacheRecord(publication_xml_file, cached_records)) {
 
     auto [parse_result, detail_map] = ParsePublicationXMLImpl::parsePublicationXML(cached_records);
     if (parse_result) {
@@ -67,8 +66,8 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
 
   }
 
-  ExecEnv::log().info( "PubmedAPICache::readPublicationCache: found XML publication details: {} in cache file: {}",
-                       publication_map.size(), detail_xml_name);
+  ExecEnv::log().info( "Found XML publication details: {} in cache file: {}",
+                       publication_map.size(), publication_cache_file_);
 
   return publication_map;
 
@@ -79,12 +78,11 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 
   LitCitationMap citation_map;
 
-  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
-  std::ifstream citation_xml_file(citation_xml_name);
+  std::ifstream citation_xml_file(citation_cache_file_);
 
   if (not citation_xml_file.good()) {
 
-    ExecEnv::log().warn("PubmedAPICache::readCitationCache; unable to open cache file: {}", citation_xml_name);
+    ExecEnv::log().warn("PubmedAPICache::readCitationCache; unable to open cache file: {}", citation_cache_file_);
     return citation_map;
 
   }
@@ -101,8 +99,8 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 
   }
 
-  ExecEnv::log().info( "PubmedAPICache::readPublicationCache: found XML publication details: {} in cache file: {}",
-                       citation_map.size(), citation_xml_name);
+  ExecEnv::log().info( "Found XML citation details: {} in cache file: {}",
+                       citation_map.size(), citation_cache_file_);
 
   return citation_map;
 
@@ -112,12 +110,11 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
 // Physical file operations.
 bool kgl::PubmedAPICache::writeCitationCache(const std::string& xml_cache_record) const {
 
-  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
-  std::ofstream citation_xml_file(citation_xml_name, std::ios::app);
+  std::ofstream citation_xml_file(citation_cache_file_, std::ios::app);
 
   if (not citation_xml_file.good()) {
 
-    ExecEnv::log().error("PubmedAPICache::writeCitationCache; unable open cache file: {}", citation_xml_name);
+    ExecEnv::log().error("PubmedAPICache::writeCitationCache; unable open cache file: {}", citation_cache_file_);
     return false;
 
   }
@@ -134,14 +131,13 @@ bool kgl::PubmedAPICache::writeCitationCache(const std::string& xml_cache_record
 }
 
 
-bool kgl::PubmedAPICache::writeDetailCache(const std::string& xml_cache_record) const {
+bool kgl::PubmedAPICache::writePublicationCache(const std::string& xml_cache_record) const {
 
-  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
-  std::ofstream detail_xml_file(detail_xml_name, std::ios::app);
+  std::ofstream detail_xml_file(publication_cache_file_, std::ios::app);
 
   if (not detail_xml_file.good()) {
 
-    ExecEnv::log().error("PubmedAPICache::writeDetailCache; unable open cache file: {}", detail_xml_name);
+    ExecEnv::log().error("PubmedAPICache::writePublicationCache; unable open cache file: {}", publication_cache_file_);
     return false;
 
   }
@@ -250,29 +246,3 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
 
 }
 
-// Empty the cache files.
-bool kgl::PubmedAPICache::flushCache() const {
-
-  std::string detail_xml_name = Utility::filePath(PUBLICATION_CACHE_, cache_file_prefix_);
-  std::ofstream detail_xml_file(detail_xml_name, std::ios::trunc);
-
-  if (not detail_xml_file.good()) {
-
-    ExecEnv::log().error("PubmedAPICache::flushCache; unable open/truncate cache file: {}", detail_xml_name);
-    return false;
-
-  }
-
-  std::string citation_xml_name = Utility::filePath(CITATION_CACHE_, cache_file_prefix_);
-  std::ofstream citation_xml_file(citation_xml_name, std::ios::trunc);
-
-  if (not detail_xml_file.good()) {
-
-    ExecEnv::log().error("PubmedAPICache::flushCache; unable open/truncate cache file: {}", citation_xml_name);
-    return false;
-
-  }
-
-  return true;
-
-}

@@ -33,13 +33,6 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   }
 
-  if (not is_cache_initialized_) {
-
-    cached_publications_ = pubmed_cache_.readCachedPublications();
-    is_cache_initialized_ = true;
-
-  }
-
   // Only retrieve from the Pubmed API publications not found in the cache.
   std::vector<std::string> unique_uncached_vector;
   for (auto const& pmid : unique_pmid_vector) {
@@ -54,8 +47,8 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   auto api_publications = getAPIPublications(unique_uncached_vector, true); // Write to cache flag is set.
 
-  ExecEnv::log().info("PubmedAPIRequester::requestCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
-                      unique_pmid_vector.size(), (unique_pmid_vector.size()-api_publications.size()), api_publications.size());
+//  ExecEnv::log().info("PubmedAPIRequester::requestCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
+//                      unique_pmid_vector.size(), (unique_pmid_vector.size()-api_publications.size()), api_publications.size());
 
   // Combine with the cache.
   cached_publications_.merge(api_publications);
@@ -248,7 +241,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vect
     auto [parse_result, parsed_map] = ParsePublicationXMLImpl::parsePublicationXML(publication_text);
     if (parse_result and write_cache) {
 
-      if (not pubmed_cache_.writeDetailCache(publication_text)) {
+      if (not pubmed_cache_.writePublicationCache(publication_text)) {
 
         ExecEnv::log().error("PubmedAPIRequester::publicationBatch; problem writing to publication detail cache");
 

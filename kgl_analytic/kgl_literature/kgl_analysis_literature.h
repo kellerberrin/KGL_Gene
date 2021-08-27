@@ -17,6 +17,7 @@
 #include "kgl_bio_pmid_parser.h"
 #include "kgl_pubmed_resource.h"
 
+#include "kgl_analysis_literature_gene.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -53,7 +54,7 @@ public:
 
 private:
 
-  std::vector<GeneCharacteristic> gene_vector_;
+  GeneLiterature gene_literature_;
 
   // Various (low memory usage) requested resources
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
@@ -65,17 +66,6 @@ private:
 
   // Parameters and output files.
   std::string ident_work_directory_;
-
-  void defineGenes( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                    const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                    const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr);
-
-  void updatePMIDStatistics( const std::set<std::string>& disease_pmid_set,
-                             const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
-
-  void outputGenePmid(const std::string& literature_directory, size_t pmid_count) const;
-  void outputPmidGene(const std::string& literature_directory, size_t max_genes, size_t min_genes, size_t citations) const;
-  [[nodiscard]] bool filterPublication(const PubMedPublicationSummary& publication) const;
 
 
 };

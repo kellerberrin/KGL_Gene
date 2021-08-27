@@ -32,7 +32,10 @@ public:
   void addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
   void addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
   void addDiseaseCitations(std::set<std::string> disease_citations) { disease_citations_ = std::move(disease_citations); }
-  void writeLiteratureSummaries(const std::string& output_file);
+  // For each publication list the alleles.
+  void writeLiteratureAlleleSummary(const std::string& output_file);
+  // For each Allele print all the relevant publications.
+  void writeAlleleLiteratureSummary(const std::string& output_file);
 
 private:
 

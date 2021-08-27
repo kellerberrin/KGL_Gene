@@ -52,7 +52,7 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     environment_ptr->executeApp(); // Run the application.
 
     double Clock, System, User;
-    Utility::getElapsedTime(Clock, System, User);
+    Utility::getRuntime(Clock, System, User);
     log().info("Elapsed seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
 

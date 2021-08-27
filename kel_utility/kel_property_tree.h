@@ -56,6 +56,8 @@ public:
 
   [[nodiscard]] bool getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
 
+  [[nodiscard]] bool getFileCreateProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
+
   [[nodiscard]] bool getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const;
 
   // Checks for the existence of a property.

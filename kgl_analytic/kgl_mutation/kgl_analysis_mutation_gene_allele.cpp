@@ -378,13 +378,13 @@ std::map<std::string, std::string> kgl::GenerateGeneAllele::retrieveVepFields( c
 }
 
 
-void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output_file) {
+void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& output_file) {
 
   std::ofstream out_file(output_file);
 
   if (not out_file.good()) {
 
-    ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; cannot open output file: {}", output_file);
+    ExecEnv::log().error("GenerateGeneAllele::writeLiteratureAlleleSummary; cannot open output file: {}", output_file);
     return;
 
   }
@@ -452,7 +452,7 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
      auto result = pmid_variant_map.find(publication.pmid());
     if (result == pmid_variant_map.end()) {
 
-      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureSummaries; no alleles found for publication pmid: {}", publication.pmid());
+      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureAlleleSummary; no alleles found for publication pmid: {}", publication.pmid());
 
     } else {
 
@@ -495,5 +495,104 @@ void kgl::GenerateGeneAllele::writeLiteratureSummaries(const std::string& output
     out_file << '\n';
 
   }
+
+}
+
+
+// For each Allele print all the relevant publications.
+void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& output_file) {
+
+  std::ofstream out_file(output_file);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("GenerateGeneAllele::writeAlleleLiteratureSummary; cannot open output file: {}", output_file);
+    return;
+
+  }
+
+  // Only variants tagged with an "ENSG" Ensembl Gene identifier.
+  std::map<std::string, std::shared_ptr<const Variant>> ensg_prefix_map;
+  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+
+    if (ensembl_id.find_first_of("ENSG") != std::string::npos) {
+
+      ensg_prefix_map.emplace(ensembl_id, variant_ptr);
+
+    }
+
+  }
+
+  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", ensg_prefix_map.size(), output_file);
+
+  // Sort by number of publications.
+  std::multimap<size_t, std::pair<std::string,std::shared_ptr<const Variant>>> allele_pubcount_map;
+  for (auto const& [ensembl_id, variant_ptr] : ensg_prefix_map) {
+
+    if (not variant_ptr->identifier().empty()) {
+
+      auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
+
+      allele_pubcount_map.emplace(pmid_set.size(), std::pair<std::string,std::shared_ptr<const Variant>>{ensembl_id, variant_ptr});
+
+    }
+
+  }
+
+
+  for (auto iter = allele_pubcount_map.rbegin(); iter != allele_pubcount_map.rend(); ++iter) {
+
+    // Unwrap the variables.
+    auto const& [pub_count, variant_pair] = *iter;
+    auto const& [ensembl_id, variant_ptr] = variant_pair;
+
+    // Print allele
+    std::string symbol_id;
+    auto find_result = ensembl_symbol_map_.find(ensembl_id);
+    if (find_result == ensembl_symbol_map_.end()) {
+
+      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+      if (not symbol_vector.empty()) {
+
+        symbol_id = symbol_vector.front();
+
+      } else {
+
+        symbol_id = "Unknown";
+
+      }
+
+    } else {
+
+      auto const& [ensembl, symbol] = *find_result;
+      symbol_id = symbol;
+
+    }
+
+    out_file << "\n******************************************\n\n";
+    out_file <<  symbol_id << "|" << ensembl_id << "|" << variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
+    out_file << "\n\n******************************************" << '\n';
+
+    // print all the publications
+    auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
+    std::vector<std::string> pmid_vector;
+    for (auto const& pmid : pmid_set) {
+
+      pmid_vector.push_back(pmid);
+
+    }
+
+    // Get the literature for this allele;
+    auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
+
+    for (auto const& [pmid, publication] : literature_map) {
+
+      out_file << '\n';
+      publication.output(out_file);
+      out_file << '\n';
+
+    }
+
+  } // for all variants.
 
 }

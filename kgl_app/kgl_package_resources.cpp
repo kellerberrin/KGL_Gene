@@ -352,7 +352,9 @@ void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, co
 
   }
 
-  std::shared_ptr<PubmedRequester> pubmed_api_ptr(std::make_shared<PubmedRequester>(api_resource_ptr->apiIdentifier(), api_resource_ptr->cacheFileName()));
+  std::shared_ptr<PubmedRequester> pubmed_api_ptr(std::make_shared<PubmedRequester>( api_resource_ptr->apiIdentifier(),
+                                                                                     api_resource_ptr->publicationCacheFile(),
+                                                                                     api_resource_ptr->citationCacheFile()));
 
   resource_ptr->addResource(pubmed_api_ptr);
 

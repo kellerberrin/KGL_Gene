@@ -583,18 +583,27 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-      key = std::string(PUBMED_CACHE_FILE_);
-      std::string cache_file_name;  // Note that the cache file(s) may not exist.
-      if (not sub_tree.getProperty(key, cache_file_name)) {
+      key = std::string(PUBMED_PUBLICATION_CACHE_);
+      std::string publication_cache_file;  // Note that the cache file(s) may not exist.
+      if (not sub_tree.getFileCreateProperty(key, workDirectory(), publication_cache_file)) {
 
-        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pubmed API Cache file, ident: {}",pubmed_api_ident);
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; Cannot create Pubmed publication API Cache file, ident: {}", pubmed_api_ident);
         continue;
 
       }
-      // Append the work directory to the file spec.
-      cache_file_name = Utility::filePath(cache_file_name, workDirectory());
 
-      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>(pubmed_api_ident, cache_file_name);
+      key = std::string(PUBMED_CITATION_CACHE_);
+      std::string citation_cache_file;  // Note that the cache file(s) may not exist.
+      if (not sub_tree.getFileCreateProperty(key, workDirectory(), citation_cache_file)) {
+
+        ExecEnv::log().error("RuntimeProperties::getRuntimeResources; Cannot create Pubmed citation API Cache file, ident: {}", pubmed_api_ident);
+        continue;
+
+      }
+
+      std::shared_ptr<const RuntimeResource> resource_ptr = std::make_shared<const RuntimePubmedAPIResource>( pubmed_api_ident,
+                                                                                                              publication_cache_file,
+                                                                                                              citation_cache_file);
 
       auto const [iter, result] = resource_map.try_emplace(pubmed_api_ident, resource_ptr);
       if (not result) {

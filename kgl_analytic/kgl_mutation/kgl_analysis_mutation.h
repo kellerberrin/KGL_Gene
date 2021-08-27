@@ -95,11 +95,14 @@ private:
   std::string gene_allele_file_;
   std::string all_allele_file_;
   std::string literature_allele_file_;
+  std::string allele_literature_file_;
+
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
   constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "GeneAlleleOut";
   constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "AllAlleleOut";
-  constexpr static const char* LIT_ALLELE_FILE_ = "LitAllAllele";
+  constexpr static const char* LIT_ALLELE_FILE_ = "AllLitAllele";
+  constexpr static const char* ALLELE_LIT_FILE_ = "AllAlleleLit";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
 

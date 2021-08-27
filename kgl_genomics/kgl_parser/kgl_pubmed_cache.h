@@ -34,14 +34,12 @@ class PubmedAPICache {
 
 public:
 
-  PubmedAPICache() = default;
+  PubmedAPICache(const std::string& publication_cache_file, const std::string& citation_cache_file)
+  : publication_cache_file_(publication_cache_file), citation_cache_file_(citation_cache_file) {}
   ~PubmedAPICache() = default;
 
-  // Empty both cache files.
-  [[nodiscard]] bool flushCache() const;
-
   // Write publication detail XML records to cache.
-  [[nodiscard]] bool writeDetailCache(const std::string& xml_cache_records) const;
+  [[nodiscard]] bool writePublicationCache(const std::string& xml_cache_record) const;
 
   // Write publication citation XML records to cache.
   [[nodiscard]] bool writeCitationCache(const std::string& xml_cache_records) const;
@@ -49,16 +47,12 @@ public:
   // Unconditionally read all cached publications.
   [[nodiscard]] LitPublicationMap readCachedPublications() const;
 
-  // Sets the cache file location. This is a partial file spec prefixed to the cite and publication files specified below.
-  void setCacheFilePrefix(const std::string& cache_file_prefix) const { cache_file_prefix_ = cache_file_prefix; }
 
 private:
 
-  mutable std::string cache_file_prefix_;
-
   // Literature Cache files.
-  const std::string PUBLICATION_CACHE_{"pubmed_pub_cache.xml"};
-  const std::string CITATION_CACHE_{"pubmed_cite_cache.xml"};
+  const std::string publication_cache_file_;
+  const std::string citation_cache_file_;
 
   // Pseudo XML to delimit the Pubmed XML text.
   const std::string START_CACHE_NODE_{"<CacheBlock Size="};

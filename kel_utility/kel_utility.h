@@ -23,6 +23,7 @@ public:
   [[nodiscard]] static std::string filePath(const std::string& file_name); // returns "path""
   [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // utility for "path/file"
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
+  [[nodiscard]] static bool fileExistsCreate(const std::string& file_path); // Check that a file exists at the file path, creates zero sized file if not.
   [[nodiscard]] static bool directoryExists(const std::string& path); // Check that the directory exists at the specified path
   [[nodiscard]] static bool createDirectory(const std::string& path); // Create directory at the specified path
   [[nodiscard]] static std::string fileExtension(const std::string& file_name);
@@ -38,7 +39,7 @@ public:
   [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
   [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  stdev = second
-  static void getElapsedTime(double &Clock, double &System, double &User);
+  static void getRuntime(double &Clock, double &System, double &User);  // Times in seconds.
 
 private:
 

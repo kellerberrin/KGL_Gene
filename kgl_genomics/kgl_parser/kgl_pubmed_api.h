@@ -32,28 +32,24 @@ class PubmedAPIRequester {
 
 public:
 
-  PubmedAPIRequester() = default;
+  PubmedAPIRequester(const std::string& publication_cache_file, const std::string& citation_cite_file)
+  : pubmed_cache_(publication_cache_file, citation_cite_file) {
+
+    cached_publications_ =  pubmed_cache_.readCachedPublications();
+
+  }
   ~PubmedAPIRequester() = default;
 
-  // Returns cited publications after making calls for publication details and publication citations.
-  // If write cache flag is set to true then XML records are written to the cache files, no cached entries are returned.
-  [[nodiscard]] LitPublicationMap getAPIPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
   // Request Pubmed publications, use cached results when available, else request from Pubmed using the API.
   // Always writes correctly parsed API results to cache.
   [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
 
-  // Empty the Pubmed disk and memory publication caches.
-  [[nodiscard]] bool flushCache() const {  cached_publications_.clear(); is_cache_initialized_ = false; return pubmed_cache_.flushCache(); }
-
-  // Set the disk cache files location.
-  void setCacheFilePrefix(const std::string& cache_file) const { pubmed_cache_.setCacheFilePrefix(cache_file);  }
 
 private:
 
   mutable RestAPI pubmed_rest_api_;  // Any uncached publications must be obtained using a Pubmed API call.
   const PubmedAPICache pubmed_cache_;  // Caching details.
-  mutable bool is_cache_initialized_{false};   // True when cache is in memory, see below.
   mutable LitPublicationMap cached_publications_;  // Initialized on first cache access using getCachedPublications().
 
   // Kellerberrin Pubmed API key.
@@ -67,6 +63,10 @@ private:
   const std::string PUBMED_ELINK_URL_{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"};
   const std::string PUBMED_ARTICLE_CITEDBY_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_citedin"};
   const std::string PUBMED_ARTICLE_REFERENCES_ARGS_{"dbfrom=pubmed&linkname=pubmed_pubmed_refs"};
+
+  // Returns cited publications after making calls for publication details and publication citations.
+  // If write cache flag is set to true then XML records are written to the cache files, no cached entries are returned.
+  [[nodiscard]] LitPublicationMap getAPIPublications(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
   [[nodiscard]] LitCitationMap getCitations(const std::vector<std::string>& pmid_vector, bool write_cache) const;
   [[nodiscard]] LitCitationMap getReferences(const std::vector<std::string>& pmid_vector, bool write_cache) const;

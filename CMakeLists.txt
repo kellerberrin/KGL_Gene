@@ -481,7 +481,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_info/kgl_analysis_json.cpp
         kgl_analytic/kgl_info/kgl_analysis_json.h
         kgl_analytic/kgl_literature/kgl_analysis_literature.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature.h)
+        kgl_analytic/kgl_literature/kgl_analysis_literature.h
+        kgl_analytic/kgl_literature/kgl_analysis_literature_gene.cpp
+        kgl_analytic/kgl_literature/kgl_analysis_literature_gene.h)
 
 # Deconvolution and mixture files.
 
