@@ -113,7 +113,7 @@ void kgl::GeneLiterature::outputGenePmid(const std::shared_ptr<const PubmedReque
         if (out_file.good()) {
 
           ++gene_lit_count;
-          gene.writeGenePublications(out_file, pubmed_requestor_ptr);
+          writeGenePublications(out_file, gene, pubmed_requestor_ptr);
 
         } else {
 
@@ -131,6 +131,79 @@ void kgl::GeneLiterature::outputGenePmid(const std::shared_ptr<const PubmedReque
                       gene_vector_.size(), gene_lit_total, gene_lit_count);
 
 }
+
+
+void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
+                                                 const GeneCharacteristic& gene,
+                                                 const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) {
+
+
+  const char output_delimiter{'\n'};
+  const char CONCAT_TOKEN_{'&'};
+
+  out_file << gene.genome() << output_delimiter
+  << gene.contigId() << output_delimiter
+  << gene.entrezId() << output_delimiter
+  << gene.HGNC() << output_delimiter;
+
+  std::string ensembl_text;
+  for (auto const& ensembl_id : gene.ensemblIds()) {
+
+    ensembl_text += ensembl_id;
+    if (ensembl_id != gene.ensemblIds().back()) {
+
+      ensembl_text += CONCAT_TOKEN_;
+
+    }
+
+  }
+
+  out_file << ensembl_text << output_delimiter
+  << gene.gafId() << output_delimiter
+  << gene.symbolId() << output_delimiter
+  << gene.description() << output_delimiter
+  << gene.citations() << output_delimiter
+  << gene.diseaseCites().size() << output_delimiter;
+
+  out_file << output_delimiter
+  << "************************************************************************************";
+
+  std::vector<std::string> pmid_vector;
+  for (auto const& pmid  :  gene.diseaseCites()) {
+
+    pmid_vector.push_back(pmid);
+
+  }
+
+  auto literature_map = pubmed_requestor_ptr->getCachedPublications(pmid_vector);
+
+  // Resort the literature map by number of citations.
+  std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;
+  for (auto const& [pmid, publication] : literature_map) {
+
+    if (filterPublication(publication)) {
+
+      citation_rank_map.emplace(publication.citedBy().size(), publication);
+
+    }
+
+  }
+
+  // Print most cited articles first.
+  for (auto iter = citation_rank_map.rbegin(); iter != citation_rank_map.rend(); ++iter) {
+
+    auto const& [cites, publication] = *iter;
+
+    out_file << "\n******************************************" << output_delimiter;
+
+    publication.extendedBiblio(out_file);
+
+    out_file << "\n******************************************" << output_delimiter;
+
+  }
+
+}
+
 
 // Ranks the publications by number of gene references.
 void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
@@ -265,7 +338,7 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
 
       out_file << "\n\n";
 
-      publication.output(out_file);
+      publication.extendedBiblio(out_file);
 
       out_file << "\n*************************************************************\n";
 
@@ -280,7 +353,7 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
 }
 
 
-bool kgl::GeneLiterature::filterPublication(const PubMedPublicationSummary& publication) const {
+bool kgl::GeneLiterature::filterPublication(const PubMedPublicationSummary& publication) {
 
   static const std::vector<std::string> Mesh_codes{ "D010963" /* Plasmodium falciparum */
                                                     ,"D016778" /*  Malaria, Falciparum */

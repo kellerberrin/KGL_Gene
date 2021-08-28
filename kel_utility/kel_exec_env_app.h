@@ -46,15 +46,15 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     signal(SIGINT, ctrlC);
 
-    log().info("############ {} {} Start Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
+    log().info("############ {} {} Start Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
 
     environment_ptr->executeApp(); // Run the application.
 
     double Clock, System, User;
     Utility::getRuntime(Clock, System, User);
-    log().info("Elapsed seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
-    log().info("############ {} {} End Processing ###########", Environment::MODULE_NAME, Environment::VERSION);
+    log().info("Runtime seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
+    log().info("############ {} {} End Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
 
     environment_ptr = nullptr; // shutdown the application
     log_ptr_ = nullptr; // shutdown the logger.

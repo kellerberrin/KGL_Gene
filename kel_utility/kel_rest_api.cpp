@@ -123,11 +123,8 @@ RestAPI::RestAPI() {
 
 }
 
-RestAPI::~RestAPI() {
-
-  restapi_ptr_ = nullptr;
-
-}
+// Must be explicitly declared.
+RestAPI::~RestAPI() {}
 
 
 std::pair<bool, std::string> RestAPI::synchronousRequest(const std::string& url, const std::string& raw_request) {

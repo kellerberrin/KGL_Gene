@@ -91,6 +91,7 @@ private:
 
   // Journal XML nodes.
   constexpr static const char* JOURNAL_NODE_{"Journal"};
+  constexpr static const char* JOURNAL_ISSN_NODE_{"ISSN"};
   constexpr static const char* JOURNAL_ISSUE_NODE_{"JournalIssue"};
   constexpr static const char* VOLUME_NODE_{"Volume"};
   constexpr static const char* ISSUE_NODE_{"Issue"};

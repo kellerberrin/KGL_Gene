@@ -2,8 +2,8 @@
 // Created by kellerberrin on 27/8/21.
 //
 
-#ifndef KGL_ANALYSIS_LITERATURE_STATS_H
-#define KGL_ANALYSIS_LITERATURE_STATS_H
+#ifndef KGL_ANALYSIS_LITERATURE_GENE_H
+#define KGL_ANALYSIS_LITERATURE_GENE_H
 
 #include "kgl_uniprot_parser.h"
 #include "kgl_citation_parser.h"
@@ -44,8 +44,11 @@ public:
                       size_t min_genes,
                       size_t min_citations) const;
 
-  bool filterPublication(const PubMedPublicationSummary& publication) const;
+  static bool filterPublication(const PubMedPublicationSummary& publication);
 
+  static void writeGenePublications( std::ostream& out_file,
+                                     const GeneCharacteristic& gene,
+                                     const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr);
 private:
 
 //  std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
@@ -62,4 +65,4 @@ private:
 } // namespace.
 
 
-#endif // KGL_ANALYSIS_LITERATURE_STATS_H
+#endif // KGL_ANALYSIS_LITERATURE_GENE_H

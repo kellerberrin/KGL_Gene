@@ -65,7 +65,10 @@ private:
   std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
 
   // Parameters and output files.
+  const std::string gene_output_directory{"Gene"};
   std::string ident_work_directory_;
+  std::string ident_gene_work_directory_;
+
 
 
 };

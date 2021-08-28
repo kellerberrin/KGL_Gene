@@ -491,7 +491,7 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
     out_file << "******************************************" << '\n';
 
     out_file << '\n';
-    publication.output(out_file);
+    publication.extendedBiblio(out_file);
     out_file << '\n';
 
   }
@@ -588,7 +588,7 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
     for (auto const& [pmid, publication] : literature_map) {
 
       out_file << '\n';
-      publication.output(out_file);
+      publication.extendedBiblio(out_file);
       out_file << '\n';
 
     }

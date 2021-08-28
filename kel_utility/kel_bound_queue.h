@@ -123,7 +123,7 @@ public:
     return 0.0;
 
   }
-  [[nodiscard]] double averageInterTidal() const {
+  [[nodiscard]] double ebbingTide() const {
 
     if (queue_samples_ > 0) {
 
@@ -134,6 +134,7 @@ public:
     return 0.0;
 
   }
+  [[nodiscard]] double floodTide() const { return 1.0 - ebbingTide(); }
   [[nodiscard]] double averageEmpty() const {
 
     if (queue_samples_ > 0) {
@@ -163,9 +164,9 @@ public:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Queue: {}, Samples: {}; High Tide ({}): {:.2f}%, Ebbing Tide: {:.2f}%, Low Tide ({}): {:.2f}%, Empty (<={}): {:.2f}%, Av. Level: {:.2f}% ({:.2f})",
+    ExecEnv::log().info("Queue: {}, Samples: {}; High Tide ({}): {:.2f}%, Flood Tide: {:.2f}%, Ebbing Tide: {:.2f}%, Low Tide ({}): {:.2f}%, Empty (<={}): {:.2f}%, Av. Level: {:.2f}% ({:.2f})",
                         queueName(), queueSamples(), highTide(), (averageHighTide() * 100.0),
-                        (averageInterTidal() * 100.0), lowTide(), (averageLowTide() * 100.0),
+                        (floodTide() * 100.0), (ebbingTide() * 100.0),  lowTide(), (averageLowTide() * 100.0),
                         emptySize(), (averageEmpty() * 100.0), avUtilization(), averageSize());
 
   }

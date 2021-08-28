@@ -11,7 +11,7 @@
 
 namespace kellerberrin {   //  organization level namespace
 
-// Singleton. Defines (boost) file and time utility functions and misc string functions.
+// Functional object cannot be created. Defines (boost) file and time utility functions and misc string functions.
 
 class Utility {
 
@@ -26,6 +26,8 @@ public:
   [[nodiscard]] static bool fileExistsCreate(const std::string& file_path); // Check that a file exists at the file path, creates zero sized file if not.
   [[nodiscard]] static bool directoryExists(const std::string& path); // Check that the directory exists at the specified path
   [[nodiscard]] static bool createDirectory(const std::string& path); // Create directory at the specified path
+  [[nodiscard]] static bool deleteDirectory(const std::string& path); // Recursively deletes the contents of a directory and all sub-directories.
+  [[nodiscard]] static bool recreateDirectory(const std::string& path); // Delete the directory and its contents and then recreate the directory.
   [[nodiscard]] static std::string fileExtension(const std::string& file_name);
   [[nodiscard]] static std::string fileName(const std::string& file_name);
   [[nodiscard]] static std::string toupper(const std::string& s);

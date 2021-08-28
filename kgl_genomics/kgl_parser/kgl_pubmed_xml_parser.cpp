@@ -356,6 +356,8 @@ void kgl::ParsePublicationXMLImpl::parseJournalArticleXML( rapidxml::xml_node<> 
 
   publication.journal(journal_title->value());
 
+  publication.journalISSN(validOptionalNode(journal_node, JOURNAL_ISSN_NODE_));
+
   auto journal_issue = validSubNode(journal_node, JOURNAL_ISSUE_NODE_, publication.pmid());
 
   publication.journalIssue(validOptionalNode(journal_issue, ISSUE_NODE_));
@@ -495,20 +497,11 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate( rapidxml::xml_node<> * journal_
   auto year = pub_date->first_node(YEAR_NODE_);
   auto month = pub_date->first_node(MONTH_NODE_);
 
-  std::string date_string;
   if (year != nullptr and month != nullptr) {
 
-    auto day =  validOptionalNode(pub_date, DAY_NODE_);
-
-    if (not day.empty()) {
-
-      date_string = day + "-" + std::string(month->value()) + "-" + std::string(year->value());
-
-    } else {
-
-      date_string = std::string(month->value()) + "-" + std::string(year->value());
-
-    }
+    publication.publicationYear(year->value());
+    publication.publicationMonth(month->value());
+    publication.publicationDay(validOptionalNode(pub_date, DAY_NODE_));
 
   } else {
 
@@ -520,15 +513,19 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate( rapidxml::xml_node<> * journal_
 
     if (pm_year != nullptr and pm_month != nullptr) {
 
-      auto day =  validOptionalNode(pubmed_date_node, DAY_NODE_);
+      publication.publicationYear(pm_year->value());
+      publication.publicationMonth(pm_month->value());
+      publication.publicationDay(validOptionalNode(pubmed_date_node, DAY_NODE_));
 
-      if (not day.empty()) {
+    } else {
 
-        date_string = day + "-" + std::string(pm_month->value()) + "-" + std::string(pm_year->value());
+      if (year != nullptr) {
 
-      } else {
+        publication.publicationYear(year->value());
 
-        date_string = std::string(pm_month->value()) + "-" + std::string(pm_year->value());
+      } else if (pm_year != nullptr) {
+
+        publication.publicationYear(pm_year->value());
 
       }
 
@@ -536,10 +533,7 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate( rapidxml::xml_node<> * journal_
 
   }
 
-  publication.publicationDate(date_string);
-
 }
-
 
 
 rapidxml::xml_node<> * kgl::ParsePublicationXMLImpl::validSubNode( rapidxml::xml_node<> * node_ptr,

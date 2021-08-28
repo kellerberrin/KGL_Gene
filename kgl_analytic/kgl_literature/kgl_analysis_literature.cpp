@@ -16,6 +16,8 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
                                                  const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
 
+  // Setup and clear the directories to hold analysis output.
+  // Most output in here.
   ident_work_directory_ = work_directory + std::string("/") + ident();
   if (not Utility::createDirectory(ident_work_directory_)) {
 
@@ -23,6 +25,15 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
                             ident_work_directory_);
 
   }
+  // Gene specific output in here.
+  ident_gene_work_directory_ = ident_work_directory_ + std::string("/") + gene_output_directory;
+  if (not Utility::recreateDirectory(ident_gene_work_directory_)) {
+
+    ExecEnv::log().critical("MutationAnalysis::initializeAnalysis, unable to recreate gene analysis results directory: {}",
+                            ident_gene_work_directory_);
+
+  }
+
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with analysis results directory: {}", ident(), ident_work_directory_);
@@ -99,11 +110,11 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   const size_t minimum_publication_count{10};
-  gene_literature_.outputGenePmid(pubmed_requestor_ptr_, ident_work_directory_, minimum_publication_count);
+  gene_literature_.outputGenePmid(pubmed_requestor_ptr_, ident_gene_work_directory_, minimum_publication_count);
 
   const size_t max_genes{1000000};
   const size_t min_genes{0};
-  const size_t min_citations{10};
+  const size_t min_citations{0};
   gene_literature_.outputPmidGene(pubmed_requestor_ptr_, ident_work_directory_, max_genes, min_genes, min_citations);
 
   return true;

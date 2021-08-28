@@ -44,6 +44,7 @@ public:
                        const std::string& uniprot_id,
                        const std::string& entrez_id);
 
+  [[nodiscard]] const GenomeId_t& genome() const { return genome_; }
   [[nodiscard]] const ContigId_t& contigId() const { return contig_; }
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& genePtr() const { return gene_ptr_; }
   [[nodiscard]] ContigOffset_t geneBegin() const { return gene_begin_; }
@@ -54,12 +55,14 @@ public:
   [[nodiscard]] const std::string& gafId() const { return uniprotKB_id_; }
   [[nodiscard]] const std::string& symbolId() const { return symbol_id_; }
   [[nodiscard]] const std::string& entrezId() const { return entrez_id_; }
+  [[nodiscard]] const std::string& HGNC() const { return HGNC_id_; }
+  [[nodiscard]] const std::string& description() const { return description_; }
+  [[nodiscard]] size_t citations() const { return citations_; }
+  [[nodiscard]] std::set<std::string> diseaseCites() const { return disease_cites_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
   [[nodiscard]] const std::set<std::string>& diseasePublications() const { return disease_cites_; }
 
 
-  void  writeGenePublications( std::ostream& out_file,
-                               const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) const;
   void update_pmid(size_t all_pmid, std::set<std::string> disease_pmids) { citations_ = all_pmid; disease_cites_ = std::move(disease_pmids); }
 
 private:

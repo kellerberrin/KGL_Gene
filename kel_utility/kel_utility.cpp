@@ -96,6 +96,35 @@ bool kel::Utility::createDirectory(const std::string& path) {
 
 }
 
+// Recursively delete the contents of a directory and then the directory.
+bool kel::Utility::deleteDirectory(const std::string& path) {
+
+  boost::system::error_code error_code;
+  fs::remove_all(fs::path(path), error_code);
+  if (error_code.value() != boost::system::errc::success) {
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
+// Delete the directory and its contents and then recreate the directory.
+bool kel::Utility::recreateDirectory(const std::string& path) {
+
+  bool result = deleteDirectory(path);
+  if (result) {
+
+    result = createDirectory(path);
+
+  }
+
+  return result;
+
+}
+
 // Returns the filename extension.
 std::string kel::Utility::fileExtension(const std::string& file_name) {
 

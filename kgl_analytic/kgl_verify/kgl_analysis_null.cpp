@@ -34,12 +34,13 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
   pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
 
   std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
-// std::vector<std::string> pmidids{ "32838150"};
+//   std::vector<std::string> pmidids{ "20401335"};
   auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmidids);
   for (auto const& [pmid, publication] : publication_map) {
 
     std::stringstream out_str;
-    publication.output(out_str, '|');
+//    publication.output(out_str, '|');
+    publication.extendedBiblio(out_str);
     ExecEnv::log().info("\n{}", out_str.str());
 
   }

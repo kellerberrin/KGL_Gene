@@ -43,8 +43,12 @@ public:
 
   // Getters
   [[nodiscard]] const std::string& pmid() const { return pmid_; }
-  [[nodiscard]] const std::string& publicationDate() const { return publication_date_; } // DD-MM-YYYY or MM-YYYY
+  [[nodiscard]] std::string publicationDate() const; // DD-MM-YYYY or MM-YYYY or YYYY
+  [[nodiscard]] const std::string& publicationYear() const { return publication_year_; }
+  [[nodiscard]] const std::string& publicationMonth() const { return publication_month_; }
+  [[nodiscard]] const std::string& publicationDay() const { return publication_day_; }
   [[nodiscard]] const std::string& journal() const { return journal_; }
+  [[nodiscard]] const std::string& journalISSN() const { return journal_issn_;  } // may be empty
   [[nodiscard]] const std::string& journalIssue() const { return journal_issue_;  } // may be empty
   [[nodiscard]] const std::string& journalVolume() const { return journal_volume_; }  // may be empty
   [[nodiscard]] const std::string& doi() const { return doi_; }
@@ -57,8 +61,11 @@ public:
   [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& references() const { return references_;  } // pmids only.
 
   // Setters
-  void publicationDate(const std::string& pub_date) { publication_date_ = pub_date; } // DD-MM-YYYY or MM-YYYY
+  void publicationYear(const std::string& year) { publication_year_ = year; }
+  void publicationMonth(const std::string& month) { publication_month_ = month; }
+  void publicationDay(const std::string& day) { publication_day_ = day; }
   void journal(const std::string& name) { journal_ = name; }
+  void journalISSN(const std::string& issn) { journal_issn_ = issn;  } // may be empty
   void journalIssue(const std::string& issue) { journal_issue_ = issue;  } // may be empty
   void journalVolume(const std::string& volume) { journal_volume_ = volume; }  // may be empty
   void doi(const std::string& id) { doi_ = id; }
@@ -74,6 +81,10 @@ public:
 
   // Output the record to an ostream, one field per line.
   std::ostream& output(std::ostream& out_stream, bool detail = false, char delimiter = SV_DELIMITER_) const;
+  // Output in latex biblographic (.bib) format.
+  std::ostream& latexBiblio(std::ostream& out_stream) const;
+  // Adds reference, citation and Mash data to the biblio.
+  std::ostream& extendedBiblio(std::ostream& out_stream, bool detail = false, char delimiter = SV_DELIMITER_) const;
 
   // Filters.
   [[nodiscard]] bool hasChemical(const std::vector<std::string>& chemical_list) const;
@@ -86,8 +97,11 @@ public:
 private:
 
   const std::string pmid_;
-  std::string publication_date_;  // DD-MM-YYYY or MM-YYYY
+  std::string publication_year_;
+  std::string publication_month_;
+  std::string publication_day_;
   std::string journal_;
+  std::string journal_issn_;
   std::string journal_issue_;  // may be empty
   std::string journal_volume_;  // may be empty
   std::string doi_;
