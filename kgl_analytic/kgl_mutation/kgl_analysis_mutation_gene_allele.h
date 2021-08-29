@@ -43,7 +43,8 @@ private:
   const static constexpr char *AFR_SUPER_POP_{"AFR"};
   const static constexpr char *ALL_SUPER_POP_{"ALL"};
 
-  EnsemblIndexMap cited_allele_map_;
+  // The key is the allele unique 'rs' code, the value pair is .first is a pointer to the variant, .second is a vector of all the gene codes for the allele.
+  std::map<std::string, std::pair<std::shared_ptr<const Variant>,std::vector<std::string>>> cited_allele_map_;
 
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;

@@ -2,8 +2,8 @@
 // Created by kellerberrin on 16/8/21.
 //
 
-#ifndef KGL_PUBMED_H
-#define KGL_PUBMED_H
+#ifndef KGL_LITERATURE_H
+#define KGL_LITERATURE_H
 
 
 #include <string>
@@ -26,20 +26,20 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 
-class PubMedPublicationSummary;
+class PublicationSummary;
 // key = pmid_, value = publication details record.
-using LitPublicationMap = std::map<std::string, PubMedPublicationSummary>;
+using LitPublicationMap = std::map<std::string, PublicationSummary>;
 
 // key = pmid_, value = unique set of pmids that cite, or are referenced by, the key pmid_.
 using LitCitationMap = std::map<std::string, std::set<std::string>>;
 
 
-class PubMedPublicationSummary {
+class PublicationSummary {
 
 public:
 
-  explicit PubMedPublicationSummary(std::string id) : pmid_(std::move(id)) {}
-  ~PubMedPublicationSummary() = default;
+  explicit PublicationSummary(std::string id) : pmid_(std::move(id)) {}
+  ~PublicationSummary() = default;
 
   // Getters
   [[nodiscard]] const std::string& pmid() const { return pmid_; }
@@ -121,4 +121,4 @@ private:
 } // namespace
 
 
-#endif // KGL_PUBMED_H
+#endif // KGL_LITERATURE_H

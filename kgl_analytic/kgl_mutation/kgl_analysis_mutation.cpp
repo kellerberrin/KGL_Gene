@@ -235,7 +235,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
                                     genome_aux_ptr_,
                                     allele_citation_ptr_,
                                     sorted_variants_ptr->ensemblMap());
-    // Add the sorted variants to the gene allele anlysis.
+    // Add the sorted variants to the gene allele analysis.
     gene_alleles_.addGeneCitedVariants(sorted_variants_ptr);
     all_pmid_alleles_.addDiseaseCitedVariants(sorted_variants_ptr);
 

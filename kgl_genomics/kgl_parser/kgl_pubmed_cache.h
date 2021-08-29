@@ -6,7 +6,7 @@
 #define KGL_PUBMED_CACHE_H
 
 
-#include "kgl_pubmed.h"
+#include "kgl_literature/kgl_literature.h"
 #include "kel_rest_api.h"
 #include "kgl_resource_db.h"
 

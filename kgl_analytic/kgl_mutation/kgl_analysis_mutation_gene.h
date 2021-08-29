@@ -98,7 +98,7 @@ public:
                    char output_delimiter) const;
 
 
-  void updatePMIDStatistics(const std::set<std::string>& pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
+  void updatePMIDStatistics(const std::set<std::string>& disease_pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr);
 
 private:
 

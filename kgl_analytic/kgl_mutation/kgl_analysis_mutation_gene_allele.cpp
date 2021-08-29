@@ -59,7 +59,20 @@ void kgl::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const S
 
     if (not getCitations(variant_ptr->identifier()).empty()) {
 
-      cited_allele_map_.emplace(ensembl_id, variant_ptr);
+      auto result = cited_allele_map_.find(variant_ptr->identifier());
+      if (result == cited_allele_map_.end()) {
+
+        std::pair<std::shared_ptr<const Variant>,std::vector<std::string>> value_pair{variant_ptr, std::vector<std::string>{ensembl_id}};
+        cited_allele_map_.emplace(variant_ptr->identifier(), value_pair);
+
+      } else {
+
+        auto& [allele_rs_key, variant_code_pair] = *result;
+        auto& [value_variant_ptr, id_array] = variant_code_pair;
+
+        id_array.push_back(ensembl_id);
+
+      }
 
     }
 
@@ -74,14 +87,26 @@ void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<cons
 
     if (not getDiseaseCitations(variant_ptr->identifier()).empty()) {
 
-      cited_allele_map_.emplace(ensembl_id, variant_ptr);
+      auto result = cited_allele_map_.find(variant_ptr->identifier());
+      if (result == cited_allele_map_.end()) {
+
+        std::pair<std::shared_ptr<const Variant>,std::vector<std::string>> value_pair{variant_ptr, std::vector<std::string>{ensembl_id}};
+        cited_allele_map_.emplace(variant_ptr->identifier(), value_pair);
+
+      } else {
+
+        auto& [allele_rs_key, variant_code_pair] = *result;
+        auto& [value_variant_ptr, id_array] = variant_code_pair;
+
+        id_array.push_back(ensembl_id);
+
+      }
 
     }
 
   }
 
 }
-
 
 
 std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
@@ -174,30 +199,55 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char d
 
   writeHeader(out_file, delimiter);
 
-  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
+  // The key is the allele unique 'rs' code, the value pair is .first is a pointer to the variant, .second is a vector of all the gene codes for the allele.
+  for (auto const& [allele_rs_id, variant_ptr_id_pair] : cited_allele_map_) {
 
-    auto find_result = ensembl_symbol_map_.find(ensembl_id);
-    if (find_result == ensembl_symbol_map_.end()) {
+    auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+    std::set<std::string> symbol_set;
+    for (auto const& allele_id : allele_id_array) {
+
+      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
       if (not symbol_vector.empty()) {
 
-        out_file << symbol_vector.front() << delimiter;
+        for (auto const& symbol : symbol_vector) {
 
-      } else {
+          symbol_set.insert(symbol);
 
-        out_file << "Error:Unknown" << delimiter;
+        }
 
       }
 
-    } else {
+    }
 
-      auto const& [ensembl, symbol] = *find_result;
-      out_file << symbol << delimiter;
+    // Generate Id and symbol strings
+    std::string concat_id;
+    for (auto const& allele_id : allele_id_array) {
+
+      concat_id += allele_id;
+      if (allele_id != allele_id_array.back()) {
+
+        concat_id += CONCATENATE_VEP_FIELDS_;
+
+      }
 
     }
 
-    out_file << ensembl_id << delimiter
+    std::string concat_symbol;
+    for (auto const& symbol : symbol_set) {
+
+      concat_symbol += symbol;
+      if (symbol != *symbol_set.rbegin()) {
+
+        concat_id += CONCATENATE_VEP_FIELDS_;
+
+      }
+
+    }
+
+    out_file << concat_symbol << delimiter;
+
+    out_file << concat_id << delimiter
              << variant_ptr->identifier() << delimiter
              << variant_ptr->contigId() << delimiter
              << variant_ptr->offset() << delimiter
@@ -389,43 +439,29 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
 
   }
 
-  // Only variants tagged with an "ENSG" Ensembl Gene identifier.
-  std::map<std::string, std::shared_ptr<const Variant>> ensg_prefix_map;
-  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
-
-    if (ensembl_id.find_first_of("ENSG") != std::string::npos) {
-
-      ensg_prefix_map.emplace(ensembl_id, variant_ptr);
-
-    }
-
-  }
-
-  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", ensg_prefix_map.size(), output_file);
+  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", cited_allele_map_.size(), output_file);
 
   std::vector<std::string> pmid_vector;
-  std::map<std::string, std::vector<std::pair<std::string,std::shared_ptr<const Variant>>>> pmid_variant_map;
-  for (auto const& [ensembl_id, variant_ptr] : ensg_prefix_map) {
+  std::map<std::string, std::vector<std::pair<std::shared_ptr<const Variant>, std::vector<std::string>>>> pmid_variant_map;
+  for (auto const& [allele_rs_id, variant_ptr_id_pair] : cited_allele_map_) {
 
-    if (not variant_ptr->identifier().empty()) {
+    auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-      auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
-      for (auto const& pmid : pmid_set) {
+    auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
+    for (auto const& pmid : pmid_set) {
 
-        pmid_vector.push_back(pmid);
-        auto result = pmid_variant_map.find(pmid);
-        if (result == pmid_variant_map.end()) {
+      pmid_vector.push_back(pmid);
+      auto result = pmid_variant_map.find(pmid);
+      if (result == pmid_variant_map.end()) {
 
-          std::vector<std::pair<std::string, std::shared_ptr<const Variant>>> variant_vector;
-          variant_vector.emplace_back(ensembl_id, variant_ptr);
-          pmid_variant_map.emplace(pmid, variant_vector);
+        std::vector<std::pair<std::shared_ptr<const Variant>, std::vector<std::string>>> variant_vector;
+        variant_vector.emplace_back(variant_ptr, allele_id_array);
+        pmid_variant_map.emplace(pmid, variant_vector);
 
-        } else {
+      } else {
 
-          auto& [pmid_key, variant_vector] = *result;
-          variant_vector.emplace_back(ensembl_id, variant_ptr);
-
-        }
+        auto& [pmid_key, variant_vector] = *result;
+        variant_vector.emplace_back(variant_ptr, allele_id_array);
 
       }
 
@@ -436,7 +472,7 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
   auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
 
   // Resort the literature map by number of citations.
-  std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;
+  std::multimap<size_t, PublicationSummary> citation_rank_map;
   for (auto const& [pmid, publication] : literature_map) {
 
     citation_rank_map.emplace(publication.citedBy().size(), publication);
@@ -449,52 +485,71 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
     auto const& [cites, publication] = *iter;
 
     out_file << "\n******************************************" << '\n';
-     auto result = pmid_variant_map.find(publication.pmid());
+    auto result = pmid_variant_map.find(publication.pmid());
     if (result == pmid_variant_map.end()) {
 
       ExecEnv::log().error("GenerateGeneAllele::writeLiteratureAlleleSummary; no alleles found for publication pmid: {}", publication.pmid());
 
     } else {
 
-      auto [pmid_key, variant_vector] = *result;
+      auto const& [pmid_key, variant_vector] = *result;
 
-      for (auto const& [ensembl_id, variant_ptr] : variant_vector) {
+      for (auto const& [variant_ptr, allele_id_array] : variant_vector) {
 
-        std::string symbol_id;
-        auto find_result = ensembl_symbol_map_.find(ensembl_id);
-        if (find_result == ensembl_symbol_map_.end()) {
+        std::set<std::string> symbol_set;
+        for (auto const& allele_id : allele_id_array) {
 
-          auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+          auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
           if (not symbol_vector.empty()) {
 
-            symbol_id = symbol_vector.front();
+            for (auto const& symbol : symbol_vector) {
 
-          } else {
+              symbol_set.insert(symbol);
 
-            symbol_id = "Unknown";
+            }
 
           }
 
-        } else {
+        }
 
-          auto const& [ensembl, symbol] = *find_result;
-          symbol_id = symbol;
+        // Generate Id and symbol strings
+        std::string concat_id;
+        for (auto const& allele_id : allele_id_array) {
+
+          concat_id += allele_id;
+          if (allele_id != allele_id_array.back()) {
+
+            concat_id += CONCATENATE_VEP_FIELDS_;
+
+          }
 
         }
 
-        out_file <<  symbol_id << "|" << ensembl_id << "|" << variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
+        std::string concat_symbol;
+        for (auto const& symbol : symbol_set) {
 
-      }
+          concat_symbol += symbol;
+          if (symbol != *symbol_set.rbegin()) {
 
-    }
+            concat_id += CONCATENATE_VEP_FIELDS_;
 
-    out_file << "******************************************" << '\n';
+          }
 
-    out_file << '\n';
-    publication.extendedBiblio(out_file);
-    out_file << '\n';
+        }
 
-  }
+        out_file << variant_ptr->identifier() << "|" << concat_symbol << "|" << concat_id << '\n';
+
+      } // For all alleles referenced by this publication.
+
+      out_file << "******************************************" << '\n';
+
+      out_file << '\n';
+      publication.extendedBiblio(out_file);
+      out_file << '\n';
+
+    } // if found publication.
+
+  } // citation ranked publication.
 
 }
 
@@ -511,66 +566,70 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
 
   }
 
-  // Only variants tagged with an "ENSG" Ensembl Gene identifier.
-  std::map<std::string, std::shared_ptr<const Variant>> ensg_prefix_map;
-  for (auto const& [ensembl_id, variant_ptr] : cited_allele_map_) {
-
-    if (ensembl_id.find_first_of("ENSG") != std::string::npos) {
-
-      ensg_prefix_map.emplace(ensembl_id, variant_ptr);
-
-    }
-
-  }
-
-  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", ensg_prefix_map.size(), output_file);
+  ExecEnv::log().info("Writing literature  summaries for: {} variants to file: {}", cited_allele_map_.size(), output_file);
 
   // Sort by number of publications.
-  std::multimap<size_t, std::pair<std::string,std::shared_ptr<const Variant>>> allele_pubcount_map;
-  for (auto const& [ensembl_id, variant_ptr] : ensg_prefix_map) {
+  std::multimap<size_t, std::pair<std::shared_ptr<const Variant>, std::vector<std::string>>> allele_pubcount_map;
+  for (auto const& [allele_rs_id, variant_ptr_id_pair] : cited_allele_map_) {
 
-    if (not variant_ptr->identifier().empty()) {
+    auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-      auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
+    auto pmid_set = getDiseaseCitations(variant_ptr->identifier());
 
-      allele_pubcount_map.emplace(pmid_set.size(), std::pair<std::string,std::shared_ptr<const Variant>>{ensembl_id, variant_ptr});
-
-    }
+    std::pair<std::shared_ptr<const Variant>, std::vector<std::string>> value_pair{variant_ptr, allele_id_array};
+    allele_pubcount_map.emplace(pmid_set.size(), value_pair);
 
   }
-
 
   for (auto iter = allele_pubcount_map.rbegin(); iter != allele_pubcount_map.rend(); ++iter) {
 
     // Unwrap the variables.
-    auto const& [pub_count, variant_pair] = *iter;
-    auto const& [ensembl_id, variant_ptr] = variant_pair;
+    auto const& [pub_count, variant_ptr_id_pair] = *iter;
+    auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-    // Print allele
-    std::string symbol_id;
-    auto find_result = ensembl_symbol_map_.find(ensembl_id);
-    if (find_result == ensembl_symbol_map_.end()) {
+    std::set<std::string> symbol_set;
+    for (auto const& allele_id : allele_id_array) {
 
-      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(ensembl_id);
+      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
       if (not symbol_vector.empty()) {
 
-        symbol_id = symbol_vector.front();
+        for (auto const& symbol : symbol_vector) {
 
-      } else {
+          symbol_set.insert(symbol);
 
-        symbol_id = "Unknown";
+        }
 
       }
 
-    } else {
+    }
 
-      auto const& [ensembl, symbol] = *find_result;
-      symbol_id = symbol;
+    // Generate Id and symbol strings
+    std::string concat_id;
+    for (auto const& allele_id : allele_id_array) {
+
+      concat_id += allele_id;
+      if (allele_id != allele_id_array.back()) {
+
+        concat_id += CONCATENATE_VEP_FIELDS_;
+
+      }
+
+    }
+
+    std::string concat_symbol;
+    for (auto const& symbol : symbol_set) {
+
+      concat_symbol += symbol;
+      if (symbol != *symbol_set.rbegin()) {
+
+        concat_id += CONCATENATE_VEP_FIELDS_;
+
+      }
 
     }
 
     out_file << "\n******************************************\n\n";
-    out_file <<  symbol_id << "|" << ensembl_id << "|" << variant_ptr->identifier() << "|" <<  variant_ptr->HGVS() << '\n';
+    out_file << variant_ptr->identifier() << "|" << concat_symbol << "|" << concat_id << '\n';
     out_file << "\n\n******************************************" << '\n';
 
     // print all the publications

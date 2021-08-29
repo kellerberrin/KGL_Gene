@@ -87,7 +87,7 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
            << uniprotKB_id_ << output_delimiter
            << symbol_id_ << output_delimiter
            << description_ << output_delimiter
-           << citations_ << output_delimiter
+           << citations_.size() << output_delimiter
            << disease_cites_.size() << output_delimiter
            << biotype_ << output_delimiter
            << (valid_protein_ ? "Valid" : "Invalid") << output_delimiter;

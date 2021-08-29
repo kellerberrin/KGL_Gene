@@ -5,7 +5,7 @@
 #ifndef KGL_PUBMED_API_H
 #define KGL_PUBMED_API_H
 
-#include "kgl_pubmed.h"
+#include "kgl_literature/kgl_literature.h"
 #include "kel_rest_api.h"
 #include "kgl_pubmed_cache.h"
 

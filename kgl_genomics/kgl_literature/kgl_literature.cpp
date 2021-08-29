@@ -2,12 +2,12 @@
 // Created by kellerberrin on 16/8/21.
 //
 
-#include "kgl_pubmed.h"
+#include "kgl_literature/kgl_literature.h"
 
 namespace kgl = kellerberrin::genome;
 
 // DD-MM-YYYY or MM-YYYY or YYYY
-std::string kgl::PubMedPublicationSummary::publicationDate() const {
+std::string kgl::PublicationSummary::publicationDate() const {
 
   std::string date_string =  publicationYear();
 
@@ -30,7 +30,7 @@ std::string kgl::PubMedPublicationSummary::publicationDate() const {
 }
 
 
-std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, bool detail, char delimiter) const {
+std::ostream& kgl::PublicationSummary::output(std::ostream& out_stream, bool detail, char delimiter) const {
 
   out_stream << "PMID" << delimiter << pmid() << '\n';
   out_stream << "PUB_DATE" << delimiter << publicationDate() << '\n'; // DD-MM-YYYY or MM-YYYY
@@ -127,15 +127,18 @@ std::ostream& kgl::PubMedPublicationSummary::output(std::ostream& out_stream, bo
 
 }
 
-std::ostream& kgl::PubMedPublicationSummary::latexBiblio(std::ostream& out_stream) const {
+std::ostream& kgl::PublicationSummary::latexBiblio(std::ostream& out_stream) const {
 
   out_stream << "@Article{pmid" << pmid() << ",\n";
 
   // Authors
+  size_t author_count{0};
+  const size_t authors_per_line{10};
   std::string author_string{"author={"};
   for (auto const& author : authors()) {
 
-    author_string += author.first;
+    ++author_count;
+    author_string += '{' + author.first + '}';
     if (not author.second.empty()) {
 
       author_string += ", ";
@@ -144,7 +147,12 @@ std::ostream& kgl::PubMedPublicationSummary::latexBiblio(std::ostream& out_strea
     }
     if (author != authors().back()) {
 
-      author_string += " and \n";
+      author_string += " and ";
+
+    }
+    if (author_count % authors_per_line == 0) {
+
+      author_string += '\n';
 
     }
 
@@ -208,7 +216,7 @@ std::ostream& kgl::PubMedPublicationSummary::latexBiblio(std::ostream& out_strea
 }
 
 
-std::ostream& kgl::PubMedPublicationSummary::extendedBiblio(std::ostream& out_stream, bool detail, char delimiter) const {
+std::ostream& kgl::PublicationSummary::extendedBiblio(std::ostream& out_stream, bool detail, char delimiter) const {
 
   latexBiblio(out_stream);
 
@@ -287,100 +295,3 @@ std::ostream& kgl::PubMedPublicationSummary::extendedBiblio(std::ostream& out_st
 
 }
 
-
-// Filters.
-
-bool kgl::PubMedPublicationSummary::hasChemical(const std::vector<std::string>& chemical_list) const {
-
-  for (auto const& [MeSH_code, description] : chemicals()) {
-
-    for (auto const& find_MeSH : chemical_list) {
-
-      if (MeSH_code == find_MeSH) {
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
-bool kgl::PubMedPublicationSummary::hasMeSHCode(const std::vector<std::string>& MeSH_list) const {
-
-  for (auto const& [MeSH_code, description] : MeshCodes()) {
-
-    for (auto const& find_MeSH : MeSH_list) {
-
-      if (MeSH_code == find_MeSH) {
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
-bool kgl::PubMedPublicationSummary::hasTitleText(const std::vector<std::string>& search_text) const {
-
-  for (auto const& text : search_text) {
-
-    if (title().find(text) != std::string::npos) {
-
-      return true;
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
-bool kgl::PubMedPublicationSummary::hasAbstractText(const std::vector<std::string>& search_text) const {
-
-  for (auto const& text : search_text) {
-
-    if (abstract().find(text) != std::string::npos) {
-
-      return true;
-
-    }
-
-  }
-
-  return false;
-
-}
-
-bool kgl::PubMedPublicationSummary::hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const {
-
-  for (auto const& [surname, initials] : author_list) {
-
-    for (auto const& [pub_surname, pub_initials] : authors()) {
-
-      if (pub_surname == surname and (initials.empty() or initials == pub_initials)) {
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
-
-}

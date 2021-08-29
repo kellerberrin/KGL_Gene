@@ -119,7 +119,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 
 }
 
-void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
+void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& disease_pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
 
   for (auto& gene_data : gene_vector_) {
 
@@ -135,7 +135,7 @@ void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& pmid
     std::set<std::string> disease_pmids;
     for (auto const& pmid : entrez_pmid) {
 
-      if (pmid_set.contains(pmid)) {
+      if (disease_pmid_set.contains(pmid)) {
 
         disease_pmids.insert(pmid);
 
@@ -143,7 +143,7 @@ void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& pmid
 
     }
 
-    gene_data.gene_characteristic.update_pmid(entrez_pmid.size(), disease_pmids);
+    gene_data.gene_characteristic.update_pmid(entrez_pmid, disease_pmids);
 
   }
 

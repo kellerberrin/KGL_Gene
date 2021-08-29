@@ -44,7 +44,7 @@ public:
                       size_t min_genes,
                       size_t min_citations) const;
 
-  static bool filterPublication(const PubMedPublicationSummary& publication);
+  static bool filterPublication(const PublicationSummary& publication);
 
   static void writeGenePublications( std::ostream& out_file,
                                      const GeneCharacteristic& gene,

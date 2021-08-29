@@ -81,7 +81,7 @@ void kgl::GeneLiterature::updatePMIDStatistics( const std::set<std::string>& dis
     }
 
     gene_disease_count += gene_disease_pmids.size();
-    gene_data.update_pmid(entrez_pmid.size(), gene_disease_pmids);
+    gene_data.update_pmid(entrez_pmid, gene_disease_pmids);
 
   }
 
@@ -178,7 +178,7 @@ void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
   auto literature_map = pubmed_requestor_ptr->getCachedPublications(pmid_vector);
 
   // Resort the literature map by number of citations.
-  std::multimap<size_t, PubMedPublicationSummary> citation_rank_map;
+  std::multimap<size_t, PublicationSummary> citation_rank_map;
   for (auto const& [pmid, publication] : literature_map) {
 
     if (filterPublication(publication)) {
@@ -353,7 +353,7 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
 }
 
 
-bool kgl::GeneLiterature::filterPublication(const PubMedPublicationSummary& publication) {
+bool kgl::GeneLiterature::filterPublication(const PublicationSummary& publication) {
 
   static const std::vector<std::string> Mesh_codes{ "D010963" /* Plasmodium falciparum */
                                                     ,"D016778" /*  Malaria, Falciparum */

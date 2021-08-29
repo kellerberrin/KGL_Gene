@@ -19,6 +19,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
                     kgl_genomics/kgl_database
+                    kgl_genomics/kgl_Literature
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
                     kol_ontology                  # Experimental Ontology Library
@@ -255,14 +256,15 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_bio_pmid_parser.cpp
         kgl_genomics/kgl_parser/kgl_bio_pmid_parser.h
         kgl_genomics/kgl_parser/kgl_pubmed_resource.h
-        kgl_genomics/kgl_parser/kgl_pubmed.cpp
-        kgl_genomics/kgl_parser/kgl_pubmed.h
+        kgl_genomics/kgl_literature/kgl_literature.cpp
+        kgl_genomics/kgl_literature/kgl_literature.h
         kgl_genomics/kgl_parser/kgl_pubmed_xml_parser.cpp
         kgl_genomics/kgl_parser/kgl_pubmed_xml_parser.h
         kgl_genomics/kgl_parser/kgl_pubmed_cache.cpp
         kgl_genomics/kgl_parser/kgl_pubmed_cache.h
         kgl_genomics/kgl_parser/kgl_pubmed_api.cpp
-        kgl_genomics/kgl_parser/kgl_pubmed_api.h)
+        kgl_genomics/kgl_parser/kgl_pubmed_api.h
+        kgl_genomics/kgl_literature/kgl_literature_filter.cpp)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)

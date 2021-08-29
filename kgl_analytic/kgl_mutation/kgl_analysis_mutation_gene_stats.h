@@ -57,13 +57,13 @@ public:
   [[nodiscard]] const std::string& entrezId() const { return entrez_id_; }
   [[nodiscard]] const std::string& HGNC() const { return HGNC_id_; }
   [[nodiscard]] const std::string& description() const { return description_; }
-  [[nodiscard]] size_t citations() const { return citations_; }
+  [[nodiscard]] size_t citations() const { return citations_.size(); }
   [[nodiscard]] std::set<std::string> diseaseCites() const { return disease_cites_; }
   [[nodiscard]] const std::set<std::string>& goSet() const { return GO_set_; }
   [[nodiscard]] const std::set<std::string>& diseasePublications() const { return disease_cites_; }
 
 
-  void update_pmid(size_t all_pmid, std::set<std::string> disease_pmids) { citations_ = all_pmid; disease_cites_ = std::move(disease_pmids); }
+  void update_pmid(std::set<std::string> all_pmid, std::set<std::string> disease_pmids) { citations_ = std::move(all_pmid); disease_cites_ = std::move(disease_pmids); }
 
 private:
 
@@ -81,7 +81,7 @@ private:
   std::string entrez_id_;
   std::string HGNC_id_;
   std::vector<std::string> ensembl_ids_;
-  size_t citations_{0};
+  std::set<std::string> citations_;
   std::set<std::string> disease_cites_;
   ContigOffset_t gene_begin_{0};
   ContigOffset_t gene_end_{0};

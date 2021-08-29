@@ -194,7 +194,7 @@ std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
 }
 
 
-kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node) {
+kgl::PublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXML(rapidxml::xml_node<> * pubmed_article_node) {
 
 
   rapidxml::xml_node<>* medline_node = pubmed_article_node->first_node(MEDLINE_NODE_);
@@ -215,7 +215,7 @@ kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXM
 
 
   std::string pmid = pmid_node->value();
-  kgl::PubMedPublicationSummary publication(pmid);
+  kgl::PublicationSummary publication(pmid);
 
   parseChemicalsXML( medline_node, publication);
   parseMeSHXML( medline_node, publication);
@@ -243,8 +243,8 @@ kgl::PubMedPublicationSummary kgl::ParsePublicationXMLImpl::parsePubmedArticleXM
 }
 
 // Unpack the various XML tags for the article.
-void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journal_article_node,
-                                                    PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseAuthorsXML(rapidxml::xml_node<> * journal_article_node,
+                                                   PublicationSummary& publication) {
 
 //  auto author_list_node = validSubNode(journal_article_node, AUTHOR_LIST_NODE_, publication.pmid());
   auto author_list_node = journal_article_node->first_node(AUTHOR_LIST_NODE_);
@@ -285,8 +285,8 @@ void kgl::ParsePublicationXMLImpl::parseAuthorsXML( rapidxml::xml_node<> * journ
 
 
 // Unpack the various XML tags for the article.
-void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML( rapidxml::xml_node<> * journal_article_node,
-                                                          PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * journal_article_node,
+                                                         PublicationSummary& publication) {
 
   auto abstract_node = journal_article_node->first_node(ABSTRACT_NODE_);
   if (abstract_node != nullptr) {
@@ -306,9 +306,9 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML( rapidxml::xml_node<> *
 
 }
 
-void kgl::ParsePublicationXMLImpl::parseDoiXML( rapidxml::xml_node<> * journal_article_node,
-                                                rapidxml::xml_node<> * pubmed_node,
-                                                PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseDoiXML(rapidxml::xml_node<> * journal_article_node,
+                                               rapidxml::xml_node<> * pubmed_node,
+                                               PublicationSummary& publication) {
 
 
   rapidxml::xml_node<>* doi_node = journal_article_node->first_node(DOI_NODE_);
@@ -347,8 +347,8 @@ void kgl::ParsePublicationXMLImpl::parseDoiXML( rapidxml::xml_node<> * journal_a
 
 
 // Unpack the various XML tags to define the Publication Journal
-void kgl::ParsePublicationXMLImpl::parseJournalArticleXML( rapidxml::xml_node<> * journal_article_node,
-                                                           PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseJournalArticleXML(rapidxml::xml_node<> * journal_article_node,
+                                                          PublicationSummary& publication) {
 
   auto journal_node = validSubNode(journal_article_node, JOURNAL_NODE_, publication.pmid());
 
@@ -368,8 +368,8 @@ void kgl::ParsePublicationXMLImpl::parseJournalArticleXML( rapidxml::xml_node<> 
 }
 
 // Unpack the various XML tags for chemicals_.
-void kgl::ParsePublicationXMLImpl::parseChemicalsXML( rapidxml::xml_node<> * medline_node,
-                                                      PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseChemicalsXML(rapidxml::xml_node<> * medline_node,
+                                                     PublicationSummary& publication) {
 
   auto chem_list_node = medline_node->first_node(CHEMICAL_LIST_NODE_);
   if (chem_list_node == nullptr) {
@@ -398,7 +398,7 @@ void kgl::ParsePublicationXMLImpl::parseChemicalsXML( rapidxml::xml_node<> * med
 
 // Unpack the various XML tags for MeSH descriptors.
 void kgl::ParsePublicationXMLImpl::parseMeSHXML( rapidxml::xml_node<> * medline_node,
-                                                 kgl::PubMedPublicationSummary& publication) {
+                                                 kgl::PublicationSummary& publication) {
 
   auto mesh_list_node = medline_node->first_node(MESH_LIST_NODE_);
   if (mesh_list_node == nullptr) {
@@ -425,8 +425,8 @@ void kgl::ParsePublicationXMLImpl::parseMeSHXML( rapidxml::xml_node<> * medline_
 }
 
 
-void kgl::ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pubmed_node,
-                                                       PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseReferencesXML(rapidxml::xml_node<> * pubmed_node,
+                                                      PublicationSummary& publication) {
 
   auto reference_list_node = pubmed_node->first_node(REFERENCE_LIST_NODE_);
   if (reference_list_node == nullptr) {
@@ -485,9 +485,9 @@ void kgl::ParsePublicationXMLImpl::parseReferencesXML( rapidxml::xml_node<> * pu
 
 }
 
-void kgl::ParsePublicationXMLImpl::parseXMLDate( rapidxml::xml_node<> * journal_article_node,
-                                                 rapidxml::xml_node<> * pubmed_node,
-                                                 PubMedPublicationSummary& publication) {
+void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_article_node,
+                                                rapidxml::xml_node<> * pubmed_node,
+                                                PublicationSummary& publication) {
 
 
   auto journal_node = validSubNode(journal_article_node, JOURNAL_NODE_, publication.pmid());
