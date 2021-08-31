@@ -13,13 +13,15 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::GenerateGeneAllele::initialize(const std::vector<std::string>& symbol_gene_list,
-                const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
-                const std::shared_ptr<const CitationResource>& allele_citation_ptr,
-                const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) {
+void kgl::GenerateGeneAllele::initialize( const std::vector<std::string>& symbol_gene_list,
+                                          const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                                          const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr,
+                                          const std::shared_ptr<const CitationResource>& allele_citation_ptr,
+                                          const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) {
 
 
   uniprot_nomenclature_ptr_ = uniprot_nomenclature_ptr;
+  entrez_nomenclature_ptr_ = entrez_nomenclature_ptr;
   allele_citation_ptr_ = allele_citation_ptr;
   pubmed_requestor_ptr_ = pubmed_requestor_ptr;
 
@@ -204,46 +206,7 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char d
 
     auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-    std::set<std::string> symbol_set;
-    for (auto const& allele_id : allele_id_array) {
-
-      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
-      if (not symbol_vector.empty()) {
-
-        for (auto const& symbol : symbol_vector) {
-
-          symbol_set.insert(symbol);
-
-        }
-
-      }
-
-    }
-
-    // Generate Id and symbol strings
-    std::string concat_id;
-    for (auto const& allele_id : allele_id_array) {
-
-      concat_id += allele_id;
-      if (allele_id != allele_id_array.back()) {
-
-        concat_id += CONCATENATE_VEP_FIELDS_;
-
-      }
-
-    }
-
-    std::string concat_symbol;
-    for (auto const& symbol : symbol_set) {
-
-      concat_symbol += symbol;
-      if (symbol != *symbol_set.rbegin()) {
-
-        concat_id += CONCATENATE_VEP_FIELDS_;
-
-      }
-
-    }
+    auto [concat_symbol, concat_id] = generateGeneCodes(allele_id_array);
 
     out_file << concat_symbol << delimiter;
 
@@ -496,46 +459,7 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
 
       for (auto const& [variant_ptr, allele_id_array] : variant_vector) {
 
-        std::set<std::string> symbol_set;
-        for (auto const& allele_id : allele_id_array) {
-
-          auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
-          if (not symbol_vector.empty()) {
-
-            for (auto const& symbol : symbol_vector) {
-
-              symbol_set.insert(symbol);
-
-            }
-
-          }
-
-        }
-
-        // Generate Id and symbol strings
-        std::string concat_id;
-        for (auto const& allele_id : allele_id_array) {
-
-          concat_id += allele_id;
-          if (allele_id != allele_id_array.back()) {
-
-            concat_id += CONCATENATE_VEP_FIELDS_;
-
-          }
-
-        }
-
-        std::string concat_symbol;
-        for (auto const& symbol : symbol_set) {
-
-          concat_symbol += symbol;
-          if (symbol != *symbol_set.rbegin()) {
-
-            concat_id += CONCATENATE_VEP_FIELDS_;
-
-          }
-
-        }
+        auto [concat_symbol, concat_id] = generateGeneCodes(allele_id_array);
 
         out_file << variant_ptr->identifier() << "|" << concat_symbol << "|" << concat_id << '\n';
 
@@ -587,46 +511,7 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
     auto const& [pub_count, variant_ptr_id_pair] = *iter;
     auto const& [variant_ptr, allele_id_array] = variant_ptr_id_pair;
 
-    std::set<std::string> symbol_set;
-    for (auto const& allele_id : allele_id_array) {
-
-      auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
-      if (not symbol_vector.empty()) {
-
-        for (auto const& symbol : symbol_vector) {
-
-          symbol_set.insert(symbol);
-
-        }
-
-      }
-
-    }
-
-    // Generate Id and symbol strings
-    std::string concat_id;
-    for (auto const& allele_id : allele_id_array) {
-
-      concat_id += allele_id;
-      if (allele_id != allele_id_array.back()) {
-
-        concat_id += CONCATENATE_VEP_FIELDS_;
-
-      }
-
-    }
-
-    std::string concat_symbol;
-    for (auto const& symbol : symbol_set) {
-
-      concat_symbol += symbol;
-      if (symbol != *symbol_set.rbegin()) {
-
-        concat_id += CONCATENATE_VEP_FIELDS_;
-
-      }
-
-    }
+    auto [concat_symbol, concat_id] = generateGeneCodes(allele_id_array);
 
     out_file << "\n******************************************\n\n";
     out_file << variant_ptr->identifier() << "|" << concat_symbol << "|" << concat_id << '\n';
@@ -653,5 +538,83 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
     }
 
   } // for all variants.
+
+}
+
+
+
+std::pair<std::string, std::string> kgl::GenerateGeneAllele::generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const {
+
+
+
+  std::set<std::string> gene_id_set;
+  for (auto const& allele_id : ensembl_entrez_codes) {
+
+    if (not allele_id.empty()) {
+
+      gene_id_set.insert(allele_id);
+
+    }
+
+  }
+
+  std::set<std::string> symbol_set;
+  for (auto const& allele_id : gene_id_set) {
+
+    auto symbol_vector = uniprot_nomenclature_ptr_->ensemblToSymbol(allele_id);
+    if (not symbol_vector.empty()) {
+
+      for (auto const& symbol : symbol_vector) {
+
+        if (not symbol.empty()) {
+
+          symbol_set.insert(symbol);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  // Some of the ids may be Entrez.
+  for (auto const& allele_id : gene_id_set) {
+
+    std::string symbol = entrez_nomenclature_ptr_->entrezToSymbol(allele_id);
+    if (not symbol.empty()) {
+
+      symbol_set.insert(symbol);
+
+    }
+
+  }
+
+  // Generate Id and symbol strings
+  std::string concat_id;
+  for (auto const& allele_id : gene_id_set) {
+
+    concat_id += allele_id;
+    if (allele_id != *gene_id_set.rbegin()) {
+
+      concat_id += CONCATENATE_VEP_FIELDS_;
+
+    }
+
+  }
+
+  std::string concat_symbol;
+  for (auto const& symbol : symbol_set) {
+
+    concat_symbol += symbol;
+    if (symbol != *symbol_set.rbegin()) {
+
+      concat_symbol += CONCATENATE_VEP_FIELDS_;
+
+    }
+
+  }
+
+  return {concat_symbol, concat_id};
 
 }

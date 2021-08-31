@@ -25,6 +25,7 @@ public:
 
   void initialize(const std::vector<std::string>& symbol_gene_list,
                   const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
+                  const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr,
                   const std::shared_ptr<const CitationResource>& allele_citation_ptr,
                   const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr);
 
@@ -47,6 +48,7 @@ private:
   std::map<std::string, std::pair<std::shared_ptr<const Variant>,std::vector<std::string>>> cited_allele_map_;
 
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
+  std::shared_ptr<const EntrezResource> entrez_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
   std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
   std::map<std::string, std::string> ensembl_symbol_map_;
@@ -79,6 +81,8 @@ private:
 
   [[nodiscard]] std::set<std::string> getCitations(const std::string& rs_code) const;
   [[nodiscard]] std::set<std::string> getDiseaseCitations(const std::string& rs_code) const;
+  [[nodiscard]] std::pair<std::string, std::string> generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const;
+
 
 };
 

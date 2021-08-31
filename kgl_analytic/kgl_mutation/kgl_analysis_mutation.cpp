@@ -58,8 +58,17 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
   // Initialize the gene allele analysis object.
-  gene_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_, pubmed_requestor_ptr_);
-  all_pmid_alleles_.initialize(MutationAnalysisData::OMIMGeneSymbol(), uniprot_nomenclature_ptr_, allele_citation_ptr_, pubmed_requestor_ptr_);
+  gene_alleles_.initialize( MutationAnalysisData::OMIMGeneSymbol(),
+                            uniprot_nomenclature_ptr_,
+                            entrez_nomenclature_ptr_,
+                            allele_citation_ptr_,
+                            pubmed_requestor_ptr_);
+
+  all_pmid_alleles_.initialize( MutationAnalysisData::OMIMGeneSymbol(),
+                                uniprot_nomenclature_ptr_,
+                                entrez_nomenclature_ptr_,
+                                allele_citation_ptr_,
+                                pubmed_requestor_ptr_);
 
   return true;
 
@@ -90,7 +99,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
       auto output_opt = xml_vector.getString(OUTPUT_FILE_);
       if (output_opt) {
 
-        output_file_name_ = output_opt.value().front() + std::string(OUTPUT_FILE_EXT_);
+        output_file_name_ = output_opt.value().front() + std::string(CSV_FILE_EXT_);
         output_file_name_ = Utility::filePath(output_file_name_, ident_work_directory_);
         ExecEnv::log().info("Analysis: {} outputfile: {}", ident(), output_file_name_);
 
@@ -105,16 +114,16 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
   }
 
-  gene_allele_file_ = std::string(GENE_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  gene_allele_file_ = std::string(GENE_ALLELE_OUTPUT_FILE_) + std::string(CSV_FILE_EXT_);
   gene_allele_file_ = Utility::filePath(gene_allele_file_, ident_work_directory_);
 
-  all_allele_file_ = std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  all_allele_file_ = std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(CSV_FILE_EXT_);
   all_allele_file_ = Utility::filePath(all_allele_file_, ident_work_directory_);
 
-  literature_allele_file_ = std::string(LIT_ALLELE_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  literature_allele_file_ = std::string(LIT_ALLELE_FILE_) + std::string(TEXT_FILE_EXT_);
   literature_allele_file_ = Utility::filePath(literature_allele_file_, ident_work_directory_);
 
-  allele_literature_file_ = std::string(ALLELE_LIT_FILE_) + std::string(OUTPUT_FILE_EXT_);
+  allele_literature_file_ = std::string(ALLELE_LIT_FILE_) + std::string(TEXT_FILE_EXT_);
   allele_literature_file_ = Utility::filePath(allele_literature_file_, ident_work_directory_);
 
   return true;

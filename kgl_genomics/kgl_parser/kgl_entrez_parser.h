@@ -35,6 +35,7 @@ public:
   explicit EntrezResource(std::string identifier, EntrezVector entrez_vector) : ResourceBase(std::move(identifier)),
   entrez_vector_(std::move(entrez_vector)) {
 
+    IndexSymbol();
     IndexEntrez();
 
   }
@@ -42,12 +43,15 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::ENTREZ_GENE; }
   [[nodiscard]] std::string symbolToEntrez(const std::string& symbol_id) const;
-  [[nodiscard]] const EntrezMap& getEntrezMap() const { return entrez_map_; }
+  [[nodiscard]] std::string entrezToSymbol(const std::string& entrez_id) const;
 
 private:
 
   const EntrezVector entrez_vector_;
+  EntrezMap symbol_map_;
   EntrezMap entrez_map_;
+
+  void IndexSymbol();
   void IndexEntrez();
 
 };

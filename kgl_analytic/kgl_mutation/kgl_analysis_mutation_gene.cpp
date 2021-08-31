@@ -419,8 +419,9 @@ void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_
 
     while (lower_iterator != upper_iterator) {
 
-      auto const&[ensembl_id, variant_ptr] = *lower_iterator;
+      auto const& [ensembl_id, variant_ptr] = *lower_iterator;
 
+      // Calculate upper and lower bounds.
       if (lower_bound == 0) {
 
         lower_bound = variant_ptr->offset();

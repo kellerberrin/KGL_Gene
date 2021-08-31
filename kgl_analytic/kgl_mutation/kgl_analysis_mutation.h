@@ -104,7 +104,8 @@ private:
   constexpr static const char* LIT_ALLELE_FILE_ = "AllLitAllele";
   constexpr static const char* ALLELE_LIT_FILE_ = "AllAlleleLit";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
-  constexpr static const char* OUTPUT_FILE_EXT_ = ".csv";
+  constexpr static const char* CSV_FILE_EXT_ = ".csv";
+  constexpr static const char* TEXT_FILE_EXT_ = ".txt";
 
   bool getParameters(const ActiveParameterList& named_parameters);
 

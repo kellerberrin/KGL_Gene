@@ -10,7 +10,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-void kgl::EntrezResource::IndexEntrez() {
+void kgl::EntrezResource::IndexSymbol() {
 
   static bool error{false};
 
@@ -22,25 +22,55 @@ void kgl::EntrezResource::IndexEntrez() {
       continue;
 
     }
-    auto [iter, result] = entrez_map_.try_emplace(entrez_record.symbol_id, entrez_record);
+    auto [iter, result] = symbol_map_.try_emplace(entrez_record.symbol_id, entrez_record);
     if (not result and not error) {
 
-      ExecEnv::log().warn("EntrezResource::IndexEntrez; duplicate Symbol record ({})",  entrez_record.symbol_id);
+      ExecEnv::log().warn("EntrezResource::IndexSymbol; duplicate Symbol record ({})",  entrez_record.symbol_id);
       error = true;
 
     }
 
   }
 
-  ExecEnv::log().info("EntrezResource loaded {}, (Symbol, Entrez) Id lookup pairs", entrez_map_.size());
+  ExecEnv::log().info("EntrezResource loaded {}, (Symbol, Entrez) Id lookup pairs", symbol_map_.size());
 
 }
 
 
+
+void kgl::EntrezResource::IndexEntrez() {
+
+  static bool error{false};
+
+  // First load up the canonical records.
+  for (auto const& entrez_record : entrez_vector_) {
+
+    if (entrez_record.entrez_id.empty()) {
+
+      continue;
+
+    }
+    auto [iter, result] = entrez_map_.try_emplace(entrez_record.entrez_id, entrez_record);
+    if (not result and not error) {
+
+      ExecEnv::log().warn("EntrezResource::IndexEntrez; duplicate Entrez record ({})",  entrez_record.entrez_id);
+      error = true;
+
+    }
+
+  }
+
+  ExecEnv::log().info("EntrezResource loaded {}, (Entrez, Symbol) Id lookup pairs", entrez_map_.size());
+
+}
+
+
+
+
 [[nodiscard]] std::string kgl::EntrezResource::symbolToEntrez(const std::string& symbol_id) const {
 
-  auto result = entrez_map_.find(symbol_id);
-  if (result == entrez_map_.end()) {
+  auto result = symbol_map_.find(symbol_id);
+  if (result == symbol_map_.end()) {
 
     return "";
 
@@ -51,6 +81,24 @@ void kgl::EntrezResource::IndexEntrez() {
   return entrez_record.entrez_id;
 
 }
+
+
+
+[[nodiscard]] std::string kgl::EntrezResource::entrezToSymbol(const std::string& entrez_id) const {
+
+  auto result = entrez_map_.find(entrez_id);
+  if (result == entrez_map_.end()) {
+
+    return "";
+
+  }
+
+  auto [entrez, entrez_record] = *result;
+
+  return entrez_record.symbol_id;
+
+}
+
 
 
 [[nodiscard]] bool kgl::ParseEntrez::parseEntrezFile(const std::string& file_name) {
