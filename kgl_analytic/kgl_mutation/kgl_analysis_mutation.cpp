@@ -57,7 +57,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                  entrez_nomenclature_ptr_);
 
 
-  // Initialize the gene allele analysis object.
+  // Initialize the gene allele analysis objects with resources.
   gene_alleles_.initialize( MutationAnalysisData::OMIMGeneSymbol(),
                             uniprot_nomenclature_ptr_,
                             entrez_nomenclature_ptr_,
@@ -69,6 +69,12 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
                                 entrez_nomenclature_ptr_,
                                 allele_citation_ptr_,
                                 pubmed_requestor_ptr_);
+
+  pop_pub_alleles_.initialize( genome_aux_ptr_,
+                               uniprot_nomenclature_ptr_,
+                               entrez_nomenclature_ptr_,
+                               allele_citation_ptr_,
+                               pubmed_requestor_ptr_);
 
   return true;
 
@@ -125,6 +131,9 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
   allele_literature_file_ = std::string(ALLELE_LIT_FILE_) + std::string(TEXT_FILE_EXT_);
   allele_literature_file_ = Utility::filePath(allele_literature_file_, ident_work_directory_);
+
+  population_lit_allele_file_ = std::string(POP_LIT_ALLELE_FILE_) + std::string(TEXT_FILE_EXT_);
+  population_lit_allele_file_ = Utility::filePath(population_lit_allele_file_, ident_work_directory_);
 
   return true;
 
@@ -206,8 +215,11 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
     ExecEnv::log().info("Bio PMID Entrez Gene Map Size: {}", bio_pmid_ptr->entrezMap().size());
 
     auto const disease_pmid_set = bio_pmid_ptr->selectDiseaseBioPMID(MutationAnalysisData::malariaMeSHList());
-    gene_alleles_.addDiseaseCitations(disease_pmid_set);
-    all_pmid_alleles_.addDiseaseCitations(disease_pmid_set);
+    auto disease_allele_map = allele_citation_ptr_->filteredAlleleIndexed(disease_pmid_set);
+    gene_alleles_.addDiseaseAlleles(disease_allele_map);
+    all_pmid_alleles_.addDiseaseAlleles(disease_allele_map);
+    pop_pub_alleles_.addDiseaseAlleles(disease_allele_map);
+
     gene_mutation_.updatePMIDStatistics(disease_pmid_set, bio_pmid_ptr);
 
   } else {
@@ -247,6 +259,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     // Add the sorted variants to the gene allele analysis.
     gene_alleles_.addGeneCitedVariants(sorted_variants_ptr);
     all_pmid_alleles_.addDiseaseCitedVariants(sorted_variants_ptr);
+    pop_pub_alleles_.processPopulationMT(population_ptr_);
 
   }
 
@@ -276,6 +289,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
   all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeLiteratureAlleleSummary(literature_allele_file_);
   all_pmid_alleles_.writeAlleleLiteratureSummary(allele_literature_file_);
+  pop_pub_alleles_.writeOutput(population_lit_allele_file_);
 
   return true;
 

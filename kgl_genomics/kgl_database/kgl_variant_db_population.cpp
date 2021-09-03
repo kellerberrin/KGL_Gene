@@ -254,8 +254,8 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
 
 
 
-bool kgl::PopulationDB::addVariant(const std::shared_ptr<const Variant>& variant_ptr,
-                                   const std::vector<GenomeId_t>& genome_vector) {
+bool kgl::PopulationDB::addVariant( const std::shared_ptr<const Variant>& variant_ptr,
+                                  const std::vector<GenomeId_t>& genome_vector) {
 
   bool result = true;
   for (auto& genome : genome_vector) {

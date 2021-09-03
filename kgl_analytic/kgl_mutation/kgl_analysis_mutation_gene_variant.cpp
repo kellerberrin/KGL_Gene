@@ -97,8 +97,8 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 // count variants with citations.
       if (not variant_ptr->identifier().empty()) {
 
-        auto find_result = allele_citation_ptr->citationMap().find(variant_ptr->identifier());
-        if (find_result != allele_citation_ptr->citationMap().end()) {
+        auto find_result = allele_citation_ptr->alleleIndexedCitations().find(variant_ptr->identifier());
+        if (find_result != allele_citation_ptr->alleleIndexedCitations().end()) {
 
           auto const& [rsid, citations] = *find_result;
           for (auto const& cite : citations) {

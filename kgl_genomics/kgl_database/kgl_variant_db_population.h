@@ -30,12 +30,12 @@ namespace kellerberrin::genome {   //  organization::project
 
 using GenomeDBMap = std::map<GenomeId_t, std::shared_ptr<GenomeDB>>;
 
+
 class PopulationDB : public DataDB {
 
 public:
 
-  explicit PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(data_source),
-                                                                                           population_id_(population_id) {}
+  PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(data_source), population_id_(population_id) {}
   PopulationDB(const PopulationDB&) = delete; // Use deep copy.
   ~PopulationDB() override { clear(); }  // Experimental, may be quicker than relying on smart pointer reference counting.
 
@@ -98,8 +98,6 @@ public:
   [[nodiscard]] std::optional<std::shared_ptr<const InfoEvidenceHeader>> getVCFInfoEvidenceHeader() const;
   // Utility function, processes all variants in the population with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
-  // Create a population of unique variants. All duplicate variants are removed.
-  [[nodiscard]] std::shared_ptr<PopulationDB> uniqueVariantPopulation() const;
 
 private:
 
@@ -131,6 +129,7 @@ bool PopulationDB::processAll(Obj& object, Func objFunc)  const {
   return true;
 
 }
+
 
 
 }   // end namespace

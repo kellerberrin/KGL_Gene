@@ -87,6 +87,8 @@ private:
   GenerateGeneAllele gene_alleles_;
   // All Alleles With a Pubmed PMID identifier.
   GenerateGeneAllele all_pmid_alleles_;
+  // Profiles population variants with matching disease specific publications.
+  GeneratePopulationAllele pop_pub_alleles_;
 
   // Parameters and output files.
   std::string ident_work_directory_;
@@ -96,6 +98,7 @@ private:
   std::string all_allele_file_;
   std::string literature_allele_file_;
   std::string allele_literature_file_;
+  std::string population_lit_allele_file_;
 
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
@@ -103,6 +106,7 @@ private:
   constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "AllAlleleOut";
   constexpr static const char* LIT_ALLELE_FILE_ = "AllLitAllele";
   constexpr static const char* ALLELE_LIT_FILE_ = "AllAlleleLit";
+  constexpr static const char* POP_LIT_ALLELE_FILE_ = "PopLitAllele";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* CSV_FILE_EXT_ = ".csv";
   constexpr static const char* TEXT_FILE_EXT_ = ".txt";

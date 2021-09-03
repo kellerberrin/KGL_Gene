@@ -120,16 +120,16 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
 
         std::string rsid{"rs"};
         rsid += ref_snp.GetString();
-        std::vector<std::string> cite_string_array;
+        std::set<std::string> cite_string_set;
         for (size_t idx = 0; idx < cite_array.Size(); ++idx) {
 
           rapidjson::Value& pmid = cite_array[idx];
           size_t pmid_cite = pmid.GetInt64();
-          cite_string_array.emplace_back(std::to_string(pmid_cite));
+          cite_string_set.insert(std::to_string(pmid_cite));
 
         }
 
-        auto [iter, result] = citation_map.try_emplace(rsid, cite_string_array);
+        auto [iter, result] = citation_map.try_emplace(rsid, cite_string_set);
         if (not result) {
 
           ExecEnv::log().error("JSONInfoParser::parseJson; problem processing citations for (duplicate) rsid: {}", rsid);

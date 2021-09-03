@@ -170,6 +170,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 
   }
 
+  // The gene analysis is multithreaded.
   ThreadPool thread_pool(ThreadPool::defaultThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
@@ -248,8 +249,9 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
       if (not all_contig_ptr->getMap().empty()) {
 
-        // Which method gene membership of variants is determined.
-        std::shared_ptr<const ContigDB> gene_variant_ptr;
+        // Gene membership of variants is determined (should be BY_ENSEMBL).
+        // Dummy initialization, no uninitialized pointers.
+        std::shared_ptr<const ContigDB> gene_variant_ptr(std::make_shared<const ContigDB>(all_contig_ptr->contigId()));
         switch(gene_membership_) {
 
           case VariantGeneMembership::BY_SPAN:

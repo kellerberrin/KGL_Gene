@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -27,8 +28,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// The map is sorted by variant key=rsid, value=pmid_ (Pubmed article identifier)
-using DBCitationMap = std::map<std::string, std::vector<std::string>>;
+// The map is sorted by variant key=rsid, value=set of pmid (Pubmed article identifiers)
+using DBCitationMap = std::map<std::string, std::set<std::string>>;
 
 class DBCitation : public DataDB {
 

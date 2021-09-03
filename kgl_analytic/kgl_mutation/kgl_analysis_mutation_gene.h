@@ -17,10 +17,10 @@
 #include "kgl_analysis_mutation_gene_clinvar.h"
 #include "kgl_analysis_mutation_gene_variant.h"
 #include "kgl_analysis_mutation_gene_ontology.h"
+#include "kgl_analysis_mutation_gene_allele_pop.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

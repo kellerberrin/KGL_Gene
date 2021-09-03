@@ -59,7 +59,7 @@ void kgl::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const S
 
   for (auto const& [ensembl_id, variant_ptr] : filtered_variants) {
 
-    if (not getCitations(variant_ptr->identifier()).empty()) {
+    if (citationsExist(variant_ptr->identifier())) {
 
       auto result = cited_allele_map_.find(variant_ptr->identifier());
       if (result == cited_allele_map_.end()) {
@@ -87,7 +87,7 @@ void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<cons
   // To save space only add citations that are relevant to the disease MeSH code.
   for (auto const& [ensembl_id, variant_ptr] : *(sorted_variants->ensemblMap())) {
 
-    if (not getDiseaseCitations(variant_ptr->identifier()).empty()) {
+    if (disease_allele_map_.contains(variant_ptr->identifier())) {
 
       auto result = cited_allele_map_.find(variant_ptr->identifier());
       if (result == cited_allele_map_.end()) {
@@ -97,6 +97,7 @@ void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<cons
 
       } else {
 
+        // Unpack the map record.
         auto& [allele_rs_key, variant_code_pair] = *result;
         auto& [value_variant_ptr, id_array] = variant_code_pair;
 
@@ -111,21 +112,29 @@ void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<cons
 }
 
 
+bool kgl::GenerateGeneAllele::citationsExist(const std::string& rs_identifier) const {
+
+  if (not rs_identifier.empty()) {
+
+    return allele_citation_ptr_->alleleIndexedCitations().contains(rs_identifier);
+
+  }
+
+  return false;
+
+}
+
+
 std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
 
   std::set<std::string> allele_pmid_set;
   if (not rs_identifier.empty()) {
 
-    auto find_result = allele_citation_ptr_->citationMap().find(rs_identifier);
-    if (find_result != allele_citation_ptr_->citationMap().end()) {
+    auto find_result = allele_citation_ptr_->alleleIndexedCitations().find(rs_identifier);
+    if (find_result != allele_citation_ptr_->alleleIndexedCitations().end()) {
 
       auto const& [rsid, citations] = *find_result;
-      std::string cite_string;
-      for (auto const& cite : citations) {
-
-        allele_pmid_set.insert(cite);
-
-      }
+      allele_pmid_set = citations;
 
     }
 
@@ -138,21 +147,19 @@ std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& r
 std::set<std::string> kgl::GenerateGeneAllele::getDiseaseCitations(const std::string& rs_identifier) const {
 
   std::set<std::string> allele_disease_set;
-  auto rs_pmid_set = getCitations(rs_identifier);
 
-  for (auto const& pmid : rs_pmid_set) {
+  auto result = disease_allele_map_.find(rs_identifier);
+  if (result != disease_allele_map_.end()) {
 
-    if (disease_citations_.contains(pmid)) {
-
-      allele_disease_set.insert(pmid);
-
-    }
+    auto const& [rs_key, pmid_set] = *result;
+    allele_disease_set = pmid_set;
 
   }
 
   return allele_disease_set;
 
 }
+
 
 
 void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, char delimiter) {

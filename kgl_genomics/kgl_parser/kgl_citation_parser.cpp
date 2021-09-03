@@ -9,6 +9,100 @@
 namespace kgl = kellerberrin::genome;
 
 
+kgl::PMIDAlleleMap kgl::CitationResource::citationIndexedAlleles() const {
+
+  PMIDAlleleMap pmid_indexed_alleles;
+
+  for (auto const& [allele, pmid_vector] : citation_map_) {
+
+    for (auto const& pmid : pmid_vector) {
+
+      auto result = pmid_indexed_alleles.find(pmid);
+      if (result == pmid_indexed_alleles.end()) {
+
+        pmid_indexed_alleles.emplace(pmid, std::set<std::string>{allele});
+
+      } else {
+
+        auto& [pmid_key, allele_set] = *result;
+        allele_set.insert(allele);
+
+      }
+
+    }
+
+  }
+
+  return pmid_indexed_alleles;
+
+}
+
+
+kgl::PMIDAlleleMap kgl::CitationResource::filteredCitationIndex(const std::set<std::string>& pmid_filter_set) const {
+
+  PMIDAlleleMap pmid_indexed_alleles;
+
+  for (auto const& [allele, pmid_vector] : citation_map_) {
+
+    for (auto const& pmid : pmid_vector) {
+
+      if (pmid_filter_set.contains(pmid)) {
+
+        auto result = pmid_indexed_alleles.find(pmid);
+        if (result == pmid_indexed_alleles.end()) {
+
+          pmid_indexed_alleles.emplace(pmid, std::set<std::string>{allele});
+
+        } else {
+
+          auto& [pmid_key, allele_set] = *result;
+          allele_set.insert(allele);
+
+        }
+
+      } // if in filter
+
+    } // for pmid
+
+  } // for allele
+
+  return pmid_indexed_alleles;
+
+}
+
+
+kgl::DBCitationMap kgl::CitationResource::filteredAlleleIndexed(const std::set<std::string>& pmid_filter_set) const {
+
+  DBCitationMap filtered_allele_map;
+
+  auto filtered_pmid_map = filteredCitationIndex(pmid_filter_set);
+
+  for (auto const& [pmid, allele_vector] : filtered_pmid_map) {
+
+    for (auto const& allele : allele_vector) {
+
+      auto result = filtered_allele_map.find(allele);
+      if (result == filtered_allele_map.end()) {
+
+        filtered_allele_map.emplace(allele, std::set<std::string>{pmid});
+
+      } else {
+
+        auto& [allele_key, pmid_set] = *result;
+        pmid_set.insert(pmid);
+
+      }
+
+    }
+
+  }
+
+  return filtered_allele_map;
+
+}
+
+
+
 [[nodiscard]] bool kgl::ParseCitations::parseCitationFile(const std::string &file_name) {
 
 
@@ -39,12 +133,12 @@ namespace kgl = kellerberrin::genome;
     auto find_result = citation_map_.find(rsid);
     if (find_result == citation_map_.end()) {
 
-      citation_map_.emplace(rsid, std::vector<std::string>{pmid_citation});
+      citation_map_.emplace(rsid, std::set<std::string>{pmid_citation});
 
     } else {
 
-      auto& [rsid, citation_vector] = *find_result;
-      citation_vector.push_back(pmid_citation);
+      auto& [rsid, citation_set] = *find_result;
+      citation_set.insert(pmid_citation);
 
     }
 

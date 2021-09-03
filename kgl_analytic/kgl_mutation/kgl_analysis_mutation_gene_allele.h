@@ -32,7 +32,7 @@ public:
   void writeOutput(const std::string& output_file, char delimiter) const;
   void addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
   void addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants);
-  void addDiseaseCitations(std::set<std::string> disease_citations) { disease_citations_ = std::move(disease_citations); }
+  void addDiseaseAlleles(DBCitationMap disease_allele_map) { disease_allele_map_ = std::move(disease_allele_map); }
   // For each publication list the alleles.
   void writeLiteratureAlleleSummary(const std::string& output_file);
   // For each Allele print all the relevant publications.
@@ -45,14 +45,19 @@ private:
   const static constexpr char *ALL_SUPER_POP_{"ALL"};
 
   // The key is the allele unique 'rs' code, the value pair is .first is a pointer to the variant, .second is a vector of all the gene codes for the allele.
-  std::map<std::string, std::pair<std::shared_ptr<const Variant>,std::vector<std::string>>> cited_allele_map_;
+  using RSCodeKey = std::string;
+  using GeneCodes = std::vector<std::string>;
+  using VariantPointer = std::shared_ptr<const Variant>;
+  using AllelePair = std::pair<VariantPointer, GeneCodes>;
+  using AlleleMap = std::map<RSCodeKey, AllelePair>;
+  AlleleMap cited_allele_map_;
 
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
   std::shared_ptr<const EntrezResource> entrez_nomenclature_ptr_;
   std::shared_ptr<const CitationResource> allele_citation_ptr_;
   std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
   std::map<std::string, std::string> ensembl_symbol_map_;
-  std::set<std::string> disease_citations_;
+  DBCitationMap disease_allele_map_;
 
   static void writeHeader(std::ofstream& outfile, char delimiter);
 
@@ -78,8 +83,8 @@ private:
 
   [[nodiscard]] static std::map<std::string, std::string> retrieveVepFields( const std::shared_ptr<const Variant>& variant_ptr,
                                                                              const std::vector<std::string>& field_list);
-
   [[nodiscard]] std::set<std::string> getCitations(const std::string& rs_code) const;
+  [[nodiscard]] bool citationsExist(const std::string& rs_code) const;
   [[nodiscard]] std::set<std::string> getDiseaseCitations(const std::string& rs_code) const;
   [[nodiscard]] std::pair<std::string, std::string> generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const;
 

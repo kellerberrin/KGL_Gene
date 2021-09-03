@@ -10,6 +10,8 @@
 #include "kgl_square_parser.h"
 #include "kgl_json_parser.h"
 
+#include <map>
+#include <set>
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -19,6 +21,8 @@ namespace kellerberrin::genome {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Key is the Pubmed publication pmid, value is a set of unique alleles as 'rsXXX' identifiers.
+using PMIDAlleleMap = std::map<std::string, std::set<std::string>>;
 
 class CitationResource : public ResourceBase {
 
@@ -29,10 +33,19 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::ALLELE_CITATION; }
 
-  [[nodiscard]] const DBCitationMap& citationMap() const { return citation_map_; }
+  // Indexed by allele 'rsXXX' code, value is a vector of Pubmed publication pmids.
+  [[nodiscard]] const DBCitationMap& alleleIndexedCitations() const { return citation_map_; }
+  // Filtered by allele 'rsXXX' code, value is a vector of Pubmed publication pmids present in the filtered set.
+  [[nodiscard]] DBCitationMap filteredAlleleIndexed(const std::set<std::string>& pmid_filter_set) const;
+  // Citation indexed alleles. Key is pmid, value is a vector of alleles 'rsXXX' code.
+  [[nodiscard]] PMIDAlleleMap citationIndexedAlleles() const;
+  // Filtered citation indexed alleles, only pmids/alleles in the filter set are returned.
+  [[nodiscard]] PMIDAlleleMap filteredCitationIndex(const std::set<std::string>& pmid_filter_set) const;
+
 
 private:
 
+  // Indexed by allele 'rsXXX' code, value is a unique set of Pubmed publication pmids.
   const DBCitationMap citation_map_;
 
 };
