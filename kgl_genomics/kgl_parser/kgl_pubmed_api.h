@@ -44,7 +44,8 @@ public:
   // Request Pubmed publications, use cached results when available, else request from Pubmed using the API.
   // Always writes correctly parsed API results to cache.
   [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
-
+  // Same function but with a std::set unsed to define unique pmid.
+  [[nodiscard]] LitPublicationMap getCachedPublications(const std::set<std::string>& pmid_set) const;
 
 private:
 

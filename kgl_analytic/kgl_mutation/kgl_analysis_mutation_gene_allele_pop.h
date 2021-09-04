@@ -13,6 +13,7 @@
 #include "kgl_hsgenome_aux.h"
 #include "kgl_variant_sort_analysis.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_analysis_mutation_gene_ethnic.h"
 
 
 
@@ -21,7 +22,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 class GeneratePopulationAllele {
 
-  using VariantCountMap = std::map<std::string, size_t>;
+  using VariantCountMap = std::map<std::string, std::set<std::string>>;
   using ThreadReturnType = std::pair<std::string, std::set<std::string>>;
 
 public:
@@ -36,13 +37,10 @@ public:
                   const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr);
 
   void processPopulation(const std::shared_ptr<const PopulationDB>& population_ptr);
-  void processPopulationMT(const std::shared_ptr<const PopulationDB>& population_ptr);
-  void writeOutput(const std::string& output_file) const;
-  void addDiseaseAlleles(DBCitationMap disease_allele_map) { disease_allele_map_ = std::move(disease_allele_map); }
+  void writePopLiterature(const std::string& output_file) const;
+  void addDiseaseAlleles(const DBCitationMap& disease_allele_map);
 
 private:
-
-
 
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const UniprotResource> uniprot_nomenclature_ptr_;
@@ -52,15 +50,14 @@ private:
 
   DBCitationMap disease_allele_map_;
   VariantCountMap variant_allele_map_;
+  GeneEthnicitySex reference_ethnic_;
 
-  const static constexpr char CONCATENATE_VEP_FIELDS_{'&'};
+  const static constexpr char CONCAT_DELIMITER_{'&'};
 
-  [[nodiscard]] std::set<std::string> getCitations(const std::string& rs_code) const;
   [[nodiscard]] std::set<std::string> getDiseaseCitations(const std::string& rs_code) const;
   [[nodiscard]] std::pair<std::string, std::string> generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const;
-  [[nodiscard]] bool citationsExist(const std::string& rs_code) const;
   [[nodiscard]] static ThreadReturnType getGenomePublications( std::shared_ptr<const GenomeDB> genome_ptr,
-                                                               std::shared_ptr<const DBCitationMap> disease_cited_alleles);
+                                                               std::shared_ptr<const DBCitationMap> disease_cited_alleles_ptr);
 
 };
 

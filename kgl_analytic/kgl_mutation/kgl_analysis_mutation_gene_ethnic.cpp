@@ -10,9 +10,9 @@ namespace kgl = kellerberrin::genome;
 
 
 
-bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
-                                      size_t count,
-                                      const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+bool kgl::GeneEthnicitySex::genomeAnalysis(const GenomeId_t& genome_id,
+                                           size_t count,
+                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   if (count == 0) {
 
@@ -22,7 +22,7 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
 
   if (not genome_aux_data) {
 
-    ExecEnv::log().critical("GenomeMutation::pedAnalysis; PED file pointer net defined");
+    ExecEnv::log().critical("GenomeMutation::genomeAnalysis; PED file pointer net defined");
     return false;
 
   }
@@ -64,7 +64,7 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
 
   } else {
 
-    ExecEnv::log().error("GenomeMutation::pedAnalysis; Unable to find super population: {}", super_pop);
+    ExecEnv::log().error("GenomeMutation::genomeAnalysis; Unable to find super population: {}", super_pop);
 
   }
 
@@ -77,7 +77,7 @@ bool kgl::GeneEthnicitySex::pedAnalysis(const GenomeId_t& genome_id,
 
   } else {
 
-    ExecEnv::log().error("GenomeMutation::pedAnalysis; Unable to find population: {}", pop);
+    ExecEnv::log().error("GenomeMutation::genomeAnalysis; Unable to find population: {}", pop);
 
   }
 

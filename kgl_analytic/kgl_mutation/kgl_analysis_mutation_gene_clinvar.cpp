@@ -88,7 +88,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
   if (subject_clinvar->variantCount() > 0) {
 
     ++genome_count_;
-    updateEthnicity().pedAnalysis(genome_id, 1, genome_aux_data);
+    updateEthnicity().genomeAnalysis(genome_id, 1, genome_aux_data);
 
   }
 

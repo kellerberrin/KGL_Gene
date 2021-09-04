@@ -161,7 +161,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   ethnic_statistics_.updatePopulations(genome_aux_data);
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
-    ethnic_statistics_.pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_statistics_.genomeAnalysis(genome_id, 1, genome_aux_data);
 
   }
   if (not ethnic_statistics_.auditTotals()) {

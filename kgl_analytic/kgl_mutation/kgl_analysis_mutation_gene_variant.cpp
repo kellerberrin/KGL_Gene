@@ -39,7 +39,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_lof > 0) {
 
     ++all_lof_;
-    ethnic_lof_.pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_lof_.genomeAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -53,7 +53,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_high_effect > 0) {
 
     ++all_high_effect_;
-    ethnic_high_.pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_high_.genomeAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -67,7 +67,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
   if (vep_info.all_moderate_effect > 0) {
 
     ++all_moderate_effect_;
-    ethnic_moderate_.pedAnalysis(genome_id, 1, genome_aux_data);
+    ethnic_moderate_.genomeAnalysis(genome_id, 1, genome_aux_data);
 
   }
 
@@ -109,7 +109,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
           // Increment if any citation
           ++citation_count_;
           // Ethnic profile
-          ethnic_citation_.pedAnalysis(genome_id, 1, genome_aux_data);
+          ethnic_citation_.genomeAnalysis(genome_id, 1, genome_aux_data);
 
         }
 

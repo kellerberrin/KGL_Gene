@@ -21,66 +21,46 @@ void kgl::GeneratePopulationAllele::initialize( const std::shared_ptr<const HsGe
   allele_citation_ptr_ = allele_citation_ptr;
   pubmed_requestor_ptr_ = pubmed_requestor_ptr;
 
+  // Initialize the reference ethnic analysis object.
+  reference_ethnic_.updatePopulations(genome_aux_ptr_);
+
+}
+
+
+void kgl::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disease_allele_map) {
+
+  for (auto const& [allele, pmid_set] : disease_allele_map) {
+
+    auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmid_set);
+
+    std::set<std::string> filtered_pmid;
+    for (auto const& [pmid, publication] : publication_map) {
+
+      if (PublicationSummary::PfalciparumFilter(publication)) {
+
+        filtered_pmid.insert(pmid);
+
+      }
+
+    }
+
+    if (not filtered_pmid.empty()) {
+
+      auto [iter, result] = disease_allele_map_.try_emplace(allele, filtered_pmid);
+      if (not result) {
+
+        ExecEnv::log().error("GeneratePopulationAllele::addDiseaseAlleles; unexpected duplicate allele: {}", allele);
+
+      }
+
+    }
+
+  }
+
 }
 
 
 void kgl::GeneratePopulationAllele::processPopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-  // Local class to process all the population data.
-  class ProcessPopulation {
-
-  public:
-
-    explicit ProcessPopulation(DBCitationMap disease_allele_map) : disease_allele_map_(std::move(disease_allele_map)) {}
-    ~ProcessPopulation() = default;
-
-    bool forEachVariant(const std::shared_ptr<const Variant>& variant_ptr) {
-
-      if (disease_allele_map_.contains(variant_ptr->identifier())) {
-
-        auto result = variant_allele_map_.find(variant_ptr->identifier());
-        if (result == variant_allele_map_.end()) {
-
-          variant_allele_map_.emplace(variant_ptr->identifier(), 1);
-
-        } else {
-
-          auto& [rs_key, genome_count] = *result;
-          ++genome_count;
-
-        }
-
-      }
-
-      return true;
-
-    }
-
-    VariantCountMap getCountMap() { return variant_allele_map_; }
-
-  private:
-
-    DBCitationMap disease_allele_map_;
-    std::map<std::string, size_t> variant_allele_map_;
-
-  };
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  ExecEnv::log().info("Begin analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
-  // Check each variant.
-  ProcessPopulation process_population(disease_allele_map_);
-
-  population_ptr->processAll(process_population, &ProcessPopulation::forEachVariant);
-
-  variant_allele_map_ = process_population.getCountMap();
-
-  ExecEnv::log().info("Completed analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
-
-}
-
-
-void kgl::GeneratePopulationAllele::processPopulationMT(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
   ExecEnv::log().info("Begin analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
 
@@ -93,7 +73,7 @@ void kgl::GeneratePopulationAllele::processPopulationMT(const std::shared_ptr<co
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
-    // function, object_ptr, arg1
+    // Function ptr, args by value.
     std::future<std::pair<std::string, std::set<std::string>>> future = thread_pool.enqueueTask( &GeneratePopulationAllele::getGenomePublications,
                                                                                                   genome_ptr,
                                                                                                   disease_allele_ptr);
@@ -107,17 +87,19 @@ void kgl::GeneratePopulationAllele::processPopulationMT(const std::shared_ptr<co
 
     auto [genome_id, allele_set] = future.get();
 
+    reference_ethnic_.genomeAnalysis(genome_id, 1, genome_aux_ptr_);
+
     for (auto const& allele : allele_set) {
 
       auto result = variant_allele_map_.find(allele);
       if (result == variant_allele_map_.end()) {
 
-        variant_allele_map_.emplace(allele, 1);
+        variant_allele_map_.emplace(allele, std::set<std::string>{genome_id});
 
       } else {
 
-        auto& [rs_key, count] = *result;
-        ++count;
+        auto& [rs_key, genome_set] = *result;
+        genome_set.insert(genome_id);
 
       }
 
@@ -130,7 +112,7 @@ void kgl::GeneratePopulationAllele::processPopulationMT(const std::shared_ptr<co
 }
 
 kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::getGenomePublications( std::shared_ptr<const GenomeDB> genome_ptr,
-                                                                                                      std::shared_ptr<const DBCitationMap> disease_cited_alleles) {
+                                                                                                      std::shared_ptr<const DBCitationMap> disease_cited_alleles_ptr) {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Local class to process all the genome data.
@@ -138,12 +120,12 @@ kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::g
 
   public:
 
-    explicit ProcessGenome(std::shared_ptr<const DBCitationMap> disease_cited_alleles) : disease_cited_alleles_(std::move(disease_cited_alleles)) {}
+    explicit ProcessGenome(std::shared_ptr<const DBCitationMap> disease_cited_alleles_ptr) : disease_cited_alleles_ptr_(std::move(disease_cited_alleles_ptr)) {}
     ~ProcessGenome() = default;
 
     bool forEachVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
-      if (disease_cited_alleles_->contains(variant_ptr->identifier())) {
+      if (disease_cited_alleles_ptr_->contains(variant_ptr->identifier())) {
 
         variant_allele_set_.insert(variant_ptr->identifier());
 
@@ -157,14 +139,14 @@ kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::g
 
   private:
 
-    std::shared_ptr<const DBCitationMap> disease_cited_alleles_;
+    std::shared_ptr<const DBCitationMap> disease_cited_alleles_ptr_;
     std::set<std::string> variant_allele_set_;
 
   };
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  ProcessGenome process_genome(std::move(disease_cited_alleles));
+  ProcessGenome process_genome(std::move(disease_cited_alleles_ptr));
 
   genome_ptr->processAll(process_genome, &ProcessGenome::forEachVariant);
 
@@ -173,14 +155,14 @@ kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::g
 }
 
 
-void kgl::GeneratePopulationAllele::writeOutput(const std::string& output_file) const {
+void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output_file) const {
 
 
   std::ofstream out_file(output_file);
 
   if (not out_file.good()) {
 
-    ExecEnv::log().error("GeneratePopulationAllele::writeOutput; cannot open output file: {}", output_file);
+    ExecEnv::log().error("GeneratePopulationAllele::writePopLiterature; cannot open output file: {}", output_file);
     return;
 
   }
@@ -189,9 +171,9 @@ void kgl::GeneratePopulationAllele::writeOutput(const std::string& output_file) 
 
   // Sort by number of genomes.
   std::multimap<size_t, std::string> allele_pubcount_map;
-  for (auto const& [allele_rs_id, genome_count] : variant_allele_map_) {
+  for (auto const& [allele_rs_id, genome_set] : variant_allele_map_) {
 
-    allele_pubcount_map.emplace(genome_count, allele_rs_id);
+    allele_pubcount_map.emplace(genome_set.size(), allele_rs_id);
 
   }
 
@@ -199,11 +181,76 @@ void kgl::GeneratePopulationAllele::writeOutput(const std::string& output_file) 
 
     // Unwrap the variables.
     auto const& [genome_count, rs_id] = *iter;
+
+    auto result = variant_allele_map_.find(rs_id);
+    if (result == variant_allele_map_.end()) {
+
+      ExecEnv::log().error("GeneratePopulationAllele::writePopLiterature; allele id: {} not found in genome map", rs_id);
+      continue;
+
+    }
+
+    // Calculate the ethnic breakdown.
+    auto const& [rs_key, genome_set] = *result;
+    GeneEthnicitySex allele_ethnic;
+    allele_ethnic.updatePopulations(genome_aux_ptr_);
+    for (auto const& genome : genome_set) {
+
+      allele_ethnic.genomeAnalysis(genome, 1 , genome_aux_ptr_);
+
+    }
+    if (reference_ethnic_.superPopulation().size() != allele_ethnic.superPopulation().size()) {
+
+      ExecEnv::log().error("GeneratePopulationAllele::writePopLiterature; allele id: {}, reference super populations: {}, allele super populations: {}",
+                           rs_id, reference_ethnic_.superPopulation().size(), allele_ethnic.superPopulation().size());
+      continue;
+
+    }
+
     std::vector<std::string> allele_id_array{rs_id};
     auto [concat_symbol, concat_id] = generateGeneCodes(allele_id_array);
 
     out_file << "\n******************************************\n\n";
-    out_file << "Genome Count: " << genome_count << '\n';
+    double pop_freq = (static_cast<double>(genome_count) * 100.0) / static_cast<double>(reference_ethnic_.total());
+    out_file << "Genome Count: " << genome_count << '/'  << reference_ethnic_.total() << " (" << pop_freq << "%)\n\n";
+
+    auto ref_iter = reference_ethnic_.superPopulation().begin();
+    auto allele_iter = allele_ethnic.superPopulation().begin();
+
+    while (ref_iter != reference_ethnic_.superPopulation().end() and allele_iter != allele_ethnic.superPopulation().end()) {
+
+      auto const& [ref_pop, ref_count] = *ref_iter;
+      auto const& [allele_pop, allele_count] = *allele_iter;
+      double pop_percent = (static_cast<double>(allele_count) * 100.0) / static_cast<double>(ref_count);
+
+      out_file << ref_pop << " " << allele_count << "/" << ref_count << " (";
+      out_file << pop_percent << "%), ";
+
+      ++ref_iter;
+      ++allele_iter;
+
+    }
+    out_file << "\n\n";
+
+    ref_iter = reference_ethnic_.population().begin();
+    allele_iter = allele_ethnic.population().begin();
+
+    while (ref_iter != reference_ethnic_.population().end() and allele_iter != allele_ethnic.population().end()) {
+
+      auto const& [ref_pop, ref_count] = *ref_iter;
+      auto const& [allele_pop, allele_count] = *allele_iter;
+      double pop_percent = (static_cast<double>(allele_count) * 100.0) / static_cast<double>(ref_count);
+
+      out_file << ref_pop << " " << allele_count << "/" << ref_count << " (";
+      out_file << pop_percent << "%), ";
+
+      ++ref_iter;
+      ++allele_iter;
+
+    }
+    out_file << "\n\n";
+
+
     out_file << rs_id << "|" << concat_symbol << "|" << concat_id << '\n';
     out_file << "\n\n******************************************" << '\n';
 
@@ -228,39 +275,6 @@ void kgl::GeneratePopulationAllele::writeOutput(const std::string& output_file) 
     }
 
   } // for all variants.
-
-}
-
-
-std::set<std::string> kgl::GeneratePopulationAllele::getCitations(const std::string& rs_identifier) const {
-
-  std::set<std::string> allele_pmid_set;
-  if (not rs_identifier.empty()) {
-
-    auto find_result = disease_allele_map_.find(rs_identifier);
-    if (find_result != disease_allele_map_.end()) {
-
-      auto const& [rsid, citations] = *find_result;
-      allele_pmid_set = citations;
-
-    }
-
-  }
-
-  return allele_pmid_set;
-
-}
-
-
-bool kgl::GeneratePopulationAllele::citationsExist(const std::string& rs_identifier) const {
-
-  if (not rs_identifier.empty()) {
-
-    return allele_citation_ptr_->alleleIndexedCitations().contains(rs_identifier);
-
-  }
-
-  return false;
 
 }
 
@@ -339,7 +353,7 @@ std::pair<std::string, std::string> kgl::GeneratePopulationAllele::generateGeneC
     concat_id += allele_id;
     if (allele_id != *gene_id_set.rbegin()) {
 
-      concat_id += CONCATENATE_VEP_FIELDS_;
+      concat_id += CONCAT_DELIMITER_;
 
     }
 
@@ -351,7 +365,7 @@ std::pair<std::string, std::string> kgl::GeneratePopulationAllele::generateGeneC
     concat_symbol += symbol;
     if (symbol != *symbol_set.rbegin()) {
 
-      concat_symbol += CONCATENATE_VEP_FIELDS_;
+      concat_symbol += CONCAT_DELIMITER_;
 
     }
 

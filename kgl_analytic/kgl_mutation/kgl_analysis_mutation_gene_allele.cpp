@@ -199,7 +199,7 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char d
 
   if (not out_file.good()) {
 
-    ExecEnv::log().error("GenerateGeneAllele::writeOutput; cannot open output file: {}", output_file);
+    ExecEnv::log().error("GenerateGeneAllele::writePopLiterature; cannot open output file: {}", output_file);
     return;
 
   }

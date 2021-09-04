@@ -94,6 +94,9 @@ public:
   // .first = surname/organization, .second is initials, can be blank.
   [[nodiscard]]bool hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const;
 
+  // Hard-coded filters.
+  static bool PfalciparumFilter(const PublicationSummary& publication);
+
 private:
 
   const std::string pmid_;

@@ -26,8 +26,18 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
     unique_pmids.insert(pmid);
 
   }
+
+  return getCachedPublications(unique_pmids);
+
+
+}
+
+
+kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std::set<std::string>& pmid_set) const {
+
+
   std::vector<std::string> unique_pmid_vector;
-  for (auto const& pmid : unique_pmids) {
+  for (auto const& pmid : pmid_set) {
 
     unique_pmid_vector.push_back(pmid);
 
@@ -55,7 +65,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   // Cache should now contain all the required publications.
   LitPublicationMap found_pub_map;
-  for (auto const& pmid :  unique_pmid_vector) {
+  for (auto const& pmid : unique_pmid_vector) {
 
     auto result = cached_publications_.find(pmid);
     if (result != cached_publications_.end()) {

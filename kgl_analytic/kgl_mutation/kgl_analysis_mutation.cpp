@@ -259,7 +259,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     // Add the sorted variants to the gene allele analysis.
     gene_alleles_.addGeneCitedVariants(sorted_variants_ptr);
     all_pmid_alleles_.addDiseaseCitedVariants(sorted_variants_ptr);
-    pop_pub_alleles_.processPopulationMT(population_ptr_);
+    pop_pub_alleles_.processPopulation(population_ptr_);
 
   }
 
@@ -289,7 +289,7 @@ bool kgl::MutationAnalysis::finalizeAnalysis() {
   all_pmid_alleles_.writeOutput(all_allele_file_, OUTPUT_DELIMITER_);
   all_pmid_alleles_.writeLiteratureAlleleSummary(literature_allele_file_);
   all_pmid_alleles_.writeAlleleLiteratureSummary(allele_literature_file_);
-  pop_pub_alleles_.writeOutput(population_lit_allele_file_);
+  pop_pub_alleles_.writePopLiterature(population_lit_allele_file_);
 
   return true;
 

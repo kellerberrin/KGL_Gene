@@ -105,3 +105,35 @@ bool kgl::PublicationSummary::hasAuthor(const std::vector<std::pair<std::string,
   return false;
 
 }
+
+
+
+bool kgl::PublicationSummary::PfalciparumFilter(const PublicationSummary& publication) {
+
+  static const std::vector<std::string> Mesh_codes{ "D010963" /* Plasmodium falciparum */
+                                                    ,"D016778" /*  Malaria, Falciparum */
+                                                    , "D008288" /* Malaria */ };
+
+  static const std::vector<std::string> search_text { "Plasmodium", "plasmodium", "Falciparum",  "falciparum", "Malaria", "malaria" };
+
+  if (publication.hasMeSHCode(Mesh_codes)) {
+
+    return true;
+
+  }
+
+  if (publication.hasTitleText(search_text)) {
+
+    return true;
+
+  }
+
+  if (publication.hasAbstractText(search_text)) {
+
+    return true;
+
+  }
+
+  return false;
+
+}

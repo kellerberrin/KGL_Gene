@@ -24,7 +24,7 @@ bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>&
 
   if (not out_file.good()) {
 
-    ExecEnv::log().error("GenomeMutation::writeOutput; could not open file: {} for output", output_file_name);
+    ExecEnv::log().error("GenomeMutation::writePopLiterature; could not open file: {} for output", output_file_name);
     return false;
 
   } else {

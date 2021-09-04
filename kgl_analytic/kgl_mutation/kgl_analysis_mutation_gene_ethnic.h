@@ -43,9 +43,9 @@ public:
   [[nodiscard]] size_t female() const { return female_; }
 
   // Update population data using genome to lookup the ped record.
-  bool pedAnalysis(const GenomeId_t& genome_id,
-                   size_t count,
-                   const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
+  bool genomeAnalysis(const GenomeId_t& genome_id,
+                      size_t count,
+                      const std::shared_ptr<const HsGenomeAux>& genome_aux_data);
 
   // Generate the map entries for each population
   void updatePopulations(const std::shared_ptr<const HsGenomeAux>& genome_aux_data);

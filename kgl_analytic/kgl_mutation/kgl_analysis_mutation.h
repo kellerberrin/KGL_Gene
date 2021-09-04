@@ -80,9 +80,6 @@ private:
   // By Ensembl looks up the variants based on the vep ensembl code.
   // By Exon uses the gene exon addresses to find gene variants - warning assumes the first transcript.
 
-  constexpr static const double FREQ_AFR_{0.0};
-  constexpr static const double FREQ_ALL_{0.0};
-
   // Gene Allele Specific Analysis.
   GenerateGeneAllele gene_alleles_;
   // All Alleles With a Pubmed PMID identifier.
@@ -99,7 +96,6 @@ private:
   std::string literature_allele_file_;
   std::string allele_literature_file_;
   std::string population_lit_allele_file_;
-
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
   constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "GeneAlleleOut";
