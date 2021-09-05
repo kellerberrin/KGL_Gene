@@ -42,6 +42,8 @@ public:
   [[nodiscard]] size_t male() const { return male_; }
   [[nodiscard]] size_t female() const { return female_; }
 
+  void clear() { population_.clear(); super_population_.clear(); male_ = 0; female_ = 0; }
+
   // Update population data using genome to lookup the ped record.
   bool genomeAnalysis(const GenomeId_t& genome_id,
                       size_t count,

@@ -32,6 +32,9 @@ using VariantIdIndexMap = std::map<std::string, std::shared_ptr<const Variant>>;
 // Variants indexed by genome and then by variant id ('rsXXXXXXXXX').
 using VariantGenomeIndexMap = std::map<std::string,  std::shared_ptr<VariantIdIndexMap>>;
 
+// Indexed by variant_ID with value as Ensembl codes.
+using VariantEnsemblIndexMap = std::map<std::string,  std::set<std::string>>;
+
 
 // Static only functions, object cannot be created.
 class VariantSort {

@@ -305,4 +305,3 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
 }
 
-

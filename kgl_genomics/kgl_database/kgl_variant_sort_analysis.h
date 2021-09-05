@@ -32,11 +32,14 @@ public:
   // Filter on on list of Ensembl Codes.
   [[nodiscard]] EnsemblIndexMap filterEnsembl(const std::vector<std::string>& ensembl_list) const;
 
+  // Variant id 'rsXXXXX' as key indexing a set of ensembl codes.
+  [[nodiscard]] const std::shared_ptr<const VariantEnsemblIndexMap>& alleleEnsemblMap() const;
+
 private:
 
   // A population of variants indexed by Ensembl gene code from the vep field.
   const std::shared_ptr<const EnsemblIndexMap> ensembl_index_map_;
-
+  mutable std::shared_ptr<const VariantEnsemblIndexMap> variant_ensembl_index_map_;
 
 };
 

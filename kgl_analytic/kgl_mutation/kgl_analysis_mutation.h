@@ -89,20 +89,22 @@ private:
 
   // Parameters and output files.
   std::string ident_work_directory_;
+  std::string population_lit_allele_directory_;
+  std::string allele_literature_directory_;
+  std::string allele_vep_directory_;
+
+  const std::string allele_lit_subdirectory_{"AlleleLiterature"};
+  const std::string population_lit_subdirectory_{"PopulationLiterature"};
+  const std::string allele_vep_subdirectory_{"AlleleVEP"};
 
   std::string output_file_name_;
-  std::string gene_allele_file_;
-  std::string all_allele_file_;
-  std::string literature_allele_file_;
-  std::string allele_literature_file_;
-  std::string population_lit_allele_file_;
 
   constexpr static const char* OUTPUT_FILE_ = "OutputFile";
-  constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "GeneAlleleOut";
-  constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "AllAlleleOut";
-  constexpr static const char* LIT_ALLELE_FILE_ = "AllLitAllele";
-  constexpr static const char* ALLELE_LIT_FILE_ = "AllAlleleLit";
-  constexpr static const char* POP_LIT_ALLELE_FILE_ = "PopLitAllele";
+  constexpr static const char* GENE_ALLELE_OUTPUT_FILE_ = "_GeneAlleleOut";
+  constexpr static const char* ALL_ALLELE_OUTPUT_FILE_ = "_AllAlleleOut";
+  constexpr static const char* LIT_ALLELE_FILE_ = "_AllLitAllele";
+  constexpr static const char* ALLELE_LIT_FILE_ = "_AllAlleleLit";
+  constexpr static const char* POP_LIT_ALLELE_FILE_ = "_PopLitAllele";
   constexpr static const char OUTPUT_DELIMITER_ = ',';
   constexpr static const char* CSV_FILE_EXT_ = ".csv";
   constexpr static const char* TEXT_FILE_EXT_ = ".txt";

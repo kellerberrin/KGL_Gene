@@ -60,7 +60,8 @@ void kgl::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disea
 }
 
 
-void kgl::GeneratePopulationAllele::processPopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
+void kgl::GeneratePopulationAllele::processPopulation( const std::shared_ptr<const PopulationDB>& population_ptr,
+                                                       const std::shared_ptr<const SortedVariantAnalysis>& sorted_variant_ptr) {
 
   ExecEnv::log().info("Begin analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
 
@@ -82,7 +83,6 @@ void kgl::GeneratePopulationAllele::processPopulation(const std::shared_ptr<cons
   }
 
   // Unpack the results.
-  variant_allele_map_.clear();
   for (auto& future : future_vector) {
 
     auto [genome_id, allele_set] = future.get();
@@ -102,6 +102,19 @@ void kgl::GeneratePopulationAllele::processPopulation(const std::shared_ptr<cons
         genome_set.insert(genome_id);
 
       }
+
+    }
+
+  }
+
+  // Setup the ensembl codes.
+  for (auto const& [allele, genome_set] : variant_allele_map_) {
+
+    auto result = sorted_variant_ptr->alleleEnsemblMap()->find(allele);
+    if (result != sorted_variant_ptr->alleleEnsemblMap()->end()) {
+
+      auto const& [rs_key, ensembl_codes] = *result;
+      allele_ensembl_codes_.emplace(allele, ensembl_codes);
 
     }
 
@@ -207,9 +220,6 @@ void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output
 
     }
 
-    std::vector<std::string> allele_id_array{rs_id};
-    auto [concat_symbol, concat_id] = generateGeneCodes(allele_id_array);
-
     out_file << "\n******************************************\n\n";
     double pop_freq = (static_cast<double>(genome_count) * 100.0) / static_cast<double>(reference_ethnic_.total());
     out_file << "Genome Count: " << genome_count << '/'  << reference_ethnic_.total() << " (" << pop_freq << "%)\n\n";
@@ -251,7 +261,19 @@ void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output
     out_file << "\n\n";
 
 
-    out_file << rs_id << "|" << concat_symbol << "|" << concat_id << '\n';
+    auto find_ensembl = allele_ensembl_codes_.find(rs_id);
+    if (find_ensembl != allele_ensembl_codes_.end()) {
+
+      auto const& [rs_id, ensembl_set] = *find_ensembl;
+      auto [concat_symbol, concat_id] = generateGeneCodes(ensembl_set);
+      out_file << rs_id << "|" << concat_symbol << "|" << concat_id << '\n';
+
+    } else {
+
+      out_file << rs_id << "|" << "***No Gene***" << "|" << "***No Gene***" << '\n';
+
+    }
+
     out_file << "\n\n******************************************" << '\n';
 
     // print all the publications
@@ -300,19 +322,8 @@ std::set<std::string> kgl::GeneratePopulationAllele::getDiseaseCitations(const s
 }
 
 
-std::pair<std::string, std::string> kgl::GeneratePopulationAllele::generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const {
+std::pair<std::string, std::string> kgl::GeneratePopulationAllele::generateGeneCodes(const std::set<std::string>& gene_id_set) const {
 
-
-  std::set<std::string> gene_id_set;
-  for (auto const& allele_id : ensembl_entrez_codes) {
-
-    if (not allele_id.empty()) {
-
-      gene_id_set.insert(allele_id);
-
-    }
-
-  }
 
   std::set<std::string> symbol_set;
   for (auto const& allele_id : gene_id_set) {

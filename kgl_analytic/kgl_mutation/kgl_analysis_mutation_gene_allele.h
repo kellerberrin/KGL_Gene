@@ -38,6 +38,8 @@ public:
   // For each Allele print all the relevant publications.
   void writeAlleleLiteratureSummary(const std::string& output_file);
 
+  void clear() { cited_allele_map_.clear(); }
+
 private:
 
 
