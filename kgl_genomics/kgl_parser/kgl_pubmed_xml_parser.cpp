@@ -291,8 +291,8 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * 
   auto abstract_node = journal_article_node->first_node(ABSTRACT_NODE_);
   if (abstract_node != nullptr) {
 
-    auto abtract_text = validSubNode(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
-    publication.abstract(abtract_text->value());
+    auto abstract = parseTextEmbeddedNodes(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
+    publication.abstract(abstract);
 
   } else {
 
@@ -300,9 +300,8 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * 
 
   }
 
-  auto article_title = validSubNode(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid());
-
-  publication.title(article_title->value());
+  auto title = parseTextEmbeddedNodes(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid());
+  publication.title(title);
 
 }
 
@@ -534,6 +533,27 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_a
   }
 
 }
+
+std::string kgl::ParsePublicationXMLImpl::parseTextEmbeddedNodes( rapidxml::xml_node<> * node_ptr,
+                                                                  const char* sub_node_name,
+                                                                  const std::string& pmid) {
+
+  std::string sub_node_text;
+
+  auto sub_node_ptr = validSubNode( node_ptr, sub_node_name, pmid);
+
+  auto child_node_ptr = sub_node_ptr->first_node();
+  while (child_node_ptr != nullptr) {
+
+    sub_node_text += child_node_ptr->value();
+    child_node_ptr = child_node_ptr->next_sibling();
+
+  }
+
+  return sub_node_text;
+
+}
+
 
 
 rapidxml::xml_node<> * kgl::ParsePublicationXMLImpl::validSubNode( rapidxml::xml_node<> * node_ptr,

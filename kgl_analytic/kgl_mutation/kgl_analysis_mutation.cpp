@@ -121,7 +121,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
   }
 
   // Recreate the Population Literature Subdirectory.
-  population_lit_allele_directory_ = ident_work_directory_ + std::string("/") + population_lit_subdirectory_;
+  population_lit_allele_directory_ = ident_work_directory_ + std::string("/") + POPULATION_LIT_SUBDIRECTORY_;
   if (not Utility::recreateDirectory(population_lit_allele_directory_)) {
 
     ExecEnv::log().critical("MutationAnalysis::getParameters, unable to recreate gene analysis results directory: {}",
@@ -130,7 +130,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
   }
 
   // Recreate the Allele Literature Subdirectory.
-  allele_literature_directory_ = ident_work_directory_ + std::string("/") + allele_lit_subdirectory_;
+  allele_literature_directory_ = ident_work_directory_ + std::string("/") + ALLELE_LIT_SUBDIRECTORY_;
   if (not Utility::recreateDirectory(allele_literature_directory_)) {
 
     ExecEnv::log().critical("MutationAnalysis::getParameters, unable to recreate gene analysis results directory: {}",
@@ -139,7 +139,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
   }
 
   // Recreate the Allele VEP Subdirectory.
-  allele_vep_directory_ = ident_work_directory_ + std::string("/") + allele_vep_subdirectory_;
+  allele_vep_directory_ = ident_work_directory_ + std::string("/") + ALLELE_VEP_SUBDIRECTORY_;
   if (not Utility::recreateDirectory(allele_vep_directory_)) {
 
     ExecEnv::log().critical("MutationAnalysis::getParameters, unable to recreate gene analysis results directory: {}",
@@ -278,7 +278,6 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     std::string population_lit_allele_file = population_ptr_->populationId() + std::string(POP_LIT_ALLELE_FILE_) + std::string(TEXT_FILE_EXT_);
     population_lit_allele_file = Utility::filePath(population_lit_allele_file, population_lit_allele_directory_);
     pop_pub_alleles_.writePopLiterature(population_lit_allele_file);
-    pop_pub_alleles_.clear();
 
     // Write allele literature output.
     std::string literature_allele_file = population_ptr_->populationId() + std::string(LIT_ALLELE_FILE_) + std::string(TEXT_FILE_EXT_);
@@ -288,17 +287,19 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
     std::string allele_literature_file = population_ptr_->populationId() + std::string(ALLELE_LIT_FILE_) + std::string(TEXT_FILE_EXT_);
     allele_literature_file = Utility::filePath(allele_literature_file, allele_literature_directory_);
     all_pmid_alleles_.writeAlleleLiteratureSummary(allele_literature_file);
-    all_pmid_alleles_.clear();
 
     // Gene Allele Specific Analysis.
     std::string gene_allele_file = population_ptr_->populationId() + std::string(GENE_ALLELE_OUTPUT_FILE_) + std::string(CSV_FILE_EXT_);
-    gene_allele_file = Utility::filePath(gene_allele_file, allele_vep_subdirectory_);
+    gene_allele_file = Utility::filePath(gene_allele_file, allele_vep_directory_);
     gene_alleles_.writeOutput(gene_allele_file, OUTPUT_DELIMITER_);
-    gene_alleles_.clear();
 
     std::string all_allele_file = population_ptr_->populationId() + std::string(ALL_ALLELE_OUTPUT_FILE_) + std::string(CSV_FILE_EXT_);
-    all_allele_file = Utility::filePath(all_allele_file, allele_vep_subdirectory_);
+    all_allele_file = Utility::filePath(all_allele_file, allele_vep_directory_);
     all_pmid_alleles_.writeOutput(all_allele_file, OUTPUT_DELIMITER_);
+
+    // Reset for the next chromosome.
+    pop_pub_alleles_.clear();
+    gene_alleles_.clear();
     all_pmid_alleles_.clear();
 
   }

@@ -93,9 +93,9 @@ private:
   std::string allele_literature_directory_;
   std::string allele_vep_directory_;
 
-  const std::string allele_lit_subdirectory_{"AlleleLiterature"};
-  const std::string population_lit_subdirectory_{"PopulationLiterature"};
-  const std::string allele_vep_subdirectory_{"AlleleVEP"};
+  const std::string ALLELE_LIT_SUBDIRECTORY_{"AlleleLiterature"};
+  const std::string POPULATION_LIT_SUBDIRECTORY_{"PopulationLiterature"};
+  const std::string ALLELE_VEP_SUBDIRECTORY_{"AlleleVEP"};
 
   std::string output_file_name_;
 

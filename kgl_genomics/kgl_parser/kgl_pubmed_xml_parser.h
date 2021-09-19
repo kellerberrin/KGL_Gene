@@ -147,6 +147,7 @@ private:
   [[nodiscard]] static rapidxml::xml_node<> * validSubNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid);
   [[nodiscard]] static rapidxml::xml_attribute<> * validAttribute(rapidxml::xml_node<> * node_ptr, const char* attribute, const std::string& pmid);
   [[nodiscard]] static std::string validOptionalNode(rapidxml::xml_node<> * node_ptr, const char* sub_node_name);
+  [[nodiscard]] static std::string parseTextEmbeddedNodes(rapidxml::xml_node<> * node_ptr, const char* sub_node_name, const std::string& pmid);
 
 };
 
