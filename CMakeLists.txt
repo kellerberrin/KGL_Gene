@@ -19,7 +19,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
                     kgl_genomics/kgl_database
-                    kgl_genomics/kgl_Literature
+                    kgl_genomics/kgl_literature
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
                     kol_ontology                  # Experimental Ontology Library
@@ -264,7 +264,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_pubmed_cache.h
         kgl_genomics/kgl_parser/kgl_pubmed_api.cpp
         kgl_genomics/kgl_parser/kgl_pubmed_api.h
-        kgl_genomics/kgl_literature/kgl_literature_filter.cpp)
+        kgl_genomics/kgl_literature/kgl_literature_filter.cpp kgl_genomics/kgl_literature/kgl_literature_analysis.cpp kgl_genomics/kgl_literature/kgl_literature_analysis.h kgl_genomics/kgl_literature/kgl_literature_filter.h kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
@@ -487,7 +487,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_literature/kgl_analysis_literature_gene.cpp
         kgl_analytic/kgl_literature/kgl_analysis_literature_gene.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h)
 
 # Deconvolution and mixture files.
 

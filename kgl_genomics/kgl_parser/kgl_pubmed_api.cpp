@@ -57,9 +57,6 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getCachedPublications(const std:
 
   auto api_publications = getAPIPublications(unique_uncached_vector, true); // Write to cache flag is set.
 
-//  ExecEnv::log().info("PubmedAPIRequester::requestCachedPublications; unique publications: {}, found cached: {}, requested Pubmed api: {}",
-//                      unique_pmid_vector.size(), (unique_pmid_vector.size()-api_publications.size()), api_publications.size());
-
   // Combine with the cache.
   cached_publications_.merge(api_publications);
 
@@ -111,7 +108,7 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getAPIPublications(const std::ve
 
   }
 
-  publication_map = getPublicationDetails(unique_pmid_vector, write_cache);
+  auto api_publication_map = getPublicationDetails(unique_pmid_vector, write_cache);
 
   // Get the citations
   std::vector<std::string> unique_vector;
@@ -123,18 +120,20 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getAPIPublications(const std::ve
 
   // Merge the citations.
   auto cite_map = getCitations(unique_vector, write_cache);
-  for (auto& [pmid, publication] : publication_map) {
+  for (auto& [pmid, publication_ptr] : api_publication_map) {
 
     auto result = cite_map.find(pmid);
     if (result == cite_map.end()) {
 
-      ExecEnv::log().warn("PubmedRequester::getAPIPublications; no citations found for publication (pmid): {}", pmid);
+      ExecEnv::log().warn("PubmedRequester::getAPIPublications; no citations found for publication_ptr (pmid): {}", pmid);
 
     } else {
 
       auto const& [cite_pmid, cite_set] = *result;
 
-      publication.citations(cite_set);
+      publication_ptr->citations(cite_set);
+      // Insert into the const pointer map, this publication record will not be modified.
+      publication_map.emplace(pmid, publication_ptr);
 
     }
 
@@ -146,9 +145,9 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getAPIPublications(const std::ve
 
 
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const {
+kgl::APIPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
-  LitPublicationMap publication_map;
+  APIPublicationMap publication_map;
 
   std::chrono::steady_clock::time_point begin_processing_time = std::chrono::steady_clock::now();
   auto begin_batch_time = begin_processing_time;
@@ -227,9 +226,9 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
 }
 
 
-kgl::LitPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const {
+kgl::APIPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
-  LitPublicationMap publication_map;
+  APIPublicationMap publication_map;
   std::string request_string;
   const std::string id_prefix{"&id="};
   for (auto const& pmid : pmid_vector) {

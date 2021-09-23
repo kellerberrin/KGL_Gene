@@ -4,6 +4,7 @@
 
 
 #include "kgl_literature.h"
+#include "kgl_literature_filter.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -11,11 +12,32 @@ namespace kgl = kellerberrin::genome;
 
 // Filters.
 
-bool kgl::PublicationSummary::hasChemical(const std::vector<std::string>& chemical_list) const {
+bool kgl::ChemicalFilter::applyFilter(const PublicationSummary& publication) const {
 
-  for (auto const& [MeSH_code, description] : chemicals()) {
+  for (auto const& [chem_code, description] : publication.chemicals()) {
 
-    for (auto const& find_MeSH : chemical_list) {
+    for (auto const& find_chem : chemical_list_) {
+
+      if (chem_code == find_chem) {
+
+        return true;
+
+      }
+
+    }
+
+  }
+
+  return false;
+
+}
+
+
+bool kgl::MeSHFilter::applyFilter(const PublicationSummary& publication) const {
+
+  for (auto const& [MeSH_code, description] : publication.chemicals()) {
+
+    for (auto const& find_MeSH : MeSH_list_) {
 
       if (MeSH_code == find_MeSH) {
 
@@ -32,32 +54,11 @@ bool kgl::PublicationSummary::hasChemical(const std::vector<std::string>& chemic
 }
 
 
-bool kgl::PublicationSummary::hasMeSHCode(const std::vector<std::string>& MeSH_list) const {
+bool kgl::AbstractTextFilter::applyFilter(const PublicationSummary& publication) const {
 
-  for (auto const& [MeSH_code, description] : MeshCodes()) {
+  for (auto const& text : text_list_) {
 
-    for (auto const& find_MeSH : MeSH_list) {
-
-      if (MeSH_code == find_MeSH) {
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
-bool kgl::PublicationSummary::hasTitleText(const std::vector<std::string>& search_text) const {
-
-  for (auto const& text : search_text) {
-
-    if (title().find(text) != std::string::npos) {
+    if (publication.abstract().find(text) != std::string::npos) {
 
       return true;
 
@@ -70,11 +71,11 @@ bool kgl::PublicationSummary::hasTitleText(const std::vector<std::string>& searc
 }
 
 
-bool kgl::PublicationSummary::hasAbstractText(const std::vector<std::string>& search_text) const {
+bool kgl::TitleTextFilter::applyFilter(const PublicationSummary& publication) const {
 
-  for (auto const& text : search_text) {
+  for (auto const& text : text_list_) {
 
-    if (abstract().find(text) != std::string::npos) {
+    if (publication.abstract().find(text) != std::string::npos) {
 
       return true;
 
@@ -86,54 +87,3 @@ bool kgl::PublicationSummary::hasAbstractText(const std::vector<std::string>& se
 
 }
 
-bool kgl::PublicationSummary::hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const {
-
-  for (auto const& [surname, initials] : author_list) {
-
-    for (auto const& [pub_surname, pub_initials] : authors()) {
-
-      if (pub_surname == surname and (initials.empty() or initials == pub_initials)) {
-
-        return true;
-
-      }
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
-
-bool kgl::PublicationSummary::PfalciparumFilter(const PublicationSummary& publication) {
-
-  static const std::vector<std::string> Mesh_codes{ "D010963" /* Plasmodium falciparum */
-                                                    ,"D016778" /*  Malaria, Falciparum */
-                                                    , "D008288" /* Malaria */ };
-
-  static const std::vector<std::string> search_text { "Plasmodium", "plasmodium", "Falciparum",  "falciparum", "Malaria", "malaria" };
-
-  if (publication.hasMeSHCode(Mesh_codes)) {
-
-    return true;
-
-  }
-
-  if (publication.hasTitleText(search_text)) {
-
-    return true;
-
-  }
-
-  if (publication.hasAbstractText(search_text)) {
-
-    return true;
-
-  }
-
-  return false;
-
-}

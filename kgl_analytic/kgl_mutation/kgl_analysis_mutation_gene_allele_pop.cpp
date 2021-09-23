@@ -3,6 +3,7 @@
 //
 
 #include "kgl_analysis_mutation_gene_allele_pop.h"
+#include "kgl_literature_filter.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -33,10 +34,12 @@ void kgl::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disea
 
     auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmid_set);
 
+    static const PlasmodiumFilter pf_filter;
     std::set<std::string> filtered_pmid;
-    for (auto const& [pmid, publication] : publication_map) {
 
-      if (PublicationSummary::PfalciparumFilter(publication)) {
+    for (auto const& [pmid, publication_ptr] : publication_map) {
+
+      if (pf_filter.applyFilter(*publication_ptr)) {
 
         filtered_pmid.insert(pmid);
 
@@ -288,10 +291,10 @@ void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output
     // Get the literature for this allele;
     auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
 
-    for (auto const& [pmid, publication] : literature_map) {
+    for (auto const& [pmid, publication_ptr] : literature_map) {
 
       out_file << '\n';
-      publication.extendedBiblio(out_file);
+      publication_ptr->extendedBiblio(out_file);
       out_file << '\n';
 
     }

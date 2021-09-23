@@ -39,6 +39,8 @@ public:
 
   [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PUBMED_API; }
 
+  // Returns all cached publications. Note that this assumes that all required publications have already been downloaded and are cached.
+  [[nodiscard]] const LitPublicationMap& getAllCachedPublications() const { return pubmed_rest_api_.getAllCachedPublications(); }
   // Same functionality as above but checks if the publications are held on a disk/memory cache before sending API requests to Pubmed.
   // Any records not found in the cache are requested using the Pubmed API and then written to the disk/memory cache.
   [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const { return pubmed_rest_api_.getCachedPublications(pmid_vector); }

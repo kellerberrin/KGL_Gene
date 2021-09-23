@@ -10,6 +10,7 @@
 #include "kgl_entrez_parser.h"
 #include "kgl_bio_pmid_parser.h"
 #include "kgl_pubmed_resource.h"
+#include "kgl_literature_filter.h"
 #include "kgl_mutation/kgl_analysis_mutation_gene_stats.h"
 
 
@@ -44,19 +45,17 @@ public:
                       size_t min_genes,
                       size_t min_citations) const;
 
-  static bool filterPublication(const PublicationSummary& publication) { return PublicationSummary::PfalciparumFilter(publication); }
+  static bool filterPublication(const PublicationSummary& publication) { return pf_filter_.applyFilter(publication); }
 
   static void writeGenePublications( std::ostream& out_file,
                                      const GeneCharacteristic& gene,
                                      const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr);
-private:
 
-//  std::shared_ptr<const PubmedRequester> pubmed_requestor_ptr_;
+private:
 
   // All the genes found in the genome.
   std::vector<GeneCharacteristic> gene_vector_;
-
-
+  inline static const PlasmodiumFilter pf_filter_;
 
 };
 

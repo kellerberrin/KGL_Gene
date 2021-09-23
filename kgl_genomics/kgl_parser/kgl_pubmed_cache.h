@@ -63,7 +63,7 @@ private:
   constexpr static const size_t MIN_CACHE_SIZE_{0};
 
   // Read and parse publication details
-  [[nodiscard]] LitPublicationMap readPublicationCache() const;
+  [[nodiscard]] APIPublicationMap readPublicationCache() const;
   // Read and parse literature citations.
   [[nodiscard]] LitCitationMap readCitationCache() const;
   // Read cached XML text.

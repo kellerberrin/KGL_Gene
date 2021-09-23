@@ -19,15 +19,15 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readCachedPublications() const {
 
   // Merge the citations.
   auto citation_map = readCitationCache();
-  for (auto& [pmid, publication] : uncited_pub_map) {
+  for (auto& [pmid, publication_ptr] : uncited_pub_map) {
 
     auto result = citation_map.find(pmid);
     if (result != citation_map.end()) {
 
       auto const& [cite_pmid, cite_set] = *result;
 
-      publication.citations(cite_set);
-      cached_pub_map.emplace(pmid, publication);
+      publication_ptr->citations(cite_set);
+      cached_pub_map.emplace(pmid, publication_ptr);
 
     }
 
@@ -41,9 +41,9 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readCachedPublications() const {
 }
 
 
-kgl::LitPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
+kgl::APIPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
 
-  LitPublicationMap publication_map;
+  APIPublicationMap publication_map;
 
   std::ifstream publication_xml_file(publication_cache_file_);
 

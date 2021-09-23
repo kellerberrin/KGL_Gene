@@ -442,23 +442,23 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
   auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
 
   // Resort the literature map by number of citations.
-  std::multimap<size_t, PublicationSummary> citation_rank_map;
-  for (auto const& [pmid, publication] : literature_map) {
+  std::multimap<size_t, std::shared_ptr<const PublicationSummary>> citation_rank_map;
+  for (auto const& [pmid, publication_ptr] : literature_map) {
 
-    citation_rank_map.emplace(publication.citedBy().size(), publication);
+    citation_rank_map.emplace(publication_ptr->citedBy().size(), publication_ptr);
 
   }
 
   // Print most cited articles first.
   for (auto iter = citation_rank_map.rbegin(); iter != citation_rank_map.rend(); ++iter) {
 
-    auto const& [cites, publication] = *iter;
+    auto const& [cites, publication_ptr] = *iter;
 
     out_file << "\n******************************************" << '\n';
-    auto result = pmid_variant_map.find(publication.pmid());
+    auto result = pmid_variant_map.find(publication_ptr->pmid());
     if (result == pmid_variant_map.end()) {
 
-      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureAlleleSummary; no alleles found for publication pmid: {}", publication.pmid());
+      ExecEnv::log().error("GenerateGeneAllele::writeLiteratureAlleleSummary; no alleles found for publication_ptr pmid: {}", publication_ptr->pmid());
 
     } else {
 
@@ -470,15 +470,15 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
 
         out_file << variant_ptr->identifier() << "|" << concat_symbol << "|" << concat_id << '\n';
 
-      } // For all alleles referenced by this publication.
+      } // For all alleles referenced by this publication_ptr.
 
       out_file << "******************************************" << '\n';
 
       out_file << '\n';
-      publication.extendedBiblio(out_file);
+      publication_ptr->extendedBiblio(out_file);
       out_file << '\n';
 
-    } // if found publication.
+    } // if found publication_ptr.
 
   } // citation ranked publication.
 
@@ -536,10 +536,10 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
     // Get the literature for this allele;
     auto literature_map = pubmed_requestor_ptr_->getCachedPublications(pmid_vector);
 
-    for (auto const& [pmid, publication] : literature_map) {
+    for (auto const& [pmid, publication_ptr] : literature_map) {
 
       out_file << '\n';
-      publication.extendedBiblio(out_file);
+      publication_ptr->extendedBiblio(out_file);
       out_file << '\n';
 
     }

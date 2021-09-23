@@ -28,7 +28,9 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 class PublicationSummary;
 // key = pmid_, value = publication details record.
-using LitPublicationMap = std::map<std::string, PublicationSummary>;
+using LitPublicationMap = std::map<std::string, std::shared_ptr<const PublicationSummary>>;
+
+using APIPublicationMap = std::map<std::string, std::shared_ptr<PublicationSummary>>;
 
 // key = pmid_, value = unique set of pmids that cite, or are referenced by, the key pmid_.
 using LitCitationMap = std::map<std::string, std::set<std::string>>;
@@ -85,17 +87,6 @@ public:
   std::ostream& latexBiblio(std::ostream& out_stream) const;
   // Adds reference, citation and Mash data to the biblio.
   std::ostream& extendedBiblio(std::ostream& out_stream, bool detail = false, char delimiter = SV_DELIMITER_) const;
-
-  // Filters.
-  [[nodiscard]] bool hasChemical(const std::vector<std::string>& chemical_list) const;
-  [[nodiscard]] bool hasMeSHCode(const std::vector<std::string>& MeSH_list) const;
-  [[nodiscard]] bool hasTitleText(const std::vector<std::string>& search_text) const;
-  [[nodiscard]] bool hasAbstractText(const std::vector<std::string>& search_text) const;
-  // .first = surname/organization, .second is initials, can be blank.
-  [[nodiscard]]bool hasAuthor(const std::vector<std::pair<std::string, std::string>>& author_list) const;
-
-  // Hard-coded filters.
-  static bool PfalciparumFilter(const PublicationSummary& publication);
 
 private:
 

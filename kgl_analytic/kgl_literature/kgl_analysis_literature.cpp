@@ -5,6 +5,7 @@
 #include "kgl_mutation/kgl_analysis_mutation_data.h"
 #include "kgl_analysis_literature.h"
 #include "kgl_analysis_gene_sequence.h"
+#include "kgl_analysis_literature_publication.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -116,6 +117,11 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
   const size_t min_genes{0};
   const size_t min_citations{0};
   gene_literature_.outputPmidGene(pubmed_requestor_ptr_, ident_work_directory_, max_genes, min_genes, min_citations);
+
+  PublicationLiterature publication_literature(pubmed_requestor_ptr_->getAllCachedPublications());
+  publication_literature.writeAuthorAnalysis(ident_work_directory_);
+  publication_literature.writeYearAnalysis(ident_work_directory_);
+  publication_literature.writeJournalAnalysis(ident_work_directory_);
 
   return true;
 

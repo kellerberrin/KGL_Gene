@@ -115,12 +115,12 @@ std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML
 
 
 
-std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
+std::pair<bool, kgl::APIPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
 
   // Comment out after testing.
   // ExecEnv::log().info("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
 
-  LitPublicationMap publication_map;
+  APIPublicationMap publication_map;
   bool parse_result{true};
 
   try {
@@ -157,7 +157,7 @@ std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
 
         }
 
-        auto [iter, result] = publication_map.try_emplace(publication.pmid(), publication);
+        auto [iter, result] = publication_map.try_emplace(publication.pmid(), std::make_shared<PublicationSummary>(publication));
         if (not result) {
 
           std::string error_message = "cannot add duplicate publication: " + publication.pmid();
@@ -183,7 +183,7 @@ std::pair<bool, kgl::LitPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
 
     ExecEnv::log().error("PubmedRequester::parsePublicationXML; RapidXML Fails: {}", e.what());
     ExecEnv::log().info("PubmedRequester::parsePublicationXMLL; Text: \n{}", publication_xml_text);
-    return {false, LitPublicationMap() };
+    return {false, APIPublicationMap() };
 
   }
 
@@ -291,7 +291,7 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * 
   auto abstract_node = journal_article_node->first_node(ABSTRACT_NODE_);
   if (abstract_node != nullptr) {
 
-    auto abstract = parseTextEmbeddedNodes(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
+    auto abstract = parseTextWithEmbeddedNodes(abstract_node, ABSTRACT_TEXT_NODE_, publication.pmid());
     publication.abstract(abstract);
 
   } else {
@@ -300,7 +300,7 @@ void kgl::ParsePublicationXMLImpl::parseArticleFieldsXML(rapidxml::xml_node<> * 
 
   }
 
-  auto title = parseTextEmbeddedNodes(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid());
+  auto title = parseTextWithEmbeddedNodes(journal_article_node, ARTICLE_TITLE_NODE_, publication.pmid());
   publication.title(title);
 
 }
@@ -534,15 +534,16 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_a
 
 }
 
-std::string kgl::ParsePublicationXMLImpl::parseTextEmbeddedNodes( rapidxml::xml_node<> * node_ptr,
-                                                                  const char* sub_node_name,
-                                                                  const std::string& pmid) {
+std::string kgl::ParsePublicationXMLImpl::parseTextWithEmbeddedNodes(rapidxml::xml_node<> * node_ptr,
+                                                                     const char* sub_node_name,
+                                                                     const std::string& pmid) {
 
   std::string sub_node_text;
 
   auto sub_node_ptr = validSubNode( node_ptr, sub_node_name, pmid);
 
   auto child_node_ptr = sub_node_ptr->first_node();
+
   while (child_node_ptr != nullptr) {
 
     sub_node_text += child_node_ptr->value();
@@ -553,7 +554,6 @@ std::string kgl::ParsePublicationXMLImpl::parseTextEmbeddedNodes( rapidxml::xml_
   return sub_node_text;
 
 }
-
 
 
 rapidxml::xml_node<> * kgl::ParsePublicationXMLImpl::validSubNode( rapidxml::xml_node<> * node_ptr,

@@ -5,7 +5,7 @@
 #ifndef KGL_PUBMED_API_H
 #define KGL_PUBMED_API_H
 
-#include "kgl_literature/kgl_literature.h"
+#include "kgl_literature.h"
 #include "kel_rest_api.h"
 #include "kgl_pubmed_cache.h"
 
@@ -41,6 +41,8 @@ public:
   ~PubmedAPIRequester() = default;
 
 
+  // Returns all cached publications. Note that this assumes that all required publications have already been downloaded and are cached.
+  [[nodiscard]] const LitPublicationMap& getAllCachedPublications() const { return cached_publications_; }
   // Request Pubmed publications, use cached results when available, else request from Pubmed using the API.
   // Always writes correctly parsed API results to cache.
   [[nodiscard]] LitPublicationMap getCachedPublications(const std::vector<std::string>& pmid_vector) const;
@@ -78,8 +80,8 @@ private:
   const std::string PUBMED_EFETCH_URL_{"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"};
   const std::string PUBMED_ARTICLE_DETAIL_ARGS_{"db=pubmed&retmode=xml"};
 
-  [[nodiscard]] LitPublicationMap publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const;
-  [[nodiscard]] LitPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const;
+  [[nodiscard]] APIPublicationMap publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const;
+  [[nodiscard]] APIPublicationMap getPublicationDetails(const std::vector<std::string>& pmid_vector, bool write_cache) const;
 
 };
 

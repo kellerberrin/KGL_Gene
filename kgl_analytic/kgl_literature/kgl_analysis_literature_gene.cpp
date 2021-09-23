@@ -5,7 +5,6 @@
 #include "kgl_analysis_literature_gene.h"
 
 
-
 namespace kgl = kellerberrin::genome;
 
 
@@ -178,12 +177,12 @@ void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
   auto literature_map = pubmed_requestor_ptr->getCachedPublications(pmid_vector);
 
   // Resort the literature map by number of citations.
-  std::multimap<size_t, PublicationSummary> citation_rank_map;
-  for (auto const& [pmid, publication] : literature_map) {
+  std::multimap<size_t, std::shared_ptr<const PublicationSummary>> citation_rank_map;
+  for (auto const& [pmid, publication_ptr] : literature_map) {
 
-    if (filterPublication(publication)) {
+    if (filterPublication(*publication_ptr)) {
 
-      citation_rank_map.emplace(publication.citedBy().size(), publication);
+      citation_rank_map.emplace(publication_ptr->citedBy().size(), publication_ptr);
 
     }
 
@@ -192,11 +191,11 @@ void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
   // Print most cited articles first.
   for (auto iter = citation_rank_map.rbegin(); iter != citation_rank_map.rend(); ++iter) {
 
-    auto const& [cites, publication] = *iter;
+    auto const& [cites, publication_ptr] = *iter;
 
     out_file << "\n******************************************" << output_delimiter;
 
-    publication.extendedBiblio(out_file);
+    publication_ptr->extendedBiblio(out_file);
 
     out_file << "\n******************************************" << output_delimiter;
 
@@ -252,19 +251,19 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
     auto pub_result = publication_map.find(pmid);
     if (pub_result == publication_map.end()) {
 
-      ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication: {}", pmid);
+      ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication_ptr: {}", pmid);
       continue;
 
     }
 
-    auto const& [pub_pmid, publication] = *pub_result;
+    auto const& [pub_pmid, publication_ptr] = *pub_result;
 
-    if (publication.citedBy().size() >= min_citations) {
+    if (publication_ptr->citedBy().size() >= min_citations) {
 
       if (gene_set.size() <= max_genes and gene_set.size() >= min_genes) {
 
 
-        bool filter_result = filterPublication(publication);
+        bool filter_result = filterPublication(*publication_ptr);
 
         if (filter_result) {
 
@@ -307,12 +306,12 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
       auto pub_result = publication_map.find(pmid);
       if (pub_result == publication_map.end()) {
 
-        ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication: {}", pmid);
+        ExecEnv::log().error("LiteratureAnalysis::outputPmidGene; unable to find pmid publication_ptr: {}", pmid);
         continue;
 
       }
 
-      auto const& [pub_pmid, publication] = *pub_result;
+      auto const& [pub_pmid, publication_ptr] = *pub_result;
       auto const& [ref_pmid, gene_set] = *ref_result;
 
       out_file << "*************************************************************\n";
@@ -338,7 +337,7 @@ void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequ
 
       out_file << "\n\n";
 
-      publication.extendedBiblio(out_file);
+      publication_ptr->extendedBiblio(out_file);
 
       out_file << "\n*************************************************************\n";
 
