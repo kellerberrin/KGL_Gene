@@ -25,6 +25,8 @@ public:
   void writeAuthorAnalysis(const std::string& literature_directory);
   void writeYearAnalysis(const std::string& literature_directory);
   void writeJournalAnalysis(const std::string& literature_directory);
+  void writeCitationPeriod(const std::string& literature_directory);
+  DateGP mostRecentPublication();
 
 private:
 

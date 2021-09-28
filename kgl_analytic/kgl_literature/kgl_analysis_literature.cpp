@@ -18,7 +18,9 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
 
 
   // Setup and clear the directories to hold analysis output.
-  // Most output in here.
+  // The top level directory for this analysis type.
+  // This directory and sub-directories are recreated each time the analysis is executed.
+  // ALL PREVIOUS ANALYSIS FILES ARE DELETED.
   ident_work_directory_ = work_directory + std::string("/") + ident();
   if (not Utility::createDirectory(ident_work_directory_)) {
 
@@ -26,15 +28,24 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
                             ident_work_directory_);
 
   }
+
   // Gene specific output in here.
-  ident_gene_work_directory_ = ident_work_directory_ + std::string("/") + gene_output_directory;
-  if (not Utility::recreateDirectory(ident_gene_work_directory_)) {
+  gene_work_directory_ = ident_work_directory_ + std::string("/") + GENE_DIRECTORY_NAME_;
+  if (not Utility::recreateDirectory(gene_work_directory_)) {
 
     ExecEnv::log().critical("MutationAnalysis::initializeAnalysis, unable to recreate gene analysis results directory: {}",
-                            ident_gene_work_directory_);
+                            gene_work_directory_);
 
   }
 
+  // Literature citation, journal, author statistics output in here.
+  analysis_work_directory_ = ident_work_directory_ + std::string("/") + ANALYSIS_DIRECTORY_NAME_;
+  if (not Utility::createDirectory(analysis_work_directory_)) {
+
+    ExecEnv::log().critical("MutationAnalysis::initializeAnalysis, unable to recreate gene analysis results directory: {}",
+                            analysis_work_directory_);
+
+  }
 
   // Get the analysis parameters.
   ExecEnv::log().info("Default Analysis Id: {} initialized with analysis results directory: {}", ident(), ident_work_directory_);
@@ -100,28 +111,33 @@ bool kgl::LiteratureAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
-
   return true;
 
 }
 
-// All VCF data has been presented, finalize analysis and write results.
+// All file data has been presented, finalize analysis and write results.
 bool kgl::LiteratureAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
   const size_t minimum_publication_count{10};
-  gene_literature_.outputGenePmid(pubmed_requestor_ptr_, ident_gene_work_directory_, minimum_publication_count);
+  // Output the publications relevant to each gene.
+  gene_literature_.outputGenePmid(pubmed_requestor_ptr_, gene_work_directory_, minimum_publication_count);
 
   const size_t max_genes{1000000};
   const size_t min_genes{0};
   const size_t min_citations{0};
+  // Output the Genes relevant for each publication.
   gene_literature_.outputPmidGene(pubmed_requestor_ptr_, ident_work_directory_, max_genes, min_genes, min_citations);
 
+  // Output literature analytics
   PublicationLiterature publication_literature(pubmed_requestor_ptr_->getAllCachedPublications());
-  publication_literature.writeAuthorAnalysis(ident_work_directory_);
-  publication_literature.writeYearAnalysis(ident_work_directory_);
-  publication_literature.writeJournalAnalysis(ident_work_directory_);
+  publication_literature.writeAuthorAnalysis(analysis_work_directory_);
+  publication_literature.writeYearAnalysis(analysis_work_directory_);
+  publication_literature.writeJournalAnalysis(analysis_work_directory_);
+  publication_literature.writeCitationPeriod(analysis_work_directory_);
+  auto most_recent_publication = publication_literature.mostRecentPublication();
+  ExecEnv::log().info("LiteratureAnalysis::finalizeAnalysis; most recent publication was on: {}", most_recent_publication.text());
 
   return true;
 

@@ -19,17 +19,23 @@ using LitAuthorMap = std::map<std::string, std::multimap<std::size_t, std::share
 using LitYearMap = std::map<std::string, std::multimap<std::size_t, std::shared_ptr<const PublicationSummary>>>;
 // The key is Journal, the value map is .key=citations and .value=publication_ptr.
 using LitJournalMap = std::map<std::string, std::multimap<std::size_t, std::shared_ptr<const PublicationSummary>>>;
+// The key is months, and .value=citations
+using LitCitationPeriodMap = std::map<size_t, size_t>;
+// The key is PublicationDate as Date, the value .value=publication_ptr.
+using LitDateMap = std::multimap<DateGP, std::shared_ptr<const PublicationSummary>>;
 
 class LiteratureAnalysis {
 
 public:
 
-  explicit LiteratureAnalysis(const LitPublicationMap& publication_map) : publication_map_(publication_map) {}
+  explicit LiteratureAnalysis(const LitPublicationMap& publication_map);
   ~LiteratureAnalysis() = default;
 
   LitAuthorMap AnalyseAuthors() const;
   LitYearMap AnalyseYears() const;
   LitJournalMap AnalyseJournal() const;
+  LitCitationPeriodMap AnalyseCitationPeriod() const;
+  LitDateMap SortPublicationDate() const;
 
 private:
 

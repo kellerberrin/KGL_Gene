@@ -5,6 +5,7 @@
 #ifndef KGL_LITERATURE_H
 #define KGL_LITERATURE_H
 
+#include "kel_date_time.h"
 
 #include <string>
 #include <memory>
@@ -45,10 +46,11 @@ public:
 
   // Getters
   [[nodiscard]] const std::string& pmid() const { return pmid_; }
-  [[nodiscard]] std::string publicationDate() const; // DD-MM-YYYY or MM-YYYY or YYYY
-  [[nodiscard]] const std::string& publicationYear() const { return publication_year_; }
-  [[nodiscard]] const std::string& publicationMonth() const { return publication_month_; }
-  [[nodiscard]] const std::string& publicationDay() const { return publication_day_; }
+  [[nodiscard]] const DateGP& publicationDate() const { return publication_date_; }
+  [[nodiscard]] std::string publicationDateText() const { return publication_date_.text(); } // YYYY-mmm-DD
+  [[nodiscard]] std::string publicationYear() const { return publication_date_.year_text(); }
+  [[nodiscard]] std::string publicationMonth() const { return publication_date_.month_text(); }
+  [[nodiscard]] std::string publicationDay() const { return publication_date_.day_text(); }
   [[nodiscard]] const std::string& journal() const { return journal_; }
   [[nodiscard]] const std::string& journalISSN() const { return journal_issn_;  } // may be empty
   [[nodiscard]] const std::string& journalIssue() const { return journal_issue_;  } // may be empty
@@ -63,9 +65,7 @@ public:
   [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& references() const { return references_;  } // pmids only.
 
   // Setters
-  void publicationYear(const std::string& year) { publication_year_ = year; }
-  void publicationMonth(const std::string& month) { publication_month_ = month; }
-  void publicationDay(const std::string& day) { publication_day_ = day; }
+  void publicationDate(const DateGP& publication_date) { publication_date_ = publication_date; }
   void journal(const std::string& name) { journal_ = name; }
   void journalISSN(const std::string& issn) { journal_issn_ = issn;  } // may be empty
   void journalIssue(const std::string& issue) { journal_issue_ = issue;  } // may be empty
@@ -91,9 +91,7 @@ public:
 private:
 
   const std::string pmid_;
-  std::string publication_year_;
-  std::string publication_month_;
-  std::string publication_day_;
+  DateGP publication_date_;
   std::string journal_;
   std::string journal_issn_;
   std::string journal_issue_;  // may be empty

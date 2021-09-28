@@ -493,14 +493,23 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_a
   auto journal_issue = validSubNode(journal_node, JOURNAL_ISSUE_NODE_, publication.pmid());
   auto pub_date = validSubNode(journal_issue, PUB_DATE_NODE_, publication.pmid());
 
-  auto year = pub_date->first_node(YEAR_NODE_);
-  auto month = pub_date->first_node(MONTH_NODE_);
+  auto year_node = pub_date->first_node(YEAR_NODE_);
+  auto month_node = pub_date->first_node(MONTH_NODE_);
 
-  if (year != nullptr and month != nullptr) {
+  if (year_node != nullptr and month_node != nullptr) {
 
-    publication.publicationYear(year->value());
-    publication.publicationMonth(month->value());
-    publication.publicationDay(validOptionalNode(pub_date, DAY_NODE_));
+    auto day_node = pub_date->first_node(DAY_NODE_);
+    if (day_node != nullptr) {
+
+      std::string date_string = std::string(year_node->value()) + "-" + std::string(month_node->value()) + "-" + std::string(day_node->value());
+      publication.publicationDate(DateGP(date_string));
+
+    }else {
+
+      std::string date_string = std::string(year_node->value()) + "-" + std::string(month_node->value()) + "-01";
+      publication.publicationDate(DateGP(date_string));
+
+    }
 
   } else {
 
@@ -512,19 +521,35 @@ void kgl::ParsePublicationXMLImpl::parseXMLDate(rapidxml::xml_node<> * journal_a
 
     if (pm_year != nullptr and pm_month != nullptr) {
 
-      publication.publicationYear(pm_year->value());
-      publication.publicationMonth(pm_month->value());
-      publication.publicationDay(validOptionalNode(pubmed_date_node, DAY_NODE_));
+      auto pm_day = pubmed_date_node->first_node(DAY_NODE_);
+      if (pm_day != nullptr) {
+
+        std::string date_string = std::string(pm_year->value()) + "-" + std::string(pm_month->value()) + "-" + std::string(pm_day->value());
+        publication.publicationDate(DateGP(date_string));
+
+      }else {
+
+        std::string date_string = std::string(pm_year->value()) + "-" + std::string(pm_month->value()) + "-01";
+        publication.publicationDate(DateGP(date_string));
+
+      }
+
 
     } else {
 
-      if (year != nullptr) {
+      if (year_node != nullptr) {
 
-        publication.publicationYear(year->value());
+        std::string date_string = std::string(year_node->value()) + "-Jun-01";
+        publication.publicationDate(DateGP(date_string));
 
       } else if (pm_year != nullptr) {
 
-        publication.publicationYear(pm_year->value());
+        std::string date_string = std::string(pm_year->value()) + "-Jun-01";
+        publication.publicationDate(DateGP(date_string));
+
+      } else {
+
+        ExecEnv::log().warn("ParsePublicationXMLImpl::parseXMLDate; could not find a publication date for pmid: {}", publication.pmid());
 
       }
 

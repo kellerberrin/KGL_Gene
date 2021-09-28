@@ -9,18 +9,28 @@
 namespace kgl = kellerberrin::genome;
 
 
-kgl::LitAuthorMap kgl::LiteratureAnalysis::AnalyseAuthors() const {
+kgl::LiteratureAnalysis::LiteratureAnalysis(const LitPublicationMap& publication_map) {
 
-  LitAuthorMap author_map;
   static const PlasmodiumFilter pf_filter;
 
-  for (auto const& [pmid, publication_ptr] : publication_map_) {
+  for (auto const& [pmid, publication_ptr] : publication_map) {
 
     if (not pf_filter.applyFilter(*publication_ptr)) {
 
-      continue;
+      publication_map_.emplace(pmid, publication_ptr);
 
     }
+
+  }
+
+}
+
+
+kgl::LitAuthorMap kgl::LiteratureAnalysis::AnalyseAuthors() const {
+
+  LitAuthorMap author_map;
+
+  for (auto const& [pmid, publication_ptr] : publication_map_) {
 
     for (auto const& [surname, initials] : publication_ptr->authors()) {
 
@@ -62,15 +72,8 @@ kgl::LitAuthorMap kgl::LiteratureAnalysis::AnalyseAuthors() const {
 kgl::LitYearMap kgl::LiteratureAnalysis::AnalyseYears() const {
 
   LitYearMap year_map;
-  static const PlasmodiumFilter pf_filter;
 
   for (auto const& [pmid, publication_ptr] : publication_map_) {
-
-    if (not pf_filter.applyFilter(*publication_ptr)) {
-
-      continue;
-
-    }
 
     // Check the Author map and update.
     auto result = year_map.find(publication_ptr->publicationYear());
@@ -97,15 +100,8 @@ kgl::LitYearMap kgl::LiteratureAnalysis::AnalyseYears() const {
 kgl::LitJournalMap kgl::LiteratureAnalysis::AnalyseJournal() const {
 
   LitJournalMap journal_map;
-  static const PlasmodiumFilter pf_filter;
 
   for (auto const& [pmid, publication_ptr] : publication_map_) {
-
-    if (not pf_filter.applyFilter(*publication_ptr)) {
-
-      continue;
-
-    }
 
     std::string journal_key = Utility::findAndReplaceAll(publication_ptr->journal(), ",", "_");
 
@@ -126,5 +122,74 @@ kgl::LitJournalMap kgl::LiteratureAnalysis::AnalyseJournal() const {
   } // For publication.
 
   return journal_map;
+
+}
+
+
+kgl::LitCitationPeriodMap kgl::LiteratureAnalysis::AnalyseCitationPeriod() const {
+
+  LitCitationPeriodMap citation_period_map;
+  const size_t minimum_citation_count = 0;
+  const size_t maximum_citation_count = 1000000;
+
+  size_t found_cite{0};
+  size_t cite_not_found{0};
+  for (auto const& [pmid, publication_ptr] : publication_map_) {
+
+    if (publication_ptr->citedBy().size() < minimum_citation_count or publication_ptr->citedBy().size() > maximum_citation_count) {
+
+      continue;
+
+    }
+
+    for (auto const& cite_pmid : publication_ptr->citedBy()) {
+
+      auto result = publication_map_.find(cite_pmid);
+      if (result == publication_map_.end()) {
+
+        ++cite_not_found;
+
+      } else {
+
+        ++found_cite;
+        auto const& [_pmid, cite_publication_ptr] = *result;
+        size_t cite_months = DateGP::monthsDifference(publication_ptr->publicationDate(), cite_publication_ptr->publicationDate());
+
+        auto period_result = citation_period_map.find(cite_months);
+        if (period_result == citation_period_map.end()) {
+
+          citation_period_map.emplace(cite_months, 1);
+
+        } else {
+
+          auto& [_months, cite_count] = *period_result;
+          ++cite_count;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("LiteratureAnalysis::AnalyseCitationPeriod; Found citations: {}, Citations Not Found: {}", found_cite, cite_not_found);
+
+  return citation_period_map;
+
+}
+
+
+kgl::LitDateMap kgl::LiteratureAnalysis::SortPublicationDate() const {
+
+  LitDateMap date_sorted_publications;
+
+  for (auto const& [pmid, publication_ptr] : publication_map_) {
+
+    date_sorted_publications.emplace(publication_ptr->publicationDate(), publication_ptr);
+
+  }
+
+  return date_sorted_publications;
 
 }

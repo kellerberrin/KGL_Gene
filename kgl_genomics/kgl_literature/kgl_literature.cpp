@@ -6,34 +6,11 @@
 
 namespace kgl = kellerberrin::genome;
 
-// DD-MM-YYYY or MM-YYYY or YYYY
-std::string kgl::PublicationSummary::publicationDate() const {
-
-  std::string date_string =  publicationYear();
-
-  if (not publicationMonth().empty()) {
-
-    date_string += "-";
-    date_string += publicationMonth();
-
-  }
-
-  if (not publicationDay().empty()) {
-
-    date_string += "-";
-    date_string += publicationDay();
-
-  }
-
-  return date_string;
-
-}
-
 
 std::ostream& kgl::PublicationSummary::output(std::ostream& out_stream, bool detail, char delimiter) const {
 
   out_stream << "PMID" << delimiter << pmid() << '\n';
-  out_stream << "PUB_DATE" << delimiter << publicationDate() << '\n'; // DD-MM-YYYY or MM-YYYY
+  out_stream << "PUB_DATE" << delimiter << publicationDateText() << '\n'; // YYYY-MMM-DD
   out_stream << "JOURNAL" << delimiter << journal() << '\n';
   out_stream << "ISSN" << delimiter << journalISSN() << '\n';
   out_stream << "ISSUE" << delimiter << journalIssue() << '\n'; // may be empty

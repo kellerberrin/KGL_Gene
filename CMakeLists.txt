@@ -105,7 +105,9 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_rest_api.cpp
-        kel_utility/kel_rest_api.h)
+        kel_utility/kel_rest_api.h
+        kel_utility/kel_date_time.cpp
+        kel_utility/kel_date_time.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -264,7 +266,11 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_pubmed_cache.h
         kgl_genomics/kgl_parser/kgl_pubmed_api.cpp
         kgl_genomics/kgl_parser/kgl_pubmed_api.h
-        kgl_genomics/kgl_literature/kgl_literature_filter.cpp kgl_genomics/kgl_literature/kgl_literature_analysis.cpp kgl_genomics/kgl_literature/kgl_literature_analysis.h kgl_genomics/kgl_literature/kgl_literature_filter.h kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h)
+        kgl_genomics/kgl_literature/kgl_literature_filter.cpp
+        kgl_genomics/kgl_literature/kgl_literature_analysis.cpp
+        kgl_genomics/kgl_literature/kgl_literature_analysis.h
+        kgl_genomics/kgl_literature/kgl_literature_filter.h
+        kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
@@ -487,7 +493,9 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_literature/kgl_analysis_literature_gene.cpp
         kgl_analytic/kgl_literature/kgl_analysis_literature_gene.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h)
+        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h
+        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp
+        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h)
 
 # Deconvolution and mixture files.
 

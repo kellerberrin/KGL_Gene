@@ -8,6 +8,7 @@
 #include <fstream>
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 void kgl::PublicationLiterature::writeAuthorAnalysis(const std::string& literature_directory) {
@@ -165,5 +166,55 @@ void kgl::PublicationLiterature::writeJournalAnalysis(const std::string& literat
     out_file << ',' << pmids << '\n';
 
   }
+
+}
+
+
+void kgl::PublicationLiterature::writeCitationPeriod(const std::string& literature_directory) {
+
+  std::string citation_period_file{"citation_period_analysis.csv"};
+  std::string citation_file_path = Utility::filePath(citation_period_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationPeriod; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Months" << ',' << "CitationCount" << '\n';
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto citation_period_map = literature_analysis.AnalyseCitationPeriod();
+
+  for (auto const& [month, cite_count] : citation_period_map) {
+
+
+    out_file << month << ',' << cite_count << '\n';
+
+  }
+
+
+}
+
+
+kel::DateGP kgl::PublicationLiterature::mostRecentPublication() {
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto date_publication_map = literature_analysis.SortPublicationDate();
+
+  if (not date_publication_map.empty()) {
+
+    auto recent_iter = date_publication_map.rbegin();
+    auto [pub_date, publication_ptr] = *recent_iter;
+
+    return pub_date;
+
+  }
+
+  return DateGP();
 
 }
