@@ -40,7 +40,7 @@ public:
   [[nodiscard]] static std::vector<std::string> char_tokenizer(const std::string& str, const char delim);
   [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
-  [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  stdev = second
+  [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  sample stdev = .second
   static void getRuntime(double &Clock, double &System, double &User);  // Times in seconds.
 
 private:

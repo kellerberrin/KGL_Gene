@@ -4,6 +4,7 @@
 
 
 #include "kgl_pubmed_resource.h"
+#include "kel_percentile.h"
 
 #include <memory>
 
@@ -23,6 +24,12 @@ using LitJournalMap = std::map<std::string, std::multimap<std::size_t, std::shar
 using LitCitationPeriodMap = std::map<size_t, size_t>;
 // The key is PublicationDate as Date, the value .value=publication_ptr.
 using LitDateMap = std::multimap<DateGP, std::shared_ptr<const PublicationSummary>>;
+// The key is months, and .value pair is .first = mean, .second = stddev.
+using LitCitationVarianceMap = std::map<size_t, std::pair<double, double>>;
+// Sort in citation count quantile order.
+using CitationQuantile = Percentile<size_t, std::shared_ptr<const PublicationSummary>>;
+
+
 
 class LiteratureAnalysis {
 
@@ -31,11 +38,13 @@ public:
   explicit LiteratureAnalysis(const LitPublicationMap& publication_map);
   ~LiteratureAnalysis() = default;
 
-  LitAuthorMap AnalyseAuthors() const;
-  LitYearMap AnalyseYears() const;
-  LitJournalMap AnalyseJournal() const;
-  LitCitationPeriodMap AnalyseCitationPeriod() const;
-  LitDateMap SortPublicationDate() const;
+  [[nodiscard]] LitAuthorMap analyseAuthors() const;
+  [[nodiscard]] LitYearMap analyseYears() const;
+  [[nodiscard]] LitJournalMap analyseJournal() const;
+  [[nodiscard]] LitCitationPeriodMap analyseCitationPeriod() const;
+  [[nodiscard]] LitDateMap sortPublicationDate() const;
+  [[nodiscard]] LitCitationVarianceMap analyseCitationPercent() const;
+  [[nodiscard]] CitationQuantile analyseCitationQuartiles() const;
 
 private:
 

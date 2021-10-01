@@ -5,12 +5,30 @@
 #include "kgl_literature/kgl_literature.h"
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
+
+
+// If not initialized then today's date is assumed.
+kel::DateGP kgl::PublicationSummary::downloadDate() const {
+
+  if (download_date_.notInitialized()) {
+
+    DateGP todays_date;
+    todays_date.setToday();
+    return todays_date;
+
+  }
+
+  return download_date_;
+
+}
 
 
 std::ostream& kgl::PublicationSummary::output(std::ostream& out_stream, bool detail, char delimiter) const {
 
   out_stream << "PMID" << delimiter << pmid() << '\n';
-  out_stream << "PUB_DATE" << delimiter << publicationDateText() << '\n'; // YYYY-MMM-DD
+  out_stream << "PUB_DATE" << delimiter << publicationDate().text() << '\n'; // YYYY-MMM-DD
+  out_stream << "DOWNLOAD_DATE" << delimiter << downloadDate().text() << '\n'; // YYYY-MMM-DD
   out_stream << "JOURNAL" << delimiter << journal() << '\n';
   out_stream << "ISSN" << delimiter << journalISSN() << '\n';
   out_stream << "ISSUE" << delimiter << journalIssue() << '\n'; // may be empty

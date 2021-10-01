@@ -33,8 +33,8 @@ using LitPublicationMap = std::map<std::string, std::shared_ptr<const Publicatio
 
 using APIPublicationMap = std::map<std::string, std::shared_ptr<PublicationSummary>>;
 
-// key = pmid_, value = unique set of pmids that cite, or are referenced by, the key pmid_.
-using LitCitationMap = std::map<std::string, std::set<std::string>>;
+// key = pmid_, value is a pair of .first = download-date and .second = a unique unique set of pmids that cite, or are referenced by, the key pmid_.
+using LitCitationMap = std::map<std::string, std::pair<DateGP, std::set<std::string>>>;
 
 
 class PublicationSummary {
@@ -46,8 +46,8 @@ public:
 
   // Getters
   [[nodiscard]] const std::string& pmid() const { return pmid_; }
-  [[nodiscard]] const DateGP& publicationDate() const { return publication_date_; }
-  [[nodiscard]] std::string publicationDateText() const { return publication_date_.text(); } // YYYY-mmm-DD
+  [[nodiscard]] DateGP publicationDate() const { return publication_date_; }
+  [[nodiscard]] DateGP downloadDate() const; // If not initialized then today's date is assumed.
   [[nodiscard]] std::string publicationYear() const { return publication_date_.year_text(); }
   [[nodiscard]] std::string publicationMonth() const { return publication_date_.month_text(); }
   [[nodiscard]] std::string publicationDay() const { return publication_date_.day_text(); }
@@ -66,6 +66,7 @@ public:
 
   // Setters
   void publicationDate(const DateGP& publication_date) { publication_date_ = publication_date; }
+  void downloadDate(const DateGP& download_date) { download_date_ = download_date; }
   void journal(const std::string& name) { journal_ = name; }
   void journalISSN(const std::string& issn) { journal_issn_ = issn;  } // may be empty
   void journalIssue(const std::string& issue) { journal_issue_ = issue;  } // may be empty
@@ -92,6 +93,7 @@ private:
 
   const std::string pmid_;
   DateGP publication_date_;
+  DateGP download_date_;   // The date that this record was downloaded from Pubmed, if not initialized then today's date is assumed.
   std::string journal_;
   std::string journal_issn_;
   std::string journal_issue_;  // may be empty

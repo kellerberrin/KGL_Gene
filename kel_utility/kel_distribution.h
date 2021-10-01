@@ -306,6 +306,8 @@ public:
   [[nodiscard]] static double logPartialPdf(double n, double k, double alpha, double beta);
   // No binomial coefficient term.
   [[nodiscard]] static double partialPdf(double n, double k, double alpha, double beta);
+  // .first is alpha, .second is beta. The raw moments are calculated from the observations and used to calculate alpha and beta.
+  [[nodiscard]] static std::pair<double, double> methodOfMoments(const std::vector<size_t>& observations, size_t n_trials);
 
 };
 

@@ -206,6 +206,32 @@ double kel::BetaBinomialDistribution::logPdf(double n, double k, double alpha, d
 
 }
 
+// .first is alpha, .second is beta. The raw moments are calculated from the observations and used to calculate alpha and beta.
+[[nodiscard]] std::pair<double, double> kel::BetaBinomialDistribution::methodOfMoments(const std::vector<size_t>& observations, size_t n_trials) {
+
+  // calculate the first moment
+  size_t obs_sum = std::accumulate(observations.begin(), observations.end(), static_cast<size_t>(0));
+  const double m1 = static_cast<double>(obs_sum) / static_cast<double>(observations.size());
+
+  // calculate the 2nd moment
+  auto sqr_lambda = [](size_t accumulate, size_t obs)->size_t { return accumulate + (obs * obs); };
+  size_t sqr_sum = std::accumulate(observations.begin(), observations.end(), static_cast<size_t>(0), sqr_lambda);
+  const double m2 = static_cast<double>(sqr_sum) / static_cast<double>(observations.size());
+
+  const double n = static_cast<double>(n_trials);
+
+  const double a_numer = (n * m1) - m2;
+  const double ab_denom = n * ((m2 / m1) - m1 - 1) + m1;
+  const double a = a_numer / ab_denom;
+
+  const double b_numer = (n - m1) * (n - (m2/m1));
+  const double b = b_numer / ab_denom;
+
+  return {a, b};
+
+}
+
+
 
 double kel::BinomialDistribution::pdf(size_t n, size_t k, double prob_success) {
 
@@ -240,6 +266,9 @@ double kel::BinomialDistribution::cdf(size_t n, double k, double prob_success) {
   return sum_pdf;
 
 }
+
+
+
 
 
 

@@ -6,7 +6,7 @@
 #define KGL_PUBMED_CACHE_H
 
 
-#include "kgl_literature/kgl_literature.h"
+#include "kgl_literature.h"
 #include "kel_rest_api.h"
 #include "kgl_resource_db.h"
 
@@ -55,9 +55,11 @@ private:
   const std::string citation_cache_file_;
 
   // Pseudo XML to delimit the Pubmed XML text.
-  const std::string START_CACHE_NODE_{"<CacheBlock Size="};
-  constexpr static const char START_CACHE_NODE_END_{'>'};
-  const std::string END_CACHE_NODE_{"</CacheBlock>"};
+  inline static const std::string START_CACHE_NODE_{"<CacheBlock Size="};
+  static constexpr const char ATTRIBUTE_SEPARATOR_{' '};
+  inline static const std::string START_CACHE_DOWNLOAD_DATE_{"DownloadDate="};
+  static constexpr const char START_CACHE_NODE_END_{'>'};
+  inline static const std::string END_CACHE_NODE_{"</CacheBlock>"};
 
   constexpr static const size_t MAX_CACHE_SIZE_{1000000};
   constexpr static const size_t MIN_CACHE_SIZE_{0};
@@ -67,7 +69,7 @@ private:
   // Read and parse literature citations.
   [[nodiscard]] LitCitationMap readCitationCache() const;
   // Read cached XML text.
-  [[nodiscard]] bool readCacheRecord(std::istream& input, std::string& record_string) const;
+  [[nodiscard]] bool readCacheRecord(std::istream& input, std::string& record_string, DateGP& download_date) const;
 
 };
 

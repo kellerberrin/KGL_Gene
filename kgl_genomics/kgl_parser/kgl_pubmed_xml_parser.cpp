@@ -10,7 +10,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML(const std::string& citation_text) {
+std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML(const std::string& citation_text, const DateGP& download_date) {
 
   LitCitationMap citation_map;
   bool parse_result{true};
@@ -75,7 +75,7 @@ std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML
 
           }
 
-          auto [iter, result] = citation_map.try_emplace(pmid_node->value(), citation_pmid_set);
+          auto [iter, result] = citation_map.try_emplace(pmid_node->value(), std::pair<DateGP, std::set<std::string>>{download_date, citation_pmid_set});
           if (not result) {
 
             ExecEnv::log().error("PubmedRequester::parseCitationXML; expected duplicate for pmid_: {}", pmid_node->value());
@@ -115,7 +115,8 @@ std::pair<bool, kgl::LitCitationMap> kgl::ParseCitationXMLImpl::parseCitationXML
 
 
 
-std::pair<bool, kgl::APIPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML(const std::string& publication_xml_text) {
+std::pair<bool, kgl::APIPublicationMap> kgl::ParsePublicationXMLImpl::parsePublicationXML( const std::string& publication_xml_text,
+                                                                                           const DateGP& download_date) {
 
   // Comment out after testing.
   // ExecEnv::log().info("PubmedRequester::parsePublicationXML; text:\n{}", publication_xml_text);
@@ -156,6 +157,8 @@ std::pair<bool, kgl::APIPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
           throw std::runtime_error(error_message);
 
         }
+
+        publication.downloadDate(download_date);
 
         auto [iter, result] = publication_map.try_emplace(publication.pmid(), std::make_shared<PublicationSummary>(publication));
         if (not result) {

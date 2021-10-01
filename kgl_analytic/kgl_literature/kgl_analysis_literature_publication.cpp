@@ -28,7 +28,7 @@ void kgl::PublicationLiterature::writeAuthorAnalysis(const std::string& literatu
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
-  auto author_map = literature_analysis.AnalyseAuthors();
+  auto author_map = literature_analysis.analyseAuthors();
 
   for (auto const& [author, pub_cite_map] : author_map) {
 
@@ -81,7 +81,7 @@ void kgl::PublicationLiterature::writeYearAnalysis(const std::string& literature
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
-  auto year_map = literature_analysis.AnalyseYears();
+  auto year_map = literature_analysis.analyseYears();
 
   for (auto const& [year, pub_cite_map] : year_map) {
 
@@ -135,7 +135,7 @@ void kgl::PublicationLiterature::writeJournalAnalysis(const std::string& literat
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
-  auto journal_map = literature_analysis.AnalyseJournal();
+  auto journal_map = literature_analysis.analyseJournal();
 
   for (auto const& [journal, pub_cite_map] : journal_map) {
 
@@ -187,7 +187,7 @@ void kgl::PublicationLiterature::writeCitationPeriod(const std::string& literatu
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
-  auto citation_period_map = literature_analysis.AnalyseCitationPeriod();
+  auto citation_period_map = literature_analysis.analyseCitationPeriod();
 
   for (auto const& [month, cite_count] : citation_period_map) {
 
@@ -200,21 +200,119 @@ void kgl::PublicationLiterature::writeCitationPeriod(const std::string& literatu
 }
 
 
-kel::DateGP kgl::PublicationLiterature::mostRecentPublication() {
+
+void kgl::PublicationLiterature::writeCitationVariance(const std::string& literature_directory) {
+
+  std::string citation_variance_file{"citation_variance_analysis.csv"};
+  std::string citation_file_path = Utility::filePath(citation_variance_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationVeriance; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Months" << ',' << "CitationMean" << ',' << "CitationStdev" << '\n';
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
-  auto date_publication_map = literature_analysis.SortPublicationDate();
+  auto citation_variance_map = literature_analysis.analyseCitationPercent();
+
+  for (auto const& [month, cite_pair] : citation_variance_map) {
+
+    auto const& [mean, stdev] = cite_pair;
+
+    out_file << month << ',' << mean << ',' << stdev << '\n';
+
+  }
+
+}
+
+
+std::shared_ptr<const kgl::PublicationSummary> kgl::PublicationLiterature::mostRecentPublication() {
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto date_publication_map = literature_analysis.sortPublicationDate();
+
+
+  auto pub_iter = date_publication_map.rbegin();
+  while(pub_iter != date_publication_map.rend()) {
+
+    auto const& [pub_date, publication_ptr] = *pub_iter;
+
+    if (pub_date > publication_ptr->downloadDate()) {
+
+      ExecEnv::log().info("Publication: {}, publication date: {}, greater than download date: {}",
+                          publication_ptr->pmid(), pub_date.text(), publication_ptr->downloadDate().text());
+
+    } else {
+
+      break;
+
+    }
+
+    ++pub_iter;
+
+  }
+
 
   if (not date_publication_map.empty()) {
 
     auto recent_iter = date_publication_map.rbegin();
+
     auto [pub_date, publication_ptr] = *recent_iter;
 
-    return pub_date;
+    return publication_ptr;
 
   }
 
-  return DateGP();
+  // Should not happen.
+  ExecEnv::log().critical("PublicationLiterature::mostRecentPublication; no publications in the publication map");
+
+  return std::shared_ptr<const kgl::PublicationSummary>();
 
 }
+
+void kgl::PublicationLiterature::writeCitationQuantiles(const std::string& literature_directory) {
+
+
+  std::string citation_quantile_file{"citation_quantile_analysis.csv"};
+  std::string citation_file_path = Utility::filePath(citation_quantile_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationQuantiles; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Quantile" << ',' << "Citations" << '\n';
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto citation_quantiles = literature_analysis.analyseCitationQuartiles();
+
+  for (double quantile = 0.01; quantile <= 1.0; quantile += 0.01) {
+
+    out_file << quantile << ',';
+
+    auto quant_opt = citation_quantiles.percentile(quantile);
+    if (quant_opt) {
+
+      auto const& [cite_count, publication_ptr] = quant_opt.value();
+      out_file << cite_count << '\n';
+
+    } else {
+
+      out_file << "N/A\n";
+
+    }
+
+  }
+
+}
+

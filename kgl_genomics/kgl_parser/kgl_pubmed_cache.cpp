@@ -24,7 +24,16 @@ kgl::LitPublicationMap kgl::PubmedAPICache::readCachedPublications() const {
     auto result = citation_map.find(pmid);
     if (result != citation_map.end()) {
 
-      auto const& [cite_pmid, cite_set] = *result;
+      auto const& [cite_pmid, cite_date_set] = *result;
+      auto const& [cite_date, cite_set] = cite_date_set;
+
+      // Check the download dates.
+      if (cite_date != publication_ptr->downloadDate()) {
+
+        ExecEnv::log().warn("PubmedAPICache::readCachedPublications; citation download date: {} does not match publication download date: {}",
+                            cite_date.text(), publication_ptr->downloadDate().text());
+
+      }
 
       publication_ptr->citations(cite_set);
       cached_pub_map.emplace(pmid, publication_ptr);
@@ -55,9 +64,10 @@ kgl::APIPublicationMap kgl::PubmedAPICache::readPublicationCache() const {
   }
 
   std::string cached_records;
-  while(readCacheRecord(publication_xml_file, cached_records)) {
+  DateGP download_date;
+  while(readCacheRecord(publication_xml_file, cached_records, download_date)) {
 
-    auto [parse_result, detail_map] = ParsePublicationXMLImpl::parsePublicationXML(cached_records);
+    auto [parse_result, detail_map] = ParsePublicationXMLImpl::parsePublicationXML(cached_records, download_date);
     if (parse_result) {
 
       publication_map.merge(detail_map);
@@ -88,9 +98,10 @@ kgl::LitCitationMap kgl::PubmedAPICache::readCitationCache() const {
   }
 
   std::string cached_records;
-  while(readCacheRecord(citation_xml_file, cached_records)) {
+  DateGP download_date;
+  while(readCacheRecord(citation_xml_file, cached_records, download_date)) {
 
-    auto [parse_result, cite_map] = ParseCitationXMLImpl::parseCitationXML(cached_records);
+    auto [parse_result, cite_map] = ParseCitationXMLImpl::parseCitationXML(cached_records, download_date);
     if (parse_result) {
 
       citation_map.merge(cite_map);
@@ -118,10 +129,15 @@ bool kgl::PubmedAPICache::writeCitationCache(const std::string& xml_cache_record
     return false;
 
   }
+  DateGP todays_date;
+  todays_date.setToday();
 
   // Wrap the XML text in pseudo begin and end tags
   citation_xml_file << std::string(START_CACHE_NODE_);
-  citation_xml_file << std::to_string(xml_cache_record.size());
+  citation_xml_file << "\"" << std::to_string(xml_cache_record.size()) << "\"";
+  citation_xml_file << ATTRIBUTE_SEPARATOR_;
+  citation_xml_file << std::string(START_CACHE_DOWNLOAD_DATE_);
+  citation_xml_file << "\"" << todays_date.text() << "\"";
   citation_xml_file << START_CACHE_NODE_END_;
   citation_xml_file << xml_cache_record;
   citation_xml_file << std::string(END_CACHE_NODE_);
@@ -141,10 +157,15 @@ bool kgl::PubmedAPICache::writePublicationCache(const std::string& xml_cache_rec
     return false;
 
   }
+  DateGP todays_date;
+  todays_date.setToday();
 
   // Wrap the XML text in pseudo begin and end tags
   detail_xml_file << std::string(START_CACHE_NODE_);
-  detail_xml_file << std::to_string(xml_cache_record.size());
+  detail_xml_file << "\"" << std::to_string(xml_cache_record.size()) << "\"";
+  detail_xml_file << ATTRIBUTE_SEPARATOR_;
+  detail_xml_file << std::string(START_CACHE_DOWNLOAD_DATE_);
+  detail_xml_file << "\"" << todays_date.text() << "\"";
   detail_xml_file << START_CACHE_NODE_END_;
   detail_xml_file << xml_cache_record;
   detail_xml_file << std::string(END_CACHE_NODE_);
@@ -155,7 +176,7 @@ bool kgl::PubmedAPICache::writePublicationCache(const std::string& xml_cache_rec
 
 
 
-bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& record_string) const {
+bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& record_string, DateGP& download_date) const {
 
   record_string.clear();
 
@@ -184,10 +205,18 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
   }
 
   std::string xml_size;
+  bool found_comma{false};
   while(auto ch = input.get()) {
 
     if (ch == START_CACHE_NODE_END_) {
 
+      break;
+
+    }
+
+    if (ch == ATTRIBUTE_SEPARATOR_) {
+
+      found_comma = true;
       break;
 
     }
@@ -199,7 +228,64 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
 
     }
 
-    xml_size += static_cast<char>(ch);
+    if (ch != '\"') {
+
+      xml_size += static_cast<char>(ch);
+
+    }
+
+  }
+
+  if (found_comma) {
+
+    input.read(node_buffer, START_CACHE_DOWNLOAD_DATE_.size());
+    if (input.eof()) {
+
+      ExecEnv::log().error("PubmedAPICache::readCacheRecord; unexpected EOF encountered, XML cache is corrupt");
+      return false;
+
+    }
+
+    node_buffer[START_CACHE_DOWNLOAD_DATE_.size()] = '\0';
+
+    if (std::string(node_buffer) != START_CACHE_DOWNLOAD_DATE_) {
+
+      ExecEnv::log().error("PubmedAPICache::readCacheRecord; unexpected start node attribute: {}, XML cache is corrupt", std::string(node_buffer));
+      return false;
+
+    }
+
+    // Read the Date format "YYYY-MMM-DD"
+    char date_buffer[32];
+    input.read(date_buffer, DateGP::TEXTSIZE+2);
+
+    if (input.eof()) {
+
+      ExecEnv::log().error("PubmedAPICache::readCacheRecord; unexpected EOF encountered, XML cache is corrupt");
+      return false;
+
+    }
+
+    // Remove the quote characters.
+    date_buffer[DateGP::TEXTSIZE+1] = '\0';
+    DateGP attribute_date(&date_buffer[1]);
+    if (attribute_date.notInitialized()) {
+
+      ExecEnv::log().error("PubmedAPICache::readCacheRecord; invalid download date");
+      return false;
+
+    }
+
+    download_date = attribute_date;
+
+    // Get the node closing bracket '>'
+    auto ch = input.get();
+    if (ch != START_CACHE_NODE_END_) {
+
+      ExecEnv::log().error("PubmedAPICache::readCacheRecord; expected '>' , XML cache is corrupt");
+      return false;
+
+    }
 
   }
 
@@ -211,6 +297,7 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
   } catch(const std::exception& e) {
 
     ExecEnv::log().error("PubmedAPICache::readCacheRecord; invalid XML record size text: {}, exception: {}", xml_size, e.what());
+    return false;
 
   }
 

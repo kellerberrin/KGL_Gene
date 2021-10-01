@@ -26,7 +26,9 @@ public:
   void writeYearAnalysis(const std::string& literature_directory);
   void writeJournalAnalysis(const std::string& literature_directory);
   void writeCitationPeriod(const std::string& literature_directory);
-  DateGP mostRecentPublication();
+  void writeCitationVariance(const std::string& literature_directory);
+  std::shared_ptr<const PublicationSummary> mostRecentPublication();
+  void writeCitationQuantiles(const std::string& literature_directory);
 
 private:
 

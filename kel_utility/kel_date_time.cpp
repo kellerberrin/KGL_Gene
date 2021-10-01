@@ -22,9 +22,9 @@ kel::DateGP::DateGP(const std::string& date_str) {
     month_ = boostdate.month();
     day_ = boostdate.day();
 
-  } catch(std::runtime_error& e) {
+  } catch(std::exception& e) {
 
-    ExecEnv::log().error("DateGP::DateGP; unable to parse date string: {}, runtime error: {}", e.what());
+    ExecEnv::log().error("DateGP::DateGP; unable to parse date string: '{}', exception: {}", date_str, e.what());
 
   }
 
@@ -39,11 +39,33 @@ kel::DateGP::DateGP(size_t year, size_t month, size_t day) {
     month_ = boostdate.month();
     day_ = boostdate.day();
 
-  } catch(std::runtime_error& e) {
+  } catch(std::exception& e) {
 
-    ExecEnv::log().error("DateGP::DateGP; invalid date: {}-{}-{}, runtime error: {}", day, month, year, e.what());
+    ExecEnv::log().error("DateGP::DateGP; invalid date: {}-{}-{}, exception: {}", day, month, year, e.what());
 
   }
+
+}
+
+// The date object is initialized to the current local date.
+void kel::DateGP::setToday() {
+
+  bg::date boostdate (bg::day_clock::local_day());
+
+  year_ = boostdate.year();
+  month_ = boostdate.month();
+  day_ = boostdate.day();
+
+}
+
+// The date object is initialized to the current UTC (Greenwich) date.
+void kel::DateGP::setUTCDate() {
+
+  bg::date boostdate (bg::day_clock::universal_day());
+
+  year_ = boostdate.year();
+  month_ = boostdate.month();
+  day_ = boostdate.day();
 
 }
 

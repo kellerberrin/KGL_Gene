@@ -31,11 +31,15 @@ public:
 
   DateGP& operator=(const DateGP&) = default;
 
+  void setToday(); // The date object is initialized to the current local (timezone) date.
+  void setUTCDate(); // The date object is initialized to the current UTC (Greenwich) date.
+
   [[nodiscard]] size_t year() const { return year_; }
   [[nodiscard]] size_t month() const { return month_; }
   [[nodiscard]] size_t day() const { return day_; }
 
   [[nodiscard]] std::string text() const; // returned as YYYY-MMM-DD, e.g. "2020-Jan-01"
+  static const constexpr size_t TEXTSIZE{11};
 
   [[nodiscard]] std::string year_text() const { return std::to_string(year_); }
   [[nodiscard]] std::string month_text() const { return std::to_string(month_); }
@@ -43,6 +47,8 @@ public:
 
   [[nodiscard]] bool operator<(const DateGP& cmp) const;
   [[nodiscard]] bool operator==(const DateGP& cmp) const;
+  [[nodiscard]] bool operator!=(const DateGP& cmp) const { return not operator==(cmp); }
+  [[nodiscard]] bool operator>(const DateGP& cmp) const { return not operator<(cmp) and not operator==(cmp); }
   [[nodiscard]] bool notInitialized() const { return this->operator==(DateGP()); }
 
   [[nodiscard]] static size_t daysDifference(const DateGP& date1, const DateGP& date2);

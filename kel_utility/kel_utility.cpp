@@ -483,7 +483,7 @@ std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
    double mean = std::accumulate(vec.begin(), vec.end(), 0.0) / size;
 
   // Now calculate the variance
-  auto variance_func = [&mean](double accumulator, const double& val)
+  auto variance_func = [&mean](const double& accumulator, const double& val)->double
   {
     return accumulator + ((val - mean) * (val - mean));
   };

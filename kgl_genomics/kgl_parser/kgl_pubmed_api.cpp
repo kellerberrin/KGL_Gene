@@ -129,7 +129,16 @@ kgl::LitPublicationMap kgl::PubmedAPIRequester::getAPIPublications(const std::ve
 
     } else {
 
-      auto const& [cite_pmid, cite_set] = *result;
+      auto const& [cite_pmid, cite_date_set] = *result;
+      auto const& [cite_date, cite_set] = cite_date_set;
+
+      // Check the download dates
+      if (cite_date != publication_ptr->downloadDate()) {
+
+        ExecEnv::log().warn( "PubmedRequester::getAPIPublications; citation download date: {}, does not match publication download date: {}",
+                             cite_date.text(), publication_ptr->downloadDate().text());
+
+      }
 
       publication_ptr->citations(cite_set);
       // Insert into the const pointer map, this publication record will not be modified.
@@ -228,6 +237,8 @@ kgl::APIPublicationMap kgl::PubmedAPIRequester::getPublicationDetails(const std:
 
 kgl::APIPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vector<std::string>& pmid_vector, bool write_cache) const {
 
+  DateGP download_date;
+  download_date.setToday();
   APIPublicationMap publication_map;
   std::string request_string;
   const std::string id_prefix{"&id="};
@@ -247,7 +258,7 @@ kgl::APIPublicationMap kgl::PubmedAPIRequester::publicationBatch(const std::vect
 
   } else {
 
-    auto [parse_result, parsed_map] = ParsePublicationXMLImpl::parsePublicationXML(publication_text);
+    auto [parse_result, parsed_map] = ParsePublicationXMLImpl::parsePublicationXML(publication_text, download_date);
     if (parse_result and write_cache) {
 
       if (not pubmed_cache_.writePublicationCache(publication_text)) {
@@ -383,6 +394,8 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::getCitationReference(const std::vec
 
 kgl::LitCitationMap kgl::PubmedAPIRequester::citationBatch(const std::vector<std::string>& pmid_vector, const std::string& cite_type_args, bool write_cache) const {
 
+  DateGP download_date;
+  download_date.setToday();
   LitCitationMap citation_map;
   std::string request_string;
   const std::string id_prefix{"&id="};
@@ -402,7 +415,7 @@ kgl::LitCitationMap kgl::PubmedAPIRequester::citationBatch(const std::vector<std
 
   } else {
 
-     auto [parse_result, parsed_map] = ParseCitationXMLImpl::parseCitationXML(citation_text);
+     auto [parse_result, parsed_map] = ParseCitationXMLImpl::parseCitationXML(citation_text, download_date);
      if (parse_result and write_cache) {
 
        if (not pubmed_cache_.writeCitationCache(citation_text)) {
