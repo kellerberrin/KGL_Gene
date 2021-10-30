@@ -15,7 +15,7 @@ double kol::InformationContentImpl::getRootCount(const std::string& root_id) con
   auto const result = probability_map_.find(root_id);
   if (result == probability_map_.end()) {
 
-    ExecEnv::log().error("TermProbabilityMap::getRootCount; root term: {} not in probability map", root_id);
+    ExecEnv::log().error("TermProbabilityMap::getRootCount; root term: {} not in probfailure map", root_id);
     return 1.0;
 
   }
@@ -52,7 +52,7 @@ double kol::InformationContentImpl::termInformation(const std::string &term_id) 
 
 
 /*!
-  This function converts the probability terms of the probability map to information content.
+  This function converts the probability terms of the probfailure map to information content.
 */
 void kol::InformationContentImpl::convertProbtoIC() {
 

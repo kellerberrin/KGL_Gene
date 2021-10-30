@@ -38,7 +38,7 @@ kol::OntologySetType<std::string> kol::EnrichmentTools::getDescendantGenes( cons
   The test value           k
 
   Answers the question:
-  "What is probability of seeing value of test_value_k or more successes
+  "What is probfailure of seeing value of test_value_k or more r_successes
     in a sample of size sample_size_n, given that total sample size population_N contains total successes_r."
 */
 

@@ -7,6 +7,8 @@
 #include "kgl_analysis_null.h"
 #include "kgl_variant_sort.h"
 
+#include "kel_distribution.h"
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -33,10 +35,17 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
   // Get the pubmed api
   pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
 
-  std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
-//std::vector<std::string> pmidids{ "33543710"};
+//  std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
+std::vector<std::string> pmidids{ "22157630", "18717995", "7886766" };
   auto publication_map = pubmed_requestor_ptr_->getCachedPublications(pmidids);
+
   for (auto const& [pmid, publication_ptr] : publication_map) {
+
+    auto citation_set= publication_ptr->citedBy();
+
+    auto citations = pubmed_requestor_ptr_->getCachedPublications(citation_set);
+
+    ExecEnv::log().info("For publication: {} Retrieved citations: {}", pmid, citations.size());
 
     std::stringstream out_str;
     publication_ptr->output(out_str, '|');
@@ -44,6 +53,23 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
     ExecEnv::log().info("\n{}", out_str.str());
 
   }
+
+  const double lambda = 0.68;
+  Poisson poisson_dist(lambda);
+  for (double quantile = 0.01; quantile <= 0.9; quantile += 0.01) {
+
+    size_t count = poisson_dist.quantile(quantile);
+    double prob = poisson_dist.cdf(0L);
+    ExecEnv::log().info("Poisson lambda: {}, quantile: {}, count: {}, prob:{}", lambda, quantile, count, prob);
+
+  }
+
+  const double nb_r{0.926523};
+  const double nb_p{0.040554};
+  NegativeBinomial negative_binomial(nb_r, nb_p);
+
+  ExecEnv::log().info("Negative Binomial: r_successes: {}, p_prob_successes: {}, mean: {}",
+                      negative_binomial.r_successes(), negative_binomial.p_probsuccess(), negative_binomial.mean());
 
   return true;
 

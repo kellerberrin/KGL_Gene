@@ -31,7 +31,7 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   // Set short description, version, and date.
   setShortDescription(parser, "Population Genome Comparison");
   setVersion(parser, VERSION);
-  setDate(parser, "March 2021");
+  setDate(parser, "October 2021");
 
   // Define usage line and long description.
   addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");

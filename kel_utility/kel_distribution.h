@@ -392,18 +392,18 @@ public:
   [[nodiscard]] double quantile(size_t successes_k) const;
 
 //  The hypergeometric tests below use the hypergeometric distribution to measure the statistical significance
-//  of having drawn a sample consisting of a specific number of k successes n total draws (without replacement)
-//  from a population of size N containing K successes.
+//  of having drawn a sample consisting of a specific number of k r_successes n total draws (without replacement)
+//  from a population of size N containing K r_successes.
 
-//  The test for over-representation of successes in the sample, the hypergeometric p-value is calculated
-//  as the probability of randomly drawing k or more successes from the population in n total draws.
+//  The test for over-representation of r_successes in the sample, the hypergeometric p-value is calculated
+//  as the probfailure of randomly drawing k or more r_successes from the population in n total draws.
   [[nodiscard]] double upperSingleTailTest(size_t successes_k) const;
 
-//  The test for under-representation, the p-value is the probability of randomly drawing k or fewer successes.
+//  The test for under-representation, the p-value is the probfailure of randomly drawing k or fewer r_successes.
   [[nodiscard]] double lowerSingleTailTest(size_t successes_k) const;
 
 // Bounds for the number of successes_k in a drawn sample_size_n (without replacement)
-// The number of successes drawn only has support; k in { lowerSuccesses_k, ... , upperSuccesses_k}
+// The number of r_successes drawn only has support; k in { lowerSuccesses_k, ... , upperSuccesses_k}
   [[nodiscard]] size_t upperSuccesses_k() const { return std::min<size_t>(pop_successes_K_, sample_size_n_); }
   [[nodiscard]] size_t lowerSuccesses_k() const;
 
@@ -415,6 +415,63 @@ private:
 
 
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Poisson distribution. Uses boost for implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Poisson {
+
+public:
+
+  explicit Poisson(double lambda) : lambda_(lambda) {}
+  ~Poisson() = default;
+
+  [[nodiscard]] double pdf(size_t count) const;
+
+  [[nodiscard]] double cdf(size_t count) const ;
+
+  [[nodiscard]] size_t quantile(double quantile) const ;
+
+  [[nodiscard]] double mean() const { return lambda_; }
+
+private:
+
+  double lambda_;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Negative Binomial distribution. Uses boost for implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class NegativeBinomial {
+
+public:
+
+  explicit NegativeBinomial(double r_successes, double p_prob_success) : r_successes_(r_successes), p_prob_success_(p_prob_success) {}
+  ~NegativeBinomial() = default;
+
+  [[nodiscard]] double pdf(size_t count) const;
+
+  [[nodiscard]] double cdf(size_t count) const ;
+
+  [[nodiscard]] size_t quantile(double quantile) const ;
+
+  [[nodiscard]] double mean() const;
+
+  [[nodiscard]] double r_successes() const { return r_successes_; }
+
+  [[nodiscard]] double p_probsuccess() const { return p_prob_success_; }
+
+private:
+
+  double r_successes_;
+  double p_prob_success_;
+
+};
+
 
 
 }   // end namespace

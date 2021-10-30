@@ -10,6 +10,9 @@
 #include <boost/math/special_functions/beta.hpp>
 #include <boost/math/distributions/gamma.hpp>
 #include <boost/math/distributions/hypergeometric.hpp>
+#include <boost/math/distributions/poisson.hpp>
+#include <boost/math/distributions/negative_binomial.hpp>
+
 
 namespace bm = boost::math;
 namespace kel = kellerberrin;
@@ -186,6 +189,7 @@ double kel::BetaBinomialDistribution::logPartialPdf(double n, double k, double a
 
 }
 
+
 double kel::BetaBinomialDistribution::logPdf(double n, double k, double alpha, double beta) {
 
   assert(k <= n);
@@ -205,6 +209,7 @@ double kel::BetaBinomialDistribution::logPdf(double n, double k, double alpha, d
   return prob;
 
 }
+
 
 // .first is alpha, .second is beta. The raw moments are calculated from the observations and used to calculate alpha and beta.
 [[nodiscard]] std::pair<double, double> kel::BetaBinomialDistribution::methodOfMoments(const std::vector<size_t>& observations, size_t n_trials) {
@@ -268,10 +273,6 @@ double kel::BinomialDistribution::cdf(size_t n, double k, double prob_success) {
 }
 
 
-
-
-
-
 kel::HypergeometricDistribution::HypergeometricDistribution(size_t pop_successes_K, size_t sample_size_n, size_t population_N) {
 
 
@@ -299,7 +300,7 @@ double kel::HypergeometricDistribution::pdf(size_t successes_k) const {
 
   if (successes_k > upperSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} exceeds upper limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::pdf; r_successes k:{} exceeds upper limit :{}",
                          successes_k, upperSuccesses_k());
     successes_k = upperSuccesses_k();
 
@@ -307,7 +308,7 @@ double kel::HypergeometricDistribution::pdf(size_t successes_k) const {
 
   if (successes_k < lowerSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::pdf; successes k:{} below lower limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::pdf; r_successes k:{} below lower limit :{}",
                          successes_k, lowerSuccesses_k());
     successes_k = lowerSuccesses_k();
 
@@ -323,7 +324,7 @@ double kel::HypergeometricDistribution::cdf(size_t successes_k) const {
 
   if (successes_k > upperSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; successes k exceeds upper limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; r_successes k exceeds upper limit :{}",
                         population_N_, pop_successes_K_, sample_size_n_, successes_k, upperSuccesses_k());
     successes_k = upperSuccesses_k();
 
@@ -331,7 +332,7 @@ double kel::HypergeometricDistribution::cdf(size_t successes_k) const {
 
   if (successes_k < lowerSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; successes k exceeds upper limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution(N:{},K:{},n:{},k:{})::cdf; r_successes k exceeds upper limit :{}",
                         population_N_, pop_successes_K_, sample_size_n_, successes_k, lowerSuccesses_k());
     successes_k = lowerSuccesses_k();
 
@@ -347,7 +348,7 @@ double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
 
   if (successes_k > upperSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::quantile; successes k:{} exceeds upper limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::quantile; r_successes k:{} exceeds upper limit :{}",
                          successes_k, upperSuccesses_k());
     successes_k = upperSuccesses_k();
 
@@ -355,7 +356,7 @@ double kel::HypergeometricDistribution::quantile(size_t successes_k) const {
 
   if (successes_k < lowerSuccesses_k()) {
 
-    ExecEnv::log().warn("HypergeometricDistribution::quantile; successes k:{} below lower limit :{}",
+    ExecEnv::log().warn("HypergeometricDistribution::quantile; r_successes k:{} below lower limit :{}",
                          successes_k, lowerSuccesses_k());
     successes_k = lowerSuccesses_k();
 
@@ -391,5 +392,55 @@ double kel::HypergeometricDistribution::upperSingleTailTest(size_t test_value_k)
 double kel::HypergeometricDistribution::lowerSingleTailTest(size_t test_value_k) const {
 
   return cdf(test_value_k);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Poisson distribution. Uses boost for implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+double kel::Poisson::pdf(size_t count) const {
+
+  return bm::pdf(bm::poisson_distribution<>(lambda_), count);
+
+}
+
+double kel::Poisson::cdf(size_t count) const  {
+
+  return bm::cdf(bm::poisson_distribution<>(lambda_), count);
+
+}
+
+size_t kel::Poisson::quantile(double quantile) const {
+
+  return bm::quantile(bm::poisson_distribution<>(lambda_), quantile);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Negative Binomial distribution. Uses boost for implementation.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+double kel::NegativeBinomial::pdf(size_t count) const {
+
+  return bm::pdf(bm::negative_binomial_distribution<>(r_successes_, p_prob_success_), count);
+
+}
+
+double kel::NegativeBinomial::cdf(size_t count) const {
+
+  return bm::cdf(bm::negative_binomial_distribution<>(r_successes_, p_prob_success_), count);
+
+}
+
+size_t kel::NegativeBinomial::quantile(double quantile) const {
+
+  return bm::quantile(bm::negative_binomial_distribution<>(r_successes_, p_prob_success_), quantile);
+
+}
+
+double kel::NegativeBinomial::mean() const {
+
+  return bm::mean(bm::negative_binomial_distribution<>(r_successes_, p_prob_success_));
 
 }

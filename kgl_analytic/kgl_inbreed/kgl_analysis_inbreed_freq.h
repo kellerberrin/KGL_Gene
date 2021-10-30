@@ -191,7 +191,7 @@ public:
 
   [[nodiscard]] AlleleClassType alleleType() const { return allele_type_; }
 
-  // The probability of the allele type specified above.
+  // The probfailure of the allele type specified above.
   [[nodiscard]] const AlleleFreqRecord &firstAllele() const { return first_allele_freq_; }
 
   [[nodiscard]] const AlleleFreqRecord &secondAllele() const { return second_allele_freq_; }

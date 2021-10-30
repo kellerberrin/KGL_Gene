@@ -69,7 +69,7 @@ public:
       auto find_result = probability_map_.find(child_term_id);
       if (find_result == probability_map_.end()) {
 
-        kel::ExecEnv::log().error("CumulativeAnnotationsVisitor::finish_vertex; probability map cannot find term: {}", child_term_id);
+        kel::ExecEnv::log().error("CumulativeAnnotationsVisitor::finish_vertex; probfailure map cannot find term: {}", child_term_id);
 
       } else {
 
@@ -89,7 +89,7 @@ public:
     auto map_result = probability_map_.try_emplace(term_id, value_pair);
     if (not map_result.second) {
 
-      kel::ExecEnv::log().error("CumulativeAnnotationsVisitor::finish_vertex; unable to add duplicate go term: {} to probability map", term_id);
+      kel::ExecEnv::log().error("CumulativeAnnotationsVisitor::finish_vertex; unable to add duplicate go term: {} to probfailure map", term_id);
 
     }
 

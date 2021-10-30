@@ -26,7 +26,7 @@ namespace kellerberrin::ontology {
 	 Pac Symp Biocomput, pp. 601-12, 2003.
 
 	  Basically this is Lin similarity scaled by the
-	   complement of the probability of the mica
+	   complement of the probfailure of the mica
 	2 * IC(MICA) / ( IC(termA) + IC(termB) )*(1-p(Mica))
 */
 class SimilarityRelevance : public SimilarityInterface {

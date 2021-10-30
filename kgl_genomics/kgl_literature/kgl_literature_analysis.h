@@ -28,8 +28,10 @@ using LitDateMap = std::multimap<DateGP, std::shared_ptr<const PublicationSummar
 using LitCitationVarianceMap = std::map<size_t, std::pair<double, double>>;
 // Sort in citation count quantile order.
 using CitationQuantile = Percentile<size_t, std::shared_ptr<const PublicationSummary>>;
-
-
+// Histogram of citations. .first is the citation count, .second is the number of publication with citation count.
+using CitationHistogram = std::vector<std::pair<size_t, size_t>>;
+// Arrival of citations. key is the month count, .value is the number of citations count.
+using CitationArrivals = std::vector<std::pair<size_t, size_t>>;
 
 class LiteratureAnalysis {
 
@@ -45,6 +47,8 @@ public:
   [[nodiscard]] LitDateMap sortPublicationDate() const;
   [[nodiscard]] LitCitationVarianceMap analyseCitationPercent() const;
   [[nodiscard]] CitationQuantile analyseCitationQuartiles() const;
+  [[nodiscard]] CitationHistogram citationDistribution() const;
+  [[nodiscard]] CitationArrivals publicationCitations(const std::string& pub_pmid) const;
 
 private:
 

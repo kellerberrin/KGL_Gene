@@ -138,6 +138,12 @@ bool kgl::LiteratureAnalysis::finalizeAnalysis() {
   publication_literature.writeCitationPeriod(analysis_work_directory_);
   publication_literature.writeCitationVariance(analysis_work_directory_);
   publication_literature.writeCitationQuantiles(analysis_work_directory_);
+  publication_literature.writeCitationHistogram(analysis_work_directory_);
+  publication_literature.writeCitationData(analysis_work_directory_);
+
+  publication_literature.writePublicationCitations(analysis_work_directory_, "22157630");
+  publication_literature.writePublicationCitations(analysis_work_directory_, "18717995");
+  publication_literature.writePublicationCitations(analysis_work_directory_, "7886766");
 
   auto publication_ptr = publication_literature.mostRecentPublication();
   ExecEnv::log().info("LiteratureAnalysis::finalizeAnalysis; most recent publication pmid: {} was on: {}",

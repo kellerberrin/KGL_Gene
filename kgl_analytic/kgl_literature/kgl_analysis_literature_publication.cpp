@@ -316,3 +316,94 @@ void kgl::PublicationLiterature::writeCitationQuantiles(const std::string& liter
 
 }
 
+
+
+void kgl::PublicationLiterature::writeCitationHistogram(const std::string& literature_directory) {
+
+  std::string citation_histogram_file{"citation_histogram_analysis.csv"};
+  std::string citation_file_path = Utility::filePath(citation_histogram_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationHistogram; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Citations" << ',' << "Count" << '\n';
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto citation_histogram = literature_analysis.citationDistribution();
+
+  for (auto const& [citations, count] : citation_histogram) {
+
+    out_file << citations << ',' << count << '\n';
+
+  }
+
+}
+
+void kgl::PublicationLiterature::writeCitationData(const std::string& literature_directory) {
+
+  std::string citation_data_file{"citation_data_analysis.csv"};
+  std::string citation_file_path = Utility::filePath(citation_data_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationData(; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Citations" << '\n';
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto citation_histogram = literature_analysis.citationDistribution();
+
+  for (auto const& [citations, count] : citation_histogram) {
+
+    for (size_t data = 0; data < count; ++data) {
+
+      out_file << citations << '\n';
+
+    }
+
+  }
+
+}
+
+
+void kgl::PublicationLiterature::writePublicationCitations(const std::string &literature_directory, const std::string &publication_pmid) {
+
+  std::string citation_data_file = publication_pmid;
+  citation_data_file += "citation_history.csv";
+  std::string citation_file_path = Utility::filePath(citation_data_file, literature_directory);
+  std::ofstream out_file(citation_file_path);
+
+  if (not out_file.good()) {
+
+    ExecEnv::log().error("PublicationLiterature::writeCitationData(; cannot open file: {} for output", citation_file_path);
+    return;
+
+  }
+
+  out_file  << "Month" << ',' << "Citations" << '\n';
+
+  LiteratureAnalysis literature_analysis(publication_map_);
+
+  auto citation_vector = literature_analysis.publicationCitations(publication_pmid);
+
+  for (auto const& [month, citations] : citation_vector) {
+
+    out_file << month << ',' << citations << '\n';
+
+  }
+
+}
+
+
+

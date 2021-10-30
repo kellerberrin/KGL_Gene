@@ -15,11 +15,12 @@ namespace kgl = kellerberrin::genome;
 
 kgl::LiteratureAnalysis::LiteratureAnalysis(const LitPublicationMap& publication_map) {
 
-  static const PlasmodiumFilter pf_filter;
+//  static const PlasmodiumFilter pf_filter;
+  static const TrueLitFilter pf_filter;
 
   for (auto const& [pmid, publication_ptr] : publication_map) {
 
-    if (not pf_filter.applyFilter(*publication_ptr)) {
+    if (pf_filter.applyFilter(*publication_ptr)) {
 
       publication_map_.emplace(pmid, publication_ptr);
 
@@ -313,5 +314,123 @@ kgl::CitationQuantile kgl::LiteratureAnalysis::analyseCitationQuartiles() const 
   }
 
   return citation_quantile;
+
+}
+
+
+kgl::CitationHistogram kgl::LiteratureAnalysis::citationDistribution() const {
+
+  const size_t min_citation{0};
+  const size_t max_citation{101};
+  const size_t MONTHS_ELAPSED{120};
+
+
+  CitationHistogram citation_histogram;
+
+  for (size_t cite_count = min_citation; cite_count <= max_citation; ++cite_count) {
+
+    citation_histogram.push_back({cite_count, 0});
+
+  }
+
+  for (auto const& [pmid, publication_ptr] : publication_map_) {
+
+    auto months = DateGP::monthsDifference(publication_ptr->downloadDate(), publication_ptr->publicationDate());
+    if (months >= MONTHS_ELAPSED) {
+
+      size_t cite_count = publication_ptr->citedBy().size();
+      if (cite_count >= citation_histogram.size()) {
+
+        cite_count = citation_histogram.size() - 1;
+
+      }
+
+      ++citation_histogram[cite_count].second;
+
+    }
+
+  }
+
+  return citation_histogram;
+
+}
+
+kgl::CitationArrivals kgl::LiteratureAnalysis::publicationCitations(const std::string& pub_pmid) const {
+
+
+  std::map<size_t, size_t> citation_map;
+  const size_t CITATION_MONTHS = 120;  // only 10 years;
+
+  auto result = publication_map_.find(pub_pmid);
+  if (result == publication_map_.end()) {
+
+    ExecEnv::log().error("LiteratureAnalysis::publicationCitations; publication: {} not found", pub_pmid);
+    // Return zero counts.
+    CitationArrivals citation_arrivals;
+    for (size_t month_index = 1; month_index <= CITATION_MONTHS; ++month_index) {
+
+      citation_arrivals.push_back({month_index, 0});
+
+    }
+
+    return citation_arrivals;
+
+  }
+
+  auto const& [pmid, publication_ptr] = *result;
+  auto citation_set = publication_ptr->citedBy();
+  auto publication_date = publication_ptr->publicationDate();
+
+  for (auto const& citation : citation_set) {
+
+    auto cite_result = publication_map_.find(citation);
+    if (cite_result == publication_map_.end()) {
+
+      ExecEnv::log().error("LiteratureAnalysis::publicationCitations; publication citation: {} not found", citation);
+
+    } else {
+
+      auto const& [cite_pmid, cite_pub_ptr] = *cite_result;
+      auto cite_date = cite_pub_ptr->publicationDate();
+      size_t months = DateGP::monthsDifference(publication_date, cite_date);
+      ++months; // add 1 to months.
+      if (months <= CITATION_MONTHS) {
+
+        auto count_result = citation_map.find(months);
+        if (count_result == citation_map.end()) {
+
+          citation_map.emplace(months, 1);
+
+        } else {
+
+          auto& [months, count] = *count_result;
+          ++count;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  CitationArrivals citation_arrivals;
+  for (size_t month_index = 1; month_index <= CITATION_MONTHS; ++month_index) {
+
+    auto count_result = citation_map.find(month_index);
+    if (count_result == citation_map.end()) {
+
+      citation_arrivals.push_back({month_index, 0});
+
+    } else {
+
+      auto const& [months, count] = *count_result;
+      citation_arrivals.push_back({month_index, count});
+
+    }
+
+  }
+
+  return citation_arrivals;
 
 }

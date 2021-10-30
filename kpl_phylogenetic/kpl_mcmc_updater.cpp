@@ -208,7 +208,7 @@ double kpl::Updater::update(double prev_lnL) {
   // Set model to proposed FSM_State and calculate log_hastings_ratio_
   proposeNewState();
 
-  // Use alternative partials and transition_ probability buffer for any selected nodes
+  // Use alternative partials and transition_ probfailure buffer for any selected nodes
   // This allows us to easily revert to the previous values if the move is rejected
   tree_manipulator_ptr_->flipPartialsAndTMatrices();
 

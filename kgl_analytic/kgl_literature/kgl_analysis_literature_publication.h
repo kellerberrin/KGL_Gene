@@ -29,6 +29,9 @@ public:
   void writeCitationVariance(const std::string& literature_directory);
   std::shared_ptr<const PublicationSummary> mostRecentPublication();
   void writeCitationQuantiles(const std::string& literature_directory);
+  void writeCitationHistogram(const std::string& literature_directory);
+  void writeCitationData(const std::string& literature_directory);
+  void writePublicationCitations(const std::string& literature_directory, const std::string& publication_pmid);
 
 private:
 

@@ -126,7 +126,7 @@ void kpl::DirichletUpdater::proposeNewState() {
 
   }
 
-  // Determine probability density of the forward proposal
+  // Determine probfailure density of the forward proposal
   double log_forward_density = 0.0;
   for (unsigned i = 0; i < dim; ++i) {
 
@@ -147,7 +147,7 @@ void kpl::DirichletUpdater::proposeNewState() {
 
   double sum_reverse_parameters = std::accumulate(reverse_params.begin(), reverse_params.end(), 0.0);
 
-  // determine probability density of the reverse proposal
+  // determine probfailure density of the reverse proposal
   double log_reverse_density = 0.0;
   for (unsigned i = 0; i < dim; ++i) {
 

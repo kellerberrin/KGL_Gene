@@ -780,7 +780,7 @@ void kpl::Likelihood::updateTransitionMatrices() {
           info.handle,                                // Instance number
           &eigen_indices[0],                          // Index of eigen-decomposition buffer
           &category_rate_indices[0],                  // category rate indices
-          &_pmatrix_index[info.handle][0],            // transition_ probability matrices to update
+          &_pmatrix_index[info.handle][0],            // transition_ probfailure matrices to update
           NULL,                                       // first derivative matrices to update
           NULL,                                       // second derivative matrices to update
           &_edge_lengths[info.handle][0],             // List of edge lengths
@@ -790,7 +790,7 @@ void kpl::Likelihood::updateTransitionMatrices() {
       code = beagleUpdateTransitionMatrices(
           info.handle,                                // Instance number
           0,                                          // Index of eigen-decomposition buffer
-          &_pmatrix_index[info.handle][0],            // transition_ probability matrices to update
+          &_pmatrix_index[info.handle][0],            // transition_ probfailure matrices to update
           NULL,                                       // first derivative matrices to update
           NULL,                                       // second derivative matrices to update
           &_edge_lengths[info.handle][0],             // List of edge lengths
@@ -932,7 +932,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, const Tre
         info.handle,                 // instance number
         &_parent_indices[0],         // indices of parent partialsBuffers
         &_child_indices[0],          // indices of child partialsBuffers
-        &_tmatrix_indices[0],        // transition_ probability matrices for this edge
+        &_tmatrix_indices[0],        // transition_ probfailure matrices for this edge
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &_weights_indices[0],        // weights to apply to each partialsBuffer
@@ -954,7 +954,7 @@ double kpl::Likelihood::calcInstanceLogLikelihood(InstanceInfo & info, const Tre
         info.handle,                 // instance number
         &parent_partials_index,      // indices of parent partialsBuffers
         &child_partials_index,       // indices of child partialsBuffers
-        &parent_tmatrix_index,       // transition_ probability matrices for this edge
+        &parent_tmatrix_index,       // transition_ probfailure matrices for this edge
         NULL,                        // first derivative matrices
         NULL,                        // second derivative matrices
         &categoryWeightsIndex,       // weights to apply to each partialsBuffer

@@ -230,7 +230,7 @@ void kpl::PolytomyUpdater::proposeAddEdgeMove(Node::PtrNode  u) {
   // as _orig_lchild in case we need to revert the proposed move.
   assert(u);
 
-  // Calculate (if necessary) the probability of each possible partitioning of the chosen polytomy
+  // Calculate (if necessary) the probfailure of each possible partitioning of the chosen polytomy
   // Select number of spokes to move over to new node
   // Note that 0 and 1 are not allowed because they
   // would leave the tree in an invalid FSM_State
@@ -415,7 +415,7 @@ kpl::PolytomyUpdater::_partition_vect_t& kpl::PolytomyUpdater::computePolytomyDi
   auto iter = _poly_prob.find(nspokes);
 
   if (iter == _poly_prob.end()) {
-    // There is no existing probability distribution vector corresponding to nspokes
+    // There is no existing probfailure distribution vector corresponding to nspokes
     double ln_denom = std::log(pow(2.0,nspokes-1) - nspokes - 1.0);
     _partition_vect_t v(nspokes - 3);
     unsigned first = 2;
