@@ -11,7 +11,7 @@ namespace kellerberrin {    // organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Random number generators and Pdfs for the Uniform, Discrete Uniform, Guassian, Binomial and BetaBinomial distributions.
+// Random number generators and Pdfs for the Uniform, Discrete Uniform, Gaussian, Binomial and BetaBinomial distributions.
 // Note that object copy semantics have been disabled as there seems no reasonable reason to do this,
 // and in the case of the random number generators, is probably dangerous.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

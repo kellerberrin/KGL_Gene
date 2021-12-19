@@ -40,7 +40,7 @@ public:
 
 protected:
 
-  size_t record_counter_;
+  size_t record_counter_{0};
 
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed.
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.

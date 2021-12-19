@@ -24,7 +24,7 @@ class DateGP {
 public:
 
   DateGP() = default;
-  DateGP(const std::string& date); // Must be a valid delimited date e.g. "2020/1/1" or "2001-Feb-28"
+  explicit DateGP(const std::string& date); // Must be a valid delimited date e.g. "2020/1/1" or "2001-Feb-28"
   DateGP(size_t year, size_t month, size_t day); // Must be a valid date, for example DateGP(2001, 2, 29) is an error.
   DateGP(const DateGP&) = default;
   ~DateGP() = default;
