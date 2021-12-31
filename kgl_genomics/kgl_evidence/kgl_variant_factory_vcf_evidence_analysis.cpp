@@ -191,8 +191,10 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
+  auto& vep_field_obj = vep_field_opt.value();
+
   // Get the vep header object.
-  std::optional<std::shared_ptr<const VEPSubFieldHeader>> vep_header_opt = vep_field_opt.value().vepSubFieldHeader();
+  std::optional<std::shared_ptr<const VEPSubFieldHeader>> vep_header_opt = vep_field_obj.vepSubFieldHeader();
 
   if (not vep_header_opt) {
 
@@ -220,7 +222,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
   // Access the data block and retrieve the vep field vector.
   const DataMemoryBlock &data_block = *variant.evidence().infoData();
 
-  std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_opt.value().getData(data_block));
+  const std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_obj.getData(data_block));
 
   // If the vector is empty then return nullopt.
   if (vep_field_vector.empty()) {
@@ -233,7 +235,9 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   size_t field_count{0};
   std::vector<std::string> checked_field_vector;
-  for (auto& vep_field : vep_field_vector) {
+  for (const auto& const_vep_field : vep_field_vector) {
+
+    auto vep_field = const_vep_field;
 
     const std::vector<std::string_view>& sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
 
@@ -249,7 +253,15 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
         ExecEnv::log().warn("InfoEvidenceAnalysis::getVepSubFields; Gnomad 3 VEP bug, VEP sub-field count: {} not equal to VEP header size: {}",
                              sub_fields.size(),  vep_header_ptr->subFieldHeaders().size());
+        ExecEnv::log().warn("InfoEvidenceAnalysis::getVepSubFields; Unparsed Vep Field: {}", vep_field);
+        for (const auto& display_vep_field : vep_field_vector) {
+
+          const std::vector<std::string_view>& display_sub_fields = VEPSubFieldEvidence::vepSubFields(display_vep_field);
+          ExecEnv::log().warn("InfoEvidenceAnalysis::getVepSubFields; Vep Field: {}, Size: {}", display_vep_field, display_sub_fields.size());
+
+        }
         gnomad3_vep_warning = true;
+
       }
 
       // The dodgy workaround.

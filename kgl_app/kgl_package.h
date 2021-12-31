@@ -50,7 +50,6 @@ private:
   void loadHsGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadCitationResource(const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadEntrezGeneResource(const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
-  void loadPMIDBioResource(const std::string& bio_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPubmedAPIResource(const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.

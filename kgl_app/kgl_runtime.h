@@ -329,34 +329,6 @@ private:
 
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Allele Citation information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeBioPMIDResource : public RuntimeResource {
-
-public:
-
-  RuntimeBioPMIDResource(std::string bio_identifier,
-                         std::string bio_file_name)
-                      : bio_identifier_(std::move(bio_identifier)),
-                        bio_file_name_(std::move(bio_file_name)) {}
-  RuntimeBioPMIDResource() = delete;
-  RuntimeBioPMIDResource(const RuntimeBioPMIDResource&) = default;
-  ~RuntimeBioPMIDResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::BIO_PMID; }
-
-  [[nodiscard]] const std::string& bioIdentifier() const { return bio_identifier_; }
-  [[nodiscard]] const std::string& bioFileName() const { return bio_file_name_; }
-
-private:
-
-  std::string bio_identifier_;   // A unique short string to identify this resource
-  std::string bio_file_name_;
-
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

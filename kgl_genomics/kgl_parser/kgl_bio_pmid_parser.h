@@ -77,43 +77,6 @@ private:
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// The PMID Resource object. Generally the PMID data is too large to be loaded as a resource (~100GB).
-// This object makes resource functionality available if available memory permits.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class BioPMIDResource : public ResourceBase {
-
-public:
-
-  explicit BioPMIDResource(std::string identifier, BioPMIDMap&& disease_pmid_map, BioPMIDMap&& entrez_gene_map)
-  : ResourceBase(std::move(identifier)), pmid_maps_(std::move(disease_pmid_map), std::move(entrez_gene_map)) {}
-  ~BioPMIDResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::BIO_PMID; }
-
-  // Only want unique pmid_ identifiers.
-  [[nodiscard]] std::set<std::string> entrezPMID(const std::string& entrez_id) const { return pmid_maps_.entrezPMID(entrez_id); }
-  [[nodiscard]] std::set<std::string> diseaseMeSHPMID(const std::string& disease_mesh_id) const { return pmid_maps_.diseaseMeSHPMID(disease_mesh_id); }
-
-  [[nodiscard]] std::set<std::string> selectDiseaseBioPMID( const std::vector<std::string>& or_MeSHlist,
-                                                            const std::vector<std::string>& and_MeSHlist = std::vector<std::string>()) const {
-
-    return pmid_maps_.selectDiseaseBioPMID(or_MeSHlist, and_MeSHlist);
-
-  }
-
-  [[nodiscard]] const BioPMIDMap& entrezMap() const { return pmid_maps_.entrezMap(); }
-  [[nodiscard]] const BioPMIDMap& diseaseMeSHMap() const { return pmid_maps_.diseaseMeSHMap(); }
-
-private:
-
-  BioPMIDMaps pmid_maps_;
-
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

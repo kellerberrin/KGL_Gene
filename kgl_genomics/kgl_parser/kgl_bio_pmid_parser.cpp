@@ -194,7 +194,8 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
     if (row_fields.size() != COLUMN_COUNT_) {
 
-      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Incorrect field count: {}, expected: {}, line: {}", row_fields.size(), COLUMN_COUNT_, line_count);
+      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Incorrect field count: {}, expected: {}, line: {}, text: {}",
+                           row_fields.size(), COLUMN_COUNT_, line_count, record_str);
       continue;
 
     }

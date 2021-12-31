@@ -51,10 +51,6 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadEntrezGeneResource(resource_ident, resource_ptr);
         break;
 
-      case RuntimeResourceType::BIO_PMID:
-        loadPMIDBioResource(resource_ident, resource_ptr);
-        break;
-
       case RuntimeResourceType::PUBMED_API:
         loadPubmedAPIResource(resource_ident, resource_ptr);
         break;
@@ -299,39 +295,6 @@ void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident
 
 }
 
-
-void kgl::ExecutePackage::loadPMIDBioResource(const std::string& bio_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(bio_ident);
-  if (result == runtime_config_.resourceMap().end()) {
-
-    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource, PMID Bio Database: {}, not defined", bio_ident);
-
-  }
-
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto bio_resource_ptr = std::dynamic_pointer_cast<const RuntimeBioPMIDResource>(resource_base_ptr);
-
-  if (not bio_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource, Resource: {} is not an PMID Bio Resource", resource_ident);
-
-  }
-
-  ParseBioPMID bio_pmid_parser;
-  if (not bio_pmid_parser.parseBioPMIDRecords(bio_resource_ptr->bioFileName())) {
-
-    ExecEnv::log().critical("ExecutePackage::loadPMIDBioResource; failed to create Bio PMID resource from file: {}", bio_resource_ptr->bioFileName());
-
-  }
-
-  std::shared_ptr<BioPMIDResource> bio_pmid_ptr(std::make_shared<BioPMIDResource>(bio_resource_ptr->bioIdentifier(),
-                                                                                  bio_pmid_parser.moveDiseasePMIDMap(),
-                                                                                  bio_pmid_parser.moveEntrezPMIDMap()));
-
-  resource_ptr->addResource(bio_pmid_ptr);
-
-}
 
 
 void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
