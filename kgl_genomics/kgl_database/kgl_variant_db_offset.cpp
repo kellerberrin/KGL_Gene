@@ -270,3 +270,4 @@ std::unique_ptr<kgl::OffsetDB> kgl::OffsetDB::setUnion( const OffsetDB& offset_B
   return union_offset;
 
 }
+

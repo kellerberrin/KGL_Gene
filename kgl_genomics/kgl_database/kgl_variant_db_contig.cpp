@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
   // Lock this function to concurrent access.
-  std::scoped_lock lock(add_variant_mutex_);
+  std::scoped_lock lock(lock_contig_mutex_);
 
   auto result = contig_offset_map_.find(variant_ptr->offset());
 
@@ -112,7 +112,7 @@ bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> o
   }
 
   // Lock this function to concurrent access.
-  std::scoped_lock lock(add_variant_mutex_);
+  std::scoped_lock lock(lock_contig_mutex_);
 
   auto result = contig_offset_map_.find(offset);
 
@@ -143,41 +143,32 @@ bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> o
 // Unconditionally adds a variant to the contig.
 bool kgl::ContigDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
-  // Lock this function to concurrent access.
-  std::scoped_lock lock(add_variant_mutex_);
+  OffsetDB* offset_ptr{nullptr};   // Warning a naked, uninitialized pointer.
+  {
+    // Lock this function to concurrent access.
+    std::scoped_lock lock(lock_contig_mutex_);
+    auto result = contig_offset_map_.find(variant_ptr->offset());
 
-  auto result = contig_offset_map_.find(variant_ptr->offset());
+    if (result != contig_offset_map_.end()) {
 
-  if (result != contig_offset_map_.end()) {
-    // Variant offset exists.
-    const OffsetDBArray& offset_variant_array = result->second->getVariantArray();
-    // Check for uniqueness
-    for (auto const& offset_variant : offset_variant_array) {
+      offset_ptr = result->second.get();
 
-      if (offset_variant->analogous(*variant_ptr)) {
+    } else {
+      // add the new offset.
+      std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
+      std::shared_ptr<Variant> unphased_variant = variant_ptr->clonePhase(VariantPhase::UNPHASED);
+      offset_array_ptr->addVariant(unphased_variant);
+      auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
 
-        return true;
+      if (not insert_result.second) {
+
+        ExecEnv::log().error("ContigDB::addUniqueUnphasedVariant(); Could not add variant offset: {} to the genome",
+                             variant_ptr->offset());
+        return false;
 
       }
 
-    }
-
-    // Variant is unique, so clone, de-phase, and add.
-    std::shared_ptr<Variant> unphased_variant = variant_ptr->clonePhase(VariantPhase::UNPHASED);
-    result->second->addVariant(unphased_variant);
-
-  } else {
-    // add the new offset.
-    std::unique_ptr<OffsetDB> offset_array_ptr(std::make_unique<OffsetDB>());
-    std::shared_ptr<Variant> unphased_variant = variant_ptr->clonePhase(VariantPhase::UNPHASED);
-    offset_array_ptr->addVariant(unphased_variant);
-    auto insert_result = contig_offset_map_.try_emplace(variant_ptr->offset(), std::move(offset_array_ptr));
-
-    if (not insert_result.second) {
-
-      ExecEnv::log().error("ContigDB::addUniqueUnphasedVariant(); Could not add variant offset: {} to the genome",
-                           variant_ptr->offset());
-      return false;
+      return true;
 
     }
 

@@ -230,7 +230,6 @@ public:
   // All subscribed Info fields.
   [[nodiscard]] std::shared_ptr<const InfoEvidenceHeader> getInfoHeader() const { return info_evidence_header_; }
 
-
 private:
 
   // The evidence fields specified in the runtime XML file.

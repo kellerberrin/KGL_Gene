@@ -121,9 +121,24 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 
     }
 
-    ensemblIdIndex(population);
+    if (population->getMap().size() > 1) {
+
+      ExecEnv::log().info("InfoFilterAnalysis::fileReadAnalysis compressing population: {} with genomes: {}",
+                          population->populationId(), population->getMap().size());
+
+      auto compressed_population = population->uniqueUnphasedGenome();
+
+      ExecEnv::log().info("InfoFilterAnalysis::fileReadAnalysis compressed population: {} contains variants: {}",
+                          compressed_population->populationId(), compressed_population->variantCount());
+
+    }
+
+//    ensemblIdIndex(population);
 
   }
+
+  ExecEnv::log().info( "Vep records processed: {}, Vep record size errors: {}",
+                       InfoEvidenceAnalysis::vep_records_, InfoEvidenceAnalysis::vep_size_errors_);
 
   return true;
 

@@ -360,16 +360,93 @@ std::shared_ptr<kgl::GenomeDB> kgl::PopulationDB::compressPopulation() const {
 }
 
 
-std::shared_ptr<kgl::GenomeDB> kgl::PopulationDB::uniqueUnphasedGenome() const {
+std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() const {
 
-  std::shared_ptr<GenomeDB> unphasedGenome(std::make_shared<GenomeDB>("UniqueUnphased"));
+  // Local class to perform the multi-threaded construction of a population with 1 genome containing
+  // all the unique variants.
+  class UniqueVariant {
 
-  if (not processAll(*unphasedGenome, &GenomeDB::addUniqueUnphasedVariant)) {
+  public:
+
+    UniqueVariant(const PopulationDB& multi_genome) {
+
+      compressed_population_ptr_ = std::make_shared<PopulationDB>(multi_genome.populationId() + "_Compressed", multi_genome.dataSource());
+
+      auto unphased_genome_opt = compressed_population_ptr_->getCreateGenome("UniqueCompressed");
+
+      if (not unphased_genome_opt) {
+
+        ExecEnv::log().critical("PopulationDB::UniqueUnphased(); problem creating unique unphased genome with population: {}", multi_genome.populationId());
+
+      }
+
+      unphased_genome_ = unphased_genome_opt.value();
+
+    }
+
+    bool addUniqueUnphasedVariant(std::shared_ptr<const Variant> variant_ptr) {
+
+      auto unphased_hash = variant_ptr->HGVS(); // Create a unique HGSV hash, phasing excluded.
+      {
+        // Acquire the mutex.
+        std::scoped_lock lock(map_mutex_);
+
+        // Check if the variant is already in the map.
+        auto find_result = variant_map_.find(unphased_hash);
+        if (find_result != variant_map_.end()) {
+
+          // If already present, just return.
+          return true;
+
+        } else {
+
+          // If not present, then add to the map.
+          auto [insert_iter, result] = variant_map_.try_emplace(std::move(unphased_hash), variant_ptr);
+
+          if (not result) {
+
+            ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add duplicate variant hash: {}", variant_ptr->HGVS());
+            return false;
+
+          }
+
+        }
+
+      }
+      // The variant was not found in the map so add to the unique population.
+      bool add_result = unphased_genome_->addVariant(variant_ptr);
+      if (not add_result) {
+
+        ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add variant hash: {} to population", variant_ptr->HGVS());
+        return false;
+
+      }
+
+      return true;
+
+    }
+
+    std::shared_ptr<PopulationDB> compressed_population_ptr_;
+    std::shared_ptr<GenomeDB> unphased_genome_;
+    // Implemented as a hash map for a bit of extra speed.
+    std::unordered_map<std::string, std::shared_ptr<const Variant>> variant_map_;
+    // Mutex to lock the map structure for safe multiple thread access.
+    std::mutex map_mutex_;
+
+  }; // End of local object definition.
+
+  // Create an instance of the local object.
+  std::shared_ptr<UniqueVariant> unique_variant_ptr(std::make_shared<UniqueVariant>(*this));
+
+  // Using the local object and multi-threading, process all variants held in the population
+  if (not processAll_MT(unique_variant_ptr, &UniqueVariant::addUniqueUnphasedVariant)) {
 
     ExecEnv::log().error("PopulationDB::UniqueUnphased(); problem creating unique unphased genome with population: {}", populationId());
+
   }
 
-  return  unphasedGenome;
+  // Return the unique variant population.
+  return  unique_variant_ptr->compressed_population_ptr_;
 
 }
 

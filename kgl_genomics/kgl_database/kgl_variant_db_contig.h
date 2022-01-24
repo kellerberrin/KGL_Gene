@@ -107,7 +107,7 @@ private:
   OffsetDBMap contig_offset_map_;
 
   // mutex to lock the structure for multiple thread access by parsers.
-  mutable std::mutex add_variant_mutex_;
+  mutable std::mutex lock_contig_mutex_;
 
   void checkUpstreamDeletion(OffsetVariantMap& variant_map) const;
 
@@ -126,7 +126,7 @@ bool ContigDB::processAll(Obj& object, Func objFunc)  const {
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      if (not (object.*objFunc)(variant_ptr)) {
+      if (not std::invoke(objFunc, object, variant_ptr)) {
 
         ExecEnv::log().error("ContigDB::processAll<Obj, Func>; Problem executing general purpose template function at offset: {}", offset);
         return false;

@@ -184,7 +184,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
       // Filtering is done so assign to the object pointer.
       population_ptr_ = population;
-
+      // Generate another population that just contains unique variants.
+      unphased_population_ptr_ = population_ptr_->uniqueUnphasedGenome();
 
     } else if ( file_characteristic.data_source == DataSourceEnum::Gnomad2_1
                or file_characteristic.data_source == DataSourceEnum::Gnomad3_1) {

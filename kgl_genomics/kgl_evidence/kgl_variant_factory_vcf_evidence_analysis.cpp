@@ -181,7 +181,6 @@ const std::vector<std::string_view> kgl::VEPSubFieldEvidence::vepSubFields(const
 std::optional<std::unique_ptr<const kgl::VEPSubFieldEvidence>>
 kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
-  static size_t correct_parse{0};
   // Check that the vep field exists for this variant.
   std::optional<const kgl::InfoSubscribedField> vep_field_opt = getSubscribedField( variant, VEPSubFieldHeader::VEP_FIELD_ID);
 
@@ -233,9 +232,10 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
   }
 
-  size_t field_count{0};
   std::vector<std::string> checked_field_vector;
   for (const auto& const_vep_field : vep_field_vector) {
+
+    ++vep_records_;
 
     auto vep_field = const_vep_field;
 
@@ -248,6 +248,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
       // and are thus parsed as separate VEP records.
 
       // Issue a warning that we have encountered the Gnomad 3 problem.
+      ++vep_size_errors_;
       static bool gnomad3_vep_warning{false};
       if (not gnomad3_vep_warning) {
 
@@ -264,62 +265,20 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
 
       }
 
-      // The dodgy workaround.
-      const size_t loftee_field_size{4};
-      if (sub_fields.size() <= (vep_header_ptr->subFieldHeaders().size() - loftee_field_size)) {
-
-        continue; // Just ignore this sub-sub-field.
-
-      } else {
-
-        // Repair the VEP field.
-        for (size_t index = sub_fields.size(); index < vep_header_ptr->subFieldHeaders().size(); ++index) {
-
-          vep_field += VEPSubFieldHeader::VEP_DELIMITER_CHAR;
-
-        }
-        // Re-check the repaired VEP field.
-        const std::vector<std::string_view>& check_sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
-        if (check_sub_fields.size() ==  vep_header_ptr->subFieldHeaders().size()) {
-
-          checked_field_vector.push_back(std::move(vep_field));
-          continue;
-
-        }
-
-      }
-      // **** Gnomad 3 VEP bug workaround ****
-
-      ExecEnv::log().error("InfoEvidenceAnalysis::getVepSubFields; VEP Field index: {}, VEP sub-field count: {} not equal to VEP header size: {}, variants correctly parsed: {}",
-                           field_count, sub_fields.size(),  vep_header_ptr->subFieldHeaders().size(), correct_parse);
-
-      for (auto const& sub_field : sub_fields) {
-
-        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; VEP Field index: {},  parsed sub field: {}", field_count, std::string(sub_field));
-
-      }
-
-      size_t error_count{0};
-      for (auto const& field : vep_field_vector) {
-
-        ExecEnv::log().error("InfoEvidenceAnalysis::vepSubFieldValues; VEP Field index: {}, vep field: {}", error_count, field);
-        ++error_count;
-
-      }
-
-      return std::nullopt;
-
     } else {
 
       checked_field_vector.push_back(std::move(vep_field));
 
     }
 
-    ++field_count;
+  }
+
+  if (checked_field_vector.empty()) {
+
+    return std::nullopt;
 
   }
 
-  ++correct_parse;
   return std::make_unique<const kgl::VEPSubFieldEvidence>(vep_header_ptr, std::move(checked_field_vector));
 
 }

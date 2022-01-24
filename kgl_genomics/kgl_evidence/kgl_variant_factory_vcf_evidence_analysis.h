@@ -87,6 +87,8 @@ public:
 public:
 
   constexpr static const char BIN_DELIMITER_{'|'};
+  inline static size_t vep_size_errors_{0};
+  inline static size_t vep_records_{0};
 
 
 

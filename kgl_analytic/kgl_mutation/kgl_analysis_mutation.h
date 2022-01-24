@@ -64,7 +64,7 @@ private:
   // Clinvar is relatively small, it is retained otherwise it would need to be
   // reloaded for each iteration.
   std::shared_ptr<const PopulationDB> clinvar_population_ptr_;
-  // Various (low memory usage) requested resources
+  // Various (relatively low memory usage) requested resources
   std::shared_ptr<const GenomeReference> ref_genome_ptr_;
   std::shared_ptr<const HsGenomeAux> genome_aux_ptr_;
   std::shared_ptr<const kol::OntologyDatabase> ontology_db_ptr_;
@@ -76,9 +76,9 @@ private:
 
   // Results of the analysis. Type of gene membership is defined here.
   GenomeMutation gene_mutation_{VariantGeneMembership::BY_ENSEMBL};
-  // By Span is all variants with in intron+exon span of the gene
-  // By Ensembl looks up the variants based on the vep ensembl code.
-  // By Exon uses the gene exon addresses to find gene variants - warning assumes the first transcript.
+  // By Span is all variants within the intron+exon span of the gene
+  // By Ensembl looks up the variants based on the vep gene ensembl code.
+  // By Exon uses the gene exon addresses to find gene variants - warning assumes the first gene transcript.
 
   // Gene Allele Specific Analysis.
   GenerateGeneAllele gene_alleles_;
