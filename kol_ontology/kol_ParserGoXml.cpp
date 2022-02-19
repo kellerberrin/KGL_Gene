@@ -16,10 +16,10 @@ namespace kol = kellerberrin::ontology;
    which are specified to the graph.
 
 */
-std::shared_ptr<kol::GoGraph> kol::ParserGoXml::parseGoFile(const std::string &filename) const {
+std::shared_ptr<kol::GoGraphImpl> kol::ParserGoXml::parseGoFile(const std::string &filename) const {
 
   //graph object to be returned
-  std::shared_ptr<GoGraph> graph(std::make_shared<GoGraph>());
+  std::shared_ptr<GoGraphImpl> graph(std::make_shared<GoGraphImpl>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {

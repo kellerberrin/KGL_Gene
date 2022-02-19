@@ -189,8 +189,8 @@ size_t kol::InformationCoutoGraSM::pathCount(const std::string &termA, const std
   OntologySetType<std::string> finished;
   OntologyMapType<std::string, size_t> pathMap;
   ancestors.insert(termB);
-  const GoGraph::Graph &go_graph = graph_ptr_->getGraph();
-  GoGraph::GoVertex v = graph_ptr_->getTermRootVertex(termB);
+  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGraph();
+  GoGraphImpl::GoVertex v = graph_ptr_->getTermRootVertex(termB);
   visitHelper(v, go_graph, ancestors, finished, pathMap);
 
   return pathMap[termA];
@@ -201,8 +201,8 @@ size_t kol::InformationCoutoGraSM::pathCount(const std::string &termA, const std
 /*!
   A path counting topological sort recursive method.
 */
-void kol::InformationCoutoGraSM::visitHelper(const GoGraph::GoVertex &go_vertex,
-                                             const GoGraph::Graph &go_graph,
+void kol::InformationCoutoGraSM::visitHelper(const GoGraphImpl::GoVertex &go_vertex,
+                                             const GoGraphImpl::Graph &go_graph,
                                              OntologySetType<std::string> &ancestors,
                                              OntologySetType<std::string> &finished,
                                              OntologyMapType<std::string, size_t> &pathMap) const {
@@ -211,10 +211,10 @@ void kol::InformationCoutoGraSM::visitHelper(const GoGraph::GoVertex &go_vertex,
   std::string vTerm = go_graph[go_vertex].termId;
 
   //examine children and recurse
-  GoGraph::InEdgeIterator it, end;
+  GoGraphImpl::InEdgeIterator it, end;
   for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
 
-    GoGraph::GoVertex child = boost::source(*it, go_graph);
+    GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
     std::string childTerm = go_graph[child].termId;
     if (not ancestors.contains(childTerm)) {
 
@@ -243,7 +243,7 @@ void kol::InformationCoutoGraSM::visitHelper(const GoGraph::GoVertex &go_vertex,
 
     pathMap[vTerm] = 0;
     for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
-      GoGraph::GoVertex child = boost::source(*it, go_graph);
+      GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
       std::string childTerm = go_graph[child].termId;
 
       if (not ancestors.contains(childTerm)) {

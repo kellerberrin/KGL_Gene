@@ -29,7 +29,7 @@ public:
 
   }
 
-  [[nodiscard]] static const GoGraph &goGraph() {
+  [[nodiscard]] static const GoGraphImpl &goGraph() {
 
     if (not go_graph_ptr_) {
 
@@ -43,7 +43,7 @@ public:
 
 private:
 
-  [[nodiscard]] static std::shared_ptr<GoGraph> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -61,7 +61,7 @@ private:
   }
 
   inline static std::unique_ptr<const InformationDepthMap> depth_map_ptr_;
-  inline static std::shared_ptr<const GoGraph> go_graph_ptr_;
+  inline static std::shared_ptr<const GoGraphImpl> go_graph_ptr_;
 
 };
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_number_of_values)
 {
 
   const size_t vertex_count = goGraph().getNumVertices();
-  if (depthMap().getValues().size() != vertex_count) BOOST_FAIL("Depth Map Values not equal to GoGraph Vertices" );
+  if (depthMap().getValues().size() != vertex_count) BOOST_FAIL("Depth Map Values not equal to GoGraphImpl Vertices" );
   BOOST_TEST_MESSAGE( "test_number_of_values ... OK" );
 
 }
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(test_number_of_keys)
 {
 
   const size_t vertex_count = goGraph().getNumVertices();
-  if (depthMap().getKeys().size() != vertex_count) BOOST_FAIL("Depth Map Keys not equal to GoGraph Vertices" );
+  if (depthMap().getKeys().size() != vertex_count) BOOST_FAIL("Depth Map Keys not equal to GoGraphImpl Vertices" );
   BOOST_TEST_MESSAGE( "test_number_of_keys ... OK" );
 
 }

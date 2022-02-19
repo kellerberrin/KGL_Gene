@@ -17,14 +17,14 @@ namespace kol = kellerberrin::ontology;
 class SubgraphBFSVisitor : public boost::default_bfs_visitor {
 
 public:
-  SubgraphBFSVisitor(kol::GoGraph::Graph &sub) : subgraph(sub) {}
+  SubgraphBFSVisitor(kol::GoGraphImpl::Graph &sub) : subgraph(sub) {}
 
   template<typename Vertex, typename Graph>
   void discover_vertex(Vertex u, const Graph &) {
     boost::add_vertex(u, subgraph);
   }
 
-  kol::GoGraph::Graph &subgraph;
+  kol::GoGraphImpl::Graph &subgraph;
 
 };
 
@@ -68,7 +68,7 @@ bool kol::GoTermRecord::validRecord() const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
+kol::GoGraphImpl::GoGraphImpl(const GoTermMap& go_term_map) {
 
   size_t relation_count{0};
 
@@ -76,8 +76,8 @@ kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
 
     if (not term_record_ptr->validRecord()) {
 
-      ExecEnv::log().error("GoGraph::GoGraph; invalid term record at term: {}",  term_record_ptr->termId());
-      ExecEnv::log().error("GoGraph::GoGraph; id: {}, name: {}, def: {}, ontology: {}",
+      ExecEnv::log().error("GoGraphImpl::GoGraphImpl; invalid term record at term: {}",  term_record_ptr->termId());
+      ExecEnv::log().error("GoGraphImpl::GoGraphImpl; id: {}, name: {}, def: {}, ontology: {}",
                            term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), GO::ontologyToString(term_record_ptr->ontology()));
 
     } else {
@@ -97,7 +97,7 @@ kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
 
   }
 
-//  ExecEnv::log().info("GoGraph::GoGraph: {}, relationships: {}", go_term_map.size(), relation_count);
+//  ExecEnv::log().info("GoGraphImpl::GoGraphImpl: {}, relationships: {}", go_term_map.size(), relation_count);
   //call to initialize the graph's vertex to index maps
   initMaps();
 
@@ -112,7 +112,7 @@ kol::GoGraph::GoGraph(const GoTermMap& go_term_map) {
    to consider if terms have already been added or not.
 */
 
-void kol::GoGraph::insertTerm(const std::string &termId, const std::string &name, const std::string &description, const std::string &ontology) {
+void kol::GoGraphImpl::insertTerm(const std::string &termId, const std::string &name, const std::string &description, const std::string &ontology) {
 
   //term already exists, update its information,
   if (_nameToIndex.find(termId) != _nameToIndex.end()) {
@@ -159,7 +159,7 @@ void kol::GoGraph::insertTerm(const std::string &termId, const std::string &name
    The method will insert the edge into the graph, setting the relationship type based
    on the data provided.
 */
-void kol::GoGraph::insertRelationship(const std::string &termParent, const std::string &termChild, const std::string &relationship) {
+void kol::GoGraphImpl::insertRelationship(const std::string &termParent, const std::string &termChild, const std::string &relationship) {
 
   //get the vertices by name, they should already exit in the graph
   GoVertex v = boost::vertex(_nameToIndex[termParent], _goGraph);
@@ -182,7 +182,7 @@ void kol::GoGraph::insertRelationship(const std::string &termParent, const std::
 /*!
   This method sets the private map variables by call calling boost get on the property maps.
 */
-void kol::GoGraph::initMaps() {
+void kol::GoGraphImpl::initMaps() {
 
   _vMap = boost::get(boost::vertex_index, _goGraph);
   _eMap = boost::get(boost::edge_index, _goGraph);
@@ -194,11 +194,11 @@ void kol::GoGraph::initMaps() {
 /*!
   This method returns the index of the given term.
 */
-size_t kol::GoGraph::getTermIndex(const std::string &term) const {
+size_t kol::GoGraphImpl::getTermIndex(const std::string &term) const {
 
   if (not hasTerm(term)) {
 
-    std::string error_message = "GoGraph::getTermIndex; term: " + term + " not defined";
+    std::string error_message = "GoGraphImpl::getTermIndex; term: " + term + " not defined";
     throw std::runtime_error(error_message);
 
   }
@@ -214,7 +214,7 @@ size_t kol::GoGraph::getTermIndex(const std::string &term) const {
   This method returns the term's string id using its index.
     Used mainly for testing.
 */
-std::string kol::GoGraph::getTermStringIdByIndex(std::size_t index) const {
+std::string kol::GoGraphImpl::getTermStringIdByIndex(std::size_t index) const {
 
   GoVertex v = getVertexByIndex(index);
   return _goGraph[v].termId;
@@ -226,7 +226,7 @@ std::string kol::GoGraph::getTermStringIdByIndex(std::size_t index) const {
 /*!
   This method returns the term's string name using the go term.
 */
-std::string kol::GoGraph::getTermName(const std::string &term) const {
+std::string kol::GoGraphImpl::getTermName(const std::string &term) const {
 
   if (hasTerm(term)) {
 
@@ -246,7 +246,7 @@ std::string kol::GoGraph::getTermName(const std::string &term) const {
 /*!
   This method returns the term's description string using the go term.
 */
-std::string kol::GoGraph::getTermDescription(const std::string &term) const {
+std::string kol::GoGraphImpl::getTermDescription(const std::string &term) const {
 
   if (hasTerm(term)) {
 
@@ -266,7 +266,7 @@ std::string kol::GoGraph::getTermDescription(const std::string &term) const {
 /*!
   This method returns the root vertex or first root vertex of a graph.
 */
-kol::GoGraph::GoVertex kol::GoGraph::getRoot() const {
+kol::GoGraphImpl::GoVertex kol::GoGraphImpl::getRoot() const {
 
   //creat a vertex variable
   GoVertex root;
@@ -288,7 +288,7 @@ kol::GoGraph::GoVertex kol::GoGraph::getRoot() const {
 /*!
   This method returns the term's ontology taking a string term as an argument
 */
-kol::GO::Ontology kol::GoGraph::getTermOntology(const std::string &term) const {
+kol::GO::Ontology kol::GoGraphImpl::getTermOntology(const std::string &term) const {
 
   if (not hasTerm(term)) {
 
@@ -307,7 +307,7 @@ kol::GO::Ontology kol::GoGraph::getTermOntology(const std::string &term) const {
 /*!
   This method returns the term's ontoogy taking an index as an argument
 */
-kol::GO::Ontology kol::GoGraph::getTermOntologyByIndex(std::size_t index) const {
+kol::GO::Ontology kol::GoGraphImpl::getTermOntologyByIndex(std::size_t index) const {
 
   GoVertex vertex = getVertexByIndex(index);
   return _goGraph[vertex].ontology;
@@ -319,7 +319,7 @@ kol::GO::Ontology kol::GoGraph::getTermOntologyByIndex(std::size_t index) const 
 /*!
   This method takes a term and returns a list of desendant terms.
 */
-kol::OntologySetType<std::string> kol::GoGraph::getDescendantTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getDescendantTerms(const std::string &term) const {
   //return empty set, if term is not found
   if (!hasTerm(term)) {
 
@@ -352,7 +352,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getDescendantTerms(const std::st
 
 }
 
-kol::OntologySetType<std::string> kol::GoGraph::getSelfDescendantTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getSelfDescendantTerms(const std::string &term) const {
 
   OntologySetType<std::string> self_ancestor_set = getDescendantTerms(term);
   self_ancestor_set.insert(term);
@@ -365,7 +365,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getSelfDescendantTerms(const std
 /*!
   This method takes a term and returns a list of ancestor terms.
 */
-kol::OntologySetType<std::string> kol::GoGraph::getAncestorTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getAncestorTerms(const std::string &term) const {
   //return empty set, if term is not found
   if (!hasTerm(term)) {
 
@@ -397,7 +397,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getAncestorTerms(const std::stri
 }
 
 
-kol::OntologySetType<std::string> kol::GoGraph::getSelfAncestorTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getSelfAncestorTerms(const std::string &term) const {
 
   OntologySetType<std::string> self_ancestor_set = getAncestorTerms(term);
   self_ancestor_set.insert(term);
@@ -409,7 +409,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getSelfAncestorTerms(const std::
 /*!
   This method returns the extended term set of a set of terms. Basically the set of terms and all their ancestors.
 */
-kol::OntologySetType<std::string> kol::GoGraph::getExtendedTermSet(const OntologySetType<std::string> &terms) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getExtendedTermSet(const OntologySetType<std::string> &terms) const {
 
 
   // For each term create set of ancestor terms plus the term itself and push onto a vector
@@ -440,7 +440,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getExtendedTermSet(const Ontolog
 /*!
   This method takes a term and returns a list of parent terms (immediate ancestors).
 */
-kol::OntologySetType<std::string> kol::GoGraph::getParentTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getParentTerms(const std::string &term) const {
   //return empty set, if term is not found
   if (!hasTerm(term)) {
 
@@ -469,7 +469,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getParentTerms(const std::string
 /*!
   This method takes a term and returns a list of child terms.
 */
-kol::OntologySetType<std::string> kol::GoGraph::getChildTerms(const std::string &term) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getChildTerms(const std::string &term) const {
   //return empty set, if term is not found
   if (!hasTerm(term)) {
 
@@ -498,7 +498,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getChildTerms(const std::string 
 /*!
   This method takes a term and returns is true boolean if it is a leaf.
 */
-bool kol::GoGraph::isLeaf(const std::string &term) const {
+bool kol::GoGraphImpl::isLeaf(const std::string &term) const {
   //return empty set, if term is not found
   if (!hasTerm(term)) {
 
@@ -515,7 +515,7 @@ bool kol::GoGraph::isLeaf(const std::string &term) const {
 }
 
 
-kol::GoGraph::GoVertex kol::GoGraph::getRightLeaf(GoVertex vertex) const {
+kol::GoGraphImpl::GoVertex kol::GoGraphImpl::getRightLeaf(GoVertex vertex) const {
 
   do {
 
@@ -532,11 +532,11 @@ kol::GoGraph::GoVertex kol::GoGraph::getRightLeaf(GoVertex vertex) const {
 }
 
 
-//! A helper method to retrieve all terms in the GoGraph
+//! A helper method to retrieve all terms in the GoGraphImpl
 /*!
   This method returns a set of term strings
 */
-kol::OntologySetType<std::string> kol::GoGraph::getAllTerms() const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getAllTerms() const {
 
   //create a collection to return
   OntologySetType<std::string> outSet;
@@ -551,11 +551,11 @@ kol::OntologySetType<std::string> kol::GoGraph::getAllTerms() const {
 }
 
 
-//! A helper method to retrieve all terms in the GoGraph
+//! A helper method to retrieve all terms in the GoGraphImpl
 /*!
   This method returns a set of term strings
 */
-kol::OntologyMapType<std::string, kol::GO::Ontology> kol::GoGraph::getAllOntTerms() const {
+kol::OntologyMapType<std::string, kol::GO::Ontology> kol::GoGraphImpl::getAllOntTerms() const {
 
   //create a collection to return
   OntologyMapType<std::string, GO::Ontology> outMap;
@@ -566,7 +566,7 @@ kol::OntologyMapType<std::string, kol::GO::Ontology> kol::GoGraph::getAllOntTerm
     if (not result) {
 
       std::string term_id = _goGraph[vertex].termId;
-      ExecEnv::log().error("GoGraph::getAllOntTerms; duplicate GO term: {}", term_id);
+      ExecEnv::log().error("GoGraphImpl::getAllOntTerms; duplicate GO term: {}", term_id);
 
     }
 
@@ -577,11 +577,11 @@ kol::OntologyMapType<std::string, kol::GO::Ontology> kol::GoGraph::getAllOntTerm
 }
 
 
-//! A helper method to retrieve all terms in the GoGraph belonging to the BIOLOGICAL_PROCESS ontology
+//! A helper method to retrieve all terms in the GoGraphImpl belonging to the BIOLOGICAL_PROCESS ontology
 /*!
   This method returns a set of BIOLOGICAL_PROCESS terms in the graph
 */
-kol::OntologySetType<std::string> kol::GoGraph::getAllTermsBP() const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getAllTermsBP() const {
 
   OntologySetType<std::string> outSet = getDescendantTerms(GO::getRootTermBP());
   outSet.insert(GO::getRootTermBP());
@@ -589,11 +589,11 @@ kol::OntologySetType<std::string> kol::GoGraph::getAllTermsBP() const {
 
 }
 
-//! A helper method to retrieve all terms in the GoGraph belonging to the MOLECULAR_FUNCTION ontology
+//! A helper method to retrieve all terms in the GoGraphImpl belonging to the MOLECULAR_FUNCTION ontology
 /*!
   This method returns a set of MOLECULAR_FUNCTION terms in the graph
 */
-kol::OntologySetType<std::string> kol::GoGraph::getAllTermsMF() const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getAllTermsMF() const {
 
   OntologySetType<std::string> outSet = getDescendantTerms(GO::getRootTermMF());
   outSet.insert(GO::getRootTermMF());
@@ -601,11 +601,11 @@ kol::OntologySetType<std::string> kol::GoGraph::getAllTermsMF() const {
 
 }
 
-//! A helper method to retrieve all terms in the GoGraph belonging to the CELLULAR_COMPONENT ontology
+//! A helper method to retrieve all terms in the GoGraphImpl belonging to the CELLULAR_COMPONENT ontology
 /*!
   This method returns a set of CELLULAR_COMPONENT terms in the graph
 */
-kol::OntologySetType<std::string> kol::GoGraph::getAllTermsCC() const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getAllTermsCC() const {
 
   OntologySetType<std::string> outSet = getDescendantTerms(GO::getRootTermCC());
   outSet.insert(GO::getRootTermCC());
@@ -617,7 +617,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getAllTermsCC() const {
 /*!
   This method returns a filtered set of ontology terms matching the given ontology
 */
-kol::OntologySetType<std::string> kol::GoGraph::filterSetForOntology(const OntologySetType<std::string> &inSet, GO::Ontology onto) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::filterSetForOntology(const OntologySetType<std::string> &inSet, GO::Ontology onto) const {
   //create a collection to return
   OntologySetType<std::string> outSet;
   //iterate over the collection
@@ -639,7 +639,7 @@ kol::OntologySetType<std::string> kol::GoGraph::filterSetForOntology(const Ontol
 /*!
   This method returns a filtered set of ontology terms matching the given ontology
 */
-kol::OntologySetType<std::string> kol::GoGraph::filterSetForOntology(const std::vector<std::string> &inSet, GO::Ontology onto) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::filterSetForOntology(const std::vector<std::string> &inSet, GO::Ontology onto) const {
   //create a collection to return
   OntologySetType<std::string> outSet;
 
@@ -661,7 +661,7 @@ kol::OntologySetType<std::string> kol::GoGraph::filterSetForOntology(const std::
 /*!
   Return the root node for a term's ontology
 */
-std::string kol::GoGraph::getTermRoot(const std::string &term) const {
+std::string kol::GoGraphImpl::getTermRoot(const std::string &term) const {
 
   GO::Ontology ontology = getTermOntology(term);
 
@@ -684,7 +684,7 @@ std::string kol::GoGraph::getTermRoot(const std::string &term) const {
 /*!
   Returns only those terms used that occur for the given ontology.
 */
-kol::OntologySetType<std::string> kol::GoGraph::getOntologyTerms(GO::Ontology ontology) const {
+kol::OntologySetType<std::string> kol::GoGraphImpl::getOntologyTerms(GO::Ontology ontology) const {
   //Use only terms in the annotation database, this will save on space and computation time.
   std::string rootId;
   switch (ontology) {
@@ -715,7 +715,7 @@ kol::OntologySetType<std::string> kol::GoGraph::getOntologyTerms(GO::Ontology on
   This method returns a subgraph of the graph induced by traversing the ancestors of
     the given vertex.
 */
-kol::GoGraph::Graph& kol::GoGraph::getInducedSubgraph2(const std::string &termId) {
+kol::GoGraphImpl::Graph& kol::GoGraphImpl::getInducedSubgraph2(const std::string &termId) {
 
   Graph &subgraph = _goGraph.create_subgraph();
 
@@ -730,7 +730,7 @@ kol::GoGraph::Graph& kol::GoGraph::getInducedSubgraph2(const std::string &termId
   This method returns a subgraph of the graph induced by traversing the ancestors of
     the given vertex.
 */
-kol::GoGraph::Graph& kol::GoGraph::getInducedSubgraph(const std::string &termId) {
+kol::GoGraphImpl::Graph& kol::GoGraphImpl::getInducedSubgraph(const std::string &termId) {
 
   Graph &subgraph = _goGraph.create_subgraph();
   boost::add_vertex(getVertexByName(termId), subgraph);
@@ -751,7 +751,7 @@ kol::GoGraph::Graph& kol::GoGraph::getInducedSubgraph(const std::string &termId)
   This method calculates the number of connected components in the graph.
     This is used to check if the GO graph contains only the 3 sub-ontologies.
 */
-std::size_t kol::GoGraph::getNumComponents() const {
+std::size_t kol::GoGraphImpl::getNumComponents() const {
 
   //Define undirected graph type
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> undirected_graph_t;
@@ -783,7 +783,7 @@ std::size_t kol::GoGraph::getNumComponents() const {
   This method is wrapped by a public method. It traverses the children of a node,
     populating the map with node indices of descendant terms.
 */
-void kol::GoGraph::getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &desendantMap) const {
+void kol::GoGraphImpl::getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &desendantMap) const {
   //create edge iterators
   InEdgeIterator ei, end;
   //loop over each edge
@@ -803,7 +803,7 @@ void kol::GoGraph::getDescendantTermsHelper(GoVertex vertex, OntologyMapType<std
   This method is wrapped by a public method. It traverses the parents of a node,
     populating the map with node indices of ancestor terms.
 */
-void kol::GoGraph::getAncestorTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &ancestorMap) const {
+void kol::GoGraphImpl::getAncestorTermsHelper(GoVertex vertex, OntologyMapType<std::size_t, bool> &ancestorMap) const {
 
   //create edge iterators
   OutEdgeIterator ei, end;

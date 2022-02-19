@@ -29,11 +29,11 @@ public:
   ~InformationContentDAG() override = default;
   //! A parameterized constructor
   /*!
-    This constructor takes pointers to GoGraph and TermAnnotation objects.
+    This constructor takes pointers to GoGraphImpl and TermAnnotation objects.
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */
-  InformationContentDAG(const std::shared_ptr<const GoGraph> &graph,
+  InformationContentDAG(const std::shared_ptr<const GoGraphImpl> &graph,
                         const std::shared_ptr<const TermAnnotation> &annoData) : InformationContentImpl(graph) {
 
     calcProbabilityMap(graph, annoData);
@@ -44,7 +44,7 @@ public:
 
 private:
 
-  void calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
+  void calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
                           const std::shared_ptr<const TermAnnotation> &annoData);
 
 };

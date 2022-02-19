@@ -30,7 +30,7 @@ public:
 
   }
 
-  [[nodiscard]] static const GoGraph &goGraph() {
+  [[nodiscard]] static const GoGraphImpl &goGraph() {
 
     if (not static_graph_) {
 
@@ -45,7 +45,7 @@ public:
 
 private:
 
-  inline static std::shared_ptr<const GoGraph> static_graph_;
+  inline static std::shared_ptr<const GoGraphImpl> static_graph_;
   inline static std::shared_ptr<const TermAnnotation> static_annotation_;
 
   [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
@@ -55,7 +55,7 @@ private:
 
   }
 
-  [[nodiscard]] static std::shared_ptr<GoGraph> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);

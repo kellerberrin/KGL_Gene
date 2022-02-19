@@ -32,7 +32,7 @@ public:
   /*!
     Creates the CoutoGraSMGreaterOrEqual class
   */
-  InformationCoutoGraSM(const std::shared_ptr<const GoGraph> &graph_ptr,
+  InformationCoutoGraSM(const std::shared_ptr<const GoGraphImpl> &graph_ptr,
                         const std::shared_ptr<const InformationContent> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
@@ -75,7 +75,7 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const GoGraphImpl> graph_ptr_;
   std::shared_ptr<const InformationContent> ic_map_ptr_;
   OntologyMapType<std::string, size_t> path_memory_;
 
@@ -89,8 +89,8 @@ private:
   /*!
     A path counting topological sort recursive method.
   */
-  void visitHelper(const GoGraph::GoVertex &go_vertex,
-                   const GoGraph::Graph &go_graph,
+  void visitHelper(const GoGraphImpl::GoVertex &go_vertex,
+                   const GoGraphImpl::Graph &go_graph,
                    OntologySetType<std::string> &ancestors,
                    OntologySetType<std::string> &finished,
                    OntologyMapType<std::string, size_t> &pathMap) const;

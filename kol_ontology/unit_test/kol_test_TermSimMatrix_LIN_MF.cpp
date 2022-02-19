@@ -61,7 +61,7 @@ private:
 
   }
 
-  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph() {
+  [[nodiscard]] std::shared_ptr<const GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -71,7 +71,7 @@ private:
 
   void getMatrixAnalysis() {
 
-    std::shared_ptr<const GoGraph> graph_ptr = getGoGraph();
+    std::shared_ptr<const GoGraphImpl> graph_ptr = getGoGraph();
     std::shared_ptr<const TermAnnotation> annotation_ptr = getAnnotation();
     std::shared_ptr<const InformationContentDAG> ic_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
     term_similarity_ptr_ = std::make_shared<const SimilarityLin>(ic_map_ptr);

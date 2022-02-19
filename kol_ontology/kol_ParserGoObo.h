@@ -47,7 +47,7 @@ public:
      which are specified to the graph.
 
   */
-  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
+  [[nodiscard]] std::shared_ptr<GoGraphImpl> parseGoFile(const std::string &filename) const override;
 
   //! A method to test if a file fits the accepted format
   /*!
@@ -86,7 +86,7 @@ private:
                  std::string &value) const;
 
   GoTermMap parseGoTermFile(const std::string &file_name) const;
-  std::shared_ptr<GoGraph>  parseGoFile2(const std::string &filename) const;
+  std::shared_ptr<GoGraphImpl>  parseGoFile2(const std::string &filename) const;
   GoTermMap filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const;
 
 };

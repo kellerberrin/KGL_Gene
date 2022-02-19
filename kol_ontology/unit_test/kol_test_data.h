@@ -16,7 +16,7 @@ public:
   // Just static definitions.
   UnitTestDefinitions() = delete;
 
-  // GoGraph file names.
+  // GoGraphImpl file names.
   [[nodiscard]] static std::string oboFileName() { return std::string(GRAPH_DIRECTORY_) + std::string(GO_OBO_); }
   [[nodiscard]] static std::string newOboFileName() { return std::string(GRAPH_DIRECTORY_) + std::string("new_") + std::string(GO_OBO_); }
   [[nodiscard]] static std::string xmlFileName() { return std::string(GRAPH_DIRECTORY_) + std::string(GO_XML_); }

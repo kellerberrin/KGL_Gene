@@ -23,12 +23,12 @@ namespace kol = kellerberrin::ontology;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
+std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
 
 
   auto term_map = parseGoTermFile(filename);
   auto filtered_term_map = filterTermMap(term_map, relationship_policy_);
-  std::shared_ptr<GoGraph> graph_ptr(std::make_shared<GoGraph>(filtered_term_map));
+  std::shared_ptr<GoGraphImpl> graph_ptr(std::make_shared<GoGraphImpl>(filtered_term_map));
 
   return graph_ptr;
 
@@ -248,10 +248,10 @@ kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_
    which are specified to the graph.
 
 */
-std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
+std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
 
   //graph object to be returned
-  std::shared_ptr<GoGraph> graph(std::make_shared<GoGraph>());
+  std::shared_ptr<GoGraphImpl> graph(std::make_shared<GoGraphImpl>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {

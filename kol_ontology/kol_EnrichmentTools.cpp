@@ -12,7 +12,7 @@ namespace kol = kellerberrin::ontology;
 /*!
   This method calculates the set of the genes annotated with a given term or transatively with a child of that term.
 */
-kol::OntologySetType<std::string> kol::EnrichmentTools::getDescendantGenes( const GoGraph &go,
+kol::OntologySetType<std::string> kol::EnrichmentTools::getDescendantGenes( const GoGraphImpl &go,
                                                                             const TermAnnotation &data,
                                                                             const std::string &term) {
 
@@ -48,7 +48,7 @@ kol::OntologySetType<std::string> kol::EnrichmentTools::getDescendantGenes( cons
   a set of genes that serves as the sample. The population is taken as all genes
   in the annotation database.
 */
-double kol::EnrichmentTools::enrichmentSignificance( const GoGraph &go,
+double kol::EnrichmentTools::enrichmentSignificance( const GoGraphImpl &go,
                                                      const TermAnnotation &data,
                                                      const OntologySetType<std::string> &genes,
                                                      const std::string &term) {

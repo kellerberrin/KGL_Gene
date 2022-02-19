@@ -21,7 +21,7 @@ namespace kellerberrin::ontology {
 // ontology functionality.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoGraph;
+class GoGraphImpl;
 class TermAnnotation;
 
 
@@ -39,16 +39,16 @@ public:
   [[nodiscard]] kgl::RuntimeResourceType getResourceType() const override { return kgl::RuntimeResourceType::ONTOLOGY_DATABASE; }
 
   // Ontology Resources.
-  [[nodiscard]] const std::shared_ptr<const GoGraph>& goGraph() const { return go_graph_ptr_; }
+  [[nodiscard]] const std::shared_ptr<const GoGraphImpl>& goGraph() const { return go_graph_ptr_; }
   [[nodiscard]] const std::shared_ptr<const TermAnnotation>& annotation() const { return annotation_ptr_; }
 
 private:
 
-  std::shared_ptr<const GoGraph> go_graph_ptr_;
+  std::shared_ptr<const GoGraphImpl> go_graph_ptr_;
   std::shared_ptr<const TermAnnotation> annotation_ptr_;
 
   [[nodiscard]] std::shared_ptr<const TermAnnotation> getAnnotation(const std::string& annotation_file);
-  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph(const std::string& go_graph_file);
+  [[nodiscard]] std::shared_ptr<const GoGraphImpl> getGoGraph(const std::string& go_graph_file);
 
 };
 

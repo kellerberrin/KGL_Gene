@@ -117,17 +117,16 @@ struct EdgeProps {
 };
 
 
-/*! \class GoGraph
+/*! \class GoGraphImpl
 	\brief This class holds the Gene Ontology directed acyclic graph
 
 	This class holds the Gene Ontology as a boost graph. It provides the graph data,
-	 as well as other strucutres which make working with the graph easier.
+	 as well as other structures which make working with the graph easier.
 
 */
-class GoGraph {
+class GoGraphImpl {
 
-public:
-
+private:
 
   //! A Graph type representing Go
   /*!
@@ -135,8 +134,12 @@ public:
    takes VertexProps and EdgeProps as templete arguments.
 */
   using Graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
-      boost::property<boost::vertex_index_t, size_t, VertexProps>,
-      boost::property<boost::edge_index_t, size_t, EdgeProps> >;
+  boost::property<boost::vertex_index_t, size_t, VertexProps>,
+  boost::property<boost::edge_index_t, size_t, EdgeProps> >;
+
+public:
+
+
 
   //! The main Graph type representing Go
   /*!
@@ -199,9 +202,9 @@ public:
   using EdgeIndexMap = boost::property_map<Graph, boost::edge_index_t>::type;
 
 
-  GoGraph() = default;
-  explicit GoGraph(const GoTermMap& go_term_map);
-  ~GoGraph() = default;
+  GoGraphImpl() = default;
+  explicit GoGraphImpl(const GoTermMap& go_term_map);
+  ~GoGraphImpl() = default;
 
 
   //! A method to return the boost graph
@@ -414,7 +417,7 @@ public:
   [[nodiscard]] bool isLeaf(const std::string &term) const;
   [[nodiscard]] GoVertex getRightLeaf(GoVertex vertex) const;
 
-  //! A helper method to retrieve all terms in the GoGraph
+  //! A helper method to retrieve all terms in the GoGraphImpl
   /*!
     This method returns a set of term strings
   */
@@ -422,20 +425,20 @@ public:
   // Returns all terms and term ontology.
   [[nodiscard]] OntologyMapType<std::string, GO::Ontology> getAllOntTerms() const;
 
-  //! A helper method to retrieve all terms in the GoGraph belonging to the BIOLOGICAL_PROCESS ontology
+  //! A helper method to retrieve all terms in the GoGraphImpl belonging to the BIOLOGICAL_PROCESS ontology
   /*!
     This method returns a set of BIOLOGICAL_PROCESS terms in the graph
   */
   [[nodiscard]] OntologySetType<std::string> getAllTermsBP() const;
 
 
-  //! A helper method to retrieve all terms in the GoGraph belonging to the MOLECULAR_FUNCTION ontology
+  //! A helper method to retrieve all terms in the GoGraphImpl belonging to the MOLECULAR_FUNCTION ontology
   /*!
     This method returns a set of MOLECULAR_FUNCTION terms in the graph
   */
   [[nodiscard]] OntologySetType<std::string> getAllTermsMF() const;
 
-  //! A helper method to retrieve all terms in the GoGraph belonging to the CELLULAR_COMPONENT ontology
+  //! A helper method to retrieve all terms in the GoGraphImpl belonging to the CELLULAR_COMPONENT ontology
   /*!
     This method returns a set of CELLULAR_COMPONENT terms in the graph
   */
@@ -559,6 +562,7 @@ public:
   [[nodiscard]] std::size_t getNumComponents() const;
 
 private:
+
   //! Private graph member
   /*!
     The go graph defined as subgraph<Graph_t>.

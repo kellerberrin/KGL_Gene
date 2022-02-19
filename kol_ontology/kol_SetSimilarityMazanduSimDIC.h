@@ -26,9 +26,9 @@ class SetSimilarityMazanduSimDIC : public SetSimilarityInterface {
 public:
   //! Constructor
   /*!
-  Creates the MazanduSimGICSetSimilarity class assigning the GoGraph private member.
+  Creates the MazanduSimGICSetSimilarity class assigning the GoGraphImpl private member.
   */
-  SetSimilarityMazanduSimDIC(const std::shared_ptr<const GoGraph> &graph,
+  SetSimilarityMazanduSimDIC(const std::shared_ptr<const GoGraphImpl> &graph,
                              const std::shared_ptr<const InformationInterface> &icMap)
       : graph_(graph), info_content_map_(icMap) {}
 
@@ -43,11 +43,11 @@ public:
 
 private:
 
-  //! Pointer to the GoGraph object.
+  //! Pointer to the GoGraphImpl object.
   /*!
     A reference to GO graph to be used.
   */
-  std::shared_ptr<const GoGraph> graph_;
+  std::shared_ptr<const GoGraphImpl> graph_;
 
   //! The information content map.
   /*!

@@ -127,7 +127,7 @@ bool kol::InformationContentImpl::validateTerms(const std::string &id_termA, con
   This method searches the sets to determine the most informative ancestor.
 */
 
-double kol::InformationContentImpl::sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const {
+double kol::InformationContentImpl::sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraphImpl &graph) const {
 
   //create 2 sets
   OntologySetType<std::string> ancestorsA = graph.getSelfAncestorTerms(go_termA);

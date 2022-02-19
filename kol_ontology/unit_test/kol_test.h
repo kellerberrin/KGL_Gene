@@ -52,7 +52,7 @@ protected:
 
   }
 
-  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph() {
+  [[nodiscard]] std::shared_ptr<const GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -86,7 +86,7 @@ private:
 
   [[nodiscard]] std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() override {
 
-    std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
+    std::shared_ptr<const GoGraphImpl> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
     std::shared_ptr<const TermAnnotation> annotation_ptr = TestSimilarity<TestValues>::getAnnotation();
     std::shared_ptr<const InformationContentDAG> info_map_ptr(std::make_shared<const InformationContentDAG>(graph_ptr, annotation_ptr));
     return std::make_unique<const SimAnalysis>(info_map_ptr);
@@ -109,7 +109,7 @@ private:
 
   [[nodiscard]] std::unique_ptr<const SimilarityInterface> getSimilarityAnalysis() override {
 
-    std::shared_ptr<const GoGraph> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
+    std::shared_ptr<const GoGraphImpl> graph_ptr = TestSimilarity<TestValues>::getGoGraph();
     std::shared_ptr<const InformationDepthMap> info_map_ptr(std::make_shared<const InformationDepthMap>(*graph_ptr));
     return std::make_unique<const SimilarityPekarStaab>(graph_ptr, info_map_ptr);
 
@@ -160,7 +160,7 @@ public:
 
   }
 
-  [[nodiscard]] const GoGraph &goGraph() {
+  [[nodiscard]] const GoGraphImpl &goGraph() {
 
     if (not graph_ptr_) {
 
@@ -181,7 +181,7 @@ public:
 protected:
 
   inline static std::shared_ptr<const TermAnnotation> annotation_ptr_;
-  inline static std::shared_ptr<const GoGraph> graph_ptr_;
+  inline static std::shared_ptr<const GoGraphImpl> graph_ptr_;
   inline static std::unique_ptr<const SetSimilarityInterface> set_similarity_ptr_;
   inline const static TestValues test_values_;
 
@@ -204,7 +204,7 @@ protected:
   }
 
 
-  [[nodiscard]] static std::shared_ptr<const GoGraph> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<const GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -404,7 +404,7 @@ protected:
 
   }
 
-  [[nodiscard]] std::shared_ptr<const GoGraph> getGoGraph() {
+  [[nodiscard]] std::shared_ptr<const GoGraphImpl> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -440,7 +440,7 @@ private:
 
   void getSimilarityAnalysis() override {
 
-    std::shared_ptr<const GoGraph> graph_ptr = SS::getGoGraph();
+    std::shared_ptr<const GoGraphImpl> graph_ptr = SS::getGoGraph();
     std::shared_ptr<const TermAnnotation> annotation_ptr = SS::getAnnotation();
     SS::term_information_ptr_ = std::make_shared<const InformationContent>(graph_ptr, annotation_ptr);
     SS::term_similarity_ptr_ = std::make_unique<const SharedAnalysis>(graph_ptr, SS::term_information_ptr_);

@@ -21,7 +21,7 @@ class EdgeSetVisitor : public boost::default_bfs_visitor {
 
 public:
   EdgeSetVisitor(kol::OntologySetType<std::size_t> &inSet,
-                 const kol::GoGraph::EdgeIndexMap &inMap,
+                 const kol::GoGraphImpl::EdgeIndexMap &inMap,
                  kol::OntologyMapType<std::string, kol::OntologySetType<std::size_t> > &termToEdges) :
       edgeSet(inSet), eMap(inMap), termEdgesMap(termToEdges) {}
 
@@ -46,7 +46,7 @@ public:
   }
 
   kol::OntologySetType<std::size_t> &edgeSet;
-  const kol::GoGraph::EdgeIndexMap &eMap;
+  const kol::GoGraphImpl::EdgeIndexMap &eMap;
   kol::OntologyMapType<std::string, kol::OntologySetType<std::size_t> > &termEdgesMap;
 
 };
@@ -86,12 +86,12 @@ kol::OntologySetType<std::string> kol::InformationFrontier::getCommonDisjointAnc
 
 
   //get the boost graph
-  const GoGraph::Graph &go_graph = graph_ptr_->getGraph();
+  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGraph();
 
   OntologySetType<std::size_t> edgesC1;
   OntologySetType<std::size_t> edgesC2;
 
-  const GoGraph::EdgeIndexMap &edge_index_map = graph_ptr_->edgeIndexMap();
+  const GoGraphImpl::EdgeIndexMap &edge_index_map = graph_ptr_->edgeIndexMap();
   OntologyMapType<std::string, OntologySetType<std::size_t> > termToEdges;
 
   EdgeSetVisitor c1EdgeVisitor(edgesC1, edge_index_map, termToEdges);

@@ -26,7 +26,7 @@ class AnnotationMapVisitor : public boost::default_dfs_visitor {
 
 public:
   //! A parameterized constructor passing parameters to the boost default_dfs_visitor
-  AnnotationMapVisitor( const std::shared_ptr<const kol::GoGraph> &graph_ptr,
+  AnnotationMapVisitor( const std::shared_ptr<const kol::GoGraphImpl> &graph_ptr,
                         const std::shared_ptr<const kol::TermAnnotation> &anno_data_ptr,
                         kol::TermProbOntMap& probability_map)
       : graph_ptr_(graph_ptr),
@@ -96,7 +96,7 @@ public:
   }//end method, finish_vertex
 
   //! The go graph object
-  std::shared_ptr<const kol::GoGraph> graph_ptr_;
+  std::shared_ptr<const kol::GoGraphImpl> graph_ptr_;
 
   //! An TermAnnotation object for accessing annotations
   std::shared_ptr<const kol::TermAnnotation> anno_data_ptr_;
@@ -108,17 +108,17 @@ public:
 
 
 // Constructor
-void kol::InformationContentDAG::calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
+void kol::InformationContentDAG::calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
                                                     const std::shared_ptr<const TermAnnotation> &annotation_data) {
 
 
-  GoGraph::GoVertex root = graph->getRoot();
+  GoGraphImpl::GoVertex root = graph->getRoot();
 
   // Create the visitor object.
   AnnotationMapVisitor map_visitor(graph, annotation_data, probability_map_);
 
-  // Get the boost graph from the GoGraph object. Must be done to utilize boost algorithms.
-  const GoGraph::Graph &go_graph = graph->getGraph();
+  // Get the boost graph from the GoGraphImpl object. Must be done to utilize boost algorithms.
+  const GoGraphImpl::Graph &go_graph = graph->getGraph();
 
   // Reversing the graph is necessary otherwise the root vertex would have no edges.
   auto reversed_graph = boost::make_reverse_graph(go_graph);

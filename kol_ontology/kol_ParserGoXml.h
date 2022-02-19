@@ -46,7 +46,7 @@ public:
      which are specified to the graph.
 
   */
-  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
+  [[nodiscard]] std::shared_ptr<GoGraphImpl> parseGoFile(const std::string &filename) const override;
 
 
   //! A method to test if a file fits the accepted format

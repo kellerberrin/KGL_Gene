@@ -77,12 +77,12 @@ protected:
   /*!
     This constructor creates an empty IC map. Should not be used.
   */
-  explicit InformationContentImpl(const std::shared_ptr<const GoGraph>& graph_ptr) : graph_ptr_(graph_ptr) {}
+  explicit InformationContentImpl(const std::shared_ptr<const GoGraphImpl>& graph_ptr) : graph_ptr_(graph_ptr) {}
   ~InformationContentImpl() override = default;
 
 
   TermProbOntMap probability_map_;
-  std::shared_ptr<const GoGraph> graph_ptr_;
+  std::shared_ptr<const GoGraphImpl> graph_ptr_;
   const static constexpr double BAD_INFO_VALUE_{0.0};
   double max_bp_information_{0.0};
   double max_mf_information_{0.0};
@@ -93,7 +93,7 @@ protected:
                                          const OntologySetType<std::string> &larger_set) const;
   [[nodiscard]] double getMaxInformation(GO::Ontology ontology) const;
   [[nodiscard]] double getRootCount(const std::string& root_id) const;
-  [[nodiscard]] double sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const;
+  [[nodiscard]] double sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraphImpl &graph) const;
 
 };
 

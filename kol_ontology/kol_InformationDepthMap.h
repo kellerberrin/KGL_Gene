@@ -5,9 +5,9 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef KOL_TERM_DEPTH_MAP
 #define KOL_TERM_DEPTH_MAP
 
-#include "kol_GoGraph.h"
 #include "kol_TermAnnotation.h"
 
+#include "kol_GoGraph.h"
 
 
 namespace kellerberrin::ontology {
@@ -23,11 +23,11 @@ class InformationDepthMap {
 public:
   //! A parameterized constructor
   /*!
-    This constructor takes pointers to GoGraph and TermAnnotation objects.
+    This constructor takes pointers to GoGraphImpl and TermAnnotation objects.
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */
-  explicit InformationDepthMap(const GoGraph &graph) { initializeDepthMap(graph); }
+  explicit InformationDepthMap(const GoGraphImpl &graph) { initializeDepthMap(graph); }
   //! A default constructor
   /*!
     This constructor initialized the storage structures. Should not be used.
@@ -88,7 +88,7 @@ private:
     This method actually calculates the depth values.
   */
 
-  void initializeDepthMap(const GoGraph &graph);
+  void initializeDepthMap(const GoGraphImpl &graph);
 
   //! A method for calculating the least common ancestor
   /*!

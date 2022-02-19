@@ -33,7 +33,7 @@ public:
 
   OntologyGeneCache( const std::vector<std::string>& gene_vector,
                      const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
-                     const std::shared_ptr<const kol::GoGraph>& go_graph_ptr)
+                     const std::shared_ptr<const kol::GoGraphImpl>& go_graph_ptr)
       : annotation_ptr_(annotation_ptr), go_graph_ptr_(go_graph_ptr) {
 
     gene_set_ = kol::SetUtilities::convertVector(gene_vector);
@@ -68,7 +68,7 @@ private:
   // Input objects.
   kol::OntologySetType<std::string> gene_set_;
   std::shared_ptr<const kol::TermAnnotation> annotation_ptr_;
-  std::shared_ptr<const kol::GoGraph> go_graph_ptr_;
+  std::shared_ptr<const kol::GoGraphImpl> go_graph_ptr_;
 
   // GO term sets.
   kol::OntologySetType<std::string> gene_set_go_terms_BP_;

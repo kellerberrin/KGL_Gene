@@ -21,17 +21,17 @@ public:
 
   virtual ~ParserGoInterface() = default;
 
-  //! A pure virtual method for parsing the file and returning a GoGraph object.
+  //! A pure virtual method for parsing the file and returning a GoGraphImpl object.
   /*!
     This pure virtual method requires any parser to have a method that takes
-      a filename string and returns a GoGraph object pointer.
+      a filename string and returns a GoGraphImpl object pointer.
   */
-  [[nodiscard]] virtual std::shared_ptr<GoGraph> parseGoFile(const std::string &fileName) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<GoGraphImpl> parseGoFile(const std::string &fileName) const = 0;
 
-  //! A pure virtual method for parsing the file and returning a GoGraph object.
+  //! A pure virtual method for parsing the file and returning a GoGraphImpl object.
   /*!
   This pure virtual method requires any parser to have a method that takes
-  a filename string and returns a GoGraph object pointer.
+  a filename string and returns a GoGraphImpl object pointer.
   */
   [[nodiscard]] virtual bool isFileGood(const std::string &filename) const = 0;
 

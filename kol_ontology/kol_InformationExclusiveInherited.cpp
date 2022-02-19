@@ -54,17 +54,17 @@ kol::OntologySetType<std::string> kol::InformationExclusiveInherited::getCommonD
   OntologySetType<std::string> diffSet = SetUtilities::setDifference(unionAncestors, commonAncestors);
 
   //get the boost graph
-  const GoGraph::Graph &g = graph_ptr_->getGraph();
+  const GoGraphImpl::Graph &g = graph_ptr_->getGraph();
   //Z&L: for each a in CommonAnSet do ...
   for (auto const &term : commonAncestors) {
 
     bool isDisj = false;
 
-    GoGraph::GoVertex v = graph_ptr_->getVertexByName(term);
-    GoGraph::InEdgeIterator ei, end;
+    GoGraphImpl::GoVertex v = graph_ptr_->getVertexByName(term);
+    GoGraphImpl::InEdgeIterator ei, end;
     for (boost::tie(ei, end) = boost::in_edges(v, g); ei != end; ++ei) {
 
-      GoGraph::GoVertex child = boost::source(*ei, g);
+      GoGraphImpl::GoVertex child = boost::source(*ei, g);
       size_t index = graph_ptr_->getVertexIndex(child);
       std::string cTerm = graph_ptr_->getTermStringIdByIndex(index);
 
