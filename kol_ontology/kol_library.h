@@ -1,12 +1,7 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
 
 #ifndef KOL_LIBRARY_H
 #define KOL_LIBRARY_H
 
-#include "kol_Accumulators.h"
 #include "kol_ParserGoObo.h"
 #include "kol_ParserGoXml.h"
 #include "kol_PolicyEvidence.h"

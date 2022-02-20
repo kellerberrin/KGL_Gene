@@ -7,8 +7,8 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "kol_SetSimilarityInterface.h"
 #include "kol_SimilarityInterface.h"
-#include "kol_Accumulators.h"
 
+#include <memory>
 
 namespace kellerberrin::ontology {
 

@@ -4,6 +4,8 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityBestMatchAverage.h"
+#include "kol_Accumulators.h"
+
 
 namespace kol = kellerberrin::ontology;
 

@@ -8,7 +8,8 @@
 
 #include "kol_SetSimilarityInterface.h"
 #include "kol_SimilarityInterface.h"
-#include "kol_Accumulators.h"
+
+#include <memory>
 
 
 namespace kellerberrin::ontology {
