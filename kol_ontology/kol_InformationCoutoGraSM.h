@@ -32,7 +32,7 @@ public:
   /*!
     Creates the CoutoGraSMGreaterOrEqual class
   */
-  InformationCoutoGraSM(const std::shared_ptr<const GoGraphImpl> &graph_ptr,
+  InformationCoutoGraSM(const std::shared_ptr<const GoGraph> &graph_ptr,
                         const std::shared_ptr<const InformationContent> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
@@ -75,7 +75,7 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraphImpl> graph_ptr_;
+  std::shared_ptr<const GoGraph> graph_ptr_;
   std::shared_ptr<const InformationContent> ic_map_ptr_;
   OntologyMapType<std::string, size_t> path_memory_;
 
@@ -84,16 +84,6 @@ private:
     Count paths between B and A
   */
   [[nodiscard]] size_t pathCount(const std::string &termA, const std::string &termB) const;
-
-  //! Recursive helper method that performs the DFS topological sort for path counting
-  /*!
-    A path counting topological sort recursive method.
-  */
-  void visitHelper(const GoGraphImpl::GoVertex &go_vertex,
-                   const GoGraphImpl::Graph &go_graph,
-                   OntologySetType<std::string> &ancestors,
-                   OntologySetType<std::string> &finished,
-                   OntologyMapType<std::string, size_t> &pathMap) const;
 
   //! A method for determining if for a term c, a pair (a1,a2) is disjoint in c
   /*!

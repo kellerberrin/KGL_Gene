@@ -46,7 +46,7 @@ namespace kol = kellerberrin::ontology;
 
 std::shared_ptr <const kol::InformationInterface>
     kol::OntologyFactory::createInformation( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                             const std::shared_ptr<const GoGraphImpl>& graph_ptr,
+                                             const std::shared_ptr<const GoGraph>& graph_ptr,
                                              InformationContentType information_type) {
 
   switch (information_type) {
@@ -108,7 +108,7 @@ std::shared_ptr <const kol::InformationInterface>
 
 std::shared_ptr<const kol::SimilarityInterface>
     kol::OntologyFactory::createSimilarity( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                            const std::shared_ptr<const GoGraphImpl>& graph_ptr,
+                                            const std::shared_ptr<const GoGraph>& graph_ptr,
                                             SimilarityType similarity_type,
                                             InformationContentType information_type) {
 
@@ -149,10 +149,10 @@ std::shared_ptr<const kol::SimilarityInterface>
 
 
 std::shared_ptr<const kol::SetSimilarityInterface> kol::OntologyFactory::createSetSimilarity( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                                                                                   const std::shared_ptr<const GoGraphImpl>& graph_ptr,
-                                                                                                   SetSimilarityType set_similarity_type,
-                                                                                                   SimilarityType similarity_type,
-                                                                                                   InformationContentType information_type) {
+                                                                                              const std::shared_ptr<const GoGraph>& graph_ptr,
+                                                                                              SetSimilarityType set_similarity_type,
+                                                                                              SimilarityType similarity_type,
+                                                                                              InformationContentType information_type) {
 
   switch (set_similarity_type) {
 

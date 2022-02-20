@@ -33,7 +33,7 @@ public:
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */
-  InformationContentDAG(const std::shared_ptr<const GoGraphImpl> &graph,
+  InformationContentDAG(const std::shared_ptr<const GoGraph> &graph,
                         const std::shared_ptr<const TermAnnotation> &annoData) : InformationContentImpl(graph) {
 
     calcProbabilityMap(graph, annoData);
@@ -44,7 +44,7 @@ public:
 
 private:
 
-  void calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
+  void calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
                           const std::shared_ptr<const TermAnnotation> &annoData);
 
 };

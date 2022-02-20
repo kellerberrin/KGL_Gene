@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationDepthMap.h"
+#include "kol_GoGraphImpl.h"
 
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/reverse_graph.hpp>
@@ -72,26 +73,26 @@ std::string kol::InformationDepthMap::getLCA(const OntologySetType<std::string> 
   This method actually calculates the depth values.
 */
 
-void kol::InformationDepthMap::initializeDepthMap(const GoGraphImpl &graph) {
+void kol::InformationDepthMap::initializeDepthMap(const GoGraph &graph) {
 
   //Initialize an annotation list the size of verticies in go, each value is 0
-  depths_ = std::vector<size_t>(graph.getNumVertices(), 0);
+  depths_ = std::vector<size_t>(graph.getGoGraphImpl().getNumVertices(), 0);
 
 
   //get the boost graph from the GoGraphImpl object. Must be done to utilize boost algorithms
-  const GoGraphImpl::Graph &go_graph = graph.getGraph();
+  const GoGraphImpl::Graph &go_graph = graph.getGoGraphImpl().getGraph();
 
   //wrap _depth with a vertex map
-  const GoGraphImpl::VertexIndexMap &vMap = graph.vertexIndexMap();
+  const GoGraphImpl::VertexIndexMap &vMap = graph.getGoGraphImpl().vertexIndexMap();
 
   boost::iterator_property_map<std::vector<size_t>::iterator, GoGraphImpl::VertexIndexMap> d_map(depths_.begin(), vMap);
 
   //call the boost depth first search using our custom visitor
   // revering the graph is necessary otherwise the root vertex would have no edges.
   //boost::depth_first_search(boost::make_reverse_graph(*go_graph),boost::visitor(vis).root_vertex(root));
-  GoGraphImpl::GoVertex bpRoot = graph.getVertexByName(GO::getRootTermBP());
-  GoGraphImpl::GoVertex mfRoot = graph.getVertexByName(GO::getRootTermMF());
-  GoGraphImpl::GoVertex ccRoot = graph.getVertexByName(GO::getRootTermCC());
+  GoGraphImpl::GoVertex bpRoot = graph.getGoGraphImpl().getVertexByName(GO::getRootTermBP());
+  GoGraphImpl::GoVertex mfRoot = graph.getGoGraphImpl().getVertexByName(GO::getRootTermMF());
+  GoGraphImpl::GoVertex ccRoot = graph.getGoGraphImpl().getVertexByName(GO::getRootTermCC());
 
   //Start at bproot, record depths
   // must reverse graph due to edge relationship direction
@@ -119,7 +120,7 @@ void kol::InformationDepthMap::initializeDepthMap(const GoGraphImpl &graph) {
   for (boost::tie(vi, vend) = boost::vertices(go_graph); vi != vend; ++vi) {
 
     GoGraphImpl::GoVertex v = *vi;
-    name_to_index_[graph.getTermStringIdByIndex(vMap[v])] = vMap[v];
+    name_to_index_[graph.getGoGraphImpl().getTermStringIdByIndex(vMap[v])] = vMap[v];
 
   }
 

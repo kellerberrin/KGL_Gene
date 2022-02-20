@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationCoutoGraSM.h"
+#include "kol_GoGraphImpl.h"
 
 #include "kol_Accumulators.h"
 #include "kol_SetUtilities.h"
@@ -18,6 +19,70 @@ namespace kol = kellerberrin::ontology;
 
 
 
+//! Recursive helper method that performs the DFS topological sort for path counting
+/*!
+  A path counting topological sort recursive method.
+*/
+void visitHelper( const kol::GoGraphImpl::GoVertex &go_vertex,
+                  const kol::GoGraphImpl::Graph &go_graph,
+                  kol::OntologySetType<std::string> &ancestors,
+                  kol::OntologySetType<std::string> &finished,
+                  kol::OntologyMapType<std::string, size_t> &pathMap) {
+
+  size_t childCount = 0;
+  std::string vTerm = go_graph[go_vertex].termId;
+
+  //examine children and recurse
+  kol::GoGraphImpl::InEdgeIterator it, end;
+  for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
+
+    kol::GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
+    std::string childTerm = go_graph[child].termId;
+    if (not ancestors.contains(childTerm)) {
+
+      continue;
+
+    }
+    //recurse if child is not finished
+    if (not finished.contains(childTerm)) {
+
+      visitHelper(child, go_graph, ancestors, finished, pathMap);
+
+    }
+
+    ++childCount;
+
+  }
+
+  //finish vertex
+  finished.insert(vTerm);
+
+  if (childCount == 0) {
+
+    pathMap[vTerm] = 1;
+
+  } else {
+
+    pathMap[vTerm] = 0;
+    for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
+      kol::GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
+      std::string childTerm = go_graph[child].termId;
+
+      if (not ancestors.contains(childTerm)) {
+
+        continue;
+
+      }
+
+      pathMap[vTerm] += pathMap[childTerm];
+
+    }
+
+  }
+
+}
+
+
 //! A method for determining the common disjunctive ancestors
 /*!
   This method returns the common disjunctive ancestors for two terms
@@ -25,8 +90,8 @@ namespace kol = kellerberrin::ontology;
 kol::OntologySetType<std::string> kol::InformationCoutoGraSM::getCommonDisjointAncestors(const std::string &termC1,
                                                                                          const std::string &termC2) const {
 
-  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
-  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
+  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC1);
+  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC2);
 
   //Couto: CommonDisjAnc = {}
   OntologySetType<std::string> cda;
@@ -99,9 +164,9 @@ bool kol::InformationCoutoGraSM::isDisjoint(const std::string &termC,
                                             const std::string &termA2) const {
 
   //if not from same ontology, return 0;
-  if (graph_ptr_->getTermOntology(termA1) != graph_ptr_->getTermOntology(termA2) ||
-      graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA1) ||
-      graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA2)) {
+  if (graph_ptr_->getGoGraphImpl().getTermOntology(termA1) != graph_ptr_->getGoGraphImpl().getTermOntology(termA2) ||
+  graph_ptr_->getGoGraphImpl().getTermOntology(termC) != graph_ptr_->getGoGraphImpl().getTermOntology(termA1) ||
+  graph_ptr_->getGoGraphImpl().getTermOntology(termC) != graph_ptr_->getGoGraphImpl().getTermOntology(termA2)) {
 
     return false;
 
@@ -185,78 +250,15 @@ size_t kol::InformationCoutoGraSM::pathCount(const std::string &termA, const std
 
   }
 
-  OntologySetType<std::string> ancestors = graph_ptr_->getAncestorTerms(termB);
+  OntologySetType<std::string> ancestors = graph_ptr_->getGoGraphImpl().getAncestorTerms(termB);
   OntologySetType<std::string> finished;
   OntologyMapType<std::string, size_t> pathMap;
   ancestors.insert(termB);
-  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGraph();
-  GoGraphImpl::GoVertex v = graph_ptr_->getTermRootVertex(termB);
+  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGoGraphImpl().getGraph();
+  GoGraphImpl::GoVertex v = graph_ptr_->getGoGraphImpl().getTermRootVertex(termB);
   visitHelper(v, go_graph, ancestors, finished, pathMap);
 
   return pathMap[termA];
-
-}
-
-//! Recursive helper method that performs the DFS topological sort for path counting
-/*!
-  A path counting topological sort recursive method.
-*/
-void kol::InformationCoutoGraSM::visitHelper(const GoGraphImpl::GoVertex &go_vertex,
-                                             const GoGraphImpl::Graph &go_graph,
-                                             OntologySetType<std::string> &ancestors,
-                                             OntologySetType<std::string> &finished,
-                                             OntologyMapType<std::string, size_t> &pathMap) const {
-
-  size_t childCount = 0;
-  std::string vTerm = go_graph[go_vertex].termId;
-
-  //examine children and recurse
-  GoGraphImpl::InEdgeIterator it, end;
-  for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
-
-    GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
-    std::string childTerm = go_graph[child].termId;
-    if (not ancestors.contains(childTerm)) {
-
-      continue;
-
-    }
-    //recurse if child is not finished
-    if (not finished.contains(childTerm)) {
-
-      visitHelper(child, go_graph, ancestors, finished, pathMap);
-
-    }
-
-    ++childCount;
-
-  }
-
-  //finish vertex
-  finished.insert(vTerm);
-
-  if (childCount == 0) {
-
-    pathMap[vTerm] = 1;
-
-  } else {
-
-    pathMap[vTerm] = 0;
-    for (boost::tie(it, end) = boost::in_edges(go_vertex, go_graph); it != end; ++it) {
-      GoGraphImpl::GoVertex child = boost::source(*it, go_graph);
-      std::string childTerm = go_graph[child].termId;
-
-      if (not ancestors.contains(childTerm)) {
-
-        continue;
-
-      }
-
-      pathMap[vTerm] += pathMap[childTerm];
-
-    }
-
-  }
 
 }
 

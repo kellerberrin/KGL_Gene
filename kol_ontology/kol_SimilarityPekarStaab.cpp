@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SimilarityPekarStaab.h"
+#include "kol_GoGraphImpl.h"
 
 namespace kol = kellerberrin::ontology;
 
@@ -22,15 +23,15 @@ double kol::SimilarityPekarStaab::calculateTermSimilarity(const std::string &goT
   }
 
   //if not from same ontology, return 0;
-  if (graph_ptr_->getTermOntology(goTermA) != graph_ptr_->getTermOntology(goTermB)) {
+  if (graph_ptr_->getGoGraphImpl().getTermOntology(goTermA) != graph_ptr_->getGoGraphImpl().getTermOntology(goTermB)) {
 
     return 0.0;
 
   }
 
   //Create 2 sets self + ancestors.
-  OntologySetType<std::string> ancestorsA = graph_ptr_->getSelfAncestorTerms(goTermA);
-  OntologySetType<std::string> ancestorsB = graph_ptr_->getSelfAncestorTerms(goTermB);
+  OntologySetType<std::string> ancestorsA = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(goTermA);
+  OntologySetType<std::string> ancestorsB = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(goTermB);
 
   //if either set is empty, return 0
   if (ancestorsA.empty() || ancestorsB.empty()) {

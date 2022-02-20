@@ -6,6 +6,7 @@
 
 #include "kol_SetUtilities.h"
 #include "kol_Accumulators.h"
+#include "kol_GoGraphImpl.h"
 
 #include <utility>
 #include <algorithm>
@@ -71,8 +72,8 @@ kol::OntologySetType<std::string> kol::InformationFrontier::getCommonDisjointAnc
 
   }
 
-  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
-  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
+  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC1);
+  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC2);
 
   //Couto: Anc = CommonAnc(c1,c2)
   OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
@@ -86,22 +87,22 @@ kol::OntologySetType<std::string> kol::InformationFrontier::getCommonDisjointAnc
 
 
   //get the boost graph
-  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGraph();
+  const GoGraphImpl::Graph &go_graph = graph_ptr_->getGoGraphImpl().getGraph();
 
   OntologySetType<std::size_t> edgesC1;
   OntologySetType<std::size_t> edgesC2;
 
-  const GoGraphImpl::EdgeIndexMap &edge_index_map = graph_ptr_->edgeIndexMap();
+  const GoGraphImpl::EdgeIndexMap &edge_index_map = graph_ptr_->getGoGraphImpl().edgeIndexMap();
   OntologyMapType<std::string, OntologySetType<std::size_t> > termToEdges;
 
   EdgeSetVisitor c1EdgeVisitor(edgesC1, edge_index_map, termToEdges);
   EdgeSetVisitor c2EdgeVisitor(edgesC2, edge_index_map, termToEdges);
 
   //get edges for c1
-  boost::breadth_first_search(go_graph, graph_ptr_->getVertexByName(termC1), boost::visitor(c1EdgeVisitor));
+  boost::breadth_first_search(go_graph, graph_ptr_->getGoGraphImpl().getVertexByName(termC1), boost::visitor(c1EdgeVisitor));
 
   //get edges for c1
-  boost::breadth_first_search(go_graph, graph_ptr_->getVertexByName(termC2), boost::visitor(c2EdgeVisitor));
+  boost::breadth_first_search(go_graph, graph_ptr_->getGoGraphImpl().getVertexByName(termC2), boost::visitor(c2EdgeVisitor));
 
 
   for (auto const &term : commonAncestors) {

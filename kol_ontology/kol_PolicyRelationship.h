@@ -7,6 +7,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <vector>
 #include "kol_GoEnums.h"
+#include "kol_OntologyTypes.h"
 
 
 namespace kellerberrin::ontology {

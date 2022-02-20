@@ -27,7 +27,7 @@ public:
       Only the parameterized construtor is allowed to ensure these objects are
       created with valid parameters.
   */
-  explicit InformationDepthMap(const GoGraphImpl &graph) { initializeDepthMap(graph); }
+  explicit InformationDepthMap(const GoGraph &graph) { initializeDepthMap(graph); }
   //! A default constructor
   /*!
     This constructor initialized the storage structures. Should not be used.
@@ -88,7 +88,7 @@ private:
     This method actually calculates the depth values.
   */
 
-  void initializeDepthMap(const GoGraphImpl &graph);
+  void initializeDepthMap(const GoGraph &graph);
 
   //! A method for calculating the least common ancestor
   /*!

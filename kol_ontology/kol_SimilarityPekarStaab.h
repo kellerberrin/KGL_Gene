@@ -39,7 +39,7 @@ public:
   /*!
     Creates the default(empty) PolicyStandardRelationship
   */
-  SimilarityPekarStaab(const std::shared_ptr<const GoGraphImpl> &graph_ptr,
+  SimilarityPekarStaab(const std::shared_ptr<const GoGraph> &graph_ptr,
                        const std::shared_ptr<const InformationDepthMap> &depth_map_ptr)
       : graph_ptr_(graph_ptr), depth_map_ptr_(depth_map_ptr) {}
 
@@ -55,7 +55,7 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraphImpl> graph_ptr_;
+  std::shared_ptr<const GoGraph> graph_ptr_;
   std::shared_ptr<const InformationDepthMap> depth_map_ptr_;
 
 };

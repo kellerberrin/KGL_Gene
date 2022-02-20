@@ -3,6 +3,7 @@
 //
 
 #include "kol_InformationContent.h"
+#include "kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 
@@ -11,14 +12,14 @@ namespace kel = kellerberrin;
 
 
 
-void kol::InformationContent::calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
+void kol::InformationContent::calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
                                                  const std::shared_ptr<const TermAnnotation> &annotation_data) {
 
-  auto term_ont_map = graph->getAllOntTerms();
+  auto term_ont_map = graph->getGoGraphImpl().getAllOntTerms();
   for (auto const& [term_id, ontology] : term_ont_map) {
 
     size_t annotations{0};
-    auto child_self_set = graph->getSelfDescendantTerms(term_id);
+    auto child_self_set = graph->getGoGraphImpl().getSelfDescendantTerms(term_id);
     for (auto const& child_term_id : child_self_set) {
 
       annotations += annotation_data->getNumAnnotationsForGoTerm(child_term_id);

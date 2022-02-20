@@ -30,7 +30,7 @@ public:
 
   OntologyCache( const std::vector<std::string>& gene_vector,
                  const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
-                 const std::shared_ptr<const kol::GoGraphImpl>& go_graph_ptr);
+                 const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
   OntologyCache(const OntologyCache &) = delete;
   ~OntologyCache();
 
@@ -60,7 +60,7 @@ private:
 
   void initializeOntology( const std::vector<std::string>& gene_vector,
                            const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
-                           const std::shared_ptr<const kol::GoGraphImpl>& go_graph_ptr);
+                           const std::shared_ptr<const kol::GoGraph>& go_graph_ptr);
 
 };
 

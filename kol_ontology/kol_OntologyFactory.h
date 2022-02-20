@@ -59,7 +59,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   [[nodiscard]] static std::shared_ptr <const InformationInterface> createInformation( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                                                                       const std::shared_ptr<const GoGraphImpl>& graph_ptr,
+                                                                                       const std::shared_ptr<const GoGraph>& graph_ptr,
                                                                                        InformationContentType information_type);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   [[nodiscard]] static std::shared_ptr<const SimilarityInterface> createSimilarity( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                                                                    const std::shared_ptr<const GoGraphImpl>& graph_ptr,
+                                                                                    const std::shared_ptr<const GoGraph>& graph_ptr,
                                                                                     SimilarityType similarity_type,
                                                                                     InformationContentType information_type = InformationContentType::CONTENT);
 
@@ -76,7 +76,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   [[nodiscard]] static std::shared_ptr<const SetSimilarityInterface> createSetSimilarity( const std::shared_ptr<const TermAnnotation>& annotation_ptr,
-                                                                                          const std::shared_ptr<const GoGraphImpl>& graph_ptr,
+                                                                                          const std::shared_ptr<const GoGraph>& graph_ptr,
                                                                                           SetSimilarityType set_similarity_type,
                                                                                           SimilarityType similarity_type = SimilarityType::LIN,
                                                                                           InformationContentType information_type = InformationContentType::CONTENT);

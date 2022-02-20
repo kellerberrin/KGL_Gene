@@ -4,6 +4,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationContentDAG.h"
+#include "kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 #include <boost/graph/depth_first_search.hpp>
@@ -26,7 +27,7 @@ class AnnotationMapVisitor : public boost::default_dfs_visitor {
 
 public:
   //! A parameterized constructor passing parameters to the boost default_dfs_visitor
-  AnnotationMapVisitor( const std::shared_ptr<const kol::GoGraphImpl> &graph_ptr,
+  AnnotationMapVisitor( const std::shared_ptr<const kol::GoGraph> &graph_ptr,
                         const std::shared_ptr<const kol::TermAnnotation> &anno_data_ptr,
                         kol::TermProbOntMap& probability_map)
       : graph_ptr_(graph_ptr),
@@ -49,9 +50,9 @@ public:
     size_t vertex_index = get(boost::vertex_index, graph)[vertex];
 
     //Get the term_id_ string.
-    std::string term_id = graph_ptr_->getTermStringIdByIndex(vertex_index);
+    std::string term_id = graph_ptr_->getGoGraphImpl().getTermStringIdByIndex(vertex_index);
 
-    auto term_ontology = graph_ptr_->getTermOntologyByIndex(vertex_index);
+    auto term_ontology = graph_ptr_->getGoGraphImpl().getTermOntologyByIndex(vertex_index);
     //Use the TermAnnotation object to get the actual number of annotations.
     size_t term_annotations = anno_data_ptr_->getNumAnnotationsForGoTerm(term_id);
     auto float_annotations = static_cast<double>(term_annotations);
@@ -64,7 +65,7 @@ public:
 
       size_t child_vertex_index = get(boost::vertex_index, graph)[child_vertex];
 
-      std::string child_term_id = graph_ptr_->getTermStringIdByIndex(child_vertex_index);
+      std::string child_term_id = graph_ptr_->getGoGraphImpl().getTermStringIdByIndex(child_vertex_index);
 
       auto find_result = probability_map_.find(child_term_id);
       if (find_result == probability_map_.end()) {
@@ -96,7 +97,7 @@ public:
   }//end method, finish_vertex
 
   //! The go graph object
-  std::shared_ptr<const kol::GoGraphImpl> graph_ptr_;
+  std::shared_ptr<const kol::GoGraph> graph_ptr_;
 
   //! An TermAnnotation object for accessing annotations
   std::shared_ptr<const kol::TermAnnotation> anno_data_ptr_;
@@ -108,17 +109,17 @@ public:
 
 
 // Constructor
-void kol::InformationContentDAG::calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
+void kol::InformationContentDAG::calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
                                                     const std::shared_ptr<const TermAnnotation> &annotation_data) {
 
 
-  GoGraphImpl::GoVertex root = graph->getRoot();
+  GoGraphImpl::GoVertex root = graph->getGoGraphImpl().getRoot();
 
   // Create the visitor object.
   AnnotationMapVisitor map_visitor(graph, annotation_data, probability_map_);
 
   // Get the boost graph from the GoGraphImpl object. Must be done to utilize boost algorithms.
-  const GoGraphImpl::Graph &go_graph = graph->getGraph();
+  const GoGraphImpl::Graph &go_graph = graph->getGoGraphImpl().getGraph();
 
   // Reversing the graph is necessary otherwise the root vertex would have no edges.
   auto reversed_graph = boost::make_reverse_graph(go_graph);

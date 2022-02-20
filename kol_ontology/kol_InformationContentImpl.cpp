@@ -3,6 +3,7 @@
 //
 
 #include "kol_InformationContentImpl.h"
+#include "kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;
@@ -127,11 +128,11 @@ bool kol::InformationContentImpl::validateTerms(const std::string &id_termA, con
   This method searches the sets to determine the most informative ancestor.
 */
 
-double kol::InformationContentImpl::sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraphImpl &graph) const {
+double kol::InformationContentImpl::sharedInformation(const std::string& go_termA, const std::string& go_termB, const GoGraph &graph) const {
 
   //create 2 sets
-  OntologySetType<std::string> ancestorsA = graph.getSelfAncestorTerms(go_termA);
-  OntologySetType<std::string> ancestorsB = graph.getSelfAncestorTerms(go_termB);
+  OntologySetType<std::string> ancestorsA = graph.getGoGraphImpl().getSelfAncestorTerms(go_termA);
+  OntologySetType<std::string> ancestorsB = graph.getGoGraphImpl().getSelfAncestorTerms(go_termB);
 
   if (ancestorsA.empty() or ancestorsB.empty()) {
 

@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_ParserGoObo.h"
+#include "kol_GoGraphImpl.h"
 
 #include "kol_GoEnums.h"
 
@@ -17,33 +18,75 @@
 
 
 namespace kol = kellerberrin::ontology;
+namespace kel = kellerberrin;
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Namespace object for the parser implementation.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class ParserGoOboImpl {
+
+public:
+
+  ParserGoOboImpl() = delete;
+  ~ParserGoOboImpl() = delete;
+
+  static kol::GoTermMap parseGoTermFile(const std::string &file_name, const kol::PolicyRelationship& relationship_policy);
+  static kol::GoTermMap filterTermMap(const kol::GoTermMap& unfiltered_term_map, const kol::PolicyRelationship& relationship_policy);
+
+private:
+
+  const static constexpr char* SEPARATOR_STR = ": ";  // Separates the "info_id: from the info content."
+  const static constexpr char SEPARATOR_SPACE = ' ';
+  const static constexpr char* TERM_TOKEN = "[Term]";  // Token that begins a go term.
+  const static constexpr char* ID_TOKEN = "id";
+  const static constexpr char* ALT_ID_TOKEN = "alt_id";
+  const static constexpr char* NAME_TOKEN = "name";
+  const static constexpr char* DEF_TOKEN = "def";
+  const static constexpr char* NAMESPACE_TOKEN = "namespace";
+  const static constexpr char* OBSOLETE_TOKEN = "is_obsolete";
+  const static constexpr char* CHILD_TOKEN = "is_a";
+  const static constexpr char* RELATIONSHIP_TOKEN = "relationship";
+
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
+std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile(const std::string &filename) const {
 
 
-  auto term_map = parseGoTermFile(filename);
-  auto filtered_term_map = filterTermMap(term_map, relationship_policy_);
-  std::shared_ptr<GoGraphImpl> graph_ptr(std::make_shared<GoGraphImpl>(filtered_term_map));
+  auto term_map = ParserGoOboImpl::parseGoTermFile(filename, relationship_policy_);
+  auto filtered_term_map = ParserGoOboImpl::filterTermMap(term_map, relationship_policy_);
+  std::unique_ptr<GoGraphImpl> graph_impl_ptr(std::make_unique<GoGraphImpl>(filtered_term_map));
 
-  return graph_ptr;
+  // Return the encapsulated graph.
+  return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
 }
 
-kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) const {
 
-  std::shared_ptr<GoTermRecord> term_record_ptr(std::make_shared<GoTermRecord>());
-  GoTermMap go_term_map;
+
+kol::GoTermMap ParserGoOboImpl::parseGoTermFile(const std::string &file_name, const kol::PolicyRelationship& relationship_policy) {
+
+
+  std::shared_ptr<kol::GoTermRecord> term_record_ptr(std::make_shared<kol::GoTermRecord>());
+  kol::GoTermMap go_term_map;
   enum class GoParserState { FIND_TERM, PROCESS_TERM};
 
   // Check the relationship policy
-  if (not relationship_policy_.validPolicy()) {
+  if (not relationship_policy.validPolicy()) {
 
-    ExecEnv::log().error("ParserGoObo::parseGoFile; invalid relationship policy, go file: {}", file_name);
+    kel::ExecEnv::log().error("ParserGoObo::parseGoFile; invalid relationship policy, go file: {}", file_name);
     return go_term_map;
 
   }
@@ -51,7 +94,7 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
   std::ifstream term_file(file_name);
   if (not term_file.good()) {
 
-    ExecEnv::log().error("ParserGoObo::parseGoFile; problem opening go file: {}", file_name);
+    kel::ExecEnv::log().error("ParserGoObo::parseGoFile; problem opening go file: {}", file_name);
     return go_term_map;
 
   }
@@ -65,7 +108,7 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
   while (not std::getline(term_file, line).eof()) {
 
     ++line_count;
-    trimmed_line = Utility::trimEndWhiteSpace(line);
+    trimmed_line = kel::Utility::trimEndWhiteSpace(line);
 
     if (parser_state == GoParserState::FIND_TERM) {
 
@@ -85,21 +128,21 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
       if (not term_record_ptr->validRecord()) {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record_ptr->termId(), line_count);
-        ExecEnv::log().error("ParserGoObo::parseGoFile; id: {}, name: {}, def: {}, ontology: {}",
-                             term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), GO::ontologyToString(term_record_ptr->ontology()));
+        kel::ExecEnv::log().error("ParserGoObo::parseGoFile; invalid term record at term: {}, line:{}, ",  term_record_ptr->termId(), line_count);
+        kel::ExecEnv::log().error("ParserGoObo::parseGoFile; id: {}, name: {}, def: {}, ontology: {}",
+                             term_record_ptr->termId(), term_record_ptr->name(), term_record_ptr->definition(), kol::GO::ontologyToString(term_record_ptr->ontology()));
 
       } else {
 
         auto [insert_iter, result] = go_term_map.try_emplace(term_record_ptr->termId(), term_record_ptr);
         if (not result) {
 
-          ExecEnv::log().error("ParserGoObo::parseGoFile; cannot insert term, duplicate term id: {}, line:{}",  term_record_ptr->termId(), line_count);
+          kel::ExecEnv::log().error("ParserGoObo::parseGoFile; cannot insert term, duplicate term id: {}, line:{}",  term_record_ptr->termId(), line_count);
 
         }
 
       }
-      term_record_ptr = std::make_shared<GoTermRecord>();
+      term_record_ptr = std::make_shared<kol::GoTermRecord>();
       parser_state = GoParserState::FIND_TERM;
       continue;
 
@@ -108,7 +151,7 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
     auto pos = trimmed_line.find_first_of(SEPARATOR_STR);
     if (pos == std::string::npos) {
 
-      ExecEnv::log().error("ParserGoObo::parseGoFile; expected 'key: value' format, line text : {}, line number: {}",  trimmed_line, line_count);
+      kel::ExecEnv::log().error("ParserGoObo::parseGoFile; expected 'key: value' format, line text : {}, line number: {}",  trimmed_line, line_count);
       parser_state = GoParserState::FIND_TERM;
       continue;
 
@@ -124,21 +167,21 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
     } else if (key == NAMESPACE_TOKEN) {
 
-      if (value == GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) {
+      if (value == kol::GO::ONTOLOGY_BIOLOGICAL_PROCESS_TEXT) {
 
-        term_record_ptr->ontology(GO::Ontology::BIOLOGICAL_PROCESS);
+        term_record_ptr->ontology(kol::GO::Ontology::BIOLOGICAL_PROCESS);
 
-      } else if (value == GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) {
+      } else if (value == kol::GO::ONTOLOGY_MOLECULAR_FUNCTION_TEXT) {
 
-        term_record_ptr->ontology(GO::Ontology::MOLECULAR_FUNCTION);
+        term_record_ptr->ontology(kol::GO::Ontology::MOLECULAR_FUNCTION);
 
-      } else if (value == GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) {
+      } else if (value == kol::GO::ONTOLOGY_CELLULAR_COMPONENT_TEXT) {
 
-        term_record_ptr->ontology(GO::Ontology::CELLULAR_COMPONENT);
+        term_record_ptr->ontology(kol::GO::Ontology::CELLULAR_COMPONENT);
 
       } else {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; unexpected namespace: {}",  value);
+        kel::ExecEnv::log().error("ParserGoObo::parseGoFile; unexpected namespace: {}",  value);
         parser_state = GoParserState::FIND_TERM;
         continue;
 
@@ -146,11 +189,11 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
     } else if (key == ID_TOKEN) {
 
-      term_record_ptr->termId(Utility::trimEndWhiteSpace(value));
+      term_record_ptr->termId(kel::Utility::trimEndWhiteSpace(value));
 
     } else if (key == ALT_ID_TOKEN) {
 
-      term_record_ptr->altId(Utility::trimEndWhiteSpace(value));
+      term_record_ptr->altId(kel::Utility::trimEndWhiteSpace(value));
 
     } else if (key == NAME_TOKEN) {
 
@@ -162,31 +205,31 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 
     } else if (key == CHILD_TOKEN) {
 
-      auto view_vector = Utility::view_tokenizer(value, SEPARATOR_SPACE);
-      std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[0]),  GO::Relationship::IS_A};
+      auto view_vector = kel::Utility::view_tokenizer(value, SEPARATOR_SPACE);
+      std::pair<std::string, kol::GO::Relationship> relation{ std::string(view_vector[0]),  kol::GO::Relationship::IS_A};
       term_record_ptr->relations(relation);
 
     } else if (key == RELATIONSHIP_TOKEN) {
 
-      auto view_vector = Utility::view_tokenizer(value, SEPARATOR_SPACE);
+      auto view_vector = kel::Utility::view_tokenizer(value, SEPARATOR_SPACE);
       if (view_vector.size() < 2) {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);
+        kel::ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);
         parser_state = GoParserState::FIND_TERM;
         continue;
 
       }
 
-      GO::Relationship relationship = GO::relationshipStringToCode(std::string(view_vector[0]));
-      if (relationship == GO::Relationship::REL_ERROR) {
+      kol::GO::Relationship relationship = kol::GO::relationshipStringToCode(std::string(view_vector[0]));
+      if (relationship == kol::GO::Relationship::REL_ERROR) {
 
-        ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);
+        kel::ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);
         parser_state = GoParserState::FIND_TERM;
         continue;
 
       }
 
-      std::pair<std::string, GO::Relationship> relation{ std::string(view_vector[1]),  relationship};
+      std::pair<std::string, kol::GO::Relationship> relation{ std::string(view_vector[1]),  relationship};
       term_record_ptr->relations(relation);
 
     } else {
@@ -205,13 +248,13 @@ kol::GoTermMap kol::ParserGoObo::parseGoTermFile(const std::string &file_name) c
 }
 
 
-kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const {
+kol::GoTermMap ParserGoOboImpl::filterTermMap(const kol::GoTermMap& unfiltered_term_map, const kol::PolicyRelationship& relationship_policy) {
 
-  GoTermMap filtered_term_map;
+  kol::GoTermMap filtered_term_map;
 
   for (auto const& [term_id, term_record_ptr] : unfiltered_term_map) {
 
-    std::vector<std::pair<std::string, GO::Relationship>> filtered_relationships;
+    std::vector<std::pair<std::string, kol::GO::Relationship>> filtered_relationships;
     for (auto const& [rel_term, rel_type] : term_record_ptr->relations()) {
 
       if (relationship_policy.isAllowed(rel_type)) {
@@ -222,14 +265,14 @@ kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_
 
     }
 
-    if (not filtered_relationships.empty() or GO::isRootTerm(term_id)) {
+    if (not filtered_relationships.empty() or kol::GO::isRootTerm(term_id)) {
 
-      std::shared_ptr<GoTermRecord> filtered_record_ptr(std::make_shared<GoTermRecord>(*term_record_ptr));
+      std::shared_ptr<kol::GoTermRecord> filtered_record_ptr(std::make_shared<kol::GoTermRecord>(*term_record_ptr));
       filtered_record_ptr->relations(std::move(filtered_relationships));
       auto [insert_iter, result] = filtered_term_map.try_emplace(term_id, filtered_record_ptr);
       if (not result) {
 
-        ExecEnv::log().error("ParserGoObo::filterTermMap; (Duplicate) Unable to insert filtered term: {}", term_id);
+        kel::ExecEnv::log().error("ParserGoObo::filterTermMap; (Duplicate) Unable to insert filtered term: {}", term_id);
 
       }
 
@@ -248,15 +291,16 @@ kol::GoTermMap kol::ParserGoObo::filterTermMap(const GoTermMap& unfiltered_term_
    which are specified to the graph.
 
 */
-std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
+std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &filename) const {
 
-  //graph object to be returned
-  std::shared_ptr<GoGraphImpl> graph(std::make_shared<GoGraphImpl>());
+  //graph_impl_ptr object to be returned
+  std::unique_ptr<GoGraphImpl> graph_impl_ptr(std::make_unique<GoGraphImpl>());
 
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {
 
-    return graph;
+    // Return the encapsulated graph_impl_ptr
+    return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
   }
 
@@ -357,8 +401,8 @@ std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile2(const std::stri
 
 
     if (!isObsolete) {
-      //add the term to the graph term
-      graph->insertTerm(term, name, description, ontology);
+      //add the term to the graph_impl_ptr term
+      graph_impl_ptr->insertTerm(term, name, description, ontology);
 
       //loop over all related terms
       for (std::size_t i = 0; i < relatedTerms.size(); ++i) {
@@ -379,10 +423,10 @@ std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile2(const std::stri
         }
 
         //insert related terms, there are just stubs to be overwritten later on
-        graph->insertTerm(relatedTerm, "name", "description", "ontology");
+        graph_impl_ptr->insertTerm(relatedTerm, "name", "description", "ontology");
 
         //insert edge
-        graph->insertRelationship(term, relatedTerm, relationship);
+        graph_impl_ptr->insertRelationship(term, relatedTerm, relationship);
 
       }//end for, each related term
     }
@@ -396,11 +440,12 @@ std::shared_ptr<kol::GoGraphImpl> kol::ParserGoObo::parseGoFile2(const std::stri
     //std::cin.get();
   }
 
-  //call to initialize the graph's vertex to index maps
-  graph->initMaps();
+  //call to initialize the graph_impl_ptr's vertex to index maps
+  graph_impl_ptr->initMaps();
 
-  //return the graph pointer
-  return graph;
+  // Return the encapsulated graph_impl_ptr;
+  return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
+
 }
 
 //! A method to test if a file fits the accepted format

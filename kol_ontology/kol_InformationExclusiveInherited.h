@@ -27,7 +27,7 @@ public:
   /*!
     Creates the InformationCoutoGraSM class
   */
-  InformationExclusiveInherited(const std::shared_ptr<const GoGraphImpl> &graph_ptr,
+  InformationExclusiveInherited(const std::shared_ptr<const GoGraph> &graph_ptr,
                                 const std::shared_ptr<const InformationContent> &ic_map_ptr)
       : graph_ptr_(graph_ptr), ic_map_ptr_(ic_map_ptr) {}
 
@@ -65,7 +65,7 @@ public:
 
 private:
 
-  std::shared_ptr<const GoGraphImpl> graph_ptr_;
+  std::shared_ptr<const GoGraph> graph_ptr_;
   std::shared_ptr<const InformationContent> ic_map_ptr_;
 
   //! A method for determining the common disjunctive ancestors

@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityGentlemanSimUI.h"
+#include "kol_GoGraphImpl.h"
 
 namespace kol = kellerberrin::ontology;
 
@@ -20,8 +21,8 @@ double kol::GentlemanSimUISetSimilarity::calculateSimilarity( const OntologySetT
                                                               const OntologySetType<std::string> &column_terms) const {
   // Get the induced set of terms for each set
 
-  OntologySetType<std::string> induced_row_set = graph_ptr_->getExtendedTermSet(row_terms);
-  OntologySetType<std::string> induced_column_set = graph_ptr_->getExtendedTermSet(column_terms);
+  OntologySetType<std::string> induced_row_set = graph_ptr_->getGoGraphImpl().getExtendedTermSet(row_terms);
+  OntologySetType<std::string> induced_column_set = graph_ptr_->getGoGraphImpl().getExtendedTermSet(column_terms);
   // Calculate union and intersection
   OntologySetType<std::string> union_set = SetUtilities::setUnion(induced_row_set, induced_column_set);
   OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(induced_row_set, induced_column_set);

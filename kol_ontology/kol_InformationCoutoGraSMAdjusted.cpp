@@ -4,6 +4,7 @@
 
 
 #include "kol_InformationCoutoGraSMAdjusted.h"
+#include "kol_GoGraphImpl.h"
 
 #include "kol_SetUtilities.h"
 #include "kol_Accumulators.h"
@@ -18,6 +19,69 @@
 
 namespace kol = kellerberrin::ontology;
 
+
+//! Recursive helper method that performs the DFS topological sort for path counting
+/*!
+  A path counting topological sort recursive method.
+*/
+void visitCoutoHelper( const kol::GoGraphImpl::GoVertex &v,
+                       const kol::GoGraphImpl::Graph &graph,
+                       kol::OntologySetType<std::string> &ancestors,
+                       kol::OntologySetType<std::string> &finished,
+                       kol::OntologyMapType<std::string, size_t> &pathMap)  {
+
+  size_t childCount = 0;
+  std::string vTerm = graph[v].termId;
+  //std::cout << "discover vertex " << vTerm << std::endl;
+
+  //examine children and recurse
+  kol::GoGraphImpl::InEdgeIterator it, end;
+  for (boost::tie(it, end) = boost::in_edges(v, graph); it != end; ++it) {
+
+    kol::GoGraphImpl::GoVertex child = boost::source(*it, graph);
+    std::string childTerm = graph[child].termId;
+
+    if (not ancestors.contains(childTerm)) {
+
+      continue;
+
+    }
+    //recurse if child is not finished
+    if (not finished.contains(childTerm)) {
+
+      visitCoutoHelper(child, graph, ancestors, finished, pathMap);
+
+    }
+    ++childCount;
+  }
+
+  //finish vertex
+  finished.insert(vTerm);
+  //std::cout << "finish vertex " << vTerm << ", childred " << childCount << std::endl;
+  if (childCount == 0) {
+
+    pathMap[vTerm] = 1;
+
+  } else {
+
+    pathMap[vTerm] = 0;
+    for (boost::tie(it, end) = boost::in_edges(v, graph); it != end; ++it) {
+
+      kol::GoGraphImpl::GoVertex child = boost::source(*it, graph);
+      std::string childTerm = graph[child].termId;
+      if (not ancestors.contains(childTerm)) {
+
+        continue;
+
+      }
+
+      pathMap[vTerm] += pathMap[childTerm];
+
+    }
+  }
+}
+
+
 //! Calculate disjunctive ancestors.
 /*!
   A method for determining common disjunctive ancestors for two terms
@@ -26,10 +90,10 @@ namespace kol = kellerberrin::ontology;
 kol::OntologySetType<std::string> kol::InformationCoutoGraSMAdjusted::getCommonDisjointAncestors(const std::string &termC1,
                                                                                                  const std::string &termC2) const {
 
-  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getAncestorTerms(termC1);
+  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getGoGraphImpl().getAncestorTerms(termC1);
   ancestorsC1.insert(termC1);
   //std::cout << ancestorsC1.size() << std::endl;
-  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getAncestorTerms(termC2);
+  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getGoGraphImpl().getAncestorTerms(termC2);
   ancestorsC2.insert(termC2);
   //std::cout << ancestorsC2.size() << std::endl;
 
@@ -108,9 +172,9 @@ bool kol::InformationCoutoGraSMAdjusted::isDisjoint(const std::string &termC,
 
   //std::cout << "isDisjoint " << termC << " ("  << termA1 << " , " << termA2 << ") "; //<< std::endl;
   //if not from same ontology, return 0;
-  if (graph_ptr_->getTermOntology(termA1) != graph_ptr_->getTermOntology(termA2) ||
-      graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA1) ||
-      graph_ptr_->getTermOntology(termC) != graph_ptr_->getTermOntology(termA2)) {
+  if (graph_ptr_->getGoGraphImpl().getTermOntology(termA1) != graph_ptr_->getGoGraphImpl().getTermOntology(termA2) ||
+  graph_ptr_->getGoGraphImpl().getTermOntology(termC) != graph_ptr_->getGoGraphImpl().getTermOntology(termA1) ||
+  graph_ptr_->getGoGraphImpl().getTermOntology(termC) != graph_ptr_->getGoGraphImpl().getTermOntology(termA2)) {
 
     return false;
 
@@ -200,78 +264,18 @@ std::size_t kol::InformationCoutoGraSMAdjusted::pathCount(const std::string &ter
 
   }
 
-  OntologySetType<std::string> ancestors = graph_ptr_->getAncestorTerms(termB);
+  OntologySetType<std::string> ancestors = graph_ptr_->getGoGraphImpl().getAncestorTerms(termB);
   ancestors.insert(termB);
 
-  const GoGraphImpl::Graph &graph = graph_ptr_->getGraph();
-  GoGraphImpl::GoVertex root_vertex = graph_ptr_->getTermRootVertex(termB);
+  const GoGraphImpl::Graph &graph = graph_ptr_->getGoGraphImpl().getGraph();
+  GoGraphImpl::GoVertex root_vertex = graph_ptr_->getGoGraphImpl().getTermRootVertex(termB);
 
   OntologySetType<std::string> finished;
   OntologyMapType<std::string, size_t> pathMap;
-  visitHelper(root_vertex, graph, ancestors, finished, pathMap);
+  visitCoutoHelper(root_vertex, graph, ancestors, finished, pathMap);
 
   return pathMap[termA];
 
-}
-
-//! Recursive helper method that performs the DFS topological sort for path counting
-/*!
-  A path counting topological sort recursive method.
-*/
-void kol::InformationCoutoGraSMAdjusted::visitHelper(const GoGraphImpl::GoVertex &v,
-                                                     const GoGraphImpl::Graph &graph,
-                                                     OntologySetType<std::string> &ancestors,
-                                                     OntologySetType<std::string> &finished,
-                                                     OntologyMapType<std::string, size_t> &pathMap) const {
-  size_t childCount = 0;
-  std::string vTerm = graph[v].termId;
-  //std::cout << "discover vertex " << vTerm << std::endl;
-
-  //examine children and recurse
-  GoGraphImpl::InEdgeIterator it, end;
-  for (boost::tie(it, end) = boost::in_edges(v, graph); it != end; ++it) {
-
-    GoGraphImpl::GoVertex child = boost::source(*it, graph);
-    std::string childTerm = graph[child].termId;
-
-    if (not ancestors.contains(childTerm)) {
-
-      continue;
-
-    }
-    //recurse if child is not finished
-    if (not finished.contains(childTerm)) {
-
-      visitHelper(child, graph, ancestors, finished, pathMap);
-
-    }
-    ++childCount;
-  }
-
-  //finish vertex
-  finished.insert(vTerm);
-  //std::cout << "finish vertex " << vTerm << ", childred " << childCount << std::endl;
-  if (childCount == 0) {
-
-    pathMap[vTerm] = 1;
-
-  } else {
-
-    pathMap[vTerm] = 0;
-    for (boost::tie(it, end) = boost::in_edges(v, graph); it != end; ++it) {
-
-      GoGraphImpl::GoVertex child = boost::source(*it, graph);
-      std::string childTerm = graph[child].termId;
-      if (not ancestors.contains(childTerm)) {
-
-        continue;
-
-      }
-
-      pathMap[vTerm] += pathMap[childTerm];
-
-    }
-  }
 }
 
 //! A private function to create a string key from a pair of terms

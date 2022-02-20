@@ -6,7 +6,6 @@
 #include "kgl_ontology_database.h"
 
 #include "kol_ParserGoFactory.h"
-#include "kol_GoGraph.h"
 #include "kol_ParserAnnotationGaf.h"
 #include "kol_TermAnnotation.h"
 
@@ -34,7 +33,7 @@ std::shared_ptr<const kol::TermAnnotation> kol::OntologyDatabase::getAnnotation(
 
 }
 
-std::shared_ptr<const kol::GoGraphImpl> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
+std::shared_ptr<const kol::GoGraph> kol::OntologyDatabase::getGoGraph(const std::string& go_graph_file) {
 
   auto relationship_policy = PolicyRelationship(GO::allRelationships());
   auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO, relationship_policy);

@@ -10,6 +10,7 @@
 #include "../contrib/rapidxml/rapidxml.h"
 
 #include "kol_ParserGoRapidXml.h"
+#include "kol_GoGraphImpl.h"
 
 namespace kol = kellerberrin::ontology;
 
@@ -21,10 +22,10 @@ namespace kol = kellerberrin::ontology;
 
 */
 
-std::shared_ptr<kol::GoGraphImpl> kol::GoParserRapidXml::parseGoFile(const std::string &filename) const {
+std::shared_ptr<kol::GoGraph> kol::GoParserRapidXml::parseGoFile(const std::string &filename) const {
 
-  //graph object to be returned
-  std::shared_ptr<GoGraphImpl> graph(std::make_shared<GoGraphImpl>());
+  //graph_impl_ptr object to be returned
+  std::unique_ptr<GoGraphImpl> graph_impl_ptr(std::make_unique<GoGraphImpl>());
 
   //open xmlfile
   rapidxml::file<> xmlFile(filename.c_str());
@@ -106,7 +107,7 @@ std::shared_ptr<kol::GoGraphImpl> kol::GoParserRapidXml::parseGoFile(const std::
 
       }//for each attribute node
 
-      //if term is obsolete continue, do not add to graph
+      //if term is obsolete continue, do not add to graph_impl_ptr
       if (isObsolete) { continue; }
 
       ///////////////////////////////////////////////////////
@@ -114,8 +115,8 @@ std::shared_ptr<kol::GoGraphImpl> kol::GoParserRapidXml::parseGoFile(const std::
       ///////////////////////////////////////////////////////
 
 
-      //add the current term to the graph
-      graph->insertTerm(term, name, description, ontology);
+      //add the current term to the graph_impl_ptr
+      graph_impl_ptr->insertTerm(term, name, description, ontology);
 
 
       //loop over all related terms
@@ -130,10 +131,10 @@ std::shared_ptr<kol::GoGraphImpl> kol::GoParserRapidXml::parseGoFile(const std::
         //std::cout << relationship << std::endl;
 
         //insert related terms, these are just stubs to be overwritten later on
-        graph->insertTerm(relatedTerm, "name", "description", "ontology");
+        graph_impl_ptr->insertTerm(relatedTerm, "name", "description", "ontology");
 
         //insert edge
-        graph->insertRelationship(term, relatedTerm, relationship);
+        graph_impl_ptr->insertRelationship(term, relatedTerm, relationship);
 
       }//end for, each related term
 
@@ -142,11 +143,11 @@ std::shared_ptr<kol::GoGraphImpl> kol::GoParserRapidXml::parseGoFile(const std::
   }//end for, for each node in obo, source, header, term
 
 
-  //call to initialize the graph's vertex to index maps
-  graph->initMaps();
+  //call to initialize the graph_impl_ptr's vertex to index maps
+  graph_impl_ptr->initMaps();
 
-  //return the graph pointer
-  return graph;
+  // Return the encapsulated graph.
+  return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
 }//end method parseGoFile
 

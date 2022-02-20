@@ -296,7 +296,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ParserAnnotationGaf.h
         kol_ontology/kol_library.h
         kol_ontology/kol_GoEnums.h
-        kol_ontology/kol_GoGraph.h
+        kol_ontology/kol_GoGraphImpl.h
         kol_ontology/kol_ParserGoFactory.h
         kol_ontology/kol_ParserGoInterface.h
         kol_ontology/kol_SetSimilarityJaccard.h
@@ -322,7 +322,7 @@ set(ONTOLOGY_SOURCE_FILES
         contrib/rapidxml/rapidxml_print.h
         contrib/rapidxml/rapidxml_utils.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/kol_GoGraph.cpp
+        kol_ontology/kol_GoGraphImpl.cpp
         kol_ontology/kol_InformationFrontier.cpp
         kol_ontology/kol_SimilarityCache.cpp
         kol_ontology/kol_SimilarityCacheAsymmetric.cpp
@@ -369,7 +369,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SetSimilarityAverageBestMatch.cpp
         kol_ontology/kol_SetSimilarityAverageBestMatch.h
         kol_ontology/kol_OntologyFactory.cpp
-        kol_ontology/kol_OntologyFactory.h)
+        kol_ontology/kol_OntologyFactory.h kol_ontology/kol_GoGraph.cpp kol_ontology/kol_GoGraph.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

@@ -7,8 +7,8 @@
 
 #include "kol_SetUtilities.h"
 #include "kol_Accumulators.h"
+#include "kol_GoGraphImpl.h"
 
-#include <utility>
 #include <algorithm>
 
 #include <boost/graph/breadth_first_search.hpp>
@@ -36,8 +36,8 @@ kol::OntologySetType<std::string> kol::InformationExclusiveInherited::getCommonD
   }
 
   //Z&L: CommonAnSet <- GetCommonAnSet(t1,t2,AncestorSet)
-  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getSelfAncestorTerms(termC1);
-  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getSelfAncestorTerms(termC2);
+  OntologySetType<std::string> ancestorsC1 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC1);
+  OntologySetType<std::string> ancestorsC2 = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termC2);
   OntologySetType<std::string> commonAncestors = SetUtilities::setIntersection(ancestorsC1, ancestorsC2);
 
   //commonDisjointAncestors(c,c) = {c}, by definition
@@ -54,19 +54,19 @@ kol::OntologySetType<std::string> kol::InformationExclusiveInherited::getCommonD
   OntologySetType<std::string> diffSet = SetUtilities::setDifference(unionAncestors, commonAncestors);
 
   //get the boost graph
-  const GoGraphImpl::Graph &g = graph_ptr_->getGraph();
+  const GoGraphImpl::Graph &g = graph_ptr_->getGoGraphImpl().getGraph();
   //Z&L: for each a in CommonAnSet do ...
   for (auto const &term : commonAncestors) {
 
     bool isDisj = false;
 
-    GoGraphImpl::GoVertex v = graph_ptr_->getVertexByName(term);
+    GoGraphImpl::GoVertex v = graph_ptr_->getGoGraphImpl().getVertexByName(term);
     GoGraphImpl::InEdgeIterator ei, end;
     for (boost::tie(ei, end) = boost::in_edges(v, g); ei != end; ++ei) {
 
       GoGraphImpl::GoVertex child = boost::source(*ei, g);
-      size_t index = graph_ptr_->getVertexIndex(child);
-      std::string cTerm = graph_ptr_->getTermStringIdByIndex(index);
+      size_t index = graph_ptr_->getGoGraphImpl().getVertexIndex(child);
+      std::string cTerm = graph_ptr_->getGoGraphImpl().getTermStringIdByIndex(index);
 
       if (diffSet.find(cTerm) != diffSet.end()) {
         //early exit should improve runtime

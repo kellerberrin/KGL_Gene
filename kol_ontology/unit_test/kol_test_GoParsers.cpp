@@ -5,6 +5,7 @@
 
 #include <kol_library.h>
 #include "kol_test.h"
+#include "kol_GoGraphImpl.h"
 #include <boost/test/unit_test.hpp>
 
 
@@ -93,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo)
 
   auto graph_ptr = checkOboParser();
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo ... OK" );
 
 }
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml)
 
   auto graph_ptr = checkXmlParser();
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml ... OK" );
 
 }
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships)
 
   auto graph_ptr = checkRelationshipOboParser(kol::PolicyRelationship());
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo_custom_relationship ... OK" );
 
 }
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships)
 
   auto graph_ptr = checkRelationshipXmlParser(kol::PolicyRelationship());
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml_custom_relationship ... OK" );
 
 }
@@ -139,7 +140,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_custom_relationships_bad_set)
   kol::PolicyRelationship bad_policy(bad_set);
   auto graph_ptr = checkRelationshipOboParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Obo graph is non-empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() != 0 or graph_ptr->getGoGraphImpl().getNumEdges() != 0) BOOST_FAIL( "Obo graph is non-empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo_custom_relationships_bad_set ... OK" );
 
 }
@@ -151,7 +152,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_custom_relationships_bad_set)
   kol::PolicyRelationship bad_policy(bad_set);
   auto graph_ptr = checkRelationshipXmlParser(bad_policy);
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() != 0 or graph_ptr->getNumEdges() != 0) BOOST_FAIL( "Xml graph is non-empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() != 0 or graph_ptr->getGoGraphImpl().getNumEdges() != 0) BOOST_FAIL( "Xml graph is non-empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml_custom_relationships_bad_set ... OK" );
 
 }
@@ -163,7 +164,7 @@ BOOST_AUTO_TEST_CASE(test_parse_obo_all_relationships)
   kol::PolicyRelationship all_policy(all_relationships);
   auto graph_ptr = checkRelationshipOboParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Obo graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_obo_all_relationships ... OK" );
 
 }
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_parse_xml_all_relationships)
   kol::PolicyRelationship all_policy(all_relationships);
   auto graph_ptr = checkRelationshipXmlParser(all_policy);
   BOOST_REQUIRE(graph_ptr);
-  if( graph_ptr->getNumVertices() == 0 or graph_ptr->getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
+  if( graph_ptr->getGoGraphImpl().getNumVertices() == 0 or graph_ptr->getGoGraphImpl().getNumEdges() == 0) BOOST_FAIL( "Xml graph is empty." );
   BOOST_TEST_MESSAGE( "test_parse_xml_all_relationships ... OK" );
 
 }

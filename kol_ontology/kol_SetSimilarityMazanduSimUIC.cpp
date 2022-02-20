@@ -4,6 +4,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityMazanduSimUIC.h"
+#include "kol_GoGraphImpl.h"
 #include "kol_SetUtilities.h"
 #include "kol_Accumulators.h"
 
@@ -19,8 +20,8 @@ double kol::SetSimilarityMazanduSimUIC::calculateSimilarity(const OntologySetTyp
                                                             const OntologySetType<std::string> &column_terms) const {
 
   // Get the induced set of terms for each set
-  OntologySetType<std::string> induced_row_terms = graph_ptr_->getExtendedTermSet(row_terms);
-  OntologySetType<std::string> induced_column_terms = graph_ptr_->getExtendedTermSet(column_terms);
+  OntologySetType<std::string> induced_row_terms = graph_ptr_->getGoGraphImpl().getExtendedTermSet(row_terms);
+  OntologySetType<std::string> induced_column_terms = graph_ptr_->getGoGraphImpl().getExtendedTermSet(column_terms);
   // Calculate union and intersection
   OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(induced_row_terms, induced_column_terms);
 

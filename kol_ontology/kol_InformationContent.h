@@ -34,7 +34,7 @@ public:
       created with valid parameters.
       This constructor relies on the TermProbabilityMap.
   */
-  InformationContent(const std::shared_ptr<const GoGraphImpl> &graph,
+  InformationContent(const std::shared_ptr<const GoGraph> &graph,
                      const std::shared_ptr<const TermAnnotation> &annoData)  : InformationContentImpl(graph) {
 
     calcProbabilityMap(graph, annoData);
@@ -45,7 +45,7 @@ public:
 
 private:
 
-  void calcProbabilityMap(const std::shared_ptr<const GoGraphImpl> &graph,
+  void calcProbabilityMap(const std::shared_ptr<const GoGraph> &graph,
                           const std::shared_ptr<const TermAnnotation> &annoData);
 
 };

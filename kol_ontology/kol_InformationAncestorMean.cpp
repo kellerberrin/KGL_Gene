@@ -5,6 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationAncestorMean.h"
+#include "kol_GoGraphImpl.h"
 
 #include "kol_SetUtilities.h"
 #include "kol_Accumulators.h"
@@ -30,8 +31,8 @@ double kol::InformationAncestorMean::sharedInformation(const std::string &termA,
 
   Accumulators::MeanAccumulator meanIC;
 
-  OntologySetType<std::string> ancestorsA = graph_ptr_->getSelfAncestorTerms(termA);
-  OntologySetType<std::string> ancestorsB = graph_ptr_->getSelfAncestorTerms(termB);
+  OntologySetType<std::string> ancestorsA = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termA);
+  OntologySetType<std::string> ancestorsB = graph_ptr_->getGoGraphImpl().getSelfAncestorTerms(termB);
 
   OntologySetType<std::string> sharedAncestors = SetUtilities::setIntersection(ancestorsA, ancestorsB);
 

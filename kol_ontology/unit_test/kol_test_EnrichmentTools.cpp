@@ -4,6 +4,7 @@
 
 #include <kol_library.h>
 #include "kol_test.h"
+#include "kol_GoGraphImpl.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
 
@@ -30,7 +31,7 @@ public:
 
   }
 
-  [[nodiscard]] static const GoGraphImpl &goGraph() {
+  [[nodiscard]] static const GoGraph &goGraph() {
 
     if (not static_graph_) {
 
@@ -45,7 +46,7 @@ public:
 
 private:
 
-  inline static std::shared_ptr<const GoGraphImpl> static_graph_;
+  inline static std::shared_ptr<const GoGraph> static_graph_;
   inline static std::shared_ptr<const TermAnnotation> static_annotation_;
 
   [[nodiscard]] static std::shared_ptr<const TermAnnotation> getAnnotation() {
@@ -55,7 +56,7 @@ private:
 
   }
 
-  [[nodiscard]] static std::shared_ptr<GoGraphImpl> getGoGraph() {
+  [[nodiscard]] static std::shared_ptr<GoGraph> getGoGraph() {
 
     auto go_parser_ptr = ParserGoFactory::createGoParser(ParserGoType::PARSER_GO_OBO);
     BOOST_REQUIRE(go_parser_ptr);
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_enrichment_tools_child_genes)
 {
 
   auto term_genes = kol::EnrichmentTools::getDescendantGenes(goGraph(), annotation(), "GO:0002507");
-  auto child_terms = goGraph().getDescendantTerms("GO:0002507");
+  auto child_terms = goGraph().getGoGraphImpl().getDescendantTerms("GO:0002507");
   child_terms.insert("GO:0002507");
 
   for (auto const& gene : term_genes) {

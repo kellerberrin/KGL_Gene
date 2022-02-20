@@ -5,6 +5,8 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityMazanduSimDIC.h"
+#include "kol_GoGraphImpl.h"
+
 #include <kol_SetUtilities.h>
 
 namespace kol = kellerberrin::ontology;
@@ -14,8 +16,8 @@ double kol::SetSimilarityMazanduSimDIC::calculateSimilarity(const OntologySetTyp
                                                             const OntologySetType<std::string> &column_terms) const {
 
   // Get the induced set of terms for each set
-  OntologySetType<std::string> induced_row_terms = graph_->getExtendedTermSet(row_terms);
-  OntologySetType<std::string> induced_column_terms = graph_->getExtendedTermSet(column_terms);
+  OntologySetType<std::string> induced_row_terms = graph_->getGoGraphImpl().getExtendedTermSet(row_terms);
+  OntologySetType<std::string> induced_column_terms = graph_->getGoGraphImpl().getExtendedTermSet(column_terms);
   // Calculate union and intersection
   OntologySetType<std::string> intersection_set = SetUtilities::setIntersection(induced_row_terms, induced_column_terms);
 

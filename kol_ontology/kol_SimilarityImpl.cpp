@@ -6,6 +6,8 @@
 #include "kol_SimilarityLin.h"
 #include "kol_SimilarityResnik.h"
 #include "kol_SimilarityRelevance.h"
+#include <cmath>
+
 
 namespace kol = kellerberrin::ontology;
 

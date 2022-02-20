@@ -47,7 +47,7 @@ public:
      which are specified to the graph.
 
   */
-  [[nodiscard]] std::shared_ptr<GoGraphImpl> parseGoFile(const std::string &filename) const override;
+  [[nodiscard]] std::shared_ptr<GoGraph> parseGoFile(const std::string &filename) const override;
 
   //! A method to test if a file fits the accepted format
   /*!
@@ -58,17 +58,6 @@ public:
 
 private:
 
-  const static constexpr char* SEPARATOR_STR = ": ";  // Separates the "info_id: from the info content."
-  const static constexpr char SEPARATOR_SPACE = ' ';
-  const static constexpr char* TERM_TOKEN = "[Term]";  // Token that begins a go term.
-  const static constexpr char* ID_TOKEN = "id";
-  const static constexpr char* ALT_ID_TOKEN = "alt_id";
-  const static constexpr char* NAME_TOKEN = "name";
-  const static constexpr char* DEF_TOKEN = "def";
-  const static constexpr char* NAMESPACE_TOKEN = "namespace";
-  const static constexpr char* OBSOLETE_TOKEN = "is_obsolete";
-  const static constexpr char* CHILD_TOKEN = "is_a";
-  const static constexpr char* RELATIONSHIP_TOKEN = "relationship";
 
   //! A PolicyRelationshipInterface
   /*! This PolicyRelationshipInterface holds the relationships to be allowed during parsing */
@@ -85,9 +74,7 @@ private:
                  std::string &attr,
                  std::string &value) const;
 
-  GoTermMap parseGoTermFile(const std::string &file_name) const;
-  std::shared_ptr<GoGraphImpl>  parseGoFile2(const std::string &filename) const;
-  GoTermMap filterTermMap(const GoTermMap& unfiltered_term_map, const PolicyRelationship& relationship_policy) const;
+  std::shared_ptr<GoGraph>  parseGoFile2(const std::string &filename) const;
 
 };
 
