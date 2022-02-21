@@ -5,7 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_ParserGoObo.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 
 #include "kol_GoEnums.h"
 

@@ -270,14 +270,16 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_literature/kgl_literature_analysis.cpp
         kgl_genomics/kgl_literature/kgl_literature_analysis.h
         kgl_genomics/kgl_literature/kgl_literature_filter.h
-        kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h kgl_genomics/kgl_literature/kgl_literature_data.h kgl_genomics/kgl_literature/kgl_literature_data.cpp)
+        kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h
+        kgl_genomics/kgl_literature/kgl_literature_data.h
+        kgl_genomics/kgl_literature/kgl_literature_data.cpp)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
-        kol_ontology/kol_Accumulators.h
+        kol_ontology/contrib/kol_Accumulators.h
         kol_ontology/kol_ParserGoObo.h
         kol_ontology/kol_ParserGoXml.h
         kol_ontology/kol_PolicyEvidence.h
@@ -296,7 +298,7 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_ParserAnnotationGaf.h
         kol_ontology/kol_library.h
         kol_ontology/kol_GoEnums.h
-        kol_ontology/kol_GoGraphImpl.h
+        kol_ontology/contrib/kol_GoGraphImpl.h
         kol_ontology/kol_ParserGoFactory.h
         kol_ontology/kol_ParserGoInterface.h
         kol_ontology/kol_SetSimilarityJaccard.h
@@ -322,7 +324,7 @@ set(ONTOLOGY_SOURCE_FILES
         contrib/rapidxml/rapidxml_print.h
         contrib/rapidxml/rapidxml_utils.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/kol_GoGraphImpl.cpp
+        kol_ontology/contrib/kol_GoGraphImpl.cpp
         kol_ontology/kol_InformationFrontier.cpp
         kol_ontology/kol_SimilarityCache.cpp
         kol_ontology/kol_SimilarityCacheAsymmetric.cpp
@@ -369,7 +371,9 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SetSimilarityAverageBestMatch.cpp
         kol_ontology/kol_SetSimilarityAverageBestMatch.h
         kol_ontology/kol_OntologyFactory.cpp
-        kol_ontology/kol_OntologyFactory.h kol_ontology/kol_GoGraph.cpp kol_ontology/kol_GoGraph.h)
+        kol_ontology/kol_OntologyFactory.h
+        kol_ontology/kol_GoGraph.cpp
+        kol_ontology/kol_GoGraph.h)
 
 # Gene ontology unit test suite
 set(ONTOLOGY_UNIT_TEST_FILES

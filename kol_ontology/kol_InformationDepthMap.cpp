@@ -5,7 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationDepthMap.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/reverse_graph.hpp>

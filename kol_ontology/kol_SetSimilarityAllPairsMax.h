@@ -33,7 +33,7 @@ public:
   /*!
     Creates the SetSimilarityAllPairsMax class assigning the similarity measure private member.
   */
-  SetSimilarityAllPairsMax(const std::shared_ptr<const SimilarityInterface> &similarity_ptr)
+  explicit SetSimilarityAllPairsMax(const std::shared_ptr<const SimilarityInterface> &similarity_ptr)
       : similarity_ptr_(similarity_ptr) {}
 
   ~SetSimilarityAllPairsMax() override = default;

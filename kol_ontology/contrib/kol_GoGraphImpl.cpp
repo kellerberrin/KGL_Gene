@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/4/21.
 //
 
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;

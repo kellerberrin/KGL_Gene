@@ -5,7 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityAllPairsMax.h"
-#include "kol_Accumulators.h"
+#include "contrib/kol_Accumulators.h"
 
 
 namespace kol = kellerberrin::ontology;

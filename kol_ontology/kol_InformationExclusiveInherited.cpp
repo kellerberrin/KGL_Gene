@@ -6,8 +6,8 @@
 #include "kol_InformationExclusiveInherited.h"
 
 #include "kol_SetUtilities.h"
-#include "kol_Accumulators.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_Accumulators.h"
+#include "contrib/kol_GoGraphImpl.h"
 
 #include <algorithm>
 

@@ -5,9 +5,9 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationCoutoGraSM.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 
-#include "kol_Accumulators.h"
+#include "contrib/kol_Accumulators.h"
 #include "kol_SetUtilities.h"
 
 #include <utility>

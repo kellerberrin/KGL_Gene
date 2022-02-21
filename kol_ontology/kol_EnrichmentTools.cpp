@@ -5,7 +5,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_EnrichmentTools.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 
 namespace kol = kellerberrin::ontology;
 

@@ -4,7 +4,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_SetSimilarityPesquitaSimGIC.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 #include "kol_SetUtilities.h"
 
 

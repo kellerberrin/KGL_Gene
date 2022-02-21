@@ -4,7 +4,7 @@
 
 #include "kol_OntologyTypes.h"
 #include "kol_InformationContentDAG.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 #include <boost/graph/depth_first_search.hpp>

@@ -3,7 +3,7 @@
 //
 
 #include "kol_InformationContentImpl.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 #include "kel_exec_env.h"
 
 namespace kol = kellerberrin::ontology;

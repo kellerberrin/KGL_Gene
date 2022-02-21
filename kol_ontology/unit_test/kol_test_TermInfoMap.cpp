@@ -4,7 +4,7 @@
 
 
 #include "kol_test.h"
-#include "kol_GoGraphImpl.h"
+#include "contrib/kol_GoGraphImpl.h"
 #include <boost/test/unit_test.hpp>
 
 namespace kellerberrin::ontology {
