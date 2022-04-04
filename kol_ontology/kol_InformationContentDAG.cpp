@@ -46,7 +46,7 @@ public:
   template<typename Vertex, typename Graph>
   void finish_vertex(Vertex vertex, const Graph &graph) {
 
-    //Get the vertx index.
+    //Get the vertex index.
     size_t vertex_index = get(boost::vertex_index, graph)[vertex];
 
     //Get the term_id_ string.

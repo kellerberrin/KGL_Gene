@@ -1,7 +1,3 @@
-/*=============================================================================
-Copyright (c) 2016 Paul W. Bible
-Distributed under the Boost Software License, Version 1.0.
-==============================================================================*/
 #ifndef KOL_SET_UTILITIES
 #define KOL_SET_UTILITIES
 

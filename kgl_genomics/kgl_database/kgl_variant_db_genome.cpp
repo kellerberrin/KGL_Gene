@@ -44,27 +44,6 @@ bool kgl::GenomeDB::addVariant(const std::shared_ptr<const Variant>& variant) {
 
 }
 
-bool kgl::GenomeDB::addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant) {
-
-  auto contig_opt = getCreateContig(variant->contigId());
-  if (not contig_opt) {
-
-    ExecEnv::log().error("GenomeDB::addUniqueUnphasedVariant(), Genome: {} could not get or create Contig: {}", genomeId(), variant->contigId());
-    return false;
-
-  }
-
-  if (not contig_opt.value()->addUniqueUnphasedVariant(variant)) {
-
-    ExecEnv::log().error("GenomeDB::addUniqueUnphasedVariant(), Genome: {} could not add variant to Contig: {}", genomeId(), variant->contigId());
-    return false;
-
-  }
-
-  return true;
-
-}
-
 
 std::optional<std::shared_ptr<kgl::ContigDB>> kgl::GenomeDB::getCreateContig(const ContigId_t& contig_id) {
 

@@ -46,9 +46,6 @@ public:
 
   [[nodiscard]] bool addVariant(const std::shared_ptr<const Variant>& variant);
 
-  // Not for use on Diploid/Haploid genomes.
-  [[nodiscard]] bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant>& variant);
-
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
   [[nodiscard]] std::shared_ptr<GenomeDB> filterVariants(const VariantFilter& filter) const;

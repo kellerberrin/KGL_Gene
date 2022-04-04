@@ -35,14 +35,17 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
 
 
 
-# add boost library directories
+# Add boost library directories
 set(BOOST_INCLUDEDIR /usr/local/include)
+include_directories(${Boost_INCLUDE_DIRS})
 set(BOOST_LIBRARYDIR /usr/local/lib/boost)
+# Specify only static libraries for portability
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
-include_directories(${Boost_INCLUDE_DIRS})
+# Find the Boost packages used.
 find_package( Boost COMPONENTS system filesystem timer chrono program_options iostreams REQUIRED )
+
 
 # zlib for compressed VCF files.
 find_package(ZLIB)

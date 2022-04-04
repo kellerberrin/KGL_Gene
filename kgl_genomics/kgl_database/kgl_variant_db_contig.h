@@ -44,14 +44,6 @@ public:
   [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
 
-  // Only adds the variant if it does not exist at the offset (only unique).
-  // Phasing information is removed, this function cannot be specified with a haploid or diploid population.
-  [[nodiscard]]  bool addUniqueUnphasedVariant(const std::shared_ptr<const Variant> &variant_ptr);
-
-  // Unconditionally adds an offset without data structure locking, must guarantee that thread has unique access
-  // to the ContigDB object or unhappiness will result.
-  [[nodiscard]] bool addUnlockedOffset(ContigOffset_t offset, const OffsetDB& offset_db);
-
   [[nodiscard]]  size_t variantCount() const;
 
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }

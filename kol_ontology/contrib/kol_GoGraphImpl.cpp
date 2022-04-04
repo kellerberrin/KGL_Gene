@@ -17,14 +17,14 @@ namespace kol = kellerberrin::ontology;
 class SubgraphBFSVisitor : public boost::default_bfs_visitor {
 
 public:
-  SubgraphBFSVisitor(kol::GoGraphImpl::Graph &sub) : subgraph(sub) {}
+  SubgraphBFSVisitor(kol::GoGraphImpl::Graph &subgraph) : subgraph_(subgraph) {}
 
   template<typename Vertex, typename Graph>
-  void discover_vertex(Vertex u, const Graph &) {
-    boost::add_vertex(u, subgraph);
+  void discover_vertex(Vertex vertex, const Graph &) {
+    boost::add_vertex(vertex, subgraph_);
   }
 
-  kol::GoGraphImpl::Graph &subgraph;
+  kol::GoGraphImpl::Graph &subgraph_;
 
 };
 
