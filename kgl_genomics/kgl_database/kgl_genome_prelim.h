@@ -41,10 +41,17 @@ public:
   [[nodiscard]] StrandSense strand() const { return strand_sense_; }
   [[nodiscard]] ContigSize_t length() const { return end_offset_ - begin_offset_; }
   [[nodiscard]] char strandText() const { return static_cast<char>(strand()); }
+  void strandText(char strand_char);
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }
 
+// Getting an 'incomplete type' compile time error setting up the constant, don't ready understand why.
+//  static constexpr ContigOffset_t const INVALID_POS = std::numeric_limits<ContigOffset_t>::max();
+
+  static constexpr char const STRAND_FORWARD_CHAR{'+'};
+  static constexpr char const STRAND_REVERSE_CHAR{'-'};
+  static constexpr char const STRAND_NOT_SPECIFIED_CHAR{'.'};
 
 private:
 

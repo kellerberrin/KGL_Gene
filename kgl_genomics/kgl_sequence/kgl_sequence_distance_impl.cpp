@@ -8,17 +8,15 @@
 #include <tuple>                        // for std::make_pair
 #include <iterator>
 #include <string>
-//#include <span>
 
-#include <seqan/align.h>
-#include <seqan/graph_msa.h>
+// #define SEQAN3 1
+#ifdef SEQAN3
 
 #include <seqan3/alphabet/all.hpp>
-#include <seqan3/std/ranges>                    // include all of the standard library's views
-#include <seqan3/range/views/all.hpp>            // include all of SeqAn's views
-#include <seqan3/alignment/configuration/align_config_edit.hpp>
-#include <seqan3/alignment/pairwise/align_pairwise.hpp>
-#include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
+#include <seqan3/alignment/all.hpp>
+#include <seqan3/alphabet/all.hpp>
+
+#endif
 
 #include <edlib.h>
 
@@ -50,8 +48,11 @@ public:
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosum80Distance(const std::string& sequenceA,
                                                                                           const std::string& sequenceB) const {
-  using TSequence = seqan::String<seqan::AminoAcid> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
+
+#ifdef SEQAN3
+
+  using TSequence = seqan3::String<seqan3::AminoAcid> ;
+  using TAlign = seqan3::Align<TSequence, seqan3::ArrayGaps> ;
   int open_gap = -8;
   int extend_gap = -3;
 
@@ -60,14 +61,20 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosu
 
   TAlign align;
   resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
+  seqan3::assignSource(row(align, 0), seq1);
+  seqan3::assignSource(row(align, 1), seq2);
 
   std::stringstream ss;
 
-  long score = seqan::globalAlignment(align, seqan::Blosum80(open_gap, extend_gap));
+  long score = seqan3::globalAlignment(align, seqan3::Blosum80(open_gap, extend_gap));
 
   return static_cast<double>(score) * -1.0;  // Invert the scores.
+
+#else
+
+  return 0.0;
+
+#endif
 
 }
 
@@ -76,8 +83,11 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosu
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum80Distance(const std::string& sequenceA,
                                                                                             const std::string& sequenceB) const {
-  using TSequence = seqan::String<seqan::AminoAcid> ;
-  using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
+
+#ifdef SEQAN3
+
+  using TSequence = seqan3::String<seqan3::AminoAcid> ;
+  using TAlign = seqan3::Align<TSequence, seqan3::ArrayGaps> ;
   int open_gap = -8;
   int extend_gap = -3;
 
@@ -86,14 +96,20 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum
 
   TAlign align;
   resize(rows(align), 2);
-  seqan::assignSource(row(align, 0), seq1);
-  seqan::assignSource(row(align, 1), seq2);
+  seqan3::assignSource(row(align, 0), seq1);
+  seqan3::assignSource(row(align, 1), seq2);
 
   std::stringstream ss;
 
-  long score = seqan::localAlignment(align, seqan::Blosum80(open_gap, extend_gap));
+  long score = seqan3::localAlignment(align, seqan3::Blosum80(open_gap, extend_gap));
 
   return static_cast<double>(score) * -1.0;  // Invert the scores.
+
+#else
+
+  return 0.0;
+
+#endif
 
 }
 
@@ -101,6 +117,8 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string& sequenceA,
                                                                                              const std::string& sequenceB) const {
+
+#ifdef SEQAN3
 
   auto Asequence = seqan3::views::char_to<seqan3::dna5>(sequenceA);
   auto Bsequence = seqan3::views::char_to<seqan3::dna5>(sequenceB);
@@ -115,6 +133,12 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
   }
 
   return edit_distance;
+
+#else
+
+  return 0.0;
+
+#endif
 
 }
 

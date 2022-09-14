@@ -7,6 +7,39 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+
+void kgl::FeatureSequence::strandText(char strand_char) {
+
+  if (strand_char == STRAND_FORWARD_CHAR) {
+
+    strand_sense_ = StrandSense::FORWARD;
+    return;
+
+  }
+
+  if (strand_char == STRAND_REVERSE_CHAR) {
+
+    strand_sense_ = StrandSense::REVERSE;
+    return;
+
+  }
+
+  if (strand_char == STRAND_NOT_SPECIFIED_CHAR) {
+
+    strand_sense_ = StrandSense::FORWARD;
+    return;
+
+  }
+
+  ExecEnv::log().warn("FeatureSequence::strandText; Unexpected character: '{}' used to specify strand sense", strand_char);
+
+  strand_sense_ = StrandSense::FORWARD;
+
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CodingSequence - Members
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +50,9 @@ kgl::StrandSense kgl::CodingSequence::strand() const {
   return getGene()->sequence().strand();
 
 }
+
+
+
 
 // Offset of the start of the sequence - not strand adjusted. Uses half interval [start, end).
 kgl::ContigOffset_t kgl::CodingSequence::start() const {

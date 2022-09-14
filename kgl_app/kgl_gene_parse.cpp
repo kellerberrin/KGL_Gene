@@ -3,79 +3,90 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Currently uses the Seqan library to parse arguments. Switch to boost when convenient.
-// Seqan dependencies should be limited to sequence analysis only.
+// Setup logger and read the XML program options.
 
 #include <iostream>
-#include <seqan/arg_parse.h>
 #include "kgl_gene_app.h"
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include "kel_utility.h"
 
 
 // Define namespace alias
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 namespace bt = boost;
 namespace kgl = kellerberrin::genome;
 
 
+// const char* program_desc =
+//    R"("kgl_Gene" analyzes genetic differences (SNPs/Indels) in a population of organisms.
+//  The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
+//  The options xml file specifies a list of VCF files and associated organism attributes to be processed.
+//  This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format
+//  and builds a memory database of the genetic structure of the target organism to facilitate analysis.)";
 
-// Public static member functions.
 
 // Parse the command line.
 bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 {
 
-  // Setup ArgumentParser.
-  seqan::ArgumentParser parser(MODULE_NAME);
-  // Set short description, version, and date.
-  setShortDescription(parser, "Population Genome Comparison");
-  setVersion(parser, VERSION);
-  setDate(parser, "October 2021");
+  std::stringstream ss;
+  ss << "Population Genome Comparison, module: "
+     << MODULE_NAME
+     << " version: "
+     << VERSION << '\n'
+     << "Usage: --workDirectory=<work_directory> --newLogFile=<new_log_file> --optionFile=<option_file.xml> (all arguments required)";
+  const char* help_flag = "help";
 
-  // Define usage line and long description.
-  addUsageLine(parser, "--workDirectory <work.directory>  --newLogFile <new_log_file> --optionFile <optionFile>");
+  if (argc <= 1) {
 
-  const char* program_desc =
-      R"("kgl_Gene" analyzes genetic differences (SNPs/Indels) in a population of organisms.
-  The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
-  The options xml file specifies a list of VCF files and associated organism attributes to be processed.
-  This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format
-  and builds a memory database of the genetic structure of the target organism to facilitate analysis.)";
+    std::cerr << "Problem Parsing Command Line. Use '--help' for argument formats." << std::endl;
+    std::cerr << ss.str() << std::endl;
+    std::exit(EXIT_FAILURE);
 
-  addDescription(parser, program_desc);
+  }
 
-  // Define Options -- Section Modification Options
-  addSection(parser, "Command Line Program Options");
+  po::options_description runtime_options(ss.str());
 
+
+  // Work directory
   const char* dir_desc =
       R"(The work directory where log files and data files are found.
-  Use a Linux style directory specification with trailing forward
-  slash '/' (default './Work/').
-  Important - to run 'kgl_snp' this directory must exist, it will not be created.)";
+  Use a Linux style directory specification with trailing forward slash '/'.
+  Important - to run 'kgl_Gene' this directory must exist, it will not be created.)";
+  const char* work_directory_flag = "workDirectory";
 
-  const char* workDirectoryFlag_ = "workDirectory";
-  const char* workDirectoryShortFlag_ = "d";
-
-  addOption(parser, seqan::ArgParseOption(workDirectoryShortFlag_, workDirectoryFlag_, dir_desc, seqan::ArgParseArgument::OUTPUT_DIRECTORY, "GRAPH_DIRECTORY_"));
-
+  // XML Options file
   const char* option_desc =
-  R"(Specifies the options file (default "Runtime_Options.xml"). This file contains all runtime options. The file path is relative to the work directory)";
+  R"(Specifies the options file (default "Runtime_Options.xml"). This file contains all runtime options.
+     The file path is relative to the work directory)";
+  const char* option_flag = "optionFile";
 
-  const char* optionFlag_ = "optionFile";
-  const char* optionShortFlag_ = "o";
-
-  addOption(parser, seqan::ArgParseOption(optionShortFlag_, optionFlag_, option_desc, seqan::ArgParseArgument::INPUT_FILE, "OPTION_FILE"));
-
+  // Logging file
   const char* log_desc =
-  R"(Log file. Appends the log to any existing logs (default "kgl_snp.log").'
-  'The log file always resides in the work directory.)";
+  R"(Log file. Appends the log to any existing logs. The log file always resides in the work directory.)";
+  const char* log_file_flag = "logFile";
 
-  const char* logFileFlag_ = "logFile";
-  const char* logFileShortFlag_ = "l";
+  runtime_options.add_options ()
+      (help_flag, ss.str().c_str())
+      (work_directory_flag, po::value<std::string>(), dir_desc)
+      (option_flag, po::value<std::string>(), option_desc)
+      (log_file_flag, po::value<std::string>(), log_desc);
 
-  addOption(parser, seqan::ArgParseOption(logFileShortFlag_, logFileFlag_, log_desc, seqan::ArgParseArgument::OUTPUT_FILE, "LOG_FILE"));
+  po::variables_map variable_map;
 
+  try {
+
+    po::store(po::command_line_parser(argc, argv).options(runtime_options).run(), variable_map);
+    po::notify(variable_map);
+
+  } catch (po::error& e) {
+    std::cerr << "ERROR: " << e.what() << "\n";
+    std::cerr << "Problem Parsing Command Line. Use '--help' for argument formats." << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -83,23 +94,26 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Parse command line.
-  seqan::ArgumentParser::ParseResult parse_result = seqan::parse(parser, argc, argv);
 
-  if (parse_result == seqan::ArgumentParser::PARSE_HELP) {
+  if(variable_map.count(help_flag)) {
 
-    std::exit(EXIT_SUCCESS);  // Help, -h or --help flags used, so just exit.
+    std::cerr << ss.str() << std::endl;
+    std::exit(EXIT_SUCCESS);
 
-  } else if (parse_result != seqan::ArgumentParser::PARSE_OK) {  // Problem parsing the command line.
+  }
 
-    std::cerr << "Error - Problem Parsing Command Line. Use '-h' or '--help' for argument formats." << std::endl;
+  if(variable_map.count(work_directory_flag)) {
+
+    args_.workDirectory = variable_map[work_directory_flag].as<std::string>();
+    std::cerr << "directory:" << args_.workDirectory << " was specified" << std::endl;
+
+  } else {
+
+    std::cerr << work_directory_flag << " was not specified" << std::endl;
     std::cerr << MODULE_NAME << " exits" << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
-
-  // Get the work directory and check that it exists
-  if (seqan::isSet(parser, workDirectoryFlag_)) seqan::getOptionValue(args_.workDirectory, parser, workDirectoryFlag_);
 
   fs::path directory_path = fs::path(getArgs().workDirectory);
 
@@ -124,10 +138,10 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   }
 
   // Get the log or newlog fields.
-  if (seqan::isSet(parser, logFileFlag_)) {
+  if (variable_map.count(log_file_flag)) {
 
     std::string log_file_name;
-    seqan::getOptionValue(log_file_name, parser, logFileFlag_);
+    log_file_name = variable_map[log_file_flag].as<std::string>();
     // Join the log file and the directory
     fs::path log_file_path = directory_path / fs::path(log_file_name);
     // truncate the log file.
@@ -138,25 +152,33 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
       std::cerr << MODULE_NAME << " exits" << std::endl;
       std::exit(EXIT_FAILURE);
     }
+
     args_.logFile = log_file_path.string();
 
-  } else { // log file not specified - join default log file to the work directory.
+  } else { // log file not specified - complain and exit.
 
-    fs::path log_file_path = directory_path / fs::path(args_.logFile);
-    args_.logFile = log_file_path.string();
+    std::cerr << log_file_flag << " was not specified" << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
+    std::exit(EXIT_FAILURE);
 
   }
   // Setup the Logger.
   ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
   // Read the options file.
-  if (seqan::isSet(parser, optionFlag_)) {
+  if (variable_map.count(option_flag)) {
 
-    std::string options_file;
-    seqan::getOptionValue(options_file, parser, optionFlag_);
-    args_.options_file = options_file;
+    args_.options_file = variable_map[option_flag].as<std::string>();
+
+  } else {
+
+    std::cerr << option_flag << " was not specified" << std::endl;
+    std::cerr << MODULE_NAME << " exits" << std::endl;
+    std::exit(EXIT_FAILURE);
+
   }
 
+  // Read the XML program options.
   runtime_options_.setWorkDirectory(args_.workDirectory);
   if (not runtime_options_.readProperties(args_.options_file)) {
 
@@ -164,7 +186,6 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
     ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
 
   }
-
 
   return true;
 

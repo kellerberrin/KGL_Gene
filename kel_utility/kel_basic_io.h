@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <fstream>
 
 #include "kel_exec_env.h"

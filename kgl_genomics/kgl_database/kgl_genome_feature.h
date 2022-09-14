@@ -24,11 +24,10 @@ class Feature {
 
 public:
 
-  Feature(const FeatureIdent_t id,
-          const FeatureType_t type,
-          const std::shared_ptr<const ContigReference> contig_ptr,
-          const FeatureSequence& sequence): id_(std::move(id)),
-                                            type_(std::move(type)), contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
+  Feature(FeatureIdent_t id,
+          FeatureType_t type,
+          std::shared_ptr<const ContigReference> contig_ptr,
+          FeatureSequence sequence): id_(std::move(id)), type_(std::move(type)), contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 

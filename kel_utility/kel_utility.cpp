@@ -330,6 +330,39 @@ std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, co
 
 }
 
+
+// Split string on encountering char. Default version splits on first whitespace
+std::pair<std::string, std::string> kel::Utility::firstSplit(const std::string& source, bool(* char_delim_fn)(char c)) {
+
+  std::string first;
+  std::string second;
+  bool split{false};
+
+  for (const char c : source) {
+
+    if (char_delim_fn(c)) {
+
+      split = true;
+
+    }
+
+    if (not split) {
+
+      first += c;
+
+    } else {
+
+      second += c;
+
+    }
+
+  }
+
+  return {first, second};
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 //
 
@@ -507,4 +540,5 @@ void kel::Utility::getRuntime(double &Clock, double &User, double &System) {
   System = elapsedtime.system / 1e09;
 
 }
+
 

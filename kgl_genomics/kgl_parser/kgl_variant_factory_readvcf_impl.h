@@ -27,7 +27,7 @@ class VCFReaderMT {
 
 public:
 
-  VCFReaderMT(size_t thread_count = DEFAULT_PARSER_THREADS) : parser_threads_(thread_count) {}
+  explicit VCFReaderMT(size_t thread_count = DEFAULT_PARSER_THREADS) : parser_threads_(thread_count) {}
   virtual ~VCFReaderMT() = default;
 
   // Perform multi-threaded parsing of queued VCF records.

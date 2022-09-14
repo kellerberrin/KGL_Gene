@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include "kgl_genome_prelim.h"
 #include "kgl_genome_genome.h"
 #include "kgl_sequence_virtual.h"
 #include "kel_logging.h"
@@ -70,6 +71,12 @@ public:
                      std::string&& fasta_sequence) : fasta_id_(fasta_id),
                                                      fasta_description_(fasta_description),
                                                      fasta_sequence_ptr_(std::make_unique<std::string>(fasta_sequence)) {}
+  ReadFastaSequence( std::string&& fasta_id,
+                     std::string&& fasta_description,
+                     std::unique_ptr<std::string>&& fasta_sequence_ptr) : fasta_id_(std::move(fasta_id)),
+                                                     fasta_description_(std::move(fasta_description)),
+                                                     fasta_sequence_ptr_(std::move(fasta_sequence_ptr)) {}
+
   ~ReadFastaSequence() = default;
 
   [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
@@ -85,36 +92,71 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Read and write Gff3 abd Fasta files.
+// Static object to provide data hiding and namespace.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class ParseGffFasta {
 
 public:
 
-  explicit ParseGffFasta();
-  ~ParseGffFasta();
+  ParseGffFasta() =delete;
+  ~ParseGffFasta() = delete;
 
-  // Functionality passed to the implmentation.
-  [[nodiscard]] std::shared_ptr<GenomeReference> readFastaFile(const std::string& organism, const std::string& fasta_file_name);
+  [[nodiscard]] static std::shared_ptr<GenomeReference> readFastaFile(const std::string& organism, const std::string& fasta_file_name);
 
-  [[nodiscard]] bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
+  [[nodiscard]] static bool writeFastaFile(const std::string& fasta_file_name, const std::vector<WriteFastaSequence>& fasta_sequences);
 
-  [[nodiscard]] bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
+  [[nodiscard]] static bool readFastaFile(const std::string& fasta_file_name, std::vector<ReadFastaSequence>& fasta_sequences);
 
-  [[nodiscard]] std::shared_ptr<GenomeReference> readFastaGffFile(const std::string& organism,
-                                                                  const std::string& fasta_file_name,
-                                                                  const std::string& gff_file_name);
-
-  void readTssGffFile(const std::string& tss_gff_file_name, GenomeReference& genome_db_ptr);
+  [[nodiscard]] static std::shared_ptr<GenomeReference> readFastaGffFile( const std::string& organism,
+                                                                          const std::string& fasta_file_name,
+                                                                          const std::string& gff_file_name);
 
 private:
 
-  class GffFastaImpl;       // Forward declaration of the Gff Fasta parser implementation class
-  std::unique_ptr<GffFastaImpl> gff_fasta_impl_ptr_;    // Gff Fasta parser PIMPL
+  static constexpr const char COMMENT_{';'};
+  static constexpr const char FASTA_ID_{'>'};
+
+  static void readGffFile( const std::string &gff_file_name, GenomeReference& genome_db);
+  static ReadFastaSequence createFastaSequence( const std::string& fasta_id,
+                                                const std::string& fasta_comment,
+                                                const std::vector<std::unique_ptr<std::string>>& fasta_lines);
+
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Important - the offsets of the features use the half open interval [begin, end) convention and are ZERO based.
+// This is different from the gff format which are 1-based and are specified as the closed interval [begin, end].
+// Thus begin_offset_ = gff.begin - 1
+// And end_offset_ = gff.end
+// Note that always begin_offset_ < end_offset_. They are not strand adjusted.
+// They always correspond to zero based offsets on the relevant contig.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GffRecord
+{
+
+  static constexpr ContigOffset_t const INVALID_POS = std::numeric_limits<ContigOffset_t>::max();
+
+  std::string ref_;
+  std::string source_;
+  std::string type_;
+  std::map<std::string, std::string> tagNamesValues_;
+  ContigOffset_t beginPos_{INVALID_POS};
+  ContigOffset_t endPos_{INVALID_POS};
+  FeatureSequence feature_sequence_;
 
 };
 
 
+
+
+
 }   // end namespace
 
-#endif //KGL_GFF_FASTA_H
+
+#endif

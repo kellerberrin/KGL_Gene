@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 #include <map>
 #include <unordered_map>
 #include <set>

@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <optional>
 
 
 namespace kellerberrin::genome {   //  organization level namespace

@@ -9,6 +9,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
                     /usr/local/include/seqan3/submodules/cereal/include   # the cereal library required by seqan3.
                     /usr/local/include/seqan3/include
+                    /usr/local/include/seqan/include
                     /usr/local/include/spdlog/include/
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
@@ -275,7 +276,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_literature/kgl_literature_filter.h
         kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h
         kgl_genomics/kgl_literature/kgl_literature_data.h
-        kgl_genomics/kgl_literature/kgl_literature_data.cpp)
+        kgl_genomics/kgl_literature/kgl_literature_data.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)

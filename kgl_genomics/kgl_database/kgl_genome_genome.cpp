@@ -6,7 +6,7 @@
 #include "kel_exec_env.h"
 #include "kel_patterns.h"
 #include "kgl_gaf_parser.h"
-#include "kgl_gff_fasta.h"
+#include "kgl_gff_fasta_seqan.h"
 #include "kgl_sequence_offset.h"
 
 namespace kgl = kellerberrin::genome;
@@ -24,7 +24,7 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
                                                                                  const std::string& gaf_file,
                                                                                  const std::string& translation_table) {
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFasta().readFastaGffFile(organism, fasta_file, gff_file);
+  std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFastaSeqan().readFastaGffFile(organism, fasta_file, gff_file);
 
   // Optionally set the translation table (defaults to the standard table).
   if (not translation_table.empty()) {

@@ -9,6 +9,7 @@
 
 #include <map>
 #include <vector>
+#include <optional>
 #include <algorithm>
 
 namespace kellerberrin {   //  organization level namespace
