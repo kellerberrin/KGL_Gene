@@ -681,7 +681,7 @@ if(BUILD_KGL_KGD_DOC)
         #        add_custom_target( doc_doxygen
         #                    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         #                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        #                    COMMENT_ "Generating API documentation with Doxygen"
+        #                    FASTA_COMMENT_ "Generating API documentation with Doxygen"
         #                    VERBATIM )
 
     endif(DOXYGEN_FOUND)

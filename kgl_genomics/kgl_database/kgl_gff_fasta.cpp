@@ -106,7 +106,7 @@ bool kgl::ParseGffFasta::readFastaFile( const std::string& fasta_file_name,
         // Skip line if zero-sized, whitespace or comment.
 
           parser_token = ParserToken::FIND_FASTA_ID;
-          if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == COMMENT_) {
+          if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == FASTA_COMMENT_) {
 
           break;
 
@@ -146,7 +146,7 @@ bool kgl::ParseGffFasta::readFastaFile( const std::string& fasta_file_name,
 
         //  If zero-sized or whitespace or comment or '>' then the fasta data block is complete.
         // Store the resultant festa record.
-        if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == COMMENT_ or record_ptr->front() == FASTA_ID_) {
+        if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == FASTA_COMMENT_ or record_ptr->front() == FASTA_ID_) {
 
           // Suppress IO, we already have an ID line.
           parser_token = ParserToken::FIND_FASTA_ID_NO_READ;
@@ -259,6 +259,65 @@ kgl::ReadFastaSequence kgl::ParseGffFasta::createFastaSequence( const std::strin
 void kgl::ParseGffFasta::readGffFile( const std::string &gff_file_name,
                                       kgl::GenomeReference& genome_db) {
 
+  readGffFile(gff_file_name);
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void kgl::ParseGffFasta::readGffFile(const std::string& file_name) {
+
+  FileDataIO file_io;
+  size_t counter = 0;
+  std::vector<std::pair<std::unique_ptr<std::string>, std::vector<std::string_view>>> gff_lines;
+
+  if (not file_io.commenceIO(file_name)) {
+
+    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_io.fileName());
+
+  }
+
+  while (true) {
+
+    auto line_record = file_io.readIORecord();
+    if (not line_record) break;
+
+    auto const& [line_count, line_ptr] = line_record.value();
+
+    const std::string& record_str = *line_ptr;
+
+    if (not record_str.empty()) {
+
+      if (record_str[0] == GFF_COMMENT_) {
+
+        continue;  // Skip comment lines.
+
+      }
+
+    }
+
+    std::vector<std::string_view> row_fields = Utility::view_tokenizer(record_str, GFF3_FIELD_DELIM_);
+
+    if (row_fields.size() != GFF3_FIELD_COUNT_) {
+
+      ExecEnv::log().info("ParseGffFasta::readGffFile; Bad row field count: {} on line number: {}, text: {}", row_fields.size(), counter, record_str);
+      continue;
+
+    }
+
+//    std::pair<std::unique_ptr<std::string>, std::vector<std::string_view>> gff_line{std::move(line_ptr), std::move(row_fields)};
+//    gff_lines.push_back();
+
+    ++counter;
+
+  }
+
+  ExecEnv::log().info("ParseGffFasta::readGffFile; Parsed: {} lines from GFF3 file: {}", counter, file_io.fileName());
 
 
 }

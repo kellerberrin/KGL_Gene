@@ -46,7 +46,7 @@ public:
   // Push an eof marker onto the queue
   void enqueueEOF() { vcf_record_queue_.push(QUEUED_EOF_MARKER); }
 
-  [[nodiscard]] const std::string& getFileName() const { return file_data_.fileName(); }
+  [[nodiscard]] [[maybe_unused]] const std::string& getFileName() const { return file_data_.fileName(); }
 
 
 private:

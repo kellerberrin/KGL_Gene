@@ -118,10 +118,14 @@ public:
 
 private:
 
-  static constexpr const char COMMENT_{';'};
+  static constexpr const char FASTA_COMMENT_{';'};
   static constexpr const char FASTA_ID_{'>'};
+  static constexpr const char GFF_COMMENT_{'#'};
+  static constexpr const char GFF3_FIELD_DELIM_{'\t'};
+  static constexpr const size_t GFF3_FIELD_COUNT_{9};
 
   static void readGffFile( const std::string &gff_file_name, GenomeReference& genome_db);
+  static void readGffFile(const std::string& file_name);
   static ReadFastaSequence createFastaSequence( const std::string& fasta_id,
                                                 const std::string& fasta_comment,
                                                 const std::vector<std::unique_ptr<std::string>>& fasta_lines);

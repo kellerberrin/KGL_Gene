@@ -120,13 +120,6 @@ bool kgl::ParseGffFastaSeqan::GffFastaSeqan::readFastaFile(const std::string& fa
     ExecEnv::log().info("ParseGffFastaSeqan::readFastaFile; file:{}, sequence id: {}, size: {}", fasta_file_name, sequence.fastaId(), sequence.fastaSequence().size());
 
   }
-  std::vector<ReadFastaSequence> compare_sequences;
-  ParseGffFasta::readFastaFile(fasta_file_name, compare_sequences);
-  for (const auto& sequence: compare_sequences) {
-
-    ExecEnv::log().info("ParseGffFasta::readFastaFile; file:{}, sequence id: {}, size: {}", fasta_file_name, sequence.fastaId(), sequence.fastaSequence().size());
-
-  }
 
   return true;
 
@@ -484,13 +477,6 @@ bool kgl::ParseGffFastaSeqan::readFastaFile(const std::string& fasta_file_name, 
   for (const auto& sequence: fasta_sequences) {
 
     ExecEnv::log().info("ParseGffFastaSeqan::readFastaFile; file:{}, sequence id: {}, size: {}", fasta_file_name, sequence.fastaId(), sequence.fastaSequence().size());
-
-  }
-  std::vector<ReadFastaSequence> compare_sequences;
-  ParseGffFasta::readFastaFile(fasta_file_name, compare_sequences);
-  for (const auto& sequence: compare_sequences) {
-
-    ExecEnv::log().info("ParseGffFasta::readFastaFile; file:{}, sequence id: {}, size: {}", fasta_file_name, sequence.fastaId(), sequence.fastaSequence().size());
 
   }
 

@@ -26,6 +26,19 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
   // Create a genome database object.
   std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFastaSeqan().readFastaGffFile(organism, fasta_file, gff_file);
 
+  // Create a genome database object.
+  std::shared_ptr<kgl::GenomeReference> new_genome_db_ptr = ParseGffFasta::readFastaGffFile(organism, fasta_file, gff_file);
+
+  if (genome_db_ptr->compareReference(*new_genome_db_ptr)) {
+
+    ExecEnv::log().info("GenomeReference::createGenomeDatabase; Equivalent Seqan and Native Genome Database: {}", organism);
+
+  } else {
+
+    ExecEnv::log().error("GenomeReference::createGenomeDatabase; mis-match between Seqan and Native Genome Database: {}", organism);
+
+  }
+
   // Optionally set the translation table (defaults to the standard table).
   if (not translation_table.empty()) {
 
@@ -138,3 +151,42 @@ bool kgl::GenomeReference::contigOffset(const ContigId_t& contig_id,
 
 }
 
+bool kgl::GenomeReference::compareReference(const GenomeReference& compare_genome) const {
+
+  bool equivalent_contigs{true};
+  for (auto const& [contig_id, contig_reference] : genome_sequence_map_) {
+
+    auto contig_opt = compare_genome.getContigSequence(contig_id);
+    if (contig_opt) {
+
+      if (not contig_opt.value()->compareContig(*contig_reference)) {
+
+        ExecEnv::log().warn("GenomeReference::compareReference; contig id: {} has differing contig sequences", contig_id);
+        equivalent_contigs = false;
+
+      }
+
+    } else {
+
+      ExecEnv::log().warn("GenomeReference::compareReference; contig id: {} not found in comparison contig", contig_id);
+      equivalent_contigs = false;
+
+    }
+
+  }
+
+  for (auto const& [contig_id, contig_reference] : compare_genome.genome_sequence_map_) {
+
+    auto contig_opt = getContigSequence(contig_id);
+    if (not contig_opt) {
+
+      ExecEnv::log().warn("GenomeReference::compareReference; comparison contig: {} not found", contig_id);
+      equivalent_contigs = false;
+
+    }
+
+  }
+
+  return equivalent_contigs;
+
+}

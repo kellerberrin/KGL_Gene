@@ -67,6 +67,9 @@ public:
                                                                              const std::string& gaf_file,
                                                                              const std::string& translation_table);
 
+  // Compares two genome references for equality (used for testing).
+  bool compareReference(const GenomeReference& compare_genome) const;
+
 private:
 
   GenomeContigMap genome_sequence_map_;

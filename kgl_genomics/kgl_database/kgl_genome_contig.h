@@ -90,6 +90,9 @@ public:
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
+  // Compare Contig Reference - compares sequence information only.
+  [[nodiscard]] bool compareContig(const ContigReference& compare_contig) const { return sequence_ptr_->operator==(*(compare_contig.sequence_ptr_)); }
+
   // Wire-up the contig features
   void verifyFeatureHierarchy();
   void verifyAuxillaryHierarchy();

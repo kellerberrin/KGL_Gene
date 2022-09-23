@@ -12,7 +12,8 @@
 
 namespace kellerberrin {   //  organization level namespace
 
-// Functional object cannot be created. Defines (boost) file and time utility functions and misc string functions.
+// Object cannot be created, just supplies scope and visibility.
+// Defines file and time utility functions and misc string/parsing functions.
 
 class Utility {
 
