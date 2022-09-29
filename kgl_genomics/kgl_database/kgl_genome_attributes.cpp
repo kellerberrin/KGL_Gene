@@ -40,6 +40,14 @@ void kgl::Attributes::insertAttribute(const std::string& key, const std::string&
 
 }
 
+// Always succeeds; keys are uppercase.
+void kgl::Attributes::insertAttribute(std::string&& key, std::string&& value) {
+
+  // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
+  attributes_.emplace(Utility::toupper(Utility::trimEndWhiteSpace(key)), value);
+
+}
+
 std::string kgl::Attributes::getHGNC() const {
 
   std::string hgnc_id;

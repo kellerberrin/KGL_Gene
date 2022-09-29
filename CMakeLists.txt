@@ -276,7 +276,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_literature/kgl_literature_filter.h
         kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h
         kgl_genomics/kgl_literature/kgl_literature_data.h
-        kgl_genomics/kgl_literature/kgl_literature_data.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.h)
+        kgl_genomics/kgl_literature/kgl_literature_data.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.cpp kgl_genomics/kgl_database/kgl_gff_fasta_seqan.h kgl_genomics/kgl_database/kgl_gff3.cpp kgl_genomics/kgl_database/kgl_gff3.h kgl_genomics/kgl_database/kgl_fasta.cpp kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
