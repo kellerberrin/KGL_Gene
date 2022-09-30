@@ -41,20 +41,14 @@ public:
 
   // Add parsed features to the different feature structures.
   [[nodiscard]] bool addGeneExonFeature(std::shared_ptr<Feature>& feature_ptr);
-  [[nodiscard]] bool addAuxFeature(std::shared_ptr<Feature>& feature_ptr);
 
   // false if not found.
   [[nodiscard]] bool findFeatureId( const FeatureIdent_t& feature_id,
                                     std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
     return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec);
   }
-  // false if offset is not in a gene, else (true) returns a vector of ptrs to the genes.
-  //  [[nodiscard]] bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
 
   [[nodiscard]] const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
-
-  // Return all Aux genome features in this contig.
-  [[nodiscard]] const AuxContigFeatures& getAuxContigFeatures() const { return aux_contig_features_; }
 
   [[nodiscard]] bool setTranslationTable(const std::string& table_name) { return coding_table_.settranslationTable(table_name); }
 
@@ -90,12 +84,11 @@ public:
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
-  // Compare Contig Reference - compares sequence information only.
-  [[nodiscard]] bool compareContig(const ContigReference& compare_contig) const { return sequence_ptr_->operator==(*(compare_contig.sequence_ptr_)); }
+  // Compare reference Contigs- mainly used for testing.
+  [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;
 
   // Wire-up the contig features
   void verifyFeatureHierarchy();
-  void verifyAuxillaryHierarchy();
   void verifyCDSPhasePeptide();
 
 private:
@@ -104,7 +97,6 @@ private:
   std::string description_;
   std::shared_ptr<const DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig.
-  AuxContigFeatures aux_contig_features_;
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.

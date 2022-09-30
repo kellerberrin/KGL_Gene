@@ -14,7 +14,6 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_rna_search.h"
 #include "kgl_legacy_Pf_analysis.h"
-#include "kgl_epigenetic_motif.h"
 
 #include <functional>
 
@@ -177,15 +176,6 @@ ExecEnv::log().info("**********Completed Analysis: {} **************", result->f
 
 }
 
-
-
-void kgl::PhylogeneticAnalysis::performMotif() {
-
-
-std::string motif_file = Utility::filePath("Motif", runtime_options_.workDirectory()) + ".csv";
-PromoterMotif::displayTFFMotif(genome_collection_ptr_->getGenome(analysis_genome), motif_file, ',');
-
-}
 
 
 void kgl::PhylogeneticAnalysis::performSequence() {

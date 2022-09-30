@@ -24,12 +24,12 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
                                                                                  const std::string& gaf_file,
                                                                                  const std::string& translation_table) {
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFastaSeqan().readFastaGffFile(organism, fasta_file, gff_file);
+  std::shared_ptr<kgl::GenomeReference> old_genome_db_ptr = ParseGffFastaSeqan().readFastaGffFile(organism, fasta_file, gff_file);
 
   // Create a genome database object.
-  std::shared_ptr<kgl::GenomeReference> new_genome_db_ptr = ParseGffFasta::readFastaGffFile(organism, fasta_file, gff_file);
+  std::shared_ptr<kgl::GenomeReference> genome_db_ptr = ParseGffFasta::readFastaGffFile(organism, fasta_file, gff_file);
 
-  if (genome_db_ptr->compareReference(*new_genome_db_ptr)) {
+  if (genome_db_ptr->equivalent(*old_genome_db_ptr)) {
 
     ExecEnv::log().info("GenomeReference::createGenomeDatabase; Equivalent Seqan and Native Genome Database: {}", organism);
 
@@ -151,36 +151,36 @@ bool kgl::GenomeReference::contigOffset(const ContigId_t& contig_id,
 
 }
 
-bool kgl::GenomeReference::compareReference(const GenomeReference& compare_genome) const {
+bool kgl::GenomeReference::equivalent(const GenomeReference& lhs) const {
 
   bool equivalent_contigs{true};
   for (auto const& [contig_id, contig_reference] : genome_sequence_map_) {
 
-    auto contig_opt = compare_genome.getContigSequence(contig_id);
+    auto contig_opt = lhs.getContigSequence(contig_id);
     if (contig_opt) {
 
-      if (not contig_opt.value()->compareContig(*contig_reference)) {
+      if (not contig_opt.value()->equivalent(*contig_reference)) {
 
-        ExecEnv::log().warn("GenomeReference::compareReference; contig id: {} has differing contig sequences", contig_id);
+        ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} has differing contig/feature attributes", contig_id);
         equivalent_contigs = false;
 
       }
 
     } else {
 
-      ExecEnv::log().warn("GenomeReference::compareReference; contig id: {} not found in comparison contig", contig_id);
+      ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} not found in comparison contig", contig_id);
       equivalent_contigs = false;
 
     }
 
   }
 
-  for (auto const& [contig_id, contig_reference] : compare_genome.genome_sequence_map_) {
+  for (auto const& [contig_id, contig_reference] : lhs.genome_sequence_map_) {
 
     auto contig_opt = getContigSequence(contig_id);
     if (not contig_opt) {
 
-      ExecEnv::log().warn("GenomeReference::compareReference; comparison contig: {} not found", contig_id);
+      ExecEnv::log().warn("GenomeReference::equivalent; comparison contig: {} not found", contig_id);
       equivalent_contigs = false;
 
     }

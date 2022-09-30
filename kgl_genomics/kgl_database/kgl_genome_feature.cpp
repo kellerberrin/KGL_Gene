@@ -63,6 +63,7 @@ std::string kgl::Feature::featureText() const {
 
 
 
+
 std::shared_ptr<const kgl::Feature> kgl::Feature::getGene() const {
 
   // Recursively search upward
@@ -83,6 +84,38 @@ std::shared_ptr<const kgl::Feature> kgl::Feature::getGene() const {
   return nullptr;
 
 }
+
+
+bool kgl::Feature::equivalent(const Feature& lhs) const {
+
+  if (id_ != lhs.id_) {
+
+    return false;
+
+  }
+
+  if (type_ != lhs.type_) {
+
+    return false;
+
+  }
+
+  if (sequence_.equivalent(lhs.sequence_)) {
+
+    return false;
+
+  }
+
+  if (attributes_.equivalent(lhs.attributes_)) {
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

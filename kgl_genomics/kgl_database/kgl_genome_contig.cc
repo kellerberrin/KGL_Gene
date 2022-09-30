@@ -22,16 +22,6 @@ bool kgl::ContigReference::addGeneExonFeature(std::shared_ptr<kgl::Feature>& fea
 }
 
 
-bool kgl::ContigReference::addAuxFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
-
-  aux_contig_features_.checkAddFeature(feature_ptr);
-
-  return true;
-
-}
-
-
-
 
 void kgl::ContigReference::verifyFeatureHierarchy() {
 
@@ -39,14 +29,6 @@ void kgl::ContigReference::verifyFeatureHierarchy() {
   gene_exon_features_.setupVerifyHierarchy();
   // Verify the Genes.
   verifyCDSPhasePeptide();
-
-}
-
-
-void kgl::ContigReference::verifyAuxillaryHierarchy() {
-
-  // Setup the Aux feature hierarchy using the gene exon hierarchy.
-  aux_contig_features_.setupVerifyHierarchy(gene_exon_features_);
 
 }
 
@@ -139,3 +121,34 @@ bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const Cod
 
 }
 
+
+bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
+
+  if (contig_id_ != lhs.contig_id_) {
+
+    return false;
+
+  }
+
+  bool compare_sequence = *sequence_ptr_ == *lhs.sequence_ptr_;
+  if (not compare_sequence) {
+
+    return false;
+
+  }
+
+  if (not gene_exon_features_.equivalent(lhs.gene_exon_features_)) {
+
+    return false;
+
+  }
+
+  if (coding_table_.translationTableName() != lhs.coding_table_.translationTableName()) {
+
+    return false;
+
+  }
+
+  return true;
+
+}

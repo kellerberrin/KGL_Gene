@@ -144,6 +144,68 @@ void kgl::StructuredFeatures::verifyFeatureHierarchy() {
 }
 
 
+
+bool kgl::StructuredFeatures::equivalent(const StructuredFeatures& lhs) const {
+
+  if (offset_feature_map_.size() != lhs.offset_feature_map_.size()) {
+
+    return false;
+
+  }
+
+  // Just compare the keys for now.
+  auto lhs_offset_iter = lhs.offset_feature_map_.begin();
+  for (auto const& [offset, offset_ptr] : offset_feature_map_) {
+
+    if (lhs_offset_iter == lhs.offset_feature_map_.end()) {
+
+      return false;
+
+    }
+
+    auto& [lhs_offset, lhs_offset_ptr] = *lhs_offset_iter;
+    if (offset != lhs_offset and offset_ptr->equivalent(*lhs_offset_ptr)) {
+
+      return false;
+
+    }
+
+    ++lhs_offset_iter;
+
+  }
+
+  if (id_feature_map_.size() != lhs.id_feature_map_.size()) {
+
+    return false;
+
+  }
+
+  // Just compare the keys for now.
+  auto lhs_id_iter = lhs.id_feature_map_.begin();
+  for (auto const& [id, id_ptr] : id_feature_map_) {
+
+    if (lhs_id_iter == lhs.id_feature_map_.end()) {
+
+      return false;
+
+    }
+
+    auto& [lhs_id, lhs_id_ptr] = *lhs_id_iter;
+    if (id != lhs_id and id_ptr->equivalent(*lhs_id_ptr)) {
+
+      return false;
+
+    }
+
+    ++lhs_id_iter;
+
+  }
+
+  return true;
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GeneExonFeatures members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

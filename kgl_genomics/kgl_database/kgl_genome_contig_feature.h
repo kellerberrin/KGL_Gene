@@ -36,7 +36,7 @@ public:
   virtual ~StructuredFeatures() = default;
 
   // Make this a virtual object.
-  [[nodiscard]] virtual const std::string featureType() const = 0;
+  [[nodiscard]] virtual std::string featureType() const = 0;
   // Checks the feature type before adding.
   [[nodiscard]] virtual bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) = 0;
 
@@ -46,6 +46,8 @@ public:
   [[nodiscard]] const OffsetFeatureMap& offsetFeatureMap() const { return offset_feature_map_; }
   [[nodiscard]] const IdFeatureMap& idFeatureMap() const { return id_feature_map_; }
 
+  // Compares contig feature structures - primarily used for testing
+  [[nodiscard]] bool equivalent(const StructuredFeatures& lhs) const;
 
 protected:
 
@@ -66,9 +68,6 @@ private:
 };
 
 
-using StructuredFeatureMap = std::map<std::string, std::shared_ptr<StructuredFeatures>>;
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A specialized container for GENE and exon genome features.
@@ -84,7 +83,7 @@ public:
   GeneExonFeatures(const GeneExonFeatures&) = default;
   ~GeneExonFeatures() override = default;
 
-  [[nodiscard]] const std::string featureType() const override { return GENE_EXON_FEATURE_; }
+  [[nodiscard]] std::string featureType() const override { return GENE_EXON_FEATURE_; }
 
   void setupVerifyHierarchy();
 
@@ -97,7 +96,7 @@ public:
                                         const FeatureIdent_t& sequence_id,
                                         std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
 
-  // Checks the feature type before adding (not TSS).
+  // Checks the feature type before adding.
   [[nodiscard]] bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 
   static constexpr const char* GENE_EXON_FEATURE_{"GeneExonFeatures"};

@@ -26,7 +26,7 @@ public:
   AdjalleyTSSFeatures(const AdjalleyTSSFeatures&) = default;
   ~AdjalleyTSSFeatures() override = default;
 
-  [[nodiscard]] const std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
+  [[nodiscard]] std::string featureType() const override { return ADJALLEY_TSS_FEATURE_; }
 
   void setupVerifyHierarchy(const StructuredFeatures& gene_super_features);
 

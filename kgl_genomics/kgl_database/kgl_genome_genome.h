@@ -68,7 +68,7 @@ public:
                                                                              const std::string& translation_table);
 
   // Compares two genome references for equality (used for testing).
-  bool compareReference(const GenomeReference& compare_genome) const;
+  bool equivalent(const GenomeReference& lhs) const;
 
 private:
 

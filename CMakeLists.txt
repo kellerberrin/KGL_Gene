@@ -434,8 +434,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_upgma_unphased.h
         kgl_analytic/kgl_Pf/kgl_upgma_unphased.cpp
         kgl_analytic/kgl_legacy/kgl_sequence_complexity.h
-        kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
-        kgl_analytic/kgl_legacy/kgl_epigenetic_motif.cpp
         kgl_analytic/kgl_Pf/kgl_upgma.h
         kgl_analytic/kgl_analysis_all.h
         kgl_analytic/kgl_verify/kgl_analysis_null.cpp

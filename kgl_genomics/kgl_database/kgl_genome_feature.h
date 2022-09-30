@@ -65,6 +65,9 @@ public:
 
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const { return contig_ptr_; }
 
+  // Compares features - primarily used for testing
+  [[nodiscard]] bool equivalent(const Feature& lhs) const;
+
 private:
 
   FeatureIdent_t id_;

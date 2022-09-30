@@ -45,6 +45,8 @@ public:
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }
 
+  // Primarily used for tesing.
+  [[nodiscard]] bool equivalent(const FeatureSequence& lhs) const { return begin() == lhs.begin() and end() == lhs.end() and strand() == lhs.strand(); }
 
 private:
 

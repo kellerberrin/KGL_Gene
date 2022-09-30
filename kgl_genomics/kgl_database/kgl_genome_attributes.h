@@ -44,7 +44,7 @@ public:
 
 
   // Convenience access routines.
-  bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
+  [[nodiscard]] bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
   void getSuperFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(SUPER_FEATURE_KEY, value_vec); }
   void getAssignedFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
   bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
@@ -54,6 +54,9 @@ public:
 
   // Get HGNC identifiers from Homo Sapien GFF files.
   std::string getHGNC() const;
+
+  // Mainly used for tesing.
+  [[nodiscard]] bool equivalent(const Attributes& lhs) const { return attributes_ == lhs.attributes_; }
 
 private:
 
