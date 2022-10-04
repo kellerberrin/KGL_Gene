@@ -7,7 +7,7 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_mutation.h"
-#include "kgl_gff_fasta_seqan.h"
+#include "kgl_gff_fasta.h"
 
 #include <memory>
 #include <sstream>
@@ -620,7 +620,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
     WriteFastaSequence fasta_mutant(mutant_fasta_ss.str(), "", mutant_sequence_ptr);
     dna_seq_vector.push_back(fasta_mutant);
 
-    if (not ParseGffFastaSeqan().writeFastaFile(fasta_file, dna_seq_vector)) {
+    if (not ParseFasta::writeFastaFile(fasta_file, dna_seq_vector)) {
 
       ExecEnv::log().error("MutateGenomeGene(), Problem writing to fasta file: {}", fasta_file);
 

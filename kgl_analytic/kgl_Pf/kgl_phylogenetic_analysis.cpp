@@ -11,7 +11,7 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_db_mutation.h"
-#include "kgl_gff_fasta_seqan.h"
+#include "kgl_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -28,7 +28,7 @@ bool kgl::GenomicMutation::writeMutantProteins(const std::string& fasta_file,
 
   }
 
-  return ParseGffFastaSeqan().writeFastaFile(fasta_file, fasta_sequence_vec);
+  return ParseFasta::writeFastaFile(fasta_file, fasta_sequence_vec);
 
 
 }
@@ -45,7 +45,7 @@ bool kgl::GenomicMutation::writeMutantDNA(const std::string& fasta_file,
 
   }
 
-  return ParseGffFastaSeqan().writeFastaFile(fasta_file, fasta_sequence_vec);
+  return ParseFasta::writeFastaFile(fasta_file, fasta_sequence_vec);
 
 
 }
@@ -59,7 +59,7 @@ bool kgl::GenomicMutation::readFastaProteins(const std::string& fasta_file,
   std::shared_ptr<AminoSequence> reference_sequence;
 
   std::vector<ReadFastaSequence> fasta_sequence_vec;
-  if (ParseGffFastaSeqan().readFastaFile(fasta_file, fasta_sequence_vec)) {
+  if (ParseFasta::readFastaFile(fasta_file, fasta_sequence_vec)) {
 
     for (auto const& sequence: fasta_sequence_vec) {
 
