@@ -5,7 +5,6 @@
 
 
 #include <iostream>
-#include <seqan/align.h>
 #include <edlib.h>
 
 
@@ -15,6 +14,9 @@
 
 
 namespace kgl = kellerberrin::genome;
+
+// The use of the seqan library is deprecated and needs to be replaced (possibly with seqan3)
+// #define USE_SEQAN 1
 
 
 class kgl::SequenceComparison::SequenceManipImpl {
@@ -41,11 +43,10 @@ private:
 
 
 
-
-
 kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGlobal(const std::string& sequenceA,
                                                                                        const std::string& sequenceB,
                                                                                        std::string& compare_str) const {
+#ifdef USE_SEQAN
 
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
@@ -66,6 +67,12 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGl
   compare_str = ss.str();
 
   return score;
+
+#else
+
+  return 0;
+
+#endif
 
 }
 
@@ -75,6 +82,8 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLo
                                                                                       const std::string& sequenceB,
                                                                                       std::string& compare_str) const {
 
+#ifdef USE_SEQAN
+
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
 
@@ -95,6 +104,12 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLo
 
   return score;
 
+#else
+
+  return 0;
+
+#endif
+
 }
 
 
@@ -103,6 +118,8 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLo
 kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGap(const std::string& sequenceA,
                                                                                     const std::string& sequenceB,
                                                                                     std::string& compare_str) const {
+
+#ifdef USE_SEQAN
 
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
@@ -128,6 +145,12 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGa
   compare_str = ss.str();
 
   return score;
+
+#else
+
+  return 0;
+
+#endif
 
 }
 
@@ -246,6 +269,9 @@ kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(cons
                                                                          const std::string& mutant_str,
                                                                          EditVector& edit_vector) const
 {
+
+#ifdef USE_SEQAN
+
   typedef seqan::String<char> TSequence;
   typedef seqan::Gaps<TSequence, seqan::ArrayGaps> TGaps;
   typedef seqan::Iterator<TGaps>::Type TGapsIterator;
@@ -340,6 +366,12 @@ kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(cons
   // Output the hit position in the text, the total number of edits and the corresponding cigar string.
 
   return edit_vector;
+
+#else
+
+  return std::vector<EditItem>();
+
+#endif
 
 }
 

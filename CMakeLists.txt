@@ -9,7 +9,6 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
                     /usr/local/include/seqan3/submodules/cereal/include   # the cereal library required by seqan3.
                     /usr/local/include/seqan3/include
-                    /usr/local/include/seqan/include
                     /usr/local/include/spdlog/include/
                     contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
