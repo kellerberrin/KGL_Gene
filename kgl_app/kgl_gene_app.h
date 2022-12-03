@@ -30,8 +30,8 @@ class GeneExecEnv {
 
 public:
 
-  GeneExecEnv()=default;
-  ~GeneExecEnv()=default;
+  GeneExecEnv()=delete;
+  ~GeneExecEnv()=delete;
 
   [[nodiscard]] inline static const CmdLineArgs& getArgs() { return args_; }
   [[nodiscard]] inline static const RuntimeProperties& getRuntimeOptions() { return runtime_options_; }

@@ -33,11 +33,8 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     // Save the command line.
     getCommandLine(argc, argv);
 
-    // Create the template execution environment
-    auto environment_ptr = std::make_unique<Environment>();
-
     // Setup the static ExecEnv runtime environment and create the logger.
-    if (not environment_ptr->parseCommandLine(argc, argv)) {
+    if (not Environment::parseCommandLine(argc, argv)) {
 
       std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - cannot parse command line" << std::endl;
       std::exit(EXIT_FAILURE);
@@ -49,15 +46,14 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     log().info("############ {} {} Start Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
 
-    environment_ptr->executeApp(); // Run the application.
+    Environment::executeApp(); // Run the application.
 
     double Clock, System, User;
     Utility::getRuntime(Clock, System, User);
     log().info("Runtime seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
 
-    environment_ptr = nullptr; // shutdown the application
-    log_ptr_ = nullptr; // shutdown the logger.
+    log_ptr_ = nullptr; // Explicitly shutdown the logger.
 
   } catch(std::exception& e) { // Code should not throw any unhandled exceptions, so complain and exit.
 

@@ -41,7 +41,7 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   if (argc <= 1) {
 
-    std::cerr << "Problem Parsing Command Line. Use '--help' for argument formats." << std::endl;
+    std::cerr << "Required arguments not specified. Use '--help' for argument formats." << std::endl;
     std::cerr << ss.str() << std::endl;
     std::exit(EXIT_FAILURE);
 
@@ -95,14 +95,14 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  if(variable_map.count(help_flag)) {
+  if (variable_map.count(help_flag)) {
 
     std::cerr << ss.str() << std::endl;
     std::exit(EXIT_SUCCESS);
 
   }
 
-  if(variable_map.count(work_directory_flag)) {
+  if (variable_map.count(work_directory_flag)) {
 
     args_.workDirectory = variable_map[work_directory_flag].as<std::string>();
     std::cerr << "directory:" << args_.workDirectory << " was specified" << std::endl;
@@ -146,11 +146,12 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
     fs::path log_file_path = directory_path / fs::path(log_file_name);
     // truncate the log file.
     std::fstream log_file(log_file_path.string(), std::fstream::out | std::fstream::trunc);
-    if(!log_file)
-    {
+    if (!log_file) {
+
       std::cerr << "Cannot open log file (--logFile):" << log_file_path.string() << std::endl;
       std::cerr << MODULE_NAME << " exits" << std::endl;
       std::exit(EXIT_FAILURE);
+
     }
 
     args_.logFile = log_file_path.string();
