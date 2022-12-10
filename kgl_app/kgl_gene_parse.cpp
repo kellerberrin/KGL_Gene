@@ -17,6 +17,7 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace bt = boost;
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 // const char* program_desc =
@@ -163,8 +164,6 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
     std::exit(EXIT_FAILURE);
 
   }
-  // Setup the Logger.
-  ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
   // Read the options file.
   if (variable_map.count(option_flag)) {
@@ -179,16 +178,14 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
 
-  // Read the XML program options.
-  runtime_options_.setWorkDirectory(args_.workDirectory);
-  if (not runtime_options_.readProperties(args_.options_file)) {
-
-    std::string options_file_path = Utility::filePath(args_.options_file, args_.workDirectory);
-    ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
-
-  }
-
   return true;
 
 }
 
+
+std::unique_ptr<kel::Logger> kgl::GeneExecEnv::createLogger() {
+
+  // Setup the Logger.
+  return ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
+
+}

@@ -275,7 +275,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
   std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
 
-  for (auto const&[offset, variant_vector] : getMap()) {
+  for (auto const& [offset, variant_vector] : getMap()) {
 
     contig_count.first += variant_vector->getVariantArray().size();
 
@@ -291,8 +291,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
       if (not variant_ptr) {
 
-        ExecEnv::log().error("ContigDB::validate, Unknown variant: {}",
-                             variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, false));
+        ExecEnv::log().error("ContigDB::validate, unexpected NULL variant found");
         continue;
 
       }

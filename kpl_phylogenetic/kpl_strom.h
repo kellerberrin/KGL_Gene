@@ -5,7 +5,6 @@
 #ifndef KPL_STROM_H
 #define KPL_STROM_H
 
-#include "kel_exec_env.h"
 
 #include "kpl_geneticdata.h"
 #include "kpl_treesummary.h"
@@ -17,8 +16,6 @@
 #include "kpl_mcmc_output.h"
 
 
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
 
 #include <iostream>
 
@@ -36,17 +33,18 @@ public:
   bool parseCommandLine(int argc, const char **argv);
   void executeApp();
 
-  static constexpr const char* VERSION = "0.1";
-  static constexpr const char* MODULE_NAME = "kpl_phyloTree";
 
 private:
+
+  inline static constexpr const char* VERSION = "0.1";
+  inline static constexpr const char* MODULE_NAME = "kpl_phyloTree";
 
   void clear();
   bool processAssignmentString(std::shared_ptr<Model> model_ptr,
                                const std::string & which,
                                const std::string & definition);
   void handleAssignmentStrings(std::shared_ptr<Model> model_ptr,
-                               const boost::program_options::variables_map & vm,
+                               size_t vm_count,
                                std::string label,
                                const std::vector<std::string> & definitions,
                                std::string default_definition);

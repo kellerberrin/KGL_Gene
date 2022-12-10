@@ -41,21 +41,34 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     }
 
+    // Create the application logger
+    log_ptr_ = Environment::createLogger();
+    if (not log_ptr_) {
+
+      std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - cannot create application logger" << std::endl;
+      std::exit(EXIT_FAILURE);
+
+    }
+
+    // Enable ctrl-C runtime termination - with warning.
     signal(SIGINT, ctrlC);
 
     log().info("############ {} {} Start Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
 
+    // Run the application.
     Environment::executeApp(); // Run the application.
 
+    //  Runtime stats.
     double Clock, System, User;
     Utility::getRuntime(Clock, System, User);
     log().info("Runtime seconds; Clock: {:.2f}, System CPU: {:.2f}, User CPU: {:.2f} (No GPU)", Clock, System, User);
     log().info("############ {} {} End Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
 
-    log_ptr_ = nullptr; // Explicitly shutdown the logger.
+    // Explicitly shutdown the logger.
+    log_ptr_ = nullptr;
 
-  } catch(std::exception& e) { // Code should not throw any unhandled exceptions, so complain and exit.
+  } catch(std::exception& e) { // In general, unhandled exceptions should not appear here, so complain and exit.
 
     std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - Unexpected/Uncaught Exception: " << e.what() << std::endl;
     std::exit(EXIT_FAILURE);

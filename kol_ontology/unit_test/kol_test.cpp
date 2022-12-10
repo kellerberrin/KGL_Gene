@@ -46,12 +46,19 @@ public:
   }
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv) {
 
-    kel::ExecEnv::createLogger(MODULE_NAME, LOG_FILE, MAX_ERROR_MESSAGES, MAX_WARNING_MESSAGES);
     argc_ = argc;
     argv_ = const_cast<char **>(argv);
     return true;
 
   }
+
+  // Create application logger.
+  [[nodiscard]] static std::unique_ptr<kel::Logger> createLogger() {
+
+    return kel::ExecEnv::createLogger(MODULE_NAME, LOG_FILE, MAX_ERROR_MESSAGES, MAX_WARNING_MESSAGES);
+
+  }
+
 
 private:
 

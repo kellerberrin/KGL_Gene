@@ -2,8 +2,13 @@
 // Created by kellerberrin on 12/12/19.
 //
 
+#include "kel_exec_env.h"
 #include "kpl_strom.h"
 #include "kpl_random.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
 
 namespace kpl = kellerberrin::phylogenetic;
 
@@ -148,28 +153,31 @@ bool kpl::Strom::parseCommandLine(int argc, const char **argv) {
     likelihood->setAmbiguityEqualsMissing(_ambig_missing);
     std::shared_ptr<Model> model_ptr = likelihood->getModel();
     model_ptr->setSubsetDataTypes(_partition->getSubsetDataTypes());
-    handleAssignmentStrings(model_ptr, vm, "statefreq", partition_statefreq, "default:equal");
-    handleAssignmentStrings(model_ptr, vm, "rmatrix", partition_rmatrix, "default:equal");
-    handleAssignmentStrings(model_ptr, vm, "omega", partition_omega, "default:0.1"  );
-    handleAssignmentStrings(model_ptr, vm, "ncateg", partition_ncateg, "default:1"    );
-    handleAssignmentStrings(model_ptr, vm, "ratevar", partition_ratevar, "default:1.0"  );
-    handleAssignmentStrings(model_ptr, vm, "pinvar", partition_pinvar, "default:0.0"  );
-    handleAssignmentStrings(model_ptr, vm, "relrate", partition_relrates, "default:equal");
-    handleAssignmentStrings(model_ptr, vm, "tree", partition_tree, "default:1");
+    handleAssignmentStrings(model_ptr, vm.count("statefreq"), "statefreq", partition_statefreq, "default:equal");
+    handleAssignmentStrings(model_ptr, vm.count("rmatrix"), "rmatrix", partition_rmatrix, "default:equal");
+    handleAssignmentStrings(model_ptr, vm.count("omega"), "omega", partition_omega, "default:0.1"  );
+    handleAssignmentStrings(model_ptr, vm.count("ncateg"), "ncateg", partition_ncateg, "default:1"    );
+    handleAssignmentStrings(model_ptr, vm.count("ratevar"), "ratevar", partition_ratevar, "default:1.0"  );
+    handleAssignmentStrings(model_ptr, vm.count("pinvar"), "pinvar", partition_pinvar, "default:0.0"  );
+    handleAssignmentStrings(model_ptr, vm.count("relrate"), "relrate", partition_relrates, "default:equal");
+    handleAssignmentStrings(model_ptr, vm.count("tree"), "tree", partition_tree, "default:1");
     _likelihoods.push_back(likelihood);
 
   }
 
-  ExecEnv::createLogger(MODULE_NAME, "kpl.log", 1000, 1000);
 
   return true;
 
 }
 
 
-void kpl::Strom::handleAssignmentStrings(std::shared_ptr<Model> model_ptr, const boost::program_options::variables_map & vm, std::string label, const std::vector<std::string> & definitions, std::string default_definition) {
+void kpl::Strom::handleAssignmentStrings(std::shared_ptr<Model> model_ptr,
+                                         size_t vm_count,
+                                         std::string label,
+                                         const std::vector<std::string> & definitions,
+                                         std::string default_definition) {
 
-  if (vm.count(label) > 0) {
+  if (vm_count > 0) {
 
     bool first = true;
 

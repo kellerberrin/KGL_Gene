@@ -36,21 +36,3 @@ size_t kel::AuditMemory::alignedSize(size_t mem_size) {
 
 }
 
-
-void kel::AuditMemory::displayMallinfo()
-{
-
-  struct mallinfo mi = mallinfo();
-
-  ExecEnv::log().info("Total non-mmapped bytes (arena):       {}", mi.arena);
-  ExecEnv::log().info("# of free chunks (ordblks):            {}", mi.ordblks);
-  ExecEnv::log().info("# of free fastbin blocks (smblks):     {}", mi.smblks);
-  ExecEnv::log().info("# of mapped regions (hblks):           {}", mi.hblks);
-  ExecEnv::log().info("Bytes in mapped regions (hblkhd):      {}", mi.hblkhd);
-  ExecEnv::log().info("Max. total allocated space (usmblks):  {}", mi.usmblks);
-  ExecEnv::log().info("Free bytes held in fastbins (fsmblks): {}", mi.fsmblks);
-  ExecEnv::log().info("Total allocated space (uordblks):      {}", mi.uordblks);
-  ExecEnv::log().info("Total free space (fordblks):           {}", mi.fordblks);
-  ExecEnv::log().info("Topmost releasable block (keepcost):   {}", mi.keepcost);
-
-}

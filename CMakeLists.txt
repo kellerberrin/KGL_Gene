@@ -514,7 +514,7 @@ set(MIXTURE_SOURCE_FILES
 
 # Application level objects
 set(APPLICATION_SOURCE_FILES
-        kgl_app/kgl_main.cc
+        kgl_app/kgl_main.cpp
         kgl_app/kgl_gene_app.cpp
         kgl_app/kgl_gene_app.h
         kgl_app/kgl_gene_parse.cpp
@@ -632,7 +632,7 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_mcmc_polytomyprior.cpp
         kpl_phylogenetic/kpl_mcmc_polytomyprior.h
         kpl_phylogenetic/kpl_tree_io.cpp
-        kpl_phylogenetic/kpl_tree_io.h)
+        kpl_phylogenetic/kpl_tree_io.h kpl_phylogenetic/kpl_main_app.cpp kpl_phylogenetic/kpl_main_app.h)
 
 add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
 

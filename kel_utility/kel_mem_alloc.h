@@ -36,9 +36,6 @@ public:
   // Force free store release using malloc trim.
   static void trimFreeStore() { malloc_trim(0); }
 
-  // Get a malloc info structure.
-  static void displayMallinfo();
-
   template<class T>
   [[nodiscard]] static T* newMem(std::size_t mem_size);
   template<class T>

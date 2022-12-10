@@ -42,11 +42,11 @@ private:
 };
 
 
+#ifdef USE_SEQAN
 
 kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGlobal(const std::string& sequenceA,
                                                                                        const std::string& sequenceB,
                                                                                        std::string& compare_str) const {
-#ifdef USE_SEQAN
 
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
@@ -68,22 +68,29 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGl
 
   return score;
 
+}
+
 #else
+
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGlobal(const std::string&,
+                                                                                     const std::string&,
+                                                                                     std::string&) const {
 
   return 0;
 
-#endif
-
 }
 
+#endif
 
+
+
+
+#ifdef USE_SEQAN
 
 kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLocal(const std::string& sequenceA,
                                                                                       const std::string& sequenceB,
                                                                                       std::string& compare_str) const {
 
-#ifdef USE_SEQAN
-
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
 
@@ -104,22 +111,29 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLo
 
   return score;
 
+}
+
 #else
+
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLocal(const std::string&,
+                                                                                    const std::string&,
+                                                                                    std::string&) const {
 
   return 0;
 
-#endif
-
 }
 
+#endif
 
 
+
+
+
+#ifdef USE_SEQAN
 
 kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGap(const std::string& sequenceA,
                                                                                     const std::string& sequenceB,
                                                                                     std::string& compare_str) const {
-
-#ifdef USE_SEQAN
 
   using TSequence = seqan::String<char> ;
   using TAlign = seqan::Align<TSequence, seqan::ArrayGaps> ;
@@ -146,13 +160,18 @@ kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGa
 
   return score;
 
+}
+
 #else
 
+kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGap(const std::string&,
+                                                                                  const std::string&,
+                                                                                  std::string&) const {
   return 0;
 
-#endif
-
 }
+
+#endif
 
 
 void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(const std::string& reference,
@@ -265,12 +284,13 @@ kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItemsEdlib
 
 
 
+
+#ifdef USE_SEQAN
+
 kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std::string& reference_str,
                                                                          const std::string& mutant_str,
                                                                          EditVector& edit_vector) const
 {
-
-#ifdef USE_SEQAN
 
   typedef seqan::String<char> TSequence;
   typedef seqan::Gaps<TSequence, seqan::ArrayGaps> TGaps;
@@ -367,13 +387,19 @@ kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(cons
 
   return edit_vector;
 
+}
+
 #else
+
+kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(const std::string&,
+                                                                            const std::string&,
+                                                                            EditVector&) const {
 
   return std::vector<EditItem>();
 
-#endif
-
 }
+
+#endif
 
 
 

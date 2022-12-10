@@ -46,10 +46,11 @@ public:
 
 
 
-kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosum80Distance(const std::string& sequenceA,
-                                                                                          const std::string& sequenceB) const {
 
 #ifdef SEQAN3
+
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosum80Distance(const std::string& sequenceA,
+                                                                                          const std::string& sequenceB) const {
 
   using TSequence = seqan3::String<seqan3::AminoAcid> ;
   using TAlign = seqan3::Align<TSequence, seqan3::ArrayGaps> ;
@@ -70,21 +71,26 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosu
 
   return static_cast<double>(score) * -1.0;  // Invert the scores.
 
+}
+
 #else
 
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::globalblosum80Distance(const std::string&,
+                                                                                            const std::string&) const {
   return 0.0;
-
-#endif
 
 }
 
+#endif
 
 
+
+
+
+#ifdef SEQAN3
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum80Distance(const std::string& sequenceA,
                                                                                             const std::string& sequenceB) const {
-
-#ifdef SEQAN3
 
   using TSequence = seqan3::String<seqan3::AminoAcid> ;
   using TAlign = seqan3::Align<TSequence, seqan3::ArrayGaps> ;
@@ -105,20 +111,25 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum
 
   return static_cast<double>(score) * -1.0;  // Invert the scores.
 
+}
+
 #else
+
+kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::localblosum80Distance(const std::string&,
+                                                                                           const std::string&) const {
 
   return 0.0;
 
-#endif
-
 }
 
+#endif
 
 
-kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string& sequenceA,
-                                                                                             const std::string& sequenceB) const {
 
 #ifdef SEQAN3
+
+  kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string& sequenceA,
+                                                                                             const std::string& sequenceB) const {
 
   auto Asequence = seqan3::views::char_to<seqan3::dna5>(sequenceA);
   auto Bsequence = seqan3::views::char_to<seqan3::dna5>(sequenceB);
@@ -134,13 +145,19 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   return edit_distance;
 
+}
+
 #else
 
-  return 0.0;
+  kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobalSeqan3(const std::string&,
+                                                                                               const std::string&) const {
+
+
+    return 0.0;
+
+  }
 
 #endif
-
-}
 
 
 kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::LevenshteinGlobal(const std::string& sequenceA,

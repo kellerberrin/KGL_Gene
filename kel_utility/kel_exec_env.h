@@ -34,10 +34,10 @@ public:
 
   static void ctrlC(int);
   static void getCommandLine(int argc, char const ** argv);
-  static void createLogger(const std::string& module,
-                           const std::string& log_file,
-                           int max_error_message,
-                           int max_warning_messages);
+  static std::unique_ptr<Logger> createLogger( const std::string& module,
+                                               const std::string& log_file,
+                                               int max_error_message,
+                                               int max_warning_messages);
 
 private:
 

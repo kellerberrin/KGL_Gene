@@ -6,7 +6,7 @@
 
 #include "kel_exec_env.h"
 #include "kel_exec_env_app.h"
-#include "kpl_strom.h"
+#include "kpl_main_app.h"
 
 /// The mainline.
 int main(int argc, char const ** argv)
@@ -14,6 +14,6 @@ int main(int argc, char const ** argv)
   namespace kpl = kellerberrin::phylogenetic;
   namespace kel = kellerberrin;
 
-  return kel::ExecEnv::runApplication<kpl::Strom>(argc, argv);
+  return kel::ExecEnv::runApplication<kpl::PhyloExecEnv>(argc, argv);
 
 }
