@@ -269,8 +269,9 @@ std::string kol::GoGraphImpl::getTermDescription(const std::string &term) const 
 kol::GoGraphImpl::GoVertex kol::GoGraphImpl::getRoot() const {
 
   //creat a vertex variable
-  GoVertex root;
   auto [vertex_iter, vertex_end] = boost::vertices(_goGraph);
+  GoVertex root = *vertex_end;
+
   for (; vertex_iter != vertex_end; ++vertex_iter) {
     //if it has no out edges it is a root
     if (boost::out_degree(*vertex_iter, _goGraph) == 0) {

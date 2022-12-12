@@ -3,7 +3,7 @@
 //
 
 
-#include "kel_thread_pool.h"
+#include "../../kel_thread/kel_thread_pool.h"
 #include "kgl_analysis_inbreed_diploid.h"
 #include "kgl_analysis_inbreed_locus.h"
 #include "kgl_analysis_inbreed_output.h"

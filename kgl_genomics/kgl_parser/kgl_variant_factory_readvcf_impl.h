@@ -12,8 +12,8 @@
 #include <functional>
 
 #include "kel_exec_env.h"
-#include "kel_mt_queue.h"
-#include "kel_thread_pool.h"
+#include "../../kel_thread/kel_mt_queue.h"
+#include "../../kel_thread/kel_thread_pool.h"
 
 #include "kgl_variant_file_vcf_impl.h"
 

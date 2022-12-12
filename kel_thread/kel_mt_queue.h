@@ -14,6 +14,7 @@
 
 namespace kellerberrin {   //  organization level namespace
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Thread safe queue for multiple consumer and producer threads.
@@ -66,7 +67,7 @@ public:
     // Unlock the mutex.
     lock.unlock();
 
-    // Notify any other waiting threads after the queue is unlocked.
+    // Notify waiting threads after the queue is unlocked.
     data_cond_.notify_one();
 
     return value;

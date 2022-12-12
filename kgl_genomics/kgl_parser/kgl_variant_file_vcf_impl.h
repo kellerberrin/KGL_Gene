@@ -11,7 +11,7 @@
 #include "kgl_variant_file_vcf_record.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 
-#include "kel_bound_queue.h"
+#include "../../kel_thread/kel_bound_queue.h"
 
 #include <memory>
 #include <string>

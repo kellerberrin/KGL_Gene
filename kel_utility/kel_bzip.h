@@ -5,7 +5,7 @@
 #ifndef KEL_BZIP_H
 #define KEL_BZIP_H
 
-#include "kel_bound_queue.h"
+#include "../kel_thread/kel_bound_queue.h"
 #include "kel_basic_io.h"
 
 

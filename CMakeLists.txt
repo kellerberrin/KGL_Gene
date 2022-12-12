@@ -14,6 +14,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     /usr/include/eigen3
                     kel_utility         # Basic Infrastructure library
+                    kel_thread          # multi-threading library
                     kgl_genomics                  # Basic Genetic library
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
@@ -95,16 +96,16 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_basic_io.cpp
         kel_utility/kel_basic_io.h
         kel_utility/kel_percentile.h
-        kel_utility/kel_thread_pool.h
+        kel_thread/kel_thread_pool.h
         kel_utility/kel_optimize.cpp
         kel_utility/kel_optimize.h
         kel_utility/kel_patterns.h
-        kel_utility/kel_lock.h
-        kel_utility/kel_mt_queue.h
+        kel_thread/kel_lock.h
+        kel_thread/kel_mt_queue.h
         kel_utility/kel_exec_env_app.h
         kel_utility/kel_bzip.cpp
         kel_utility/kel_bzip.h
-        kel_utility/kel_bound_queue.h
+        kel_thread/kel_bound_queue.h
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_rest_api.cpp

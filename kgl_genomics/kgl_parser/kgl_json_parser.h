@@ -10,7 +10,7 @@
 #include "kgl_data_file_impl.h"
 #include "kgl_data_file_type.h"
 
-#include "kel_bound_queue.h"
+#include "../../kel_thread/kel_bound_queue.h"
 
 #include <memory>
 #include <string>

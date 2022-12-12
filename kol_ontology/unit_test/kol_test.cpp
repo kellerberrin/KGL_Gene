@@ -28,9 +28,8 @@ class TestExecEnv {
 
 public:
 
-  TestExecEnv()=default;
-  ~TestExecEnv()=default;
-
+  TestExecEnv()=delete;
+  ~TestExecEnv()=delete;
 
   // The following 4 static members are required for all applications.
   inline static constexpr const char* VERSION = "0.9";
