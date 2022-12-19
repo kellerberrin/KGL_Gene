@@ -52,7 +52,7 @@ bool RecordVCFIO::commenceVCFIO(const std::string& vcf_file_name) {
 
 void RecordVCFIO::launchThreads() {
 
-  ThreadPool vcf_record_threads{PARSER_THREADS_};
+  WorkflowThreads vcf_record_threads{PARSER_THREADS_};
   std::vector<std::future<void>> thread_futures;
   for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
 

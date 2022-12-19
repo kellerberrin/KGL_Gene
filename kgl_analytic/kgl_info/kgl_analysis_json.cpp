@@ -82,7 +82,7 @@ bool kgl::JsonAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
-  ThreadPool thread_pool(ThreadPool::defaultThreads(json_file_names_.size()));
+  WorkflowThreads thread_pool(WorkflowThreads::defaultThreads(json_file_names_.size()));
   // Simplify the future vector type definition.
   using CitationResult = std::shared_ptr<const DBCitationMap>;
   using FutureResult = std::future<CitationResult>;

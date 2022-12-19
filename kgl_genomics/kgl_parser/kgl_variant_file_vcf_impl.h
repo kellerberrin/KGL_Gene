@@ -65,7 +65,7 @@ private:
   // VCF queue worker threads
   static constexpr const long PARSER_THREADS_{15};         // Threads parsing into vcf_records.
   // The detached main thread.
-  ThreadPool detached_launch_{1};
+  WorkflowThreads detached_launch_{1};
   // Synchronize shutdown
   std::future<void> launch_token_;
 

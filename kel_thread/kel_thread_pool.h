@@ -26,15 +26,15 @@ namespace kellerberrin {  //  organization level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-class ThreadPool
+class WorkflowThreads
 {
 
   using Proc = std::function<void(void)>;
 
 public:
 
-  explicit ThreadPool(size_t threads) { queueThreads(threads); }
-  ~ThreadPool() noexcept { joinThreads(); }
+  explicit WorkflowThreads(size_t threads) { queueThreads(threads); }
+  ~WorkflowThreads() noexcept { joinThreads(); }
 
   // Convenience routines, default is available hardware threads minus 1, minimum 1 thread.
   [[nodiscard]] static size_t defaultThreads() { return std::max<size_t>(std::thread::hardware_concurrency() - 1, 1); }
@@ -45,8 +45,8 @@ public:
   void enqueueWork(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
   {
 
-    auto fb = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-    work_queue_.push([fb]() { fb(); });
+    auto task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+    work_queue_.push([task]{ task(); });
 
   }
 
@@ -58,9 +58,9 @@ public:
 
     using return_type = typename std::result_of<F(Args...)>::type;
 
-    auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
-    std::future<return_type> future = task->get_future();
-    work_queue_.push([task]{ (*task)(); });
+    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    std::future<return_type> future = task_ptr->get_future();
+    work_queue_.push([task_ptr]{ (*task_ptr)(); });
     return future;
 
   }
@@ -75,17 +75,13 @@ private:
   void queueThreads(size_t threads)
   {
 
-    if (threads < 1) {
-
-      ExecEnv::log().warn("ThreadPool::queueThreads; attempted to initialize with zero (0) threads, initialized with 1 thread.");
-      threads = 1;
-
-    }
+    // Always have at least one worker thread queued.
+    threads = std::max<size_t>(threads, 1);
 
     // Queue the worker threads,
     for(size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&ThreadPool::threadProlog, this);
+      threads_.emplace_back(&WorkflowThreads::threadProlog, this);
 
     }
 
@@ -96,7 +92,7 @@ private:
     while(true)
     {
 
-      auto workItem = work_queue_.waitAndPop();
+      Proc workItem = work_queue_.waitAndPop();
 
       if (workItem == nullptr) {
 

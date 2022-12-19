@@ -225,7 +225,7 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Pop
                                                        const LociiVectorArguments& locii_args) {
 
 
-  ThreadPool threadpool(FrequencyDatabaseRead::superPopulations().size());
+  WorkflowThreads threadpool(FrequencyDatabaseRead::superPopulations().size());
   std::vector<std::future<LocusReturnPair>> futures_vec;
 
   for (auto const& super_pop : FrequencyDatabaseRead::superPopulations()) {

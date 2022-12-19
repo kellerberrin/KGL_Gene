@@ -5,6 +5,8 @@
 #ifndef KEL_BOUND_QUEUE_H
 #define KEL_BOUND_QUEUE_H
 
+#include "kel_exec_env.h"
+
 #include "kel_mt_queue.h"
 #include "kel_thread_pool.h"
 
@@ -56,7 +58,7 @@ private:
 
   BoundedMtQueue<T>* queue_ptr_;
   size_t sample_milliseconds_;
-  ThreadPool stats_thread_{1};
+  WorkflowThreads stats_thread_{1};
 
   std::mutex stats_mutex_;
   std::condition_variable stats_condition_;
@@ -221,7 +223,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The bounded multithreaded queue has a maximum of high_tide elements and a low tide
+// The bounded multithread queue has a maximum of high_tide elements and a low tide
 // when the producer(s) can again start pushing elements after a high tide event.
 // This stops excessive memory usage (and swapping) if the producer(s) can queue records
 // faster than consumer(s) can remove them.
@@ -250,13 +252,13 @@ public:
   BoundedMtQueue(BoundedMtQueue&&) = delete;
   BoundedMtQueue& operator=(const BoundedMtQueue&) = delete;
 
-  void push(T new_value) {
+  void push(T&& new_value) {
 
     if (queue_state_) {
 
       if (size() < high_tide_) {  // Possible race condition with size() >= high_tide is considered unimportant.
 
-        mt_queue_.push(std::move(new_value));
+        mt_queue_.push(std::forward<T>(new_value));
         return;
 
       }

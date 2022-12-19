@@ -116,7 +116,7 @@ private:
   std::string file_name_;
   std::ifstream bgz_file_;
   size_t thread_count_;
-  ThreadPool reader_thread_{1};
+  WorkflowThreads reader_thread_{1};
   std::future<bool> reader_return_;
 
   // Blocks are queued here to be decompressed.

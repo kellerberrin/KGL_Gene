@@ -5,7 +5,6 @@
 #ifndef KEL_MT_QUEUE_H
 #define KEL_MT_QUEUE_H
 
-#include "kel_exec_env.h"
 
 #include <queue>
 #include <mutex>
@@ -55,7 +54,7 @@ public:
   [[nodiscard]] T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(mutex_);
-    // wait on non-empty
+    // Wait on non-empty queue.
     data_cond_.wait(lock, [this]{ return not empty(); });
 
     --size_;

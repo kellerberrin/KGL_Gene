@@ -226,8 +226,8 @@ bool kel::BGZReader::verify(const std::string &file_name, bool silent) {
 
 bool kel::BGZReader::decompressGZBlockFile() {
 
-  ThreadPool thread_pool(thread_count_);
-  ThreadPool line_thread(1);
+  WorkflowThreads thread_pool(thread_count_);
+  WorkflowThreads line_thread(1);
 
   // Unpacks the decompressed data and queues line records.
   line_thread.enqueueWork(&BGZReader::assembleRecords, this);

@@ -59,11 +59,11 @@ private:
   // Unless there is a (very) good reason, the number of worker threads should be 1.
   constexpr static const size_t IO_THREAD_COUNT_{1};
   // The detached main thread.
-  ThreadPool detached_launch_{1};
+  WorkflowThreads detached_launch_{1};
   // Synchronize shutdown
   std::future<void> launch_token_;
 
-  ThreadPool io_threads_{IO_THREAD_COUNT_};
+  WorkflowThreads io_threads_{IO_THREAD_COUNT_};
 
   // The data input stream.
   std::optional<std::unique_ptr<BaseStreamIO>> file_stream_opt_;

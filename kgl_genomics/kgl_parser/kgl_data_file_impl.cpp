@@ -47,7 +47,7 @@ bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
 
 void kgl::FileDataIO::launchThreads() {
 
-  ThreadPool vcf_record_threads{IO_THREAD_COUNT_};
+  WorkflowThreads vcf_record_threads{IO_THREAD_COUNT_};
   std::vector<std::future<void>> thread_futures;
   for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
 

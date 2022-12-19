@@ -271,9 +271,9 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
 
   // Thread count strategy
-  size_t thread_count = ThreadPool::defaultThreads(population_ptr->getMap().size());
+  size_t thread_count = WorkflowThreads::defaultThreads(population_ptr->getMap().size());
   // Fire-up the threads.
-  ThreadPool thread_pool(thread_count);
+  WorkflowThreads thread_pool(thread_count);
 
   using GenomeIndexFuture = std::future<std::shared_ptr<VariantIdIndexMap>>;
   std::vector<std::pair<std::string, GenomeIndexFuture>> future_vector;

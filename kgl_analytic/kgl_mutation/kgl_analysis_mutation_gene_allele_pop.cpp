@@ -68,7 +68,7 @@ void kgl::GeneratePopulationAllele::processPopulation( const std::shared_ptr<con
 
   ExecEnv::log().info("Begin analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
 
-  ThreadPool thread_pool(ThreadPool::defaultThreads());
+  WorkflowThreads thread_pool(WorkflowThreads::defaultThreads());
   std::vector<std::future<ThreadReturnType>> future_vector;
 
   // Create a disease allele map resource.

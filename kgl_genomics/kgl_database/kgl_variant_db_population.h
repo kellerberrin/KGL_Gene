@@ -142,8 +142,8 @@ bool PopulationDB::processAll_MT(Obj object, Func objFunc)  const {
 
 
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), ThreadPool::defaultThreads());
-  ThreadPool thread_pool(thread_count);
+  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
+  WorkflowThreads thread_pool(thread_count);
   // A vector for thread futures.
   std::vector<std::future<std::pair<bool,std::string>>> future_vector;
 

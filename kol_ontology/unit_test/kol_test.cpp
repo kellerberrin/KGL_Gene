@@ -5,7 +5,6 @@
 #define BOOST_TEST_NO_MAIN
 //#define BOOST_TEST_MODULE "Kellerberrin Ontology Library Unit Test"
 //#define BOOST_TEST_DYN_LINK
-//#include "kel_exec_env.h"
 #include "kel_exec_env_app.h"
 
 #include <boost/test/included/unit_test.hpp>

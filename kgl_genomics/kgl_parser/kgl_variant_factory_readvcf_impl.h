@@ -50,7 +50,7 @@ private:
   RecordVCFIO vcf_io_;
 
   // Threads to process the VCF record queue.
-  ThreadPool parser_threads_;
+  WorkflowThreads parser_threads_;
 
   // Get genome and contig information.
   VCFParseHeader parseheader_;

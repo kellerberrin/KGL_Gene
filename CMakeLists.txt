@@ -96,22 +96,24 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_basic_io.cpp
         kel_utility/kel_basic_io.h
         kel_utility/kel_percentile.h
-        kel_thread/kel_thread_pool.h
         kel_utility/kel_optimize.cpp
         kel_utility/kel_optimize.h
         kel_utility/kel_patterns.h
-        kel_thread/kel_lock.h
-        kel_thread/kel_mt_queue.h
         kel_utility/kel_exec_env_app.h
         kel_utility/kel_bzip.cpp
         kel_utility/kel_bzip.h
-        kel_thread/kel_bound_queue.h
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_rest_api.cpp
         kel_utility/kel_rest_api.h
         kel_utility/kel_date_time.cpp
         kel_utility/kel_date_time.h)
+
+set(THREAD_SOURCE_FILES
+        kel_thread/kel_mt_queue.h
+        kel_thread/kel_thread_pool.h
+        kel_thread/kel_bound_queue.h
+        kel_thread/kel_workflow_queue.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -137,7 +139,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_attributes.h
         kgl_genomics/kgl_database/kgl_genome_attributes.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_virtual.h
-        kgl_genomics/kgl_database/kgl_genome_contig.cc
+        kgl_genomics/kgl_database/kgl_genome_contig.cpp
         kgl_genomics/kgl_database/kgl_genome_verify.cpp
         kgl_genomics/kgl_database/kgl_genome_genome.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_codon.h
@@ -184,7 +186,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_db_population.h
         kgl_genomics/kgl_database/kgl_genome_contig_feature.h
         kgl_genomics/kgl_database/kgl_genome_contig_feature.cpp
-        kgl_genomics/kgl_database/kgl_genome_contig_aux.cc
+        kgl_genomics/kgl_database/kgl_genome_contig_aux.cpp
         kgl_genomics/kgl_database/kgl_genome_contig_aux.h
         kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.cpp
         kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.h
@@ -276,10 +278,14 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_literature/kgl_literature_filter.h
         kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h
         kgl_genomics/kgl_literature/kgl_literature_data.h
-        kgl_genomics/kgl_literature/kgl_literature_data.cpp kgl_genomics/kgl_database/kgl_gff3.cpp kgl_genomics/kgl_database/kgl_gff3.h kgl_genomics/kgl_database/kgl_fasta.cpp kgl_genomics/kgl_database/kgl_fasta.h)
+        kgl_genomics/kgl_literature/kgl_literature_data.cpp
+        kgl_genomics/kgl_database/kgl_gff3.cpp
+        kgl_genomics/kgl_database/kgl_gff3.h
+        kgl_genomics/kgl_database/kgl_fasta.cpp
+        kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -537,7 +543,7 @@ set(APPLICATION_SOURCE_FILES
 
 
 
-add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES})
+add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${THREAD_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
 
 add_library(kgl_genomics STATIC ${GENETIC_LIBRARY_SOURCE_FILES})
 
@@ -560,6 +566,10 @@ add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
 target_link_libraries (kol_test kol_ontology kel_utility ${Boost_LIBRARIES})
 
+#generate libraries.
+add_executable(thread_test kel_thread/kel_workflow_unittest.cpp )
+
+target_link_libraries (thread_test kel_utility ${Boost_LIBRARIES})
 
 
 ############################################################################################################

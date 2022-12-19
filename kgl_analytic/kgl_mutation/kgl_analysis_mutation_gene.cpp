@@ -171,7 +171,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   }
 
   // The gene analysis is multithreaded.
-  ThreadPool thread_pool(ThreadPool::defaultThreads());
+  WorkflowThreads thread_pool(WorkflowThreads::defaultThreads());
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
 

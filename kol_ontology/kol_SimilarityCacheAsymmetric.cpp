@@ -3,6 +3,8 @@
 //
 
 
+#include "kel_exec_env.h"
+
 #include "../kel_thread/kel_thread_pool.h"
 #include "kol_SimilarityCacheAsymmetric.h"
 
@@ -148,7 +150,7 @@ bool kol::SimilarityCacheAsymmetric::termSimilarityCache(const std::vector<std::
   // Create a pointer for the column term vector
   std::shared_ptr<const std::vector<std::string>> column_terms_ptr(std::make_shared<const std::vector<std::string>>(unique_column_terms));
   // Default to HW threads less 1.
-  ThreadPool thread_pool(ThreadPool::defaultThreads());
+  WorkflowThreads thread_pool(WorkflowThreads::defaultThreads());
   // Simplify the future vector type definition.
   using ColumnResult = std::unique_ptr<std::vector<double>>;
   using FutureResult = std::future<ColumnResult>;
