@@ -10,7 +10,7 @@
 namespace kel = kellerberrin;
 
 
-void unit_test() {
+void unit_test_copyable() {
 
   const size_t test_thread_count = 5;
   struct InputObject {
@@ -31,9 +31,9 @@ void unit_test() {
   using OutputType = std::shared_ptr<OutputObject>;
 
 
-  auto callback = [](InputType /*p*/) -> OutputType { return std::make_shared<OutputObject>(); };
-  kel::WorkflowThreads<InputType, OutputType> work_flow;
-  work_flow.registerCallback(nullptr, nullptr, test_thread_count, callback);
+  auto callback = [](InputType /*p*/, size_t /*i*/) -> OutputType { return std::make_shared<OutputObject>(); };
+  kel::WorkflowMove<InputType, OutputType> work_flow;
+  work_flow.registerProcessingFn(nullptr, nullptr, test_thread_count, callback, 7);
 
   for (size_t i = 0; i < 1000; ++i) {
 
@@ -42,22 +42,80 @@ void unit_test() {
   }
 
   // Stop the processing threads.
-  work_flow.joinThreads();
+  work_flow.stopProcessing();
 
   size_t out_size{0};
   OutputType out_obj = work_flow.waitAndPop();
   while(out_obj) {
 
     ++out_size;
-    kel::ExecEnv::log().info("Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
+    kel::ExecEnv::log().info("Copy - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
     out_obj = work_flow.waitAndPop();
 
   }
 
-  kel::ExecEnv::log().info("Final - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
+  kel::ExecEnv::log().info("Final - Copy - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
 
 }
 
+
+
+void unit_test_moveable() {
+
+  const size_t test_thread_count = 5;
+  struct InputObject {
+
+    size_t count_;
+    std::string count_string_;
+
+  };
+
+  struct OutputObject {
+
+    size_t count_;
+    std::string count_string_;
+
+  };
+
+  using InputType = std::unique_ptr<InputObject>;
+  using OutputType = std::unique_ptr<OutputObject>;
+
+
+  auto callback = [](InputType /*p*/, size_t /*i*/) -> OutputType { return std::make_unique<OutputObject>(); };
+  kel::WorkflowMove<InputType, OutputType> work_flow;
+  work_flow.registerProcessingFn(nullptr, nullptr, test_thread_count, callback, 7);
+
+  for (size_t i = 0; i < 1000; ++i) {
+
+    work_flow.push(std::make_unique<InputObject>());
+    work_flow.push(nullptr);
+
+  }
+
+  // Stop the processing threads.
+  work_flow.stopProcessing();
+
+  size_t out_size{0};
+  OutputType out_obj = work_flow.waitAndPop();
+  while(out_obj) {
+
+    ++out_size;
+    kel::ExecEnv::log().info("Move - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
+    out_obj = work_flow.waitAndPop();
+
+  }
+
+  kel::ExecEnv::log().info("Final - Move - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
+
+}
+
+
+void unit_test() {
+
+  unit_test_copyable();
+  unit_test_moveable();
+
+}
 
 
 
