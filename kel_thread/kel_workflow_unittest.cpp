@@ -10,7 +10,6 @@
 namespace kel = kellerberrin;
 
 
-const size_t test_thread_count = 5;
 struct InputObject {
 
   size_t count_;
@@ -34,58 +33,36 @@ struct OutputObject {
 
 };
 
-using InputType = std::shared_ptr<InputObject>;
-using OutputType = std::shared_ptr<OutputObject>;
+const size_t high_tide = 5000;
+const size_t low_tide = 1000;
+const size_t mon_freq_ms = 100;
 
-void unit_test_copyable() {
+const size_t input_thread_count = 50;
+const size_t intermediate_thread_count = 50;
+const size_t output_thread_count = 50;
 
+const size_t iterations = 1000000;
+const size_t work_iterations = 1000000; // work for each thread
 
-  auto callback = [](size_t /*i*/, InputType /*p*/) -> OutputType { return std::make_shared<OutputObject>(); };
-  kel::WorkflowQueues<InputType, OutputType> work_flow;
-  work_flow.registerProcessingFn(nullptr, nullptr, test_thread_count, callback, 7);
+using InputType = std::unique_ptr<InputObject>;
+using OutputType = std::unique_ptr<OutputObject>;
+using IntermediateType = std::unique_ptr<IntermediateObject>;
 
-  for (size_t i = 0; i < 1000; ++i) {
+// using QueueType = kel::MtQueue;
 
-    work_flow.push(std::make_unique<InputObject>());
-
-  }
-
-  // Stop the processing threads by pushing a stop token
-  work_flow.push(nullptr);
-
-  size_t out_size{0};
-  // Dequeue the output objects until the output stop token is encountered.
-  OutputType out_obj = work_flow.waitAndPop();
-  while(out_obj) {
-
-    ++out_size;
-    kel::ExecEnv::log().info("Copy - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
-    out_obj = work_flow.waitAndPop();
-
-  }
-
-  kel::ExecEnv::log().info("Final - Copy - Out objects processed: {}, Out Queue Size: {}", out_size, work_flow.outputQueue().size());
-  kel::ExecEnv::log().info("Final - Copy - In Queue Size: {}", work_flow.inputQueue().size());
-
-}
+using InQueue = kel::WorkflowQueue<InputType, kel::BoundedMtQueue>;
+using MedQueue = kel::WorkflowQueue<IntermediateType, kel::BoundedMtQueue>;
+using OutQueue = kel::WorkflowQueue<OutputType, kel::BoundedMtQueue>;
 
 
+class WorkFunctions {
 
-void unit_test_moveable() {
+public:
 
+  WorkFunctions() = default;
+  ~WorkFunctions() = default;
 
-  using InputType = std::unique_ptr<InputObject>;
-  using IntermediateType = std::unique_ptr<IntermediateObject>;
-  using OutputType = std::unique_ptr<OutputObject>;
-
-  std::unique_ptr<kel::WorkflowSingle<InputType>> work_flow(std::make_unique<kel::WorkflowSingle<InputType>>(nullptr));
-  std::shared_ptr<kel::WorkflowSingle<IntermediateType>> intermediate_queue(std::make_shared<kel::WorkflowSingle<IntermediateType>>(nullptr));
-  std::shared_ptr<kel::WorkflowSingle<OutputType>> output_queue(std::make_shared<kel::WorkflowSingle<OutputType>>(nullptr));
-
-  auto interqueue = [](std::shared_ptr<kel::WorkflowSingle<IntermediateType>> intermediate_queue
-      , IntermediateType intermediate_stop
-      , InputType input_stop
-      ,InputType input_item) -> void {
+  void interqueue_work_fn(std::shared_ptr<MedQueue> intermediate_queue, IntermediateType intermediate_stop, InputType input_stop, InputType input_item) {
 
     if (input_item == input_stop) {
 
@@ -93,17 +70,23 @@ void unit_test_moveable() {
 
     } else {
 
-      intermediate_queue->push(std::make_unique<IntermediateObject>());
+      auto med_ptr = std::make_unique<IntermediateObject>();
+      for (size_t i = 0; i < work_iterations; ++i) {
+
+        // Random Work
+        med_ptr->count_ += input_item->count_ ^ i;
+
+      }
+
+      intermediate_queue->push(std::move(med_ptr));
 
     }
 
 
-  };
+  }
 
-  auto outqueue = [](std::shared_ptr<kel::WorkflowSingle<OutputType>> output_queue
-      , OutputType output_stop
-      , IntermediateType intermediate_stop
-      , IntermediateType intermediate_item) -> void {
+
+  void outqueue_work_fn(std::shared_ptr<OutQueue> output_queue, OutputType output_stop, IntermediateType intermediate_stop, IntermediateType intermediate_item) {
 
     if (intermediate_item == intermediate_stop) {
 
@@ -111,44 +94,94 @@ void unit_test_moveable() {
 
     } else {
 
-      output_queue->push(std::make_unique<OutputObject>());
+      auto out_ptr = std::make_unique<OutputObject>();
+      for (size_t i = 0; i < work_iterations; ++i) {
+
+        // Random Work
+        out_ptr->count_ += intermediate_item->count_ ^ i;
+
+      }
+
+      output_queue->push(std::move(out_ptr));
 
     }
 
 
-  };
+  }
 
-  intermediate_queue->registerProcessingFn(test_thread_count, outqueue, output_queue, nullptr, nullptr);
-  work_flow->registerProcessingFn(test_thread_count, interqueue, std::move(intermediate_queue), nullptr, nullptr);
+  void push_input_thread(std::shared_ptr<InQueue> input_queue) {
 
-  for (size_t i = 0; i < 1000; ++i) {
+    // Push input objects onto the input queue
+    for (size_t i = 0; i < iterations; ++i) {
 
-    work_flow->push(std::make_unique<InputObject>());
+      auto input_ptr = std::make_unique<InputObject>();
+      input_ptr->count_ = i;
+      input_queue->push(std::move(input_ptr));
+
+    }
+    // Stop the input processing by pushing a stop token.
+    input_queue->push(nullptr);
+
 
   }
 
-  // Stop the processing threads.
-  work_flow->push(nullptr);
 
-  size_t out_size{0};
-  OutputType out_obj = output_queue->waitAndPop();
-  while(out_obj) {
+  void retrieve_output_thread(std::shared_ptr<OutQueue> output_queue) {
 
-    ++out_size;
-    kel::ExecEnv::log().info("Move - Out objects processed: {}, Out Queue Size: {}", out_size, output_queue->inputQueue().size());
-    out_obj = output_queue->waitAndPop();
+    size_t out_size{0};
+    size_t check_sum{0};
+
+    OutputType out_obj = output_queue->waitAndPop();
+    while (out_obj) {
+
+      ++out_size;
+      check_sum += out_obj->count_;
+
+      out_obj = output_queue->waitAndPop();
+
+    }
+
+    kel::ExecEnv::log().info("Final - Move - Out Queue Items: {}, CheckSum: {}", out_size, check_sum);
 
   }
 
-  kel::ExecEnv::log().info("Final - Move - Out objects processed: {}, Out Queue Size: {}", out_size, output_queue->inputQueue().size());
-  kel::ExecEnv::log().info("Final - Move - In Queue Size: {}", work_flow->inputQueue().size());
+};
+
+
+void unit_test_moveable() {
+
+  WorkFunctions work_functions;
+  // Create the 3 work queues
+  auto input_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
+  auto input_queue = std::make_shared<InQueue>(nullptr, std::move(input_queue_impl_ptr));
+
+  auto intermediate_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
+  auto intermediate_queue = std::make_shared<MedQueue>(nullptr, std::move(intermediate_queue_impl_ptr));
+
+  auto output_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
+  auto output_queue = std::make_shared<OutQueue>(nullptr, std::move(output_queue_impl_ptr));
+
+  // Link the queues together
+  input_queue->registerProcessingFn(input_thread_count, &WorkFunctions::interqueue_work_fn, &work_functions, intermediate_queue, nullptr, nullptr);
+  intermediate_queue->registerProcessingFn(intermediate_thread_count, &WorkFunctions::outqueue_work_fn, &work_functions, output_queue, nullptr, nullptr);
+
+  // Asynchronously add objects to the beginning of the linked queues.
+  std::thread input_thread(&WorkFunctions::push_input_thread, &work_functions, input_queue);
+
+  // Retrieve objects from the out queue until we encounter a stop token.
+  work_functions.retrieve_output_thread(output_queue);
+
+  kel::ExecEnv::log().info("Final - Move - Out Queue Size: {}", output_queue->inputQueue().size());
+  kel::ExecEnv::log().info("Final - Move - In Queue Size: {}", input_queue->inputQueue().size());
+
+  input_thread.join();
 
 }
 
 
+
 void unit_test() {
 
-  unit_test_copyable();
   unit_test_moveable();
 
 }
