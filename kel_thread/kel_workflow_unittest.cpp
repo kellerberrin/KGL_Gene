@@ -48,11 +48,12 @@ using InputType = std::unique_ptr<InputObject>;
 using OutputType = std::unique_ptr<OutputObject>;
 using IntermediateType = std::unique_ptr<IntermediateObject>;
 
-// using QueueType = kel::MtQueue;
+// template <typename T> using QueueType = kel::MtQueue<T>;
+template <typename T> using QueueType = kel::BoundedMtQueue<T>;
 
-using InQueue = kel::WorkflowQueue<InputType, kel::BoundedMtQueue>;
-using MedQueue = kel::WorkflowQueue<IntermediateType, kel::BoundedMtQueue>;
-using OutQueue = kel::WorkflowQueue<OutputType, kel::BoundedMtQueue>;
+using InQueue = kel::WorkflowQueue<InputType, QueueType>;
+using MedQueue = kel::WorkflowQueue<IntermediateType, QueueType>;
+using OutQueue = kel::WorkflowQueue<OutputType, QueueType>;
 
 
 class WorkFunctions {
@@ -152,13 +153,13 @@ void unit_test_moveable() {
 
   WorkFunctions work_functions;
   // Create the 3 work queues
-  auto input_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
+  auto input_queue_impl_ptr = std::make_unique<QueueType<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
   auto input_queue = std::make_shared<InQueue>(nullptr, std::move(input_queue_impl_ptr));
 
-  auto intermediate_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
+  auto intermediate_queue_impl_ptr = std::make_unique<QueueType<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
   auto intermediate_queue = std::make_shared<MedQueue>(nullptr, std::move(intermediate_queue_impl_ptr));
 
-  auto output_queue_impl_ptr = std::make_unique<kel::BoundedMtQueue<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
+  auto output_queue_impl_ptr = std::make_unique<QueueType<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
   auto output_queue = std::make_shared<OutQueue>(nullptr, std::move(output_queue_impl_ptr));
 
   // Link the queues together
@@ -171,8 +172,8 @@ void unit_test_moveable() {
   // Retrieve objects from the out queue until we encounter a stop token.
   work_functions.retrieve_output_thread(output_queue);
 
-  kel::ExecEnv::log().info("Final - Move - Out Queue Size: {}", output_queue->inputQueue().size());
-  kel::ExecEnv::log().info("Final - Move - In Queue Size: {}", input_queue->inputQueue().size());
+  kel::ExecEnv::log().info("Final - Move - Out Queue Size: {}", output_queue->ObjectQueue().size());
+  kel::ExecEnv::log().info("Final - Move - In Queue Size: {}", input_queue->ObjectQueue().size());
 
   input_thread.join();
 
