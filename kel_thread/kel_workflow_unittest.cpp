@@ -3,6 +3,7 @@
 //
 
 #include "kel_workflow_queue.h"
+#include "kel_ordered_workflow_queue.h"
 #include "kel_exec_env_app.h"
 #include "kel_logging.h"
 
