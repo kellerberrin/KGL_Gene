@@ -198,7 +198,11 @@ private:
       // Check for stalled queues (deadlock).
       if (previous_activity_ == sample_activity) {
 
-        ++previous_count_;
+        if (not queue_ptr_->empty()) {
+
+          ++previous_count_;
+
+        }
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
           ExecEnv::log().warn("Monitor Queue: {}, size: {}, FSM_State: {}, stalled for samples: {}",
@@ -236,8 +240,8 @@ template<typename T> class BoundedMtQueue {
 
 public:
 
-  BoundedMtQueue(size_t high_tide,
-                 size_t low_tide,
+  BoundedMtQueue(size_t high_tide = DEFAULT_HIGH_TIDE,
+                 size_t low_tide = DEFAULT_LOW_TIDE,
                  std::string queue_name = DEFAULT_QUEUE_NAME,
                  size_t sample_frequency = BoundedQueueMonitor<T>::DISABLE_QUEUE_MONITOR):
                   high_tide_(high_tide),
@@ -317,6 +321,8 @@ public:
   [[nodiscard]] const std::string& queueName() const { return queue_name_; }
 
   constexpr static const char* DEFAULT_QUEUE_NAME{"BoundedMtQueue"};
+  constexpr static const size_t DEFAULT_HIGH_TIDE{10000};
+  constexpr static const size_t DEFAULT_LOW_TIDE{2000};
 
 private:
 
