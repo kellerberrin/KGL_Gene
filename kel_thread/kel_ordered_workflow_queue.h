@@ -42,7 +42,7 @@ class WorkflowOrderedQueue
 {
 
   struct CompareProcessed {
-    constexpr bool operator()(const std::pair<WorkFlowObjectCounter, OutputObject> &lhs, const std::pair<WorkFlowObjectCounter, OutputObject> &rhs) const {
+    bool operator()(const std::pair<WorkFlowObjectCounter, OutputObject> &lhs, const std::pair<WorkFlowObjectCounter, OutputObject> &rhs) const {
       return lhs.first > rhs.first;
     }
   };
@@ -60,8 +60,9 @@ public:
 
   ~WorkflowOrderedQueue() { stopProcessing(); }
 
-  // Note that the variadic args... are presented to ALL active threads and must be thread safe.
-  // If the work function is a non-static class member function then the first ...args should be a pointer (Class* this) to the class instance.
+  // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
+  // If the work function is a non-static class member then the first of the ...args should be a
+  // pointer (MyClass* this) to the class instance.
   template<typename F, typename... Args>
   void registerProcessingFn(size_t threads, F&& f, Args&&... args) noexcept
   {

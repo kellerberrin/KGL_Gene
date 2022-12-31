@@ -7,7 +7,6 @@
 
 
 #include "kel_exec_env.h"
-
 #include "kel_mt_queue.h"
 #include "kel_thread_pool.h"
 
