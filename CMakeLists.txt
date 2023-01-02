@@ -113,7 +113,13 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_mt_queue.h
         kel_thread/kel_thread_pool.h
         kel_thread/kel_bound_queue.h
-        kel_thread/kel_workflow_queue.h kel_thread/kel_ordered_workflow_queue.h kel_thread/kel_bound_queue_monitor.h kel_thread/kel_queue_monitor.h)
+        kel_thread/kel_workflow_asynch.h
+        kel_thread/kel_workflow_synch.h
+        kel_thread/kel_bound_queue_monitor.h
+        kel_thread/kel_queue_monitor.h
+        kel_thread/kel_workflow_unittest.h
+        kel_thread/kel_workflow_unitsynch.cpp
+        kel_thread/kel_workflow_unitasynch.cpp)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -567,7 +573,7 @@ add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 target_link_libraries (kol_test kol_ontology kel_utility ${Boost_LIBRARIES})
 
 #generate libraries.
-add_executable(thread_test kel_thread/kel_ordered_workflow_queue.h kel_thread/kel_bound_queue_monitor.h kel_thread/kel_queue_monitor.h kel_thread/kel_workflow_unittest.h kel_thread/kel_workflow_unitwork.cpp kel_thread/kel_workflow_unitmain.cpp)
+add_executable(thread_test kel_thread/kel_workflow_unitmain.cpp)
 
 target_link_libraries (thread_test kel_utility ${Boost_LIBRARIES})
 

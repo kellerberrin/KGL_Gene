@@ -8,8 +8,8 @@
 
 
 
-#include "kel_workflow_queue.h"
-#include "kel_ordered_workflow_queue.h"
+#include "kel_workflow_asynch.h"
+#include "kel_workflow_synch.h"
 #include "kel_exec_env_app.h"
 #include "kel_logging.h"
 
@@ -47,57 +47,118 @@ using InputType = std::unique_ptr<InputObject>;
 using OutputType = std::unique_ptr<OutputObject>;
 using IntermediateType = std::unique_ptr<IntermediateObject>;
 
-template<typename T> using QueueType = MtQueue<T>;
-//template <typename T> using QueueType = kel::BoundedMtQueue<T>;
-
-
-//using InQueue = kel::WorkflowQueue<InputType, QueueType>;
-//using MedQueue = kel::WorkflowQueue<IntermediateType, QueueType>;
-//using OutQueue = kel::WorkflowQueue<OutputType, QueueType>;
 
 template<typename T> using OrderedQueueType = BoundedMtQueue<std::pair<WorkFlowObjectCounter, T>>;
-//using OrderedQueueType = kel::BoundedMtQueue;
-using InQueue = WorkflowOrderedQueue<InputType, IntermediateType, OrderedQueueType>;
-using MedQueue = WorkflowOrderedQueue<IntermediateType, OutputType, OrderedQueueType>;
-//using InQueue = kel::WorkflowOrderedQueue<InputType, IntermediateType>;
-//using MedQueue = kel::WorkflowOrderedQueue<IntermediateType, OutputType>;
+using InQueue = WorkflowSynchQueue<InputType, IntermediateType, OrderedQueueType>;
+using MedQueue = WorkflowSynchQueue<IntermediateType, OutputType, OrderedQueueType>;
+
+template<typename T> using ReQueueType = MtQueue<std::pair<WorkFlowObjectCounter, T>>;
+using ReQueue = WorkflowSynchQueue<InputType, InputType, ReQueueType>;
 
 
-const size_t iterations = 10000000;
-const size_t report_iterations = 100000;
-const size_t work_iterations = 1000000; // work for each thread
-
-
-const size_t high_tide = 5000;
-const size_t low_tide = 1000;
-const size_t mon_freq_ms = 100;
-
-const size_t input_thread_count = 100;
-const size_t intermediate_thread_count = 100;
-const size_t output_thread_count = 20;
-
-
-class OrderedWorkFunctions {
+class SynchQueueUnitTest {
 
 public:
 
-  OrderedWorkFunctions() = default;
-  ~OrderedWorkFunctions() = default;
+  SynchQueueUnitTest() = default;
+  ~SynchQueueUnitTest() = default;
 
-  static void unit_test_moveable();
+  static void synchMoveable();
 
-  [[nodiscard]] IntermediateType interqueue_work_fn(InputType input_item);
+  [[nodiscard]] InputType synchRequeueWork(InputType input_item);
 
-  [[nodiscard]] OutputType outqueue_work_fn(IntermediateType intermediate_item);
+  [[nodiscard]] IntermediateType synchInputWork(InputType input_item);
 
-  void input_to_ouput_thread(std::shared_ptr<InQueue> input_queue, std::shared_ptr<MedQueue> med_queue);
+  [[nodiscard]] OutputType synchIntermediateWork(IntermediateType intermediate_item);
 
-  void push_input_thread(std::shared_ptr<InQueue> input_queue);
+  void connectInputIntermediate(std::shared_ptr<InQueue> input_queue, std::shared_ptr<MedQueue> med_queue);
 
-  void retrieve_output_thread(std::shared_ptr<MedQueue> output_queue);
+  void queueInputObjects(std::shared_ptr<InQueue> queue);
+
+  void requeueObjects(std::shared_ptr<ReQueue> queue);
+
+  void retrieveOutputObjects(std::shared_ptr<MedQueue> output_queue);
+
+  // Work intensity parameters
+
+  static const size_t iterations{1000000};
+  static const size_t report_iterations{100000};
+  static const size_t work_iterations{1000000}; // work for each thread
+
+  static const size_t high_tide{5000};
+  static const size_t low_tide{1000};
+  static const size_t mon_freq_ms{100};
+
+  static const size_t input_thread_count{100};
+  static const size_t intermediate_thread_count{100};
+
+private:
+
 
 
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+// Unit test object tests simple asynchronous work queues.
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//template<typename T> using AsynchQueueType = MtQueue<T>;
+template <typename T> using AsynchQueueType = BoundedMtQueue<T>;
+
+using AsynchInQueue = WorkflowAsynchQueue<InputType, AsynchQueueType>;
+using AsynchMedQueue = WorkflowAsynchQueue<IntermediateType, AsynchQueueType>;
+using AsynchOutQueue = WorkflowAsynchQueue<OutputType, AsynchQueueType>;
+
+
+class AsynchQueueUnitTest {
+
+public:
+
+  AsynchQueueUnitTest() = default;
+  ~AsynchQueueUnitTest() = default;
+
+  static void asynchMoveable();
+
+  void asynchInputWork( std::shared_ptr<AsynchMedQueue> med_queue
+                       , InputType input_item);
+
+  void asynchIntermediateWork( std::shared_ptr<const AsynchMedQueue> med_queue
+                              , std::shared_ptr<AsynchOutQueue> output_queue
+                              , IntermediateType intermediate_item);
+
+  void asynchOutputWork(std::shared_ptr<const AsynchOutQueue> output_queue, OutputType output_item);
+
+  void pushInput(std::shared_ptr<AsynchInQueue> input_queue);
+
+
+  inline static const size_t iterations{1000000};
+  inline static const size_t report_iterations{100000};
+  inline static const size_t work_iterations{1000000}; // work for each thread
+
+  inline static const size_t high_tide{5000};
+  inline static const size_t low_tide{1000};
+  inline static const size_t mon_freq_ms{100};
+
+  inline static const size_t input_thread_count{50};
+  inline static const size_t intermediate_thread_count{50};
+  inline static const size_t output_thread_count{50};
+
+private:
+
+  std::atomic<size_t> input_count_{0};
+  std::atomic<size_t> intermediate_count_{0};
+  std::atomic<size_t> output_count_{0};
+  size_t check_sum_{0};
+
+
+};
+
 
 
 

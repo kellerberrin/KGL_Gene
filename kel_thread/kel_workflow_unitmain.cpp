@@ -11,7 +11,8 @@ namespace kel = kellerberrin;
 
 void unit_test() {
 
-  kel::OrderedWorkFunctions::unit_test_moveable();
+  kel::SynchQueueUnitTest::synchMoveable();
+  kel::AsynchQueueUnitTest::asynchMoveable();
 
 }
 
