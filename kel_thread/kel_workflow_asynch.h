@@ -43,7 +43,7 @@ public:
   ~WorkflowAsynchQueue() {
     // Deactivate and join all the workflow threads.
     stopProcessing();
-    // Explicitly remove the workflow lambda to prevent circular references from any lambda pointer arguments.
+    // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
 
   }
@@ -96,7 +96,7 @@ public:
       std::unique_lock<std::mutex> lock(mutex_);
       stopped_condition_.wait(lock, [this]{ return workflow_state_ == AsynchWorkflowState::STOPPED; });
     }
-    stopped_condition_.notify_one(); // In case multiple threads are blocked.
+    stopped_condition_.notify_one(); // Multiple threads may be blocked.
 
   }
 
@@ -154,7 +154,7 @@ private:
           // to notify the processing function logic that the workflow queue will be STOPPED.
           workflow_callback_(std::move(work_item));
 
-          // Explicitly remove the workflow function to prevent circular references from pointer arguments.
+          // Explicitly remove the lambda workflow function to prevent circular references from captured pointer arguments.
           workflow_callback_ = nullptr;
 
           // Notify any threads waiting on the workflow STOPPED condition.

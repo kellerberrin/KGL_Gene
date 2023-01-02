@@ -8,7 +8,6 @@
 
 #include "kel_exec_env.h"
 #include "kel_mt_queue.h"
-#include "kel_thread_pool.h"
 
 #include <chrono>
 
@@ -31,19 +30,14 @@ template<typename T> class BoundedQueueMonitor {
 
 public:
 
-  BoundedQueueMonitor(BoundedMtQueue<T> *queue_ptr, size_t sample_milliseconds = DISABLE_QUEUE_MONITOR) :
-      queue_ptr_(queue_ptr),
-      sample_milliseconds_(sample_milliseconds) {
-
-    launchStats();
-
-  }
-
+  BoundedQueueMonitor() = default;
   ~BoundedQueueMonitor() {
 
     stopStats();
     if (queue_samples_ > MIN_SAMPLES_) {
+
       displayQueueStats();
+
     }
 
   }
@@ -56,12 +50,44 @@ public:
 
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
+  void launchStats(BoundedMtQueue<T> *queue_ptr, size_t sample_milliseconds) {
+
+    queue_ptr_ = queue_ptr;
+    sample_milliseconds_ = sample_milliseconds;
+
+    if (stats_thread_ptr_) {
+
+      stopStats();
+
+    }
+
+    if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
+
+      ExecEnv::log().info("Sampling queue: {} every: {} milliseconds", queue_ptr_->queueName(), sample_milliseconds_);
+      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&BoundedQueueMonitor::SampleQueue, this));
+
+    }
+
+  }
+
+  void stopStats() {
+
+    terminate_flag_ = true;
+    stats_condition_.notify_one();
+    if (stats_thread_ptr_) {
+
+      stats_thread_ptr_->join();
+      stats_thread_ptr_ = nullptr;
+
+    }
+
+  }
 
 private:
 
   BoundedMtQueue<T> *queue_ptr_;
   size_t sample_milliseconds_;
-  WorkflowThreads stats_thread_{1};
+  std::unique_ptr<std::thread> stats_thread_ptr_;
 
   std::mutex stats_mutex_;
   std::condition_variable stats_condition_;
@@ -152,23 +178,6 @@ private:
 
   }
 
-  void launchStats() {
-
-    if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
-
-      ExecEnv::log().info("Sampling queue: {} every: {} milliseconds", queue_ptr_->queueName(), sample_milliseconds_);
-      stats_thread_.enqueueWork(&BoundedQueueMonitor::SampleQueue, this);
-
-    }
-
-  }
-
-  void stopStats() {
-
-    terminate_flag_ = true;
-    stats_condition_.notify_one();
-
-  }
 
   void SampleQueue() {
 

@@ -38,7 +38,9 @@ public:
                   sample_frequency_(sample_frequency),
                   empty_size_(high_tide_/EMPTY_PROPORTION_) {
 
-    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<T>>(this, sample_frequency_);
+    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<T>>();
+    monitor_ptr_->launchStats(this, sample_frequency);
+
   }
   ~BoundedMtQueue() { monitor_ptr_ = nullptr; }
   BoundedMtQueue(const BoundedMtQueue&) = delete;
