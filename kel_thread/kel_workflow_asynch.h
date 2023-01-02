@@ -52,7 +52,7 @@ public:
   // The callback lambda is not mutable and great care (thread safe!) must be taken when modifying the arguments within the supplied function.
   // If the work function is a non-static class member function then the first ...args should be a pointer (MyClass* this) to the class instance.
   template<typename F, typename... Args>
-  void registerProcessingFn(size_t threads, F&& f, Args&&... args) noexcept
+  void activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
 
     workflow_callback_ = [f, args...](QueuedObj t)->void { std::invoke(f, args..., std::move(t)); };

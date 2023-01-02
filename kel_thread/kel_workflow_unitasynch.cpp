@@ -182,20 +182,11 @@ void kel::AsynchQueueUnitTest::asynchMoveable() {
   auto output_queue_impl_ptr = std::make_unique<AsynchQueueType<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
   auto output_queue = std::make_shared<AsynchOutQueue>(nullptr, std::move(output_queue_impl_ptr));
 
-  // The input queue.
-//  auto input_queue = std::make_shared<AsynchInQueue>(nullptr);
-
-  // The middle queue.
-//  auto intermediate_queue = std::make_shared<AsynchMedQueue>(nullptr);
-
-  // The output queue
-//  auto output_queue = std::make_shared<AsynchOutQueue>(nullptr);
-
 
   // Assign work functions to the queues.
-  input_queue->registerProcessingFn(input_thread_count, &kel::AsynchQueueUnitTest::asynchInputWork, &work_functions, intermediate_queue);
-  intermediate_queue->registerProcessingFn(intermediate_thread_count, &kel::AsynchQueueUnitTest::asynchIntermediateWork, &work_functions, intermediate_queue, output_queue);
-  output_queue->registerProcessingFn(output_thread_count, &kel::AsynchQueueUnitTest::asynchOutputWork, &work_functions, output_queue);
+  input_queue->activateWorkflow(input_thread_count, &kel::AsynchQueueUnitTest::asynchInputWork, &work_functions, intermediate_queue);
+  intermediate_queue->activateWorkflow(intermediate_thread_count, &kel::AsynchQueueUnitTest::asynchIntermediateWork, &work_functions, intermediate_queue, output_queue);
+  output_queue->activateWorkflow(output_thread_count, &kel::AsynchQueueUnitTest::asynchOutputWork, &work_functions, output_queue);
 
   // Asynchronously add objects to the beginning of the linked queues.
   std::thread input_thread(&kel::AsynchQueueUnitTest::pushInput, &work_functions, input_queue);

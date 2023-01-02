@@ -70,7 +70,7 @@ public:
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
   template<typename F, typename... Args>
-  void registerProcessingFn(size_t threads, F&& f, Args&&... args) noexcept
+  void activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
 
     workflow_callback_ = [f, args...](InputObject t)->OutputObject{ return std::invoke(f, args..., std::move(t)); };
@@ -114,7 +114,7 @@ public:
   }
 
   // Workflow is STOPPED if there are no active work threads.
-  // The Workflow queue is STOPPED on object creation and before registering the workflow function and creating active threads.
+  // The Workflow queue is STOPPED on object creation and before activating the workflow function and creating active threads.
   // The Workflow queue is also STOPPED after a stop token is placed on the input object queue and there are no longer any active threads.
   [[nodiscard]] SynchWorkflowState workflowState() const { return workflow_state_; }
 
@@ -122,7 +122,7 @@ public:
   void waitUntilStopped() const {
 
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      std::unique_lock<std::mutex> lock(state_mutex_);
       stopped_condition_.wait(lock, [this]{ return workflow_state_ == SynchWorkflowState::STOPPED; });
     }
     stopped_condition_.notify_one(); // In case multiple threads are blocked.
@@ -156,7 +156,7 @@ private:
 
   // Threads can wait on workflow queue state.
   SynchWorkflowState workflow_state_{ SynchWorkflowState::STOPPED };
-  mutable std::mutex mutex_;
+  mutable std::mutex state_mutex_;
   mutable std::condition_variable stopped_condition_;
 
   void queueThreads(size_t threads)
@@ -204,7 +204,7 @@ private:
           workflow_callback_ = nullptr;
           // Notify any threads waiting on the workflow STOPPED condition.
           {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(state_mutex_);
             workflow_state_ = SynchWorkflowState::STOPPED;
           }
           stopped_condition_.notify_one();

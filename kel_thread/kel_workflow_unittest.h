@@ -81,16 +81,16 @@ public:
 
   // Work intensity parameters
 
-  static const size_t iterations{1000000};
-  static const size_t report_iterations{100000};
-  static const size_t work_iterations{1000000}; // work for each thread
+  inline static const size_t iterations{1000000};
+  inline static const size_t report_iterations{100000};
+  inline static const size_t work_iterations{1000000}; // work for each thread
 
-  static const size_t high_tide{5000};
-  static const size_t low_tide{1000};
-  static const size_t mon_freq_ms{100};
+  inline static const size_t high_tide{5000};
+  inline static const size_t low_tide{1000};
+  inline static const size_t mon_freq_ms{100};
 
-  static const size_t input_thread_count{100};
-  static const size_t intermediate_thread_count{100};
+  inline static const size_t input_thread_count{100};
+  inline static const size_t intermediate_thread_count{100};
 
 private:
 

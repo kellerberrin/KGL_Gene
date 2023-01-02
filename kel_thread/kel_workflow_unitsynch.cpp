@@ -17,7 +17,9 @@ kel::InputType kel::SynchQueueUnitTest::synchRequeueWork(InputType input_item) {
 
   }
 
+  // Make work nonsense.
   volatile u_int64_t work_count{0};
+  size_t save_count = input_item->count_;
   for (size_t i = 0; i < work_iterations; ++i) {
 
     // Random Work
@@ -26,6 +28,7 @@ kel::InputType kel::SynchQueueUnitTest::synchRequeueWork(InputType input_item) {
   }
 
   input_item->count_ = work_count;
+  input_item->count_ = save_count;
 
   return input_item;
 
@@ -201,7 +204,7 @@ void kel::SynchQueueUnitTest::synchMoveable() {
 
 
   auto input_requeue = std::make_shared<kel::ReQueue>(nullptr);
-  input_requeue->registerProcessingFn(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
+  input_requeue->activateWorkflow(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
 
   // Asynchronously add objects to the beginning of the linked queues.
   std::thread requeue_thread(&kel::SynchQueueUnitTest::requeueObjects, &work_functions, input_requeue);
@@ -211,8 +214,24 @@ void kel::SynchQueueUnitTest::synchMoveable() {
   // And check the contents.
   ExecEnv::log().info("Synchronous requeue, input queue size: {}, output queue size: {}", input_requeue->inputQueue().size(), input_requeue->outputQueue().size());
 
+  // Dequeue all the objects.
+  InputType obj = input_requeue->waitAndPop();
+  size_t expected{0};
+  while(obj) {
+
+    if (++expected != obj->count_) {
+
+      ExecEnv::log().info("Synchronous requeue, expected: {}, actual: {}", expected, obj->count_);
+      break;
+
+    }
+
+    obj = input_requeue->waitAndPop();
+
+  }
+
   // Reactivate the queue.
-  input_requeue->registerProcessingFn(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
+  input_requeue->activateWorkflow(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
 
   // Asynchronously add objects to the beginning of the linked queues.
   std::thread rerequeue_thread(&kel::SynchQueueUnitTest::requeueObjects, &work_functions, input_requeue);
@@ -229,8 +248,8 @@ void kel::SynchQueueUnitTest::synchMoveable() {
   auto intermediate_queue = std::make_shared<kel::MedQueue>(nullptr, std::move(intermediate_queue_impl_ptr));
 
   // Work functions.
-  input_queue->registerProcessingFn(input_thread_count, &kel::SynchQueueUnitTest::synchInputWork, &work_functions);
-  intermediate_queue->registerProcessingFn(intermediate_thread_count, &kel::SynchQueueUnitTest::synchIntermediateWork, &work_functions);
+  input_queue->activateWorkflow(input_thread_count, &kel::SynchQueueUnitTest::synchInputWork, &work_functions);
+  intermediate_queue->activateWorkflow(intermediate_thread_count, &kel::SynchQueueUnitTest::synchIntermediateWork, &work_functions);
 
   // Asynchronously add objects to the beginning of the linked queues.
   std::thread input_thread(&kel::SynchQueueUnitTest::queueInputObjects, &work_functions, input_queue);
