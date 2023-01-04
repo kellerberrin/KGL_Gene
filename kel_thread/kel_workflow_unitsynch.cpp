@@ -202,8 +202,8 @@ void kel::SynchQueueUnitTest::synchMoveable() {
 
   kel::SynchQueueUnitTest work_functions;
 
-
-  auto input_requeue = std::make_shared<kel::ReQueue>(nullptr);
+  auto mt_queue_ptr = std::make_unique<kel::ReQueueType<InputType>>("Monitored Mt queue", mon_freq_ms);
+  auto input_requeue = std::make_shared<kel::ReQueue>(nullptr, std::move(mt_queue_ptr));
   input_requeue->activateWorkflow(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
 
   // Asynchronously add objects to the beginning of the linked queues.
@@ -240,7 +240,8 @@ void kel::SynchQueueUnitTest::synchMoveable() {
   input_requeue->waitUntilStopped();
   // And check the contents.
   ExecEnv::log().info("Synchronous requeue, input queue size: {}, output queue size: {}", input_requeue->inputQueue().size(), input_requeue->outputQueue().size());
-
+  // End queue lifetime.
+  input_requeue = nullptr;
 
   auto input_queue_impl_ptr = std::make_unique<kel::OrderedQueueType<kel::InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
   auto input_queue = std::make_shared<kel::InQueue>(nullptr, std::move(input_queue_impl_ptr));

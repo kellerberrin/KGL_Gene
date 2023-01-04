@@ -5,6 +5,7 @@
 #ifndef KEL_MT_QUEUE_H
 #define KEL_MT_QUEUE_H
 
+#include "kel_queue_monitor.h"
 
 #include <queue>
 #include <mutex>
@@ -27,6 +28,13 @@ template<typename T> class MtQueue {
 public:
 
   MtQueue() = default;
+  MtQueue(std::string queue_name, size_t sample_frequency)  {
+
+    monitor_ptr_ = std::make_unique<MtQueueMonitor<T>>();
+    monitor_ptr_->launchStats(this, sample_frequency, queue_name);
+
+  }
+
   ~MtQueue() = default;
   MtQueue(const MtQueue&) = delete;
   MtQueue(MtQueue&&) = delete;
@@ -88,6 +96,8 @@ private:
   std::atomic<size_t> size_{0};
   std::atomic<size_t> activity_{0};
 
+  // Held in a pointer for explicit object lifetime.
+  std::unique_ptr<MtQueueMonitor<T>> monitor_ptr_;
 
 };
 

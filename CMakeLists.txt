@@ -115,7 +115,6 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_bound_queue.h
         kel_thread/kel_workflow_asynch.h
         kel_thread/kel_workflow_synch.h
-        kel_thread/kel_bound_queue_monitor.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_unittest.h
         kel_thread/kel_workflow_unitsynch.cpp
