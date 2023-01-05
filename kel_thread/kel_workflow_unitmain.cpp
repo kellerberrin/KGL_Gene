@@ -27,13 +27,12 @@ struct CmdLineArgs {
 
 };
 
-// The Runtime environment.
+// The Static Runtime environment.
 class ThreadExecEnv {
 
 public:
 
   ThreadExecEnv() = delete;
-
   ~ThreadExecEnv() = delete;
 
   // The following 5 static members are required for all applications.

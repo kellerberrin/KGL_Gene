@@ -2,8 +2,8 @@
 // Created by kellerberrin on 30/12/22.
 //
 
-#ifndef KEL_BOUND_QUEUE_MONITOR_H
-#define KEL_BOUND_QUEUE_MONITOR_H
+#ifndef KEL_QUEUE_MONITOR_H
+#define KEL_QUEUE_MONITOR_H
 
 
 #include "kel_exec_env.h"
@@ -24,7 +24,7 @@ namespace kellerberrin {   //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward queue declaration.
-template<typename T> class MtQueue;
+template<typename T> requires std::move_constructible<T> class MtQueue;
 
 // Realtime queue monitor
 template<typename T> class MtQueueMonitor {
@@ -177,7 +177,7 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward queue declaration.
-template<typename T> class BoundedMtQueue;
+template<typename T> requires std::move_constructible<T> class BoundedMtQueue;
 
 // Realtime queue monitor
 template<typename T> class BoundedQueueMonitor {
@@ -407,4 +407,4 @@ private:
 
 
 
-#endif //KEL_BOUND_QUEUE_MONITOR_H
+#endif //KEL_QUEUE_MONITOR_H

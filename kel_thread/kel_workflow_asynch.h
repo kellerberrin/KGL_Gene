@@ -22,12 +22,14 @@ namespace kellerberrin {  //  organization level namespace
 //
 // A threaded workflow for std::move constructable objects (std::unique_ptr).
 // There is no guarantee that objects are processed in the same order as they were pushed onto the queue.
-// The supplied processing function must be able to handle the stop token (generally a null pointer).
+// The supplied processing function must be able to handle the stop token (a nullptr in the std::unique_ptr case).
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum class AsynchWorkflowState { ACTIVE, STOPPED};
 
+// The objects must be std::move constructable. In addition, the objects should be comparable
+// to enable the detection of a stop token placed on the workflow queue.
 template<typename QueuedObj, template <typename> typename Queue = MtQueue>
 requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedObj>)
 class WorkflowAsynchQueue
@@ -37,7 +39,10 @@ public:
 
   using WorkProc = std::function<void(QueuedObj)>;
 
-  WorkflowAsynchQueue(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
+  // The constructor requires that an input stop token is specified.
+  // If the InputObject is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
+  // The queue will be either a MtQueue (unbounded) or BondedMtQueue (a bounded tidal queue).
+  explicit WorkflowAsynchQueue(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
   ~WorkflowAsynchQueue() {
@@ -51,6 +56,7 @@ public:
   // Note that the variadic args... are presented to ALL active threads and must be thread safe.
   // The callback lambda is not mutable and great care (thread safe!) must be taken when modifying the arguments within the supplied function.
   // If the work function is a non-static class member function then the first ...args should be a pointer (MyClass* this) to the class instance.
+  // This function is not multi-threaded and must be called after workflow queue creation to initiate workflow processing.
   template<typename F, typename... Args>
   void activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
@@ -63,7 +69,7 @@ public:
 
   // Queue objects onto the workflow queue.
   // Can be concurrently called by multiple producer threads.
-  // If the underlying object queue is a bounded (load balancing) queue then this will block
+  // If the underlying object queue is a bounded (load balancing tidal) queue then this will block
   // until space becomes available on the queue. Pushing a stop token onto the workflow queue
   // shuts down all the active threads and the workflow queue is in a STOPPED condition.
   void push(QueuedObj input_obj) {
@@ -82,11 +88,12 @@ public:
   }
 
   // Underlying object queue access routine.
+  // All public members of MtQueue and BoundedMtQueue are thread safe.
   [[nodiscard]] const Queue<QueuedObj>& ObjectQueue() const { return *queue_ptr_; }
 
   // Workflow is STOPPED if there are no active work threads.
   // The Workflow queue is STOPPED on object creation and before registering the workflow function and creating active threads.
-  // The Workflow queue is also STOPPED after a stop token is placed on the object queue and there are no longer any active threads.
+  // The Workflow queue is also STOPPED after a stop token is placed on the queue and there are no longer any active threads.
   [[nodiscard]] AsynchWorkflowState workflowState() const { return workflow_state_; }
 
   // Calling thread(s) wait on a std::condition_variable until the queue is STOPPED.
@@ -119,7 +126,7 @@ private:
     // Remove any existing threads.
     stopProcessing();
 
-    // Always have at least one worker thread queued.
+    // Always have at least one worker thread.
     threads = threads < 1 ? 1 : threads;
 
     // Queue the worker threads,

@@ -8,7 +8,8 @@
 
 
 #include "kel_exec_env.h"
-#include "../../kel_thread/kel_bound_queue.h"
+#include "kel_bound_queue.h"
+#include "kel_thread_pool.h"
 #include "kel_basic_io.h"
 #include "kgl_genome_types.h"
 

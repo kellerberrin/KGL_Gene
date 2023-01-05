@@ -40,7 +40,7 @@ public:
   [[nodiscard]] static size_t defaultThreads() { return std::max<size_t>(std::thread::hardware_concurrency() - 1, 1); }
   [[nodiscard]] static size_t defaultThreads(size_t job_size) { return (job_size > 0 ? std::min<size_t>(defaultThreads(), job_size) : 1); }
 
-  // Assumes the function has a void return type, does not return a future.
+  // Assumes the work function has a void return type, does not return a future.
   template<typename F, typename... Args>
   void enqueueWork(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
   {
@@ -51,7 +51,7 @@ public:
   }
 
 
-  // Returns a std::future holding the function return value.
+  // Returns a std::future holding the work function return value.
   template<typename F, typename... Args>
   [[nodiscard]] auto enqueueTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
   {

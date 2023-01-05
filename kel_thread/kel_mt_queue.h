@@ -23,11 +23,12 @@ namespace kellerberrin {   //  organization level namespace
 
 
 
-template<typename T> class MtQueue {
+template<typename T> requires std::move_constructible<T> class MtQueue {
 
 public:
 
   MtQueue() = default;
+  // Create the MtQueue with an asynchronous queue monitor that checks for 'stalled' queues and collects queue statistics.
   MtQueue(std::string queue_name, size_t sample_frequency)  {
 
     monitor_ptr_ = std::make_unique<MtQueueMonitor<T>>();
@@ -42,7 +43,7 @@ public:
 
   void push(T value) {
 
-    // Scope for automatic locking/unlocking.
+    // Scope for RAII locking/unlocking.
     {
 
       std::scoped_lock lock(mutex_);
@@ -82,10 +83,9 @@ public:
 
   }
 
+  // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return size_ == 0; }
-
   [[nodiscard]] size_t size() const { return size_; }
-
   [[nodiscard]] size_t activity() const { return activity_; }
 
 private:

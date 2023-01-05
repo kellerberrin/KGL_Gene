@@ -50,14 +50,14 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     }
 
-    // Enable ctrl-C runtime termination - with warning.
+    // Enable ctrl-C runtime termination.
     signal(SIGINT, ctrlC);
 
     log().info("############ {} {} Start Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
 
     // Run the application.
-    Environment::executeApp(); // Run the application.
+    Environment::executeApp();
 
     //  Runtime stats.
     double Clock, System, User;
