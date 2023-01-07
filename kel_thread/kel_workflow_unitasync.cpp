@@ -1,5 +1,18 @@
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 1/01/23.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 //
 
 #include "kel_workflow_unittest.h"
@@ -171,15 +184,15 @@ void kel::AsynchQueueUnitTest::asynchMoveable() {
 
   // Create the 3 work queues
   // The input queue.
-  auto input_queue_impl_ptr = std::make_unique<AsynchQueueType<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
+  auto input_queue_impl_ptr = std::make_unique<AsyncQueueType<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
   auto input_queue = std::make_shared<AsynchInQueue>(nullptr, std::move(input_queue_impl_ptr));
 
   // The middle queue.
-  auto intermediate_queue_impl_ptr = std::make_unique<AsynchQueueType<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
+  auto intermediate_queue_impl_ptr = std::make_unique<AsyncQueueType<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
   auto intermediate_queue = std::make_shared<AsynchMedQueue>(nullptr, std::move(intermediate_queue_impl_ptr));
 
   // The output queue
-  auto output_queue_impl_ptr = std::make_unique<AsynchQueueType<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
+  auto output_queue_impl_ptr = std::make_unique<AsyncQueueType<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
   auto output_queue = std::make_shared<AsynchOutQueue>(nullptr, std::move(output_queue_impl_ptr));
 
 

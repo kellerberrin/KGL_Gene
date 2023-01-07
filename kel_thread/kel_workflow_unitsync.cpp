@@ -1,5 +1,18 @@
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 31/12/22.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 //
 
 #include "kel_workflow_unittest.h"
@@ -200,6 +213,112 @@ void kel::SynchQueueUnitTest::retrieveOutputObjects(std::shared_ptr<MedQueue> ou
 
 void kel::SynchQueueUnitTest::synchMoveable() {
 
+  // Create the workflow with a bounded tidal input queue and nullptr stop token.
+  auto bounded_queue_ptr = std::make_unique<BoundedSyncInput<InputType>>();
+  WorkflowSyncBounded<InputType, OutputType> workflow_bounded(nullptr, std::move(bounded_queue_ptr));
+
+  // Simple workflow lambda increments the object count and queues input objects.
+  // Workflow functions must handle stop tokens as a special case.
+  auto bounded_lambda = [](InputType t)->OutputType {
+
+    // Work functions must always handle input stop tokens.
+    if (not t) return nullptr; // Just re-queue the null pointer on the output queue.
+    return std::make_unique<OutputObject>(t->count_);  // Transfer the input count into the output object.
+
+  };
+
+  // Activate the workflow with 20 threads. This is best done after creating a bounded workflow and before any input
+  // objects are processed. Otherwise, the input queue will block after it reaches high tide.
+  workflow_bounded.activateWorkflow(20, bounded_lambda);
+
+  // Now place some objects in the input queue.
+  for (size_t i = 1; i <= 1000000; ++i) {
+
+    workflow_bounded.push(std::make_unique<InputObject>(i));
+
+  }
+  // Push a stop token onto the input. This shuts down all active threads.
+  workflow_bounded.push(nullptr);
+
+  // Simple lambda to check the output queue object ordering.
+  auto check_lambda = [&workflow_bounded]() -> void {
+
+    size_t out_order{0};
+    auto out_obj = workflow_bounded.waitAndPop();
+
+  // Check for the stop token.
+    while(out_obj) {
+
+      ++out_order;
+      // Check the ordering of the output objects.
+      if (out_order != out_obj->count_) break;
+
+      out_obj = workflow_bounded.waitAndPop();
+
+    }
+
+  };
+
+  // Do the check asynchronously.
+  std::thread check_thread(check_lambda);
+
+  // Wait until all output objects have been checked and dequeued.
+  check_thread.join();
+
+  // Input and output queue sizes should be empty here.
+  ExecEnv::log().info( "Monitored Bounded Queue, input queue size: {}, output queue size: {}"
+      , workflow_bounded.inputQueue().size(), workflow_bounded.outputQueue().size());
+
+
+
+  // An unbounded input queue workflow. The nullptr has been specified as the stop token.
+  WorkflowSync<InputType, InputType> workflow_queue(nullptr);
+
+  // Asynchronously place some objects in the queue.
+  // This can be done before the queue is activated because an unbounded queue will not block.
+  auto fill_lambda = [&workflow_queue]()->void{
+
+    for (size_t i = 0; i < 1000000; ++i) {
+
+      auto in_obj = std::make_unique<InputObject>();
+      // Tag the input object with an ordering.
+      in_obj->count_ = i + 1;
+      workflow_queue.push(std::move(in_obj));
+
+    }
+    // Queue the stop token.
+    workflow_queue.push(nullptr);
+
+  };
+  std::thread fill_thread(fill_lambda);
+
+  // Activate the workflow with 20 threads. Just move input objects to the output queue.
+  workflow_queue.activateWorkflow(20, [](InputType t)->InputType{ return t; });
+
+  // Dequeue from the output queue.
+  // The stop token will be transferred to the output queue as the final object, and we can check for that.
+  size_t out_order{0};
+  auto out_obj = workflow_queue.waitAndPop();
+  while(out_obj) {
+
+    ++out_order;
+    // Check the ordering of the output objects.
+    if (out_order != out_obj->count_) {
+
+      ExecEnv::log().error("Unbounded Sync Queue output object ordering incorrect; expected: {}, dequeued: {}", out_order, out_obj->count_);
+      break;
+
+    }
+
+    out_obj = workflow_queue.waitAndPop();
+
+  }
+  // Check the queue sizes. Input and Output queues should be empty.
+  ExecEnv::log().info("Unbounded Sync Queue, input queue size: {}, output queue size: {}",
+                      workflow_queue.inputQueue().size(), workflow_queue.outputQueue().size());
+
+  fill_thread.join();
+
   kel::SynchQueueUnitTest work_functions;
 
   auto mt_queue_ptr = std::make_unique<kel::ReQueueType<InputType>>("Monitored Mt queue", mon_freq_ms);
@@ -230,8 +349,10 @@ void kel::SynchQueueUnitTest::synchMoveable() {
 
   }
 
+  ExecEnv::log().info("Synchronous requeue before reactivate, workflow state: {}", (input_requeue->workflowState() == SyncWorkflowState::STOPPED ? "Stopped" : "Active"));
   // Reactivate the queue.
   input_requeue->activateWorkflow(input_thread_count, &kel::SynchQueueUnitTest::synchRequeueWork, &work_functions);
+  ExecEnv::log().info("Synchronous requeue after reactivate");
 
   // Asynchronously add objects to the beginning of the linked queues.
   std::thread rerequeue_thread(&kel::SynchQueueUnitTest::requeueObjects, &work_functions, input_requeue);

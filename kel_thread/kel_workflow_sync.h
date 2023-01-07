@@ -1,10 +1,25 @@
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 30/12/22.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 //
 
-#ifndef KEL_WORKFLOW_SYNCH_H
-#define KEL_WORKFLOW_SYNCH_H
+#ifndef KEL_WORKFLOW_SYNC_H
+#define KEL_WORKFLOW_SYNC_H
 
+#include "kel_mt_queue.h"
+#include "kel_bound_queue.h"
 
 #include <functional>
 #include <vector>
@@ -12,17 +27,12 @@
 #include <set>
 #include <thread>
 
-#include "kel_mt_queue.h"
-#include "kel_bound_queue.h"
-
 
 namespace kellerberrin {  //  organization level namespace
 
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// A threaded workflow for std::move constructable objects (std::unique_ptr<T>).
+// A threaded workflow for std::move constructable objects (such as std::unique_ptr<T>).
 // These queues guarantee that the output objects are removed from the output queue in exactly the same order in which
 // the matching input object was presented to the input workflow queue.
 //
@@ -34,20 +44,22 @@ namespace kellerberrin {  //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class SynchWorkflowState { ACTIVE, STOPPED};
 
-// Some very long lived (heat death of the universe) applications may need to use a 128 bit unsigned int
+enum class SyncWorkflowState { ACTIVE, STOPPED};
+
+// Some very long-lived (heat death of the universe) applications may need to use a 128 bit unsigned int
 // to assign an ordering to the input and output objects.
-// If the 128 bit unsigned type is not supported on the target architecture then use uint64_t.
+// If the 128 bit unsigned type is not supported on the target architecture then use uint64_t instead.
 using WorkFlowObjectCounter = __uint128_t;
 //using WorkFlowObjectCounter = uint64_t;
 
 // The input and output objects must be std::move constructable. In addition, the input object should be comparable
 // to enable the detection of a stop token placed on the input queue.
+// The input queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
 template<typename InputObject, typename OutputObject, template <typename> typename InputQueue>
 requires (std::move_constructible<InputObject> && std::equality_comparable<InputObject>)
          && std::move_constructible<OutputObject>
-class WorkflowSynchQueue
+class WorkflowSyncQueue
 {
 
   // A custom ordering used by std::priority_queue.
@@ -65,15 +77,21 @@ public:
   // The constructor requires that an input stop token is specified.
   // If the InputObject is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
   // The input queue will be either a MtQueue (unbounded) or BoundedMtQueue (a bounded tidal queue).
-  explicit WorkflowSynchQueue(InputObject input_stop_token
+  explicit WorkflowSyncQueue(InputObject input_stop_token
       , std::unique_ptr<InputQueue<InputObject>> input_queue_ptr = std::make_unique<InputQueue<InputObject>>())
       : input_stop_token_(std::move(input_stop_token))
       , input_queue_ptr_(std::move(input_queue_ptr)) {}
 
-  ~WorkflowSynchQueue() {
+  ~WorkflowSyncQueue() {
 
     // Shutdown any active threads and join() them.
-    stopProcessing();
+    // If we have active threads then push an input stop token so that the workflow is STOPPED.
+    if (active_threads_ != 0) {
+
+      input_queue_ptr_->push({0, std::move(input_stop_token_)});
+
+    }
+    joinAndDeleteThreads();
     // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
 
@@ -82,25 +100,37 @@ public:
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
-  // This function is not multi-threaded and must be called after workflow queue creation to initiate workflow processing.
+  // This function is not multi-threaded and must be called after workflow queue creation for workflow processing to be ACTIVE.
+  // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
+  // Calling this function on an ACTIVE workflow queue will return false.
   template<typename F, typename... Args>
-  void activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
 
+    if (workflow_state_ == SyncWorkflowState::ACTIVE) {
+
+      return false;
+
+    }
+    joinAndDeleteThreads();
     workflow_callback_ = [f, args...](InputObject t)->OutputObject{ return std::invoke(f, args..., std::move(t)); };
     queueThreads(threads);
-    workflow_state_ = SynchWorkflowState::ACTIVE;
+    workflow_state_ = SyncWorkflowState::ACTIVE;
+    return true;
 
   }
 
 
   // Although this function is thread-safe, it should really only be called with a single thread.
   // Since calling with multiple threads will lead to undefined input object ordering.
+  // This function can be called on a STOPPED workflow queue.
+  // However, if the underlying input queue is a BoundedMtQueue, the function will block once high-tide is reached.
+  // The function will not block if the underlying input queue is an MtQueue.
   void push(InputObject input_obj) {
 
     // Note, this variable is only used to carry the object ordering tag outside the mutex scope.
     WorkFlowObjectCounter input_tag;
-    // RAII mutex protected critical code.
+    // Mutex protected critical code.
     {
       std::scoped_lock lock(process_mutex_);
 
@@ -122,6 +152,10 @@ public:
 
   // Although this function is thread-safe, it should really only be called with a single thread.
   // Since calling with multiple threads will lead to undefined output object ordering.
+  // This function can be called on a STOPPED workflow queue.
+  // If the output queue is empty the calling thread will block.
+  // A suggestion is to push a user defined output stop token onto the output queue when the user workflow function
+  // receives an input stop token. The dequeue thread can then stop requesting further output objects.
   [[nodiscard]] OutputObject waitAndPop() {
 
     return output_queue_.waitAndPop();
@@ -131,14 +165,14 @@ public:
   // Workflow is STOPPED if there are no active work threads.
   // The Workflow queue is STOPPED on object creation and before activating the workflow function and creating active threads.
   // The Workflow queue is also STOPPED after a stop token is placed on the input object queue and there are no longer any active threads.
-  [[nodiscard]] SynchWorkflowState workflowState() const { return workflow_state_; }
+  [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_; }
 
-  // Calling thread(s) wait on a std::condition_variable until all threads are inactive and the workflow queue is STOPPED.
+  // Calling thread(s) wait on a std::condition_variable until the workflow queue is STOPPED.
   void waitUntilStopped() const {
 
     {
       std::unique_lock<std::mutex> lock(state_mutex_);
-      stopped_condition_.wait(lock, [this]{ return workflow_state_ == SynchWorkflowState::STOPPED; });
+      stopped_condition_.wait(lock, [this]{ return workflow_state_ == SyncWorkflowState::STOPPED; });
     }
     stopped_condition_.notify_one(); // In case multiple threads are blocked.
 
@@ -159,7 +193,7 @@ private:
   WorkProc workflow_callback_;
   std::mutex process_mutex_;
 
-  // Input queue. This can be a bounded (tidal) queue to control queue size.
+  // Input queue. This can be a bounded (tidal) queue to control queue size and balance CPU load.
   std::unique_ptr<InputQueue<InputObject>> input_queue_ptr_;
   // Custom comparators ensure lower counter values are at the top of the priority queues.
   std::priority_queue< WorkFlowObjectCounter
@@ -172,15 +206,13 @@ private:
   MtQueue<OutputObject> output_queue_;
 
   // Threads can wait on workflow queue state.
-  SynchWorkflowState workflow_state_{ SynchWorkflowState::STOPPED };
+  std::atomic<SyncWorkflowState> workflow_state_{SyncWorkflowState::STOPPED };
   mutable std::mutex state_mutex_;
   mutable std::condition_variable stopped_condition_;
 
+  // Can only be called on a STOPPED workflow.
   void queueThreads(size_t threads)
   {
-
-    // Remove any existing threads.
-    stopProcessing();
 
     // Always have at least one worker thread.
     threads = threads < 1 ? 1 : threads;
@@ -188,19 +220,21 @@ private:
     // Queue the worker threads,
     for(size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&WorkflowSynchQueue::threadProlog, this);
+      threads_.emplace_back(&WorkflowSyncQueue::threadProlog, this);
       ++active_threads_;
 
     }
 
   }
 
+  // Shuts down the all the active threads if a stop token is found on the input queue.
   void threadProlog() {
 
     // Loop until a stop token is encountered.
     while(true) {
 
-      // Can block.
+      // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
+      // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
       std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
 
       if (work_item.second == input_stop_token_) {
@@ -216,13 +250,14 @@ private:
           // Call the workflow function with the stop token
           // to notify the processing function logic that the workflow queue will be STOPPED.
           // Typically, this will push an output stop token onto the output queue.
+          // Output queue update is single threaded and will not block.
           output_queue_.push(workflow_callback_(std::move(work_item.second)));
           // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
           workflow_callback_ = nullptr;
           // Notify any threads waiting on the workflow STOPPED condition.
           {
             std::lock_guard<std::mutex> lock(state_mutex_);
-            workflow_state_ = SynchWorkflowState::STOPPED;
+            workflow_state_ = SyncWorkflowState::STOPPED;
           }
           stopped_condition_.notify_one();
 
@@ -231,7 +266,7 @@ private:
 
       } else {
 
-        // Call the worker function.
+        // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
         std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
 
         // RAII mutex protected critical code.
@@ -242,7 +277,7 @@ private:
           if (output.first == ordered_requests_.top()) {
 
             ordered_requests_.pop();
-            // Output queue cannot block since this code is mutex protected and deadlock will result.
+            // Output will not block since this code is mutex protected and therefore single threaded.
             output_queue_.push(std::move(output.second));
 
             // Dequeue any processed requests that match the request priority queue.
@@ -251,10 +286,10 @@ private:
               if (ordered_requests_.top() == processed_objects_.top().first) {
 
                 ordered_requests_.pop();
-                // Very nasty. Should by able to std::move a std::unique_ptr from a std::priority_queue without resorting to this kind of unpleasantness.
+                // Very nasty. Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this kind of unpleasantness.
                 std::pair<WorkFlowObjectCounter, OutputObject> processed = std::move(const_cast<std::pair<WorkFlowObjectCounter, OutputObject> &>(processed_objects_.top()));
                 processed_objects_.pop();
-                // Output queue cannot block.
+                // Output queue update is single threaded and will not block.
                 output_queue_.push(std::move(processed.second));
 
               } else {
@@ -279,14 +314,7 @@ private:
 
   }
 
-  void stopProcessing() {
-
-    // If any active threads then push the stop token onto the input queue.
-    if (active_threads_ != 0) {
-
-      input_queue_ptr_->push({0, std::move(input_stop_token_)});
-
-    }
+  void joinAndDeleteThreads() {
 
     // Join all the threads
     for(auto& thread : threads_) {
@@ -301,8 +329,18 @@ private:
 
 };
 
+// Convenience synchronous workflow typedefs.
+
+// Implemented with a bounded tidal input queue.
+template<typename WorkObj> using BoundedSyncInput = BoundedMtQueue<std::pair<WorkFlowObjectCounter, WorkObj>>;
+template<typename WorkInput, typename WorkOutput> using WorkflowSyncBounded = WorkflowSyncQueue<WorkInput, WorkOutput, BoundedSyncInput>;
+
+// Implemented with an unbounded input queue.
+template<typename WorkObj> using SyncInputQueue = MtQueue<std::pair<WorkFlowObjectCounter, WorkObj>>;
+template<typename WorkInput, typename WorkOutput> using WorkflowSync = WorkflowSyncQueue<WorkInput, WorkOutput, SyncInputQueue>;
+
 
 }   // end namespace
 
 
-#endif //KEL_WORKFLOW_SYNCH_H
+#endif //KEL_WORKFLOW_SYNC_H

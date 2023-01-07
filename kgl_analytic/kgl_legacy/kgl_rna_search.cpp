@@ -5,7 +5,7 @@
 #include "kgl_sequence_offset.h"
 #include "kgl_rna_search.h"
 
-
+#include <iostream>
 
 namespace kgl = kellerberrin::genome;
 

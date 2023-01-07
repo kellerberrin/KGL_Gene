@@ -1,15 +1,26 @@
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 31/12/22.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 //
 
 #ifndef KEL_WORKFLOW_UNITTEST_H
 #define KEL_WORKFLOW_UNITTEST_H
 
 
-
-
-#include "kel_workflow_asynch.h"
-#include "kel_workflow_synch.h"
+#include "kel_workflow_async.h"
+#include "kel_workflow_sync.h"
 #include "kel_exec_env_app.h"
 #include "kel_logging.h"
 
@@ -20,6 +31,9 @@ namespace kellerberrin {  //  organization level namespace
 
 
 struct InputObject {
+
+  InputObject() : count_(0) {}
+  InputObject(size_t count) : count_(count) {}
 
   size_t count_;
   std::string count_string_;
@@ -36,6 +50,9 @@ struct IntermediateObject {
 
 struct OutputObject {
 
+  OutputObject() : count_(0) {}
+  OutputObject(size_t count) : count_(count) {}
+
   size_t count_;
   size_t in_count_;
   std::string count_string_;
@@ -49,11 +66,11 @@ using IntermediateType = std::unique_ptr<IntermediateObject>;
 
 
 template<typename T> using OrderedQueueType = BoundedMtQueue<std::pair<WorkFlowObjectCounter, T>>;
-using InQueue = WorkflowSynchQueue<InputType, IntermediateType, OrderedQueueType>;
-using MedQueue = WorkflowSynchQueue<IntermediateType, OutputType, OrderedQueueType>;
+using InQueue = WorkflowSyncQueue<InputType, IntermediateType, OrderedQueueType>;
+using MedQueue = WorkflowSyncQueue<IntermediateType, OutputType, OrderedQueueType>;
 
 template<typename T> using ReQueueType = MtQueue<std::pair<WorkFlowObjectCounter, T>>;
-using ReQueue = WorkflowSynchQueue<InputType, InputType, ReQueueType>;
+using ReQueue = WorkflowSyncQueue<InputType, InputType, ReQueueType>;
 
 
 class SynchQueueUnitTest {
@@ -109,11 +126,11 @@ private:
 
 
 //template<typename T> using AsynchQueueType = MtQueue<T>;
-template <typename T> using AsynchQueueType = BoundedMtQueue<T>;
+template <typename T> using AsyncQueueType = BoundedMtQueue<T>;
 
-using AsynchInQueue = WorkflowAsynchQueue<InputType, AsynchQueueType>;
-using AsynchMedQueue = WorkflowAsynchQueue<IntermediateType, AsynchQueueType>;
-using AsynchOutQueue = WorkflowAsynchQueue<OutputType, AsynchQueueType>;
+using AsynchInQueue = WorkflowAsyncQueue<InputType, AsyncQueueType>;
+using AsynchMedQueue = WorkflowAsyncQueue<IntermediateType, AsyncQueueType>;
+using AsynchOutQueue = WorkflowAsyncQueue<OutputType, AsyncQueueType>;
 
 
 class AsynchQueueUnitTest {

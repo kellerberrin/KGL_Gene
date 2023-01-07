@@ -113,12 +113,12 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_mt_queue.h
         kel_thread/kel_thread_pool.h
         kel_thread/kel_bound_queue.h
-        kel_thread/kel_workflow_asynch.h
-        kel_thread/kel_workflow_synch.h
+        kel_thread/kel_workflow_async.h
+        kel_thread/kel_workflow_sync.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_unittest.h
-        kel_thread/kel_workflow_unitsynch.cpp
-        kel_thread/kel_workflow_unitasynch.cpp)
+        kel_thread/kel_workflow_unitsync.cpp
+        kel_thread/kel_workflow_unitasync.cpp)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES

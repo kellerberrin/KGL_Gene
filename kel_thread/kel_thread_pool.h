@@ -1,6 +1,23 @@
 //
 // Created by kellerberrin on 25/7/20.
 //
+// Copyright 2023 Kellerberrin
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//
+//
 
 #ifndef KEL_THREAD_POOL_H
 #define KEL_THREAD_POOL_H
@@ -9,12 +26,9 @@
 
 #include <condition_variable>
 #include <functional>
-#include <iostream>
 #include <future>
 #include <vector>
 #include <thread>
-#include <queue>
-#include <algorithm>
 
 
 namespace kellerberrin {  //  organization level namespace
@@ -22,7 +36,7 @@ namespace kellerberrin {  //  organization level namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
-// A general purpose thread pool class.
+// A general purpose thread pool class returns a std::future with user work function results.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +54,7 @@ public:
   [[nodiscard]] static size_t defaultThreads() { return std::max<size_t>(std::thread::hardware_concurrency() - 1, 1); }
   [[nodiscard]] static size_t defaultThreads(size_t job_size) { return (job_size > 0 ? std::min<size_t>(defaultThreads(), job_size) : 1); }
 
-  // Assumes the work function has a void return type, does not return a future.
+  // Assumes the work function has a void return type and therefore does not return a future.
   template<typename F, typename... Args>
   void enqueueWork(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
   {
