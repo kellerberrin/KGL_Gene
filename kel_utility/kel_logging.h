@@ -115,8 +115,6 @@ template<typename... Args> void Logger::critical(const char* message, Args... ar
 
 }
 
-
-
 } // end namespace.
 
 #endif //KGL_LOGGING_H

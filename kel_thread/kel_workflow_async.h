@@ -57,7 +57,7 @@ public:
   explicit WorkflowAsyncQueue(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
-  ~WorkflowAsyncQueue() {
+  ~WorkflowAsyncQueue() noexcept {
 
     // If any active threads then push the stop token onto the workflow queue.
     if (active_threads_ != 0) {
@@ -105,18 +105,10 @@ public:
 
   }
 
-  // Remove an object from the underlying workflow object queue.
-  // Blocks the calling thread if the queue is empty.
-  // Can be concurrently called by multiple consumer threads.
-  [[nodiscard]] QueuedObj waitAndPop() {
-
-    return queue_ptr_->waitAndPop();
-
-  }
 
   // Underlying object queue access routine.
-  // All public members of MtQueue and BoundedMtQueue are thread safe.
-  [[nodiscard]] const Queue<QueuedObj>& ObjectQueue() const { return *queue_ptr_; }
+  // All const public members of MtQueue and BoundedMtQueue are thread safe.
+  [[nodiscard]] const Queue<QueuedObj>& objectQueue() const { return *queue_ptr_; }
 
   // Workflow is STOPPED if there are no active work threads.
   // The Workflow queue is STOPPED on object creation and before registering the workflow function and creating active threads.
@@ -134,6 +126,15 @@ public:
 
   }
 
+  // Remove an object from the underlying workflow object queue.
+  // Blocks the calling thread if the queue is empty.
+  // Can be concurrently called by multiple consumer threads.
+  [[nodiscard]] QueuedObj waitAndPop() {
+
+    return queue_ptr_->waitAndPop();
+
+  }
+
 
 private:
 
@@ -147,11 +148,9 @@ private:
   mutable std::condition_variable stopped_condition_;
 
 
+
   void queueThreads(size_t threads)
   {
-
-    // Remove any existing inactive threads.
-    threads_.clear();
 
     // Always have at least one worker thread.
     threads = threads < 1 ? 1 : threads;
@@ -177,7 +176,7 @@ private:
       if (work_item == stop_token_) {
 
         // If not the last thread then re-queue the stop token and terminate.
-        if (--active_threads_ != 0) {
+        if (active_threads_.fetch_sub(1) > 1) {
 
           push(std::move(work_item));
 
@@ -201,7 +200,8 @@ private:
         }
         break; // Thread terminates and can be joined.
 
-      } else {
+      }
+      else {
 
         // The thread performs work with the dequeued work item.
         workflow_callback_(std::move(work_item));

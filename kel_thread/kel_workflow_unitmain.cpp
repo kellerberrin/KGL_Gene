@@ -15,17 +15,23 @@
 //
 //
 
+void boundedExample1();
+void boundedExample2();
+void asyncExample1();
 
-#include "kel_workflow_unittest.h"
-
+#include "kel_exec_env_app.h"
 
 namespace kel = kellerberrin;
 
-
 void unit_test() {
 
-  kel::SynchQueueUnitTest::synchMoveable();
-  kel::AsynchQueueUnitTest::asynchMoveable();
+//  boundedExample1();
+//  boundedExample2();
+  for (size_t i = 0; i <100; ++i) {
+
+    asyncExample1();
+
+  }
 
 }
 

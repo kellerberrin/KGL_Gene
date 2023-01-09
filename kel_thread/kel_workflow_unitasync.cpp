@@ -15,203 +15,157 @@
 //
 //
 
-#include "kel_workflow_unittest.h"
+#include "kel_workflow_async.h"
+#include <iostream>
 
 namespace kel = kellerberrin;
 
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void kel::AsynchQueueUnitTest::asynchInputWork( std::shared_ptr<AsynchMedQueue> med_queue
-                                              , InputType input_item) {
-
-  if (not input_item) {
-
-    ExecEnv::log().info("Asynch input objects processed before stop token: {}", input_count_.load());
-    med_queue->push(nullptr);
-    return;
-
-  }
-
-  ++input_count_;
-
-  if (input_count_ % report_iterations == 0) {
-
-    ExecEnv::log().info("Asynch Input Objects processed: {}", input_count_.load());
-
-  }
-
-  auto med_ptr = std::make_unique<kel::IntermediateObject>();
-  volatile u_int64_t work_count{0};
-  for (size_t i = 0; i < work_iterations; ++i) {
-
-    // Random Work
-    work_count = input_item->count_ + 1;
-
-  }
-
-  med_ptr->count_ = work_count;
-  med_ptr->count_ = input_item->count_;
-
-  // Queue to the intermediate queue.
-  med_queue->push(std::move(med_ptr));
-
-}
-
-
-void kel::AsynchQueueUnitTest::asynchIntermediateWork(  std::shared_ptr<const AsynchMedQueue> med_queue
-                                                      , std::shared_ptr<AsynchOutQueue> output_queue
-                                                      , IntermediateType intermediate_item) {
-
-
-
-  if (not intermediate_item) {
-
-    ExecEnv::log().info("Asynch Intermediate Objects processed before stop token: {}, Queue size: {}", intermediate_count_.load(), med_queue->ObjectQueue().size());
-    output_queue->push(nullptr);
-    return;
-
-  }
-
-  ++intermediate_count_;
-
-  if (intermediate_count_ % report_iterations == 0) {
-
-    ExecEnv::log().info("Asynch Intermediate Objects processed: {}", intermediate_count_.load());
-
-  }
-
-  auto out_ptr = std::make_unique<kel::OutputObject>();
-  volatile u_int64_t work_count{0};
-  for (size_t i = 0; i < work_iterations; ++i) {
-    // Random Work
-    work_count = intermediate_item->count_ + 1;
-
-  }
-
-  out_ptr->count_ = work_count;
-  out_ptr->count_ = intermediate_item->count_;
-
-  // Queue to the output queue.
-  output_queue->push(std::move(out_ptr));
-
-}
-
-
-
-void kel::AsynchQueueUnitTest::pushInput(std::shared_ptr<AsynchInQueue> input_queue) {
-
-  std::vector<InputType> input_vector;
-  input_vector.reserve(iterations + 1);
-  // Push input objects onto the input queue
-  for (size_t i = 1; i <= iterations; ++i) {
-
-    auto input_ptr = std::make_unique<InputObject>();
-    input_ptr->count_ = i;
-    input_vector.push_back(std::move(input_ptr));
-    if (i % report_iterations == 0) {
-
-      ExecEnv::log().info("Input Objects created: {}", i);
-
-    }
-
-  }
-  ExecEnv::log().info("Finished creating input objects: {}", iterations);
-  // Stop the input processing by pushing a stop token.
-  size_t objects{0};
-  for (auto& input_ptr : input_vector) {
-
-    input_queue->push(std::move(input_ptr));
-    ++objects;
-
-  }
-  // Stop the queue.
-  input_queue->push(nullptr);
-
-  ExecEnv::log().info("Pushed all objects: {} onto input work queue.", objects);
-
-}
-
-
-void kel::AsynchQueueUnitTest::asynchOutputWork(std::shared_ptr<const AsynchOutQueue> output_queue, OutputType output_item) {
-
-
-  if (output_item) {
-
-    ++output_count_;
-    check_sum_ += output_item->count_;
-
-    if (output_count_ % report_iterations == 0) {
-
-      ExecEnv::log().info("Asynch Output Objects processed: {}", output_count_.load());
-
-    }
-
-    volatile u_int64_t work_count{0};
-    for (size_t i = 0; i < work_iterations; ++i) {
-      // Random Work
-      work_count = output_item->count_ + 1;
-
-    }
-
-    output_item->count_ = work_count;
-
-  } else {
-
-    ExecEnv::log().info("Asynch Final - Move - Out Queue Items: {}, CheckSum: {}, Queue Size: {}", output_count_.load(), check_sum_, output_queue->ObjectQueue().size());
-
-  }
-
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// Asynchronous workflows do not preserve object input order.
 //
+// An example of using asynchronous workflow queues. The example below uses 3 workflows connected together
+// by a task object (ExampleAsyncTask). The workflows are implemented as bounded queues (WorkflowAsyncBounded).
+// This is useful as it automatically load balances the CPU as the workflows perform their tasks.
+// (Read the documentation on bounded tidal queues.) Another advantage is that memory usage is minimised
+// as the bounded queues can only grow to a size of high-tide (default is 10000 objects).
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// The toy object to be processed.
+struct ExampleAsync{
 
-void kel::AsynchQueueUnitTest::asynchMoveable() {
+  explicit ExampleAsync(size_t count) : count_(count) {}
 
-  kel::AsynchQueueUnitTest work_functions;
+  size_t count_{0};
 
-  // Create the 3 work queues
-  // The input queue.
-  auto input_queue_impl_ptr = std::make_unique<AsyncQueueType<InputType>>(high_tide, low_tide, "Input_Queue", mon_freq_ms);
-  auto input_queue = std::make_shared<AsynchInQueue>(nullptr, std::move(input_queue_impl_ptr));
+};
+// Moving objects around on the workflows via a pointer is generally optimal.
+using ExampleAsyncType = std::unique_ptr<ExampleAsync>;
 
-  // The middle queue.
-  auto intermediate_queue_impl_ptr = std::make_unique<AsyncQueueType<IntermediateType>>(high_tide, low_tide, "Intermediate_Queue", mon_freq_ms);
-  auto intermediate_queue = std::make_shared<AsynchMedQueue>(nullptr, std::move(intermediate_queue_impl_ptr));
+// Forward definition of the bounded workflows.
+using ExampleWorkflowType = std::shared_ptr<kel::WorkflowAsyncBounded<ExampleAsyncType>>;
 
-  // The output queue
-  auto output_queue_impl_ptr = std::make_unique<AsyncQueueType<OutputType>>(high_tide, low_tide, "Output_Queue", mon_freq_ms);
-  auto output_queue = std::make_shared<AsynchOutQueue>(nullptr, std::move(output_queue_impl_ptr));
+// The workflow function is implemented as a member of the ExampleAsyncTask object.
+struct ExampleAsyncTask {
+
+  // Do some work and place the object on the next workflow.
+  // Note that the workflow object is always the last argument to the task function.
+  void workflowTask (ExampleWorkflowType workflow_ptr, size_t work_iterations, ExampleAsyncType t) {
+
+    // Always check for stop tokens.
+     if (not t) {
+
+       ++stop_tokens_;
+       workflow_ptr->push(std::move(t)); // Just re-queue the stop token on the next workflow.
+
+     }
+    // Perform some work.
+    workIterations(work_iterations);
+    workflow_ptr->push(std::move(t));  // Transfer to the next workflow.
+
+  }
+
+  // Do some work and place the object in an output queue.
+  // Note that the workflow object is always the last argument to the task function.
+  void queueTask (size_t work_iterations, ExampleAsyncType t) {
+
+    // Ignore the stop token.
+    if (t) {
+
+      workIterations(work_iterations);
+      output_queue_.push(std::move(t));
+
+    }
+
+  }
+
+  // Simple make work function to soak up some CPU cycles.
+  static void workIterations(size_t iterations) {
+
+    // Do some example work, volatile will not be optimized away by the compiler.
+    volatile u_int64_t work_count{0};
+    for (size_t i = 0; i < iterations; ++i) {
+
+      work_count = i + 1;
+
+    }
+    work_count = work_count + 1;
+
+  }
+
+  // Will be simultaneously accessed by all output workflow threads.
+  // This is OK, MtQueue and BoundedMtQueue can be accessed by multiple consumer and producer threads.
+  kel::MtQueue<ExampleAsyncType> output_queue_;
+  std::atomic<size_t> stop_tokens_{0};
+
+};
 
 
-  // Assign work functions to the queues.
-  input_queue->activateWorkflow(input_thread_count, &kel::AsynchQueueUnitTest::asynchInputWork, &work_functions, intermediate_queue);
-  intermediate_queue->activateWorkflow(intermediate_thread_count, &kel::AsynchQueueUnitTest::asynchIntermediateWork, &work_functions, intermediate_queue, output_queue);
-  output_queue->activateWorkflow(output_thread_count, &kel::AsynchQueueUnitTest::asynchOutputWork, &work_functions, output_queue);
+void asyncExample1() {
 
-  // Asynchronously add objects to the beginning of the linked queues.
-  std::thread input_thread(&kel::AsynchQueueUnitTest::pushInput, &work_functions, input_queue);
-  input_thread.join();
+  // We can concatenate workflows together to perform 3 stage processing.
+  auto input_workflow_ptr = std::make_shared<kel::WorkflowAsyncBounded<ExampleAsyncType>>(nullptr);
+  auto intermediate_workflow_ptr = std::make_shared<kel::WorkflowAsyncBounded<ExampleAsyncType>>(nullptr);
+  auto output_workflow_ptr = std::make_shared<kel::WorkflowAsyncBounded<ExampleAsyncType>>(nullptr);
 
-  // Wait until the queues have stopped processing.
-  output_queue->waitUntilStopped();
-  input_queue->waitUntilStopped();
-  intermediate_queue->waitUntilStopped();
+  ExampleAsyncTask async_task;
+  // Activate the workflows with 100 threads each and assign different CPU demand work functions to the queues.
+  // More threads have been allocated than are available in hardware.
+  // However, CPU usage will still balance to approximately 100% of the available hardware CPU.
+  // This is the advantage of using bounded queues in a workflow.
+  input_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, intermediate_workflow_ptr, 100000);
+  intermediate_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, output_workflow_ptr, 10000);
+  output_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::queueTask, &async_task, 1000);
 
-  ExecEnv::log().info("Asynch Workflow Unit Test exits. Input Shared Count: {}, Intermediate Count: {}, Output Count: {}"
-                      , input_queue.use_count(), intermediate_queue.use_count(), output_queue.use_count());
+  // Asynchronously add objects to the input of the linked queues.
+  auto fill_lambda = [input_workflow_ptr]() {
+
+    for (size_t i = 1; i <= 1000000; ++i) {
+
+      input_workflow_ptr->push(std::make_unique<ExampleAsync>(i));
+
+    }
+    // Stop token
+    input_workflow_ptr->push(nullptr);
+
+  };
+
+  std::cout << "Asynchronous concatenated workflow example begins ....." << std::endl;
+
+  std::thread fill_thread(fill_lambda);
+  // Wait until processing is finished,
+  input_workflow_ptr->waitUntilStopped();
+  intermediate_workflow_ptr->waitUntilStopped();
+  output_workflow_ptr->waitUntilStopped();
+
+  std::cout << "Asynchronous concatenated workflow example ends." << std::endl;
+
+  // Check that the workflows are empty and there are 1000000 objects in the final output queue.
+  std::cout << "Input workflow size: " << input_workflow_ptr->objectQueue().size()
+            << ", Intermediate workflow size: " <<  intermediate_workflow_ptr->objectQueue().size()
+            << ", Output workflow size: " << output_workflow_ptr->objectQueue().size()
+            << ", Final output queue size: " << async_task.output_queue_.size() << std::endl;
+
+  // The workflows are empty and stopped, so we can join on the fill thread.
+  fill_thread.join();
+
+  if (output_workflow_ptr->objectQueue().size() != 0) {
+
+    auto obj = output_workflow_ptr->waitAndPop();
+    if (not obj) {
+
+      std::cout << "Final object is a stop token, stop tokens moved: " << async_task.stop_tokens_.load() << std::endl;
+
+    } else {
+
+      std::cout << "Final object is a NOT stop token" << std::endl;
+
+    }
+
+
+  }
 
 }
 

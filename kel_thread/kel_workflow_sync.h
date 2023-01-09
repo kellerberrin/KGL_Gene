@@ -36,7 +36,7 @@ namespace kellerberrin {  //  organization level namespace
 // These queues guarantee that the output objects are removed from the output queue in exactly the same order in which
 // the matching input object was presented to the input workflow queue.
 //
-// At the end of processing the WorkflowSynchQueue must be STOPPED by a stop_token being pushed onto the workflow queue.
+// At the end of processing the WorkflowSynchQueue is STOPPED by a stop_token being pushed onto the workflow queue.
 // The stop_token is defined in the WorkflowSynchQueue constructor. This will be a nullptr in the usual case of the
 // InputObject being a pointer (std::unique_ptr<T>).
 //
@@ -82,7 +82,7 @@ public:
       : input_stop_token_(std::move(input_stop_token))
       , input_queue_ptr_(std::move(input_queue_ptr)) {}
 
-  ~WorkflowSyncQueue() {
+  ~WorkflowSyncQueue() noexcept {
 
     // Shutdown any active threads and join() them.
     // If we have active threads then push an input stop token so that the workflow is STOPPED.
@@ -104,7 +104,7 @@ public:
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on an ACTIVE workflow queue will return false.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
 
     if (workflow_state_ == SyncWorkflowState::ACTIVE) {
@@ -227,6 +227,9 @@ private:
 
   }
 
+  // Workflow threads do not block if they process input objects out of order.
+  // The processed results (output objects) are placed on a std::priority queue to facilitate re-ordering so that
+  // the ordering of output objects matches that of input objects without blocking.
   // Shuts down the all the active threads if a stop token is found on the input queue.
   void threadProlog() {
 
@@ -250,7 +253,6 @@ private:
           // Call the workflow function with the stop token
           // to notify the processing function logic that the workflow queue will be STOPPED.
           // Typically, this will push an output stop token onto the output queue.
-          // Output queue update is single threaded and will not block.
           output_queue_.push(workflow_callback_(std::move(work_item.second)));
           // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
           workflow_callback_ = nullptr;
@@ -269,7 +271,7 @@ private:
         // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
         std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
 
-        // RAII mutex protected critical code.
+        // Mutex protected critical code.
         {
           std::scoped_lock lock(process_mutex_);
 
@@ -277,7 +279,6 @@ private:
           if (output.first == ordered_requests_.top()) {
 
             ordered_requests_.pop();
-            // Output will not block since this code is mutex protected and therefore single threaded.
             output_queue_.push(std::move(output.second));
 
             // Dequeue any processed requests that match the request priority queue.
@@ -286,10 +287,9 @@ private:
               if (ordered_requests_.top() == processed_objects_.top().first) {
 
                 ordered_requests_.pop();
-                // Very nasty. Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this kind of unpleasantness.
+                // Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this unpleasantness.
                 std::pair<WorkFlowObjectCounter, OutputObject> processed = std::move(const_cast<std::pair<WorkFlowObjectCounter, OutputObject> &>(processed_objects_.top()));
                 processed_objects_.pop();
-                // Output queue update is single threaded and will not block.
                 output_queue_.push(std::move(processed.second));
 
               } else {

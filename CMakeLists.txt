@@ -548,33 +548,35 @@ set(APPLICATION_SOURCE_FILES
 
 
 
-add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${THREAD_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+
+add_library(kel_thread STATIC ${THREAD_SOURCE_FILES})
 
 add_library(kgl_genomics STATIC ${GENETIC_LIBRARY_SOURCE_FILES})
 
-target_link_libraries(kgl_genomics kel_utility )
+target_link_libraries(kgl_genomics kel_utility kel_thread)
 
 add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES})
 
-target_link_libraries(kgl_analysis kgl_genomics kel_utility )
+target_link_libraries(kgl_analysis kgl_genomics kel_utility kel_thread)
 
 #generate kgl_genome executable
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
 #generate libraries.
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
-target_link_libraries (kol_test kol_ontology kel_utility ${Boost_LIBRARIES})
+target_link_libraries (kol_test kol_ontology kel_utility kel_thread ${Boost_LIBRARIES})
 
 #generate libraries.
 add_executable(thread_test kel_thread/kel_workflow_unitmain.cpp)
 
-target_link_libraries (thread_test kel_utility ${Boost_LIBRARIES})
+target_link_libraries (thread_test kel_utility kel_thread ${Boost_LIBRARIES})
 
 
 ############################################################################################################
@@ -664,7 +666,7 @@ link_directories(/usr/local/lib/libhmsbeagle-1/lib)
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp)
 
 #specify link libraries.
-target_link_libraries(kpl kpl_library_lib kgl_genomics kel_utility libncl.a ${Boost_LIBRARIES} hmsbeagle)
+target_link_libraries(kpl kpl_library_lib kgl_genomics kel_utility kel_thread libncl.a ${Boost_LIBRARIES} hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")
