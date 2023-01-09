@@ -126,14 +126,6 @@ public:
 
   }
 
-  // Remove an object from the underlying workflow object queue.
-  // Blocks the calling thread if the queue is empty.
-  // Can be concurrently called by multiple consumer threads.
-  [[nodiscard]] QueuedObj waitAndPop() {
-
-    return queue_ptr_->waitAndPop();
-
-  }
 
 
 private:
@@ -148,6 +140,14 @@ private:
   mutable std::condition_variable stopped_condition_;
 
 
+  // Remove an object from the underlying workflow object queue.
+  // Blocks the calling thread if the queue is empty.
+  // Can be concurrently called by multiple consumer threads.
+  [[nodiscard]] QueuedObj waitAndPop() {
+
+    return queue_ptr_->waitAndPop();
+
+  }
 
   void queueThreads(size_t threads)
   {
@@ -176,7 +176,7 @@ private:
       if (work_item == stop_token_) {
 
         // If not the last thread then re-queue the stop token and terminate.
-        if (active_threads_.fetch_sub(1) > 1) {
+        if (--active_threads_ != 0) {
 
           push(std::move(work_item));
 

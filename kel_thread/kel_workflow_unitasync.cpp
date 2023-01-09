@@ -55,15 +55,14 @@ struct ExampleAsyncTask {
   void workflowTask (ExampleWorkflowType workflow_ptr, size_t work_iterations, ExampleAsyncType t) {
 
     // Always check for stop tokens.
-     if (not t) {
+     if (t) {
 
-       ++stop_tokens_;
-       workflow_ptr->push(std::move(t)); // Just re-queue the stop token on the next workflow.
+       workIterations(work_iterations); // Perform some work.
 
      }
-    // Perform some work.
-    workIterations(work_iterations);
-    workflow_ptr->push(std::move(t));  // Transfer to the next workflow.
+
+    // Forward all objects including the final stop token to the next workflow.
+     workflow_ptr->push(std::move(t));
 
   }
 
@@ -71,7 +70,7 @@ struct ExampleAsyncTask {
   // Note that the workflow object is always the last argument to the task function.
   void queueTask (size_t work_iterations, ExampleAsyncType t) {
 
-    // Ignore the stop token.
+    // Do not push the stop token onto the output queue.
     if (t) {
 
       workIterations(work_iterations);
@@ -98,7 +97,6 @@ struct ExampleAsyncTask {
   // Will be simultaneously accessed by all output workflow threads.
   // This is OK, MtQueue and BoundedMtQueue can be accessed by multiple consumer and producer threads.
   kel::MtQueue<ExampleAsyncType> output_queue_;
-  std::atomic<size_t> stop_tokens_{0};
 
 };
 
@@ -111,13 +109,14 @@ void asyncExample1() {
   auto output_workflow_ptr = std::make_shared<kel::WorkflowAsyncBounded<ExampleAsyncType>>(nullptr);
 
   ExampleAsyncTask async_task;
+
   // Activate the workflows with 100 threads each and assign different CPU demand work functions to the queues.
   // More threads have been allocated than are available in hardware.
   // However, CPU usage will still balance to approximately 100% of the available hardware CPU.
   // This is the advantage of using bounded queues in a workflow.
-  input_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, intermediate_workflow_ptr, 100000);
-  intermediate_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, output_workflow_ptr, 10000);
-  output_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::queueTask, &async_task, 1000);
+  input_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, intermediate_workflow_ptr, 1000000);
+  intermediate_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::workflowTask, &async_task, output_workflow_ptr, 10000000);
+  output_workflow_ptr->activateWorkflow(100, &ExampleAsyncTask::queueTask, &async_task, 100000);
 
   // Asynchronously add objects to the input of the linked queues.
   auto fill_lambda = [input_workflow_ptr]() {
@@ -136,9 +135,9 @@ void asyncExample1() {
 
   std::thread fill_thread(fill_lambda);
   // Wait until processing is finished,
-  input_workflow_ptr->waitUntilStopped();
-  intermediate_workflow_ptr->waitUntilStopped();
   output_workflow_ptr->waitUntilStopped();
+  // The workflows are empty and stopped, so we can join on the fill thread.
+  fill_thread.join();
 
   std::cout << "Asynchronous concatenated workflow example ends." << std::endl;
 
@@ -148,24 +147,6 @@ void asyncExample1() {
             << ", Output workflow size: " << output_workflow_ptr->objectQueue().size()
             << ", Final output queue size: " << async_task.output_queue_.size() << std::endl;
 
-  // The workflows are empty and stopped, so we can join on the fill thread.
-  fill_thread.join();
-
-  if (output_workflow_ptr->objectQueue().size() != 0) {
-
-    auto obj = output_workflow_ptr->waitAndPop();
-    if (not obj) {
-
-      std::cout << "Final object is a stop token, stop tokens moved: " << async_task.stop_tokens_.load() << std::endl;
-
-    } else {
-
-      std::cout << "Final object is a NOT stop token" << std::endl;
-
-    }
-
-
-  }
 
 }
 
