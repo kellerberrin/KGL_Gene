@@ -48,7 +48,7 @@ class WorkflowThreads
 public:
 
   explicit WorkflowThreads(size_t threads) { queueThreads(threads); }
-  ~WorkflowThreads() noexcept { joinThreads(); }
+  ~WorkflowThreads() { joinThreads(); }
 
   // Convenience routines, default is available hardware threads minus 1, minimum 1 thread.
   [[nodiscard]] static size_t defaultThreads() { return std::max<size_t>(std::thread::hardware_concurrency() - 1, 1); }
@@ -56,11 +56,11 @@ public:
 
   // Assumes the work function has a void return type and therefore does not return a future.
   template<typename F, typename... Args>
-  void enqueueWork(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable<decltype(&MtQueue<Proc>::push)>::value)
+  void enqueueWork(F&& f, Args&&... args)
   {
 
-    auto task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-    work_queue_.push([task]{ task(); });
+    auto task = std::bind_front(f, args...);
+    work_queue_.push([task]()->void{ task(); });
 
   }
 
@@ -72,9 +72,9 @@ public:
 
     using return_type = typename std::result_of<F(Args...)>::type;
 
-    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(std::bind_front(f, args...));
     std::future<return_type> future = task_ptr->get_future();
-    work_queue_.push([task_ptr]{ (*task_ptr)(); });
+    work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
     return future;
 
   }

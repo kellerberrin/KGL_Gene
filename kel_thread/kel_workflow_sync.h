@@ -26,9 +26,11 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <optional>
 
 
 namespace kellerberrin {  //  organization level namespace
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -45,7 +47,7 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class SyncWorkflowState { ACTIVE, STOPPED};
+enum class SyncWorkflowState { ACTIVE, STARTING, SHUTDOWN, STOPPED};
 
 // Some very long-lived (heat death of the universe) applications may need to use a 128 bit unsigned int
 // to assign an ordering to the input and output objects.
@@ -82,17 +84,17 @@ public:
       : input_stop_token_(std::move(input_stop_token))
       , input_queue_ptr_(std::move(input_queue_ptr)) {}
 
-  ~WorkflowSyncQueue() noexcept {
+  ~WorkflowSyncQueue() {
 
     // Shutdown any active threads and join() them.
     // If we have active threads then push an input stop token so that the workflow is STOPPED.
-    if (active_threads_ != 0) {
+    if (active_threads_.load() != 0) {
 
       input_queue_ptr_->push({0, std::move(input_stop_token_)});
 
     }
     joinAndDeleteThreads();
-    // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
+    // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
 
   }
@@ -100,22 +102,33 @@ public:
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
-  // This function is not multi-threaded and must be called after workflow queue creation for workflow processing to be ACTIVE.
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on an ACTIVE workflow queue will return false.
   template<typename F, typename... Args>
   bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
 
-    if (workflow_state_ == SyncWorkflowState::ACTIVE) {
+    { // mutex scope
+      std::scoped_lock<std::mutex> lock1(state_mutex_);
 
-      return false;
+      if (workflow_state_ != SyncWorkflowState::STOPPED) {
 
-    }
+        return false;
+
+      }
+      workflow_state_ = SyncWorkflowState::STARTING;
+    } // ~mutex scope
+
     joinAndDeleteThreads();
-    workflow_callback_ = [f, args...](InputObject t)->OutputObject{ return std::invoke(f, args..., std::move(t)); };
+    workflow_callback_ = std::bind_front(f, args...);
     queueThreads(threads);
-    workflow_state_ = SyncWorkflowState::ACTIVE;
+
+    { // mutex scope
+      std::scoped_lock<std::mutex> lock2(state_mutex_);
+      workflow_state_ = SyncWorkflowState::ACTIVE;
+    } // ~mutex scope
+    active_condition_.notify_one();
+
     return true;
 
   }
@@ -123,10 +136,27 @@ public:
 
   // Although this function is thread-safe, it should really only be called with a single thread.
   // Since calling with multiple threads will lead to undefined input object ordering.
-  // This function can be called on a STOPPED workflow queue.
-  // However, if the underlying input queue is a BoundedMtQueue, the function will block once high-tide is reached.
-  // The function will not block if the underlying input queue is an MtQueue.
-  void push(InputObject input_obj) {
+  // Objects can be pushed on to the workflow only when the workflow is active.
+  // The input object is returned to the caller if the workflow is not active.
+  std::optional<InputObject> push(InputObject input_obj) {
+
+    // Stop tokens can only be pushed once
+    { // mutex scope
+      std::scoped_lock<std::mutex> lock(state_mutex_);
+
+      if (workflow_state_ != SyncWorkflowState::ACTIVE) {
+
+        return std::make_optional<InputObject>(std::move(input_obj));
+
+      }
+
+      if (input_obj == input_stop_token_) {
+
+        workflow_state_ = SyncWorkflowState::SHUTDOWN;
+
+      }
+
+    }
 
     // Note, this variable is only used to carry the object ordering tag outside the mutex scope.
     WorkFlowObjectCounter input_tag;
@@ -145,8 +175,10 @@ public:
     } // End of critical code.
 
     // The order of objects pushed onto the input queue does not matter as the input objects have already been tagged.
-    // In particular, this queue can block and be implemented as a tidal (automatic load balancing) queue.
     input_queue_ptr_->push({input_tag, std::move(input_obj)});
+
+    // The input object has been consumed.
+    return std::nullopt;
 
   }
 
@@ -163,8 +195,12 @@ public:
   }
 
   // Workflow is STOPPED if there are no active work threads.
-  // The Workflow queue is STOPPED on object creation and before activating the workflow function and creating active threads.
-  // The Workflow queue is also STOPPED after a stop token is placed on the input object queue and there are no longer any active threads.
+  // The Workflow queue is STOPPED on object creation and before activating the workflow with a task function.
+  // The workflow is in a SHUTDOWN state if a stop token has been received, the workflow will accept no further input objects.
+  // SHUTDOWN is a temporary state that will transition to STOPPED.
+  // Workflow  is in STARTUP if the activateWorkflow() function has been called but the threads are not yet active.
+  // STARTUP is a temporary state that will transition to ACTIVE.
+  // The workflow is ACTIVE if a task function has been supplied and all threads are ready for processing.
   [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_; }
 
   // Calling thread(s) wait on a std::condition_variable until the workflow queue is STOPPED.
@@ -177,6 +213,19 @@ public:
     stopped_condition_.notify_one(); // In case multiple threads are blocked.
 
   }
+
+  // Calling thread(s) wait on a std::condition_variable until the workflow queue is ACTIVE.
+  void waitUntilActive() const {
+
+    {
+      std::unique_lock<std::mutex> lock(state_mutex_);
+      active_condition_.wait(lock, [this]{ return workflow_state_ == SyncWorkflowState::ACTIVE; });
+    }
+    active_condition_.notify_one(); // In case multiple threads are blocked.
+
+  }
+
+
 
   // Input and output queue const access. All const public functions on these queues are thread safe.
   [[nodiscard]] const InputQueue<InputObject>& inputQueue() const { return *input_queue_ptr_; }
@@ -206,9 +255,10 @@ private:
   MtQueue<OutputObject> output_queue_;
 
   // Threads can wait on workflow queue state.
-  std::atomic<SyncWorkflowState> workflow_state_{SyncWorkflowState::STOPPED };
+  SyncWorkflowState workflow_state_{SyncWorkflowState::STOPPED };
   mutable std::mutex state_mutex_;
   mutable std::condition_variable stopped_condition_;
+  mutable std::condition_variable active_condition_;
 
   // Can only be called on a STOPPED workflow.
   void queueThreads(size_t threads)
@@ -221,9 +271,9 @@ private:
     for(size_t i = 0; i < threads; ++i) {
 
       threads_.emplace_back(&WorkflowSyncQueue::threadProlog, this);
-      ++active_threads_;
 
     }
+    active_threads_.store(threads);
 
   }
 
@@ -242,7 +292,7 @@ private:
 
       if (work_item.second == input_stop_token_) {
 
-        if (--active_threads_ != 0) {
+        if (active_threads_.fetch_sub(1) > 1) {
 
           // If multiple threads are active then re-queue the input stop token.
           input_queue_ptr_->push(std::move(work_item));
@@ -250,19 +300,17 @@ private:
         } else {
 
           // Last active thread.
-          // Call the workflow function with the stop token
-          // to notify the processing function logic that the workflow queue will be STOPPED.
-          // Typically, this will push an output stop token onto the output queue.
+          // Call the workflow function with the stop token.
+          // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
           output_queue_.push(workflow_callback_(std::move(work_item.second)));
-          // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
+          // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
           workflow_callback_ = nullptr;
           // Notify any threads waiting on the workflow STOPPED condition.
           {
-            std::lock_guard<std::mutex> lock(state_mutex_);
+            std::scoped_lock<std::mutex> lock(state_mutex_);
             workflow_state_ = SyncWorkflowState::STOPPED;
           }
           stopped_condition_.notify_one();
-
         }
         break; // Thread terminates,
 

@@ -32,8 +32,10 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A threaded workflow for std::move constructable objects (such as std::unique_ptr).
-// There is no guarantee that objects are processed in the same order as they were pushed onto the queue.
-// The supplied processing function must be able to handle the stop token (a nullptr in the std::unique_ptr case).
+// There is no guarantee that objects (except the stop token) are processed in the same order as they were pushed onto the queue.
+// The workflow is STOPPED and no threads are active after a stop token is pushed onto the workflow.
+// The supplied processing function must check for the stop token (a nullptr in the std::unique_ptr case).
+// The stop token is guaranteed to be the last object processed.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,26 +49,26 @@ requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedO
 class WorkflowAsyncQueue
 {
 
-public:
-
   using WorkProc = std::function<void(QueuedObj)>;
 
-  // The constructor requires that an input stop token is specified.
-  // If the InputObject is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
+public:
+
+  // The constructor requires that a top token is specified.
+  // If the Object is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
   // The queue will be either a MtQueue (unbounded) or BondedMtQueue (a bounded tidal queue).
   explicit WorkflowAsyncQueue(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
-  ~WorkflowAsyncQueue() noexcept {
+  ~WorkflowAsyncQueue() {
 
     // If any active threads then push the stop token onto the workflow queue.
-    if (active_threads_ != 0) {
+    if (active_threads_.load() != 0) {
 
       push(std::move(stop_token_));
 
     }
     joinAndDeleteThreads();
-    // Explicitly remove the workflow lambda to prevent circular references from any captured pointer arguments.
+    // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
 
   }
@@ -78,18 +80,22 @@ public:
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on an active workflow queue will return false.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
 
-    if (workflow_state_ == AsynchWorkflowState::ACTIVE) {
+    { // mutex scope
+      std::scoped_lock<std::mutex> lock(state_mutex_);
 
-      return false;
+      if (workflow_state_ == AsynchWorkflowState::ACTIVE) {
 
-    }
+        return false;
+
+      }
+      workflow_state_ = AsynchWorkflowState::ACTIVE;
+    } // ~mutex scope
     joinAndDeleteThreads();
-    workflow_callback_ = [f, args...](QueuedObj t)->void { std::invoke(f, args..., std::move(t)); };
+    workflow_callback_ = std::bind_front(f, args...);
     queueThreads(threads);
-    workflow_state_ = AsynchWorkflowState::ACTIVE;
     return true;
 
   }
@@ -119,7 +125,7 @@ public:
   void waitUntilStopped() const {
 
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      std::unique_lock<std::mutex> lock(state_mutex_);
       stopped_condition_.wait(lock, [this]{ return workflow_state_ == AsynchWorkflowState::STOPPED; });
     }
     stopped_condition_.notify_one(); // Multiple threads may be blocked.
@@ -135,8 +141,8 @@ private:
   std::vector<std::thread> threads_;
   std::atomic<uint32_t> active_threads_{0};
   WorkProc workflow_callback_;
-  std::atomic<AsynchWorkflowState> workflow_state_{ AsynchWorkflowState::STOPPED };
-  mutable std::mutex mutex_;
+  AsynchWorkflowState workflow_state_{ AsynchWorkflowState::STOPPED };
+  mutable std::mutex state_mutex_;
   mutable std::condition_variable stopped_condition_;
 
 
@@ -154,14 +160,13 @@ private:
 
     // Always have at least one worker thread.
     threads = threads < 1 ? 1 : threads;
-
     // Queue the worker threads,
-    for(size_t i = 0; i < threads; ++i) {
+    for (size_t i = 0; i < threads; ++i) {
 
       threads_.emplace_back(&WorkflowAsyncQueue::threadProlog, this);
-      ++active_threads_;
 
     }
+    active_threads_.store(threads);
 
   }
 
@@ -176,23 +181,22 @@ private:
       if (work_item == stop_token_) {
 
         // If not the last thread then re-queue the stop token and terminate.
-        if (--active_threads_ != 0) {
+        if (active_threads_.fetch_sub(1) > 1) {
 
           push(std::move(work_item));
 
         } else {
 
           // This is guaranteed to be the last active thread.
-          // Call the workflow function with the stop token
-          // to notify the workflow function logic that the workflow queue will be STOPPED.
+          // Call the workflow function with the stop token.
+          // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
           workflow_callback_(std::move(work_item));
 
-          // Explicitly remove the lambda workflow function to prevent circular references from captured pointer arguments.
+          // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
           workflow_callback_ = nullptr;
-
           // Notify any threads waiting on the workflow STOPPED condition.
           {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::scoped_lock<std::mutex> lock(state_mutex_);
             workflow_state_ = AsynchWorkflowState::STOPPED;
           }
           stopped_condition_.notify_one();
