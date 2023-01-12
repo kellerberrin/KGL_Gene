@@ -27,7 +27,6 @@
 #include <set>
 #include <thread>
 #include <optional>
-#include <iostream>
 
 
 namespace kellerberrin {  //  organization level namespace
@@ -48,7 +47,7 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class SyncWorkflowState { ACTIVE, STOPPED};
+enum class SyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 
 // Some very long-lived (heat death of the universe) applications may need to use a 128 bit unsigned int
 // to assign an ordering to the input and output objects.
@@ -87,10 +86,14 @@ public:
 
   ~WorkflowSyncQueue() {
 
-  //  joinAndDeleteThreads();
+    if (workflow_state_ != SyncWorkflowState::STOPPED) {
+
+      input_queue_ptr_->push({0, std::move(input_stop_token_)});
+
+    }
+    joinAndDeleteThreads();
     // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
-    std::cout << "workflow destructor called, active threads: " << threads_.size() << std::endl;
 
   }
 
@@ -106,7 +109,7 @@ public:
     { // mutex scope
       std::scoped_lock<std::mutex> lock1(state_mutex_);
 
-      if (workflow_state_ == SyncWorkflowState::ACTIVE) {
+      if (workflow_state_ != SyncWorkflowState::STOPPED) {
 
         return false;
 
@@ -114,6 +117,7 @@ public:
 
     } // ~mutex scope
 
+    joinAndDeleteThreads();
     workflow_callback_ = std::bind_front(f, args...);
     queueThreads(threads);
 
@@ -128,41 +132,41 @@ public:
   }
 
 
-  // Although this function is thread-safe, it should really only be called with a single thread.
-  // Since calling with multiple threads will lead to undefined input object ordering.
-  // Objects can be pushed on to the workflow only when the workflow is active.
-  // The input object is returned to the caller if the workflow is not active.
-  std::optional<InputObject> push(InputObject input_obj) {
+  // This will block if the workflow is not active.
+  void push(InputObject input_obj) {
 
-    // Stop tokens toggle the workflow state.
-    // Input objects cannot be pushed onto a stopped workflow.
+    auto in_obj = pushNoBlock(std::move(input_obj));
 
+    while (in_obj.has_value()) {
+
+      waitUntilActive();
+      in_obj = pushNoBlock(std::move(in_obj.value()));
+
+    }
+
+  }
+
+
+  // Does not block, the input object is returned to the caller if the workflow is not active.
+  std::optional<InputObject> pushNoBlock(InputObject input_obj) {
+
+    // Input objects cannot be pushed onto a stopped/shutdown workflow.
     { // mutex scope
       std::scoped_lock<std::mutex> lock(state_mutex_);
 
-      if (input_obj == input_stop_token_) {
-
-        if (workflow_state_ == SyncWorkflowState::ACTIVE) {
-
-          workflow_state_ = SyncWorkflowState::STOPPED;
-          return std::nullopt;
-
-        }
-
-        if (workflow_state_ == SyncWorkflowState::STOPPED) {
-
-          workflow_state_ = SyncWorkflowState::ACTIVE;
-          return std::nullopt;
-
-        }
-
-      } else if ( workflow_state_ == SyncWorkflowState::STOPPED) {
+      if ( workflow_state_ != SyncWorkflowState::ACTIVE) {
 
         return std::make_optional<InputObject>(std::move(input_obj));
 
       }
 
-    } // ~ mutex.
+      if (input_obj == input_stop_token_) {
+
+        workflow_state_ = SyncWorkflowState::SHUTDOWN;
+
+      }
+
+    } // ~mutex.
 
     // Note, this variable is only used to carry the object ordering tag outside the mutex scope.
     WorkFlowObjectCounter input_tag;
@@ -188,9 +192,6 @@ public:
 
   }
 
-  // Although this function is thread-safe, it should really only be called with a single thread.
-  // Since calling with multiple threads will lead to undefined output object ordering.
-  // This function can be called on a STOPPED workflow queue.
   // If the output queue is empty the calling thread will block.
   // A suggestion is to push a user defined output stop token onto the output queue when the user workflow function
   // receives an input stop token. The dequeue thread can then stop requesting further output objects.
@@ -275,8 +276,7 @@ private:
     // Queue the worker threads,
     for(size_t i = 0; i < threads; ++i) {
 
-      std::jthread thread(&WorkflowSyncQueue::threadProlog,  this);
-      threads_.emplace_back(std::move(thread));
+      threads_.emplace_back(&WorkflowSyncQueue::threadProlog,  this);
 
     }
     active_threads_.store(threads);
@@ -290,11 +290,35 @@ private:
   void threadProlog() {
 
   // Loop until a stop token is encountered.
-  while(true) {
+    while(true) {
 
-    // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
-    // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
-    std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
+      // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
+      // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
+      std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
+
+      // If stop token then shutdown the thread.
+      if (work_item.second == input_stop_token_) {
+
+        // Check if the last thread active.
+        if (active_threads_.fetch_sub(1) > 1) {
+
+          input_queue_ptr_->push(std::move(work_item)); // Re-queue the stop token.
+
+        } else {
+
+          // This is guaranteed to be the last object processed before shutdown.
+          output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
+          // Workflow is now stopped
+          {
+            std::scoped_lock<std::mutex> lock(state_mutex_);
+            workflow_state_ = SyncWorkflowState::STOPPED;
+          }
+          stopped_condition_.notify_one();
+        }
+
+        return;  // Thread exits.
+
+      }
 
       // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
       std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
@@ -336,7 +360,7 @@ private:
 
       } // Mutex protected critical code ends.
 
-    }
+    } // ~while loop
 
   }
 

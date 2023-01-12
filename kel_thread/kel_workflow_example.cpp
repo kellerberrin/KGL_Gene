@@ -176,6 +176,8 @@ using SyncExample1Type = std::unique_ptr<SyncExample1>;
 // The actual work performed by the workflow threads.
 auto task_lambda = [](SyncExample1Type t) ->SyncExample1Type {
 
+  // Check for the last stop token.
+  if (not t) return t;
   // Do some example work, volatile will not be optimized away by the compiler.
   volatile u_int64_t work_count{0};
   for (size_t i = 0; i < 1000000; ++i) {
@@ -197,27 +199,27 @@ void syncUnboundedExample1() {
   kel::WorkflowSync<SyncExample1Type, SyncExample1Type> workflow_unbounded(nullptr);
   workflow_unbounded.activateWorkflow(20, task_lambda);
 
-  // Asynchronously place some objects in the workflow.
+  // Place some objects in the workflow.
   auto fill_lambda = [&workflow_unbounded]()->void {
 
     for (size_t i = 1; i <= 1000000; ++i) {
 
-      auto obj_opt = workflow_unbounded.push(std::move(std::make_unique<SyncExample1>(i)));
+      workflow_unbounded.push(std::make_unique<SyncExample1>(i));
 
     }
-    // Stop the workflow.
+    // Stop the workflow by pushing a stop token.
     workflow_unbounded.push(nullptr);
 
   };
   std::thread fill_thread(fill_lambda);
 
-  // Dequeue from the output queue.
+  // Dequeue from the output queue until the stop token is received.
   size_t count{0};
-  while(not (workflow_unbounded.inputQueue().empty() and workflow_unbounded.outputQueue().empty())
-        or workflow_unbounded.workflowState() != kel::SyncWorkflowState::STOPPED) {
+  auto out_obj =  workflow_unbounded.waitAndPop();
+  while(out_obj) {
     // Next object.
     count++;
-    auto out_obj =  workflow_unbounded.waitAndPop();
+    out_obj =  workflow_unbounded.waitAndPop();
 
   }
 
