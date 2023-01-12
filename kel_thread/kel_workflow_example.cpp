@@ -176,9 +176,6 @@ using SyncExample1Type = std::unique_ptr<SyncExample1>;
 // The actual work performed by the workflow threads.
 auto task_lambda = [](SyncExample1Type t) ->SyncExample1Type {
 
-  // Always check for the stop token.
-  if (not t) return t; // Just place on the output queue.
-
   // Do some example work, volatile will not be optimized away by the compiler.
   volatile u_int64_t work_count{0};
   for (size_t i = 0; i < 1000000; ++i) {
@@ -198,57 +195,38 @@ void syncUnboundedExample1() {
   // An unbounded synchronised workflow. The nullptr has been specified as the stop token.
   // The same object type is used for both input and output queues.
   kel::WorkflowSync<SyncExample1Type, SyncExample1Type> workflow_unbounded(nullptr);
+  workflow_unbounded.activateWorkflow(20, task_lambda);
 
   // Asynchronously place some objects in the workflow.
   auto fill_lambda = [&workflow_unbounded]()->void {
 
     for (size_t i = 1; i <= 1000000; ++i) {
 
-      // Periodically insert a stop token.
-      SyncExample1Type obj = (i % 10000 == 0) ? nullptr : std::make_unique<SyncExample1>(i);
-      auto obj_opt = workflow_unbounded.push(std::move(obj));
-      // Check if the push succeeded, if the object is returned then the push failed.
-      while (obj_opt.has_value()) {
-
-        // Wait for the workflow to stop.
-        workflow_unbounded.waitUntilStopped();
-        // Activate the workflow with 20 threads. Perform the example work and move input objects to the output queue.
-        workflow_unbounded.activateWorkflow(20, task_lambda);
-        // Wait for the workflow to start.
-        workflow_unbounded.waitUntilActive();
-        // Resubmit the object to the workflow.
-        obj_opt = workflow_unbounded.push(std::move(obj_opt.value()));
-
-      }
+      auto obj_opt = workflow_unbounded.push(std::move(std::make_unique<SyncExample1>(i)));
 
     }
-    // Queue the stop token as the last object.
+    // Stop the workflow.
     workflow_unbounded.push(nullptr);
 
   };
   std::thread fill_thread(fill_lambda);
-  fill_thread.join();
 
-  // Dequeue from the output queue and check the object order.
-  for (size_t i = 1; i <= workflow_unbounded.outputQueue().size(); ++i) {
-
-    auto out_obj = workflow_unbounded.waitAndPop();
-    // Check for stop tokens on the output.
-    if (not out_obj) continue;
-    // Check the ordering of the output objects.
-    if (i != out_obj->count_) {
-
-      std::cout << "expected object: " << i << ", actual object: " << out_obj->count_ << std::endl;
-      break;
-
-    }
+  // Dequeue from the output queue.
+  size_t count{0};
+  while(not (workflow_unbounded.inputQueue().empty() and workflow_unbounded.outputQueue().empty())
+        or workflow_unbounded.workflowState() != kel::SyncWorkflowState::STOPPED) {
+    // Next object.
+    count++;
+    auto out_obj =  workflow_unbounded.waitAndPop();
 
   }
 
+  fill_thread.join();
 
   // Check the queue sizes. Input and Output queues should now be empty.
   std::cout << "Unbounded Sync Queue, input queue size: " <<  workflow_unbounded.inputQueue().size()
-            << ", output queue size: " << workflow_unbounded.outputQueue().size() << std::endl;
+            << ", output queue size: " << workflow_unbounded.outputQueue().size()
+            << ", objects processed: " << count << std::endl;
 
 
 }

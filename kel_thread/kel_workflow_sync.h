@@ -27,6 +27,7 @@
 #include <set>
 #include <thread>
 #include <optional>
+#include <iostream>
 
 
 namespace kellerberrin {  //  organization level namespace
@@ -47,7 +48,7 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-enum class SyncWorkflowState { ACTIVE, STARTING, SHUTDOWN, STOPPED};
+enum class SyncWorkflowState { ACTIVE, STOPPED};
 
 // Some very long-lived (heat death of the universe) applications may need to use a 128 bit unsigned int
 // to assign an ordering to the input and output objects.
@@ -86,16 +87,10 @@ public:
 
   ~WorkflowSyncQueue() {
 
-    // Shutdown any active threads and join() them.
-    // If we have active threads then push an input stop token so that the workflow is STOPPED.
-    if (active_threads_.load() != 0) {
-
-      input_queue_ptr_->push({0, std::move(input_stop_token_)});
-
-    }
-    joinAndDeleteThreads();
+  //  joinAndDeleteThreads();
     // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
     workflow_callback_ = nullptr;
+    std::cout << "workflow destructor called, active threads: " << threads_.size() << std::endl;
 
   }
 
@@ -111,15 +106,14 @@ public:
     { // mutex scope
       std::scoped_lock<std::mutex> lock1(state_mutex_);
 
-      if (workflow_state_ != SyncWorkflowState::STOPPED) {
+      if (workflow_state_ == SyncWorkflowState::ACTIVE) {
 
         return false;
 
       }
-      workflow_state_ = SyncWorkflowState::STARTING;
+
     } // ~mutex scope
 
-    joinAndDeleteThreads();
     workflow_callback_ = std::bind_front(f, args...);
     queueThreads(threads);
 
@@ -140,23 +134,35 @@ public:
   // The input object is returned to the caller if the workflow is not active.
   std::optional<InputObject> push(InputObject input_obj) {
 
-    // Stop tokens can only be pushed once
+    // Stop tokens toggle the workflow state.
+    // Input objects cannot be pushed onto a stopped workflow.
+
     { // mutex scope
       std::scoped_lock<std::mutex> lock(state_mutex_);
 
-      if (workflow_state_ != SyncWorkflowState::ACTIVE) {
+      if (input_obj == input_stop_token_) {
+
+        if (workflow_state_ == SyncWorkflowState::ACTIVE) {
+
+          workflow_state_ = SyncWorkflowState::STOPPED;
+          return std::nullopt;
+
+        }
+
+        if (workflow_state_ == SyncWorkflowState::STOPPED) {
+
+          workflow_state_ = SyncWorkflowState::ACTIVE;
+          return std::nullopt;
+
+        }
+
+      } else if ( workflow_state_ == SyncWorkflowState::STOPPED) {
 
         return std::make_optional<InputObject>(std::move(input_obj));
 
       }
 
-      if (input_obj == input_stop_token_) {
-
-        workflow_state_ = SyncWorkflowState::SHUTDOWN;
-
-      }
-
-    }
+    } // ~ mutex.
 
     // Note, this variable is only used to carry the object ordering tag outside the mutex scope.
     WorkFlowObjectCounter input_tag;
@@ -201,7 +207,7 @@ public:
   // Workflow  is in STARTUP if the activateWorkflow() function has been called but the threads are not yet active.
   // STARTUP is a temporary state that will transition to ACTIVE.
   // The workflow is ACTIVE if a task function has been supplied and all threads are ready for processing.
-  [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_; }
+  [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_.load(); }
 
   // Calling thread(s) wait on a std::condition_variable until the workflow queue is STOPPED.
   void waitUntilStopped() const {
@@ -226,7 +232,6 @@ public:
   }
 
 
-
   // Input and output queue const access. All const public functions on these queues are thread safe.
   [[nodiscard]] const InputQueue<InputObject>& inputQueue() const { return *input_queue_ptr_; }
   [[nodiscard]] const MtQueue<OutputObject>& outputQueue() const { return output_queue_; }
@@ -236,7 +241,7 @@ private:
   InputObject input_stop_token_;
 
   std::atomic<size_t> active_threads_{0};
-  std::vector<std::thread> threads_;
+  std::vector<std::jthread> threads_;
 
   WorkFlowObjectCounter object_counter_{0};
   WorkProc workflow_callback_;
@@ -255,7 +260,7 @@ private:
   MtQueue<OutputObject> output_queue_;
 
   // Threads can wait on workflow queue state.
-  SyncWorkflowState workflow_state_{SyncWorkflowState::STOPPED };
+  std::atomic<SyncWorkflowState> workflow_state_{SyncWorkflowState::STOPPED };
   mutable std::mutex state_mutex_;
   mutable std::condition_variable stopped_condition_;
   mutable std::condition_variable active_condition_;
@@ -270,7 +275,8 @@ private:
     // Queue the worker threads,
     for(size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&WorkflowSyncQueue::threadProlog, this);
+      std::jthread thread(&WorkflowSyncQueue::threadProlog,  this);
+      threads_.emplace_back(std::move(thread));
 
     }
     active_threads_.store(threads);
@@ -283,80 +289,52 @@ private:
   // Shuts down the all the active threads if a stop token is found on the input queue.
   void threadProlog() {
 
-    // Loop until a stop token is encountered.
-    while(true) {
+  // Loop until a stop token is encountered.
+  while(true) {
 
-      // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
-      // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
-      std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
+    // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
+    // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
+    std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
 
-      if (work_item.second == input_stop_token_) {
+      // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
+      std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
 
-        if (active_threads_.fetch_sub(1) > 1) {
+      // Mutex protected critical code.
+      {
+        std::scoped_lock lock(process_mutex_);
 
-          // If multiple threads are active then re-queue the input stop token.
-          input_queue_ptr_->push(std::move(work_item));
+        // Is the processed object the next ordered (earliest) request?
+        if (output.first == ordered_requests_.top()) {
 
-        } else {
+          ordered_requests_.pop();
+          output_queue_.push(std::move(output.second));
 
-          // Last active thread.
-          // Call the workflow function with the stop token.
-          // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
-          output_queue_.push(workflow_callback_(std::move(work_item.second)));
-          // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
-          workflow_callback_ = nullptr;
-          // Notify any threads waiting on the workflow STOPPED condition.
-          {
-            std::scoped_lock<std::mutex> lock(state_mutex_);
-            workflow_state_ = SyncWorkflowState::STOPPED;
-          }
-          stopped_condition_.notify_one();
-        }
-        break; // Thread terminates,
+          // Dequeue any processed requests that match the request priority queue.
+          while(not ordered_requests_.empty() and not processed_objects_.empty()) {
 
-      } else {
+            if (ordered_requests_.top() == processed_objects_.top().first) {
 
-        // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
-        std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
+              ordered_requests_.pop();
+              // Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this unpleasantness.
+              std::pair<WorkFlowObjectCounter, OutputObject> processed = std::move(const_cast<std::pair<WorkFlowObjectCounter, OutputObject> &>(processed_objects_.top()));
+              processed_objects_.pop();
+              output_queue_.push(std::move(processed.second));
 
-        // Mutex protected critical code.
-        {
-          std::scoped_lock lock(process_mutex_);
+            } else {
 
-          // Is the processed object the next ordered (earliest) request?
-          if (output.first == ordered_requests_.top()) {
-
-            ordered_requests_.pop();
-            output_queue_.push(std::move(output.second));
-
-            // Dequeue any processed requests that match the request priority queue.
-            while(not ordered_requests_.empty() and not processed_objects_.empty()) {
-
-              if (ordered_requests_.top() == processed_objects_.top().first) {
-
-                ordered_requests_.pop();
-                // Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this unpleasantness.
-                std::pair<WorkFlowObjectCounter, OutputObject> processed = std::move(const_cast<std::pair<WorkFlowObjectCounter, OutputObject> &>(processed_objects_.top()));
-                processed_objects_.pop();
-                output_queue_.push(std::move(processed.second));
-
-              } else {
-
-                break;
-
-              }
+              break;
 
             }
 
-          } else { // Place the processed object onto the internal re-ordering std::priority_queue.
+          } // ~while
 
-            processed_objects_.emplace(output.first, std::move(output.second));
+        } else { // Place the processed object onto the internal re-ordering std::priority_queue.
 
-          }
+          processed_objects_.emplace(output.first, std::move(output.second));
 
-        } // Mutex protected critical code ends.
+        }
 
-      }
+      } // Mutex protected critical code ends.
 
     }
 
