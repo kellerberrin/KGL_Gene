@@ -70,6 +70,11 @@ struct ExampleAsyncTask {
     }
 
     // Forward all objects including the final stop token to the next workflow.
+    if (not t) {
+
+      std::cout << "Pushing Stop Token to Next queue" << std::endl;
+
+    }
     workflow_ptr->push(std::move(t));
 
   }
@@ -137,14 +142,39 @@ void asyncExample1() {
     }
     // Stop token
     input_workflow_ptr->push(nullptr);
+    std::cout << "Fill thread completes" << std::endl;
+
 
   };
   std::thread fill_thread(fill_lambda);
 
+  auto readout_lambda = [input_workflow_ptr, intermediate_workflow_ptr, output_workflow_ptr, &async_task] () {
+
+    while (true) {
+
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+
+      std::cout << "Input workflow size: " << input_workflow_ptr->objectQueue().size()
+                << ", Intermediate workflow size: " <<  intermediate_workflow_ptr->objectQueue().size()
+                << ", Output workflow size: " << output_workflow_ptr->objectQueue().size()
+                << ", Final output queue size: " << async_task.output_queue_.size() << std::endl;
+
+      std::cout << "Input workflow state: " << (input_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped")
+                << ", Intermediate workflow state: " <<  (intermediate_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped")
+                << ", Output workflow state: " << (output_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped") << std::endl;
+
+    }
+
+  };
+
+  std::thread readout_thread(readout_lambda);
+
   // Wait until processing is finished,
+  std::cout << "Output waitOnStopped()" << std::endl;
   output_workflow_ptr->waitUntilStopped();
   // The workflows are empty and stopped, so we can join on the fill thread.
   fill_thread.join();
+  readout_thread.join();
 
   // Check that the workflows are empty and there are 1000000 objects in the final output queue.
   std::cout << "Input workflow size: " << input_workflow_ptr->objectQueue().size()
@@ -289,29 +319,36 @@ struct SyncExample2Task {
 void syncBoundedExample2() {
 
   // Create the workflow with a bounded tidal input queue and a nullptr stop token.
-  kel::WorkflowSyncBounded<SyncExample2Type, SyncExample2OutputType> workflow_bounded(nullptr);
+  auto workflow_ptr = std::make_shared<kel::WorkflowSyncBounded<SyncExample2Type, SyncExample2OutputType>>(nullptr);
 
   // An instance of the SyncExample2Task object.
   SyncExample2Task task_object;
   // Activate the workflow with 20 threads. This is best done before any input
   // objects are processed. Otherwise, the bounded input queue will block after it reaches high tide.
-  workflow_bounded.activateWorkflow(20, &SyncExample2Task::task, &task_object);
+  workflow_ptr->activateWorkflow(20, &SyncExample2Task::task, &task_object);
 
-  // Now place some objects in the input queue tagged with their position in the queue.
-  for (size_t i = 1; i <= 1000000; ++i) {
+  auto fill_lambda = [workflow_ptr]()->void { // Now place some objects in the input queue tagged with their position in the queue.
 
-    workflow_bounded.push(std::make_unique<SyncExample2>(i));
+    for (size_t i = 1; i <= 1000000; ++i) {
 
-  }
-  // Push a stop token onto the input.
-  // This will shut down all active threads after all the preceding input objects been processed.
-  workflow_bounded.push(nullptr);
+      workflow_ptr->push(std::make_unique<SyncExample2>(i));
+
+    }
+    // Push a stop token onto the input.
+    // This will shut down all active threads after all the preceding input objects been processed.
+    workflow_ptr->push(nullptr);
+
+  };
+
+  // Do the sequential output object check asynchronously.
+  std::thread fill_thread(fill_lambda);
+
 
   // Lambda to dequeue objects from the output queue and check the object ordering.
-  auto check_lambda = [&workflow_bounded]() -> void {
+  auto check_lambda = [workflow_ptr]() -> void {
 
     size_t out_order{0};
-    auto out_obj = workflow_bounded.waitAndPop();
+    auto out_obj = workflow_ptr->waitAndPop();
     // Check for the stop token on the output queue.
     while(out_obj) {
 
@@ -320,7 +357,7 @@ void syncBoundedExample2() {
       if (out_order != out_obj->count()) break;
 
       // Next output object.
-      out_obj = workflow_bounded.waitAndPop();
+      out_obj = workflow_ptr->waitAndPop();
 
     }
 
@@ -330,12 +367,15 @@ void syncBoundedExample2() {
   std::thread check_thread(check_lambda);
 
   // Wait until all output objects have been checked and dequeued.
-  check_thread.join();
+  workflow_ptr->waitUntilStopped();
 
   // Input and output queues are empty here.
-  std::cout << "Bounded Sync Queue, input queue size: " << workflow_bounded.inputQueue().size()
-            << ", output queue size: " << workflow_bounded.outputQueue().size()
+  std::cout << "Bounded Sync Queue, input queue size: " << workflow_ptr->inputQueue().size()
+            << ", output queue size: " << workflow_ptr->outputQueue().size()
             << ", objects processed: " << task_object.objects_processed_.load() << std::endl;
+
+  check_thread.join();
+  fill_thread.join();
 
 }
 

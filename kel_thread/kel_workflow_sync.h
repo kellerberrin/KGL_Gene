@@ -47,6 +47,12 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// The workflow is STOPPED if there are no active work threads.
+// The workflow is STOPPED on object creation and before activating the workflow with a task function.
+// The workflow is in a SHUTDOWN state if a stop token has been received.
+// SHUTDOWN is a temporary state that will transition to STOPPED.
+// The workflow is ACTIVE if a task function has been supplied and all threads are ready for processing.
+
 enum class SyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 
 // Some very long-lived (heat death of the universe) applications may need to use a 128 bit unsigned int
@@ -88,12 +94,12 @@ public:
 
     if (workflow_state_ != SyncWorkflowState::STOPPED) {
 
+      // This stop token is not processed by the workflow function.
       input_queue_ptr_->push({0, std::move(input_stop_token_)});
 
     }
+
     joinAndDeleteThreads();
-    // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
-    workflow_callback_ = nullptr;
 
   }
 
@@ -101,7 +107,7 @@ public:
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
-  // Calling this function on an ACTIVE workflow queue will return false.
+  // Calling this function on a workflow that is not STOPPED will return false and fail.
   template<typename F, typename... Args>
   bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
@@ -135,12 +141,12 @@ public:
   // This will block if the workflow is not active.
   void push(InputObject input_obj) {
 
-    auto in_obj = pushNoBlock(std::move(input_obj));
+    auto in_obj_opt = pushNoBlock(std::move(input_obj));
 
-    while (in_obj.has_value()) {
+    while (in_obj_opt.has_value()) {
 
       waitUntilActive();
-      in_obj = pushNoBlock(std::move(in_obj.value()));
+      in_obj_opt = pushNoBlock(std::move(in_obj_opt.value()));
 
     }
 
@@ -148,7 +154,7 @@ public:
 
 
   // Does not block, the input object is returned to the caller if the workflow is not active.
-  std::optional<InputObject> pushNoBlock(InputObject input_obj) {
+  [[nodiscard]] std::optional<InputObject> pushNoBlock(InputObject input_obj) {
 
     // Input objects cannot be pushed onto a stopped/shutdown workflow.
     { // mutex scope
@@ -201,14 +207,10 @@ public:
 
   }
 
-  // Workflow is STOPPED if there are no active work threads.
-  // The Workflow queue is STOPPED on object creation and before activating the workflow with a task function.
-  // The workflow is in a SHUTDOWN state if a stop token has been received, the workflow will accept no further input objects.
-  // SHUTDOWN is a temporary state that will transition to STOPPED.
-  // Workflow  is in STARTUP if the activateWorkflow() function has been called but the threads are not yet active.
-  // STARTUP is a temporary state that will transition to ACTIVE.
-  // The workflow is ACTIVE if a task function has been supplied and all threads are ready for processing.
-  [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_.load(); }
+  // This function is not thread safe! A race condition potentially exists.
+  // If a producer thread has pushed a stop token, another thread calling this function may still return ACTIVE.
+  // Consider using waitOnStopped() or waitOnActive() instead.
+   [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_.load(); }
 
   // Calling thread(s) wait on a std::condition_variable until the workflow queue is STOPPED.
   void waitUntilStopped() const {
@@ -289,7 +291,7 @@ private:
   // Shuts down the all the active threads if a stop token is found on the input queue.
   void threadProlog() {
 
-  // Loop until a stop token is encountered.
+  // Loop until a stop token is encountered and then recursively shutdown the active threads.
     while(true) {
 
       // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
@@ -306,8 +308,18 @@ private:
 
         } else {
 
-          // This is guaranteed to be the last object processed before shutdown.
-          output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
+
+          // The stop token is guaranteed to be the last object processed before shutdown.
+          // Only call the workflow function if the stop token did NOT originate from the destructor.
+          if (work_item.first != 0) {
+
+            output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
+
+          }
+
+          // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
+          workflow_callback_ = nullptr;
+
           // Workflow is now stopped
           {
             std::scoped_lock<std::mutex> lock(state_mutex_);
