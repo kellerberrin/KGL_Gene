@@ -70,12 +70,7 @@ struct ExampleAsyncTask {
     }
 
     // Forward all objects including the final stop token to the next workflow.
-    if (not t) {
-
-      std::cout << "Pushing Stop Token to Next queue" << std::endl;
-
-    }
-    workflow_ptr->push(std::move(t));
+     workflow_ptr->push(std::move(t));
 
   }
 
@@ -142,39 +137,13 @@ void asyncExample1() {
     }
     // Stop token
     input_workflow_ptr->push(nullptr);
-    std::cout << "Fill thread completes" << std::endl;
-
 
   };
   std::thread fill_thread(fill_lambda);
 
-  auto readout_lambda = [input_workflow_ptr, intermediate_workflow_ptr, output_workflow_ptr, &async_task] () {
-
-    while (true) {
-
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-
-      std::cout << "Input workflow size: " << input_workflow_ptr->objectQueue().size()
-                << ", Intermediate workflow size: " <<  intermediate_workflow_ptr->objectQueue().size()
-                << ", Output workflow size: " << output_workflow_ptr->objectQueue().size()
-                << ", Final output queue size: " << async_task.output_queue_.size() << std::endl;
-
-      std::cout << "Input workflow state: " << (input_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped")
-                << ", Intermediate workflow state: " <<  (intermediate_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped")
-                << ", Output workflow state: " << (output_workflow_ptr->workflowState() == kel::AsyncWorkflowState::ACTIVE ? "Active" : "Stopped") << std::endl;
-
-    }
-
-  };
-
-  std::thread readout_thread(readout_lambda);
-
-  // Wait until processing is finished,
-  std::cout << "Output waitOnStopped()" << std::endl;
   output_workflow_ptr->waitUntilStopped();
   // The workflows are empty and stopped, so we can join on the fill thread.
   fill_thread.join();
-  readout_thread.join();
 
   // Check that the workflows are empty and there are 1000000 objects in the final output queue.
   std::cout << "Input workflow size: " << input_workflow_ptr->objectQueue().size()

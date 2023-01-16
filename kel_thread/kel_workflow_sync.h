@@ -109,7 +109,7 @@ public:
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on a workflow that is not STOPPED will return false and fail.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
 
     { // mutex scope
@@ -269,7 +269,7 @@ private:
   mutable std::condition_variable active_condition_;
 
   // Can only be called on a STOPPED workflow.
-  void queueThreads(size_t threads)
+  void queueThreads(size_t threads) noexcept
   {
 
     // Always have at least one worker thread.
@@ -302,23 +302,13 @@ private:
       if (work_item.second == input_stop_token_) {
 
         // Check if the last thread active.
-        if (active_threads_.fetch_sub(1) > 1) {
+        if (active_threads_.fetch_sub(1) != 1) {
 
           input_queue_ptr_->push(std::move(work_item)); // Re-queue the stop token.
 
         } else {
 
-
-          // The stop token is guaranteed to be the last object processed before shutdown.
-          // Only call the workflow function if the stop token did NOT originate from the destructor.
-          if (work_item.first != 0) {
-
-            output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
-
-          }
-
-          // Explicitly remove the std::function to prevent circular references from any captured pointer arguments.
-          workflow_callback_ = nullptr;
+          output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
 
           // Workflow is now stopped
           {
@@ -372,11 +362,11 @@ private:
 
       } // Mutex protected critical code ends.
 
-    } // ~while loop
+    } // ~thread while loop
 
   }
 
-  void joinAndDeleteThreads() {
+  void joinAndDeleteThreads() noexcept {
 
     // Join all the threads
     for(auto& thread : threads_) {

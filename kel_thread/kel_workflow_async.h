@@ -22,10 +22,8 @@
 
 #include <functional>
 #include <vector>
-#include <map>
-#include <set>
 #include <thread>
-#include <iostream>
+#include <optional>
 
 namespace kellerberrin {  //  organization level namespace
 
@@ -53,7 +51,7 @@ enum class AsyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 // The object queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
 template<typename QueuedObj, template <typename> typename Queue = MtQueue>
 requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedObj>)
-class WorkflowAsyncQueue
+class WorkflowBase
 {
 
   using WorkProc = std::function<void(QueuedObj)>;
@@ -63,10 +61,10 @@ public:
   // The constructor requires that a top token is specified.
   // If the Object is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
   // The queue will be either a MtQueue (unbounded) or BondedMtQueue (a bounded tidal queue).
-  explicit WorkflowAsyncQueue(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
+  explicit WorkflowBase(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
-  ~WorkflowAsyncQueue() {
+  ~WorkflowBase() {
 
     // If any active threads then push the stop token onto the workflow queue.
     if (workflow_state_ != AsyncWorkflowState::STOPPED) {
@@ -86,7 +84,7 @@ public:
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on an active workflow queue will return false.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
   {
 
     { // mutex scope
@@ -217,7 +215,7 @@ private:
     // Queue the worker threads,
     for (size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&WorkflowAsyncQueue::threadProlog, this);
+      threads_.emplace_back(&WorkflowBase::threadProlog, this);
 
     }
     active_threads_.store(threads);
@@ -235,13 +233,12 @@ private:
       if (work_item == stop_token_) {
 
         // If not the last thread then re-queue the stop token and terminate.
-        if (active_threads_.fetch_sub(1) > 1) {
+        if (active_threads_.fetch_sub(1) != 1) {
 
-          push(std::move(work_item));
+         queue_ptr_->push(std::move(work_item));
 
         } else {
 
-          std::cout << "***** Last thread called" << std::endl;
           // This is guaranteed to be the last active thread.
           // Call the workflow function with the stop token.
           // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
@@ -290,11 +287,11 @@ private:
 
 // Implemented with a bounded tidal queue.
 template<typename WorkObj> using BoundedAsync = BoundedMtQueue<WorkObj>;
-template<typename WorkObj> using WorkflowAsyncBounded = WorkflowAsyncQueue<WorkObj, BoundedAsync>;
+template<typename WorkObj> using WorkflowAsyncBounded = WorkflowBase<WorkObj, BoundedAsync>;
 
 // Implemented with an unbounded queue.
 template<typename WorkObj> using AsyncQueue = MtQueue<WorkObj>;
-template<typename WorkObj> using WorkflowAsync = WorkflowAsyncQueue<WorkObj, AsyncQueue>;
+template<typename WorkObj> using WorkflowAsync = WorkflowBase<WorkObj, AsyncQueue>;
 
 
 }   // end namespace

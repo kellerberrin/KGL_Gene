@@ -18,13 +18,72 @@
 #ifndef KEL_QUEUE_MONITOR_H
 #define KEL_QUEUE_MONITOR_H
 
-#include "kel_exec_env.h"
 #include "kel_mt_queue.h"
 
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 #include <chrono>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
+// Replace the spdlog based messaging system.
+enum class MessageType { INFO, WARNING, ERROR};
+
+#define WORKFLOW_STAND_ALONE 1
+#ifdef WORKFLOW_STAND_ALONE
+
+void streamOut(MessageType type, const std::string& message) {
+
+  switch (type) {
+
+    case MessageType::INFO:
+      std::clog << "INFO - ";
+      break;
+
+    case MessageType::WARNING:
+      std::clog << "WARNING - ";
+      break;
+
+    case MessageType::ERROR:
+      std::clog << "ERROR - ";
+      break;
+
+  }
+
+  std::clog << message << std::endl;
+
+}
+
+#else
+
+#include "kel_exec_env.h"
+
+void streamOut(MessageType type, const std::string& message) {
+
+  switch (type) {
+
+    case MessageType::INFO:
+      kellerberrin::ExecEnv::log().info(message.c_str());
+      break;
+
+    case MessageType::WARNING:
+      kellerberrin::ExecEnv::log().warn(message.c_str());
+      break;
+
+    case MessageType::ERROR:
+      kellerberrin::ExecEnv::log().error(message.c_str());
+      break;
+
+  }
+
+}
+
+#endif
+
 
 namespace kellerberrin {   //  organization level namespace
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,16 +115,18 @@ public:
 
 
   [[nodiscard]] size_t sampleFrequency() const { return sample_milliseconds_; }
-
   [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
-
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats(MtQueue<T> *queue_ptr, size_t sample_milliseconds, std::string queue_name) {
+  void launchStats( MtQueue<T> *queue_ptr
+                   , size_t sample_milliseconds
+                   , std::string queue_name = DEFAULT_QUEUE_NAME
+                   , bool monitor_stalled = true) {
 
     queue_ptr_ = queue_ptr;
     sample_milliseconds_ = sample_milliseconds;
     queue_name_ = std::move(queue_name);
+    monitor_stalled_ = monitor_stalled;
 
     if (stats_thread_ptr_) {
 
@@ -75,8 +136,11 @@ public:
 
     if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
 
-      ExecEnv::log().info("Sampling queue: {} every: {} milliseconds", queue_name_, sample_milliseconds_);
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MtQueueMonitor::SampleQueue, this));
+
+      std::stringstream begin_message;
+      begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
+      streamOut(MessageType::INFO, begin_message.str());
 
     }
 
@@ -102,6 +166,7 @@ private:
 
   MtQueue<T> *queue_ptr_;
   size_t sample_milliseconds_;
+  bool monitor_stalled_{true};
   std::string queue_name_;
   std::unique_ptr<std::thread> stats_thread_ptr_;
 
@@ -133,7 +198,12 @@ private:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Queue: {}, Samples: {}; Av. Level: {:.2f}", queue_name_, queueSamples(),  averageSize());
+    std::stringstream stats_message;
+    stats_message << "Queue Name: " <<  queue_name_
+                  << ", Sample Interval (ms): " << sample_milliseconds_
+                  << ", Samples: " << queue_samples_
+                  << "; Average Queue Size:" << std::setprecision(2) << averageSize();
+    streamOut(MessageType::INFO, stats_message.str());
 
   }
 
@@ -151,7 +221,7 @@ private:
       cumulative_queue_size_ += sample_size;
 
       // Check for stalled queues (deadlock).
-      if (previous_activity_ == sample_activity) {
+      if (monitor_stalled_ and previous_activity_ == sample_activity) {
 
         if (not queue_ptr_->empty()) {
 
@@ -160,8 +230,12 @@ private:
         }
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          ExecEnv::log().warn("Monitor Queue: {}, size: {}, FSM_State: {}, stalled for samples: {}",
-                              queue_name_, sample_size, static_cast<size_t>(previous_count_));
+          std::stringstream stalled_message;
+          stalled_message << "Monitor Queue: " <<  queue_name_
+                          << " Size: " << sample_size
+                          << " Stalled (no consumer activity) for milliseconds: "
+                          << (queue_samples_ * sample_milliseconds_);
+          streamOut(MessageType::INFO, stalled_message.str());
 
         }
 
@@ -214,10 +288,14 @@ public:
 
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats(BoundedMtQueue<T> *queue_ptr, size_t sample_milliseconds, std::string queue_name) {
+  void launchStats(BoundedMtQueue<T> *queue_ptr
+                   , size_t sample_milliseconds
+                   , std::string queue_name = DEFAULT_QUEUE_NAME
+                   , bool monitor_stalled = true) {
 
     queue_ptr_ = queue_ptr;
     sample_milliseconds_ = sample_milliseconds;
+    monitor_stalled_ = monitor_stalled;
     queue_name_ = std::move(queue_name);
     empty_size_ = static_cast<size_t>(queue_ptr_->highTide() * EMPTY_PROPORTION_);
 
@@ -229,8 +307,10 @@ public:
 
     if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
 
-      ExecEnv::log().info("Sampling queue: {} every: {} milliseconds", queue_name_, sample_milliseconds_);
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&BoundedQueueMonitor::SampleQueue, this));
+      std::stringstream begin_message;
+      begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
+      streamOut(MessageType::INFO, begin_message.str());
 
     }
 
@@ -256,6 +336,7 @@ private:
 
   BoundedMtQueue<T> *queue_ptr_;
   size_t sample_milliseconds_;
+  bool monitor_stalled_{true};
   std::string queue_name_;
   constexpr static const double EMPTY_PROPORTION_ = 0.1; // Queue at 10% of high tide is considered empty.
   size_t empty_size_;
@@ -276,6 +357,7 @@ private:
   // Somewhat arbitrary but should work in most cases.
   constexpr static const size_t MIN_SAMPLES_{100};
   constexpr static const size_t WARN_INACTIVE_COUNT_{100};
+
 
   [[nodiscard]] double averageHighTide() const {
 
@@ -343,10 +425,20 @@ private:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info("Queue: {}, Samples: {}; High Tide ({}): {:.2f}%, Flood Tide: {:.2f}%, Ebbing Tide: {:.2f}%, Low Tide ({}): {:.2f}%, Empty (<={}): {:.2f}%, Av. Level: {:.2f}% ({:.2f})",
-                        queue_name_, queueSamples(), queue_ptr_->highTide(), (averageHighTide() * 100.0),
-                        (floodTide() * 100.0), (ebbingTide() * 100.0), queue_ptr_->lowTide(), (averageLowTide() * 100.0),
-                        empty_size_, (averageEmpty() * 100.0), avUtilization(), averageSize());
+    std::stringstream stats_message;
+    stats_message << "Queue Name: " << queue_name_
+                  << ", Samples :" <<  queueSamples()
+                  << "; High Tide (" << queue_ptr_->highTide() <<"): "
+                  << std::setprecision(2) << (averageHighTide() * 100.0) << "%"
+                  << ", Flood Tide: " << (floodTide() * 100.0) << "%"
+                  << ", Ebbing Tide: " << (ebbingTide() * 100.0) << "%"
+                  << ", Low Tide (" << std::setprecision(0) << queue_ptr_->lowTide() << "): "
+                  << std::setprecision(2) << (averageLowTide() * 100.0) << "%"
+                  << ", Empty (<=" << std::setprecision(0) << empty_size_ << "): "
+                  << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
+                  << "Av. Size: (" << std::setprecision(0) <<  averageSize() << ") "
+                  << std::setprecision(0) << avUtilization() << "%";
+    streamOut(MessageType::INFO, stats_message.str());
 
   }
 
@@ -391,10 +483,14 @@ private:
           ++previous_count_;
 
         }
-        if (previous_count_ >= WARN_INACTIVE_COUNT_) {
+        if (monitor_stalled_ and previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          ExecEnv::log().warn("Monitor Queue: {}, size: {}, FSM_State: {}, stalled for samples: {}",
-                              queue_name_, sample_size, (queue_ptr_->queueState() ? "'active'" : "'inactive'"), static_cast<size_t>(previous_count_));
+          std::stringstream stalled_message;
+          stalled_message << "Monitor Queue: " <<  queue_name_
+                          << " Size: " << sample_size
+                          << " Stalled (no consumer activity) for milliseconds: "
+                          << (queue_samples_ * sample_milliseconds_);
+          streamOut(MessageType::INFO, stalled_message.str());
 
         }
 
