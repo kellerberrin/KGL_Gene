@@ -32,11 +32,11 @@ public:
   void SetMaxwarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
 
 
-  template<typename... Args> void trace(const char* message, Args... args) noexcept;
-  template<typename... Args> void info(const char* message, Args... args) noexcept;
-  template<typename... Args> void warn(const char* message, Args... args) noexcept;
-  template<typename... Args> void error(const char* message, Args... args) noexcept;
-  template<typename... Args> void critical(const char* message, Args... args) noexcept;
+  template<typename... Args> void trace(const std::string& message, Args... args) noexcept;
+  template<typename... Args> void info(const std::string& message, Args... args) noexcept;
+  template<typename... Args> void warn(const std::string& message, Args... args) noexcept;
+  template<typename... Args> void error(const std::string& message, Args... args) noexcept;
+  template<typename... Args> void critical(const std::string& message, Args... args) noexcept;
 
 
 private:
@@ -54,21 +54,21 @@ private:
 };
 
 
-template<typename... Args> void Logger::trace(const char* message, Args... args) noexcept {
+template<typename... Args> void Logger::trace(const std::string& message, Args... args) noexcept {
 
   plog_impl_->trace(message, args...);
   plog_impl_->flush();
 
 }
 
-template<typename... Args> void Logger::info(const char* message, Args... args) noexcept {
+template<typename... Args> void Logger::info(const std::string& message, Args... args) noexcept {
 
   plog_impl_->info(message, args...);
   plog_impl_->flush();
 
 }
 
-template<typename... Args> void Logger::warn(const char* message, Args... args) noexcept {
+template<typename... Args> void Logger::warn(const std::string& message, Args... args) noexcept {
 
   if (max_warn_messages_ < 0 or warn_message_count_ <= max_warn_messages_) {
 
@@ -88,7 +88,7 @@ template<typename... Args> void Logger::warn(const char* message, Args... args) 
 
 }
 
-template<typename... Args> void Logger::error(const char* message, Args... args) noexcept {
+template<typename... Args> void Logger::error(const std::string& message, Args... args) noexcept {
 
   plog_impl_->error(message , args...);
   plog_impl_->flush();
@@ -105,7 +105,7 @@ template<typename... Args> void Logger::error(const char* message, Args... args)
 
 }
 
-template<typename... Args> void Logger::critical(const char* message, Args... args) noexcept {
+template<typename... Args> void Logger::critical(const std::string& message, Args... args) noexcept {
 
 
   plog_impl_->critical(message, args...);

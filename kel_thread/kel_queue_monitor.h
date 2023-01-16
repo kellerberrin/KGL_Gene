@@ -30,61 +30,9 @@
 
 // Replace the spdlog based messaging system.
 enum class MessageType { INFO, WARNING, ERROR};
-
-#define WORKFLOW_STAND_ALONE 1
-#ifdef WORKFLOW_STAND_ALONE
-
-void streamOut(MessageType type, const std::string& message) {
-
-  switch (type) {
-
-    case MessageType::INFO:
-      std::clog << "INFO - ";
-      break;
-
-    case MessageType::WARNING:
-      std::clog << "WARNING - ";
-      break;
-
-    case MessageType::ERROR:
-      std::clog << "ERROR - ";
-      break;
-
-  }
-
-  std::clog << message << std::endl;
-
-}
-
-#else
-
-#include "kel_exec_env.h"
-
-void streamOut(MessageType type, const std::string& message) {
-
-  switch (type) {
-
-    case MessageType::INFO:
-      kellerberrin::ExecEnv::log().info(message.c_str());
-      break;
-
-    case MessageType::WARNING:
-      kellerberrin::ExecEnv::log().warn(message.c_str());
-      break;
-
-    case MessageType::ERROR:
-      kellerberrin::ExecEnv::log().error(message.c_str());
-      break;
-
-  }
-
-}
-
-#endif
-
+void workflowStreamOut(MessageType type, const std::string& message);
 
 namespace kellerberrin {   //  organization level namespace
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -140,7 +88,7 @@ public:
 
       std::stringstream begin_message;
       begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
-      streamOut(MessageType::INFO, begin_message.str());
+      workflowStreamOut(MessageType::INFO, begin_message.str());
 
     }
 
@@ -203,7 +151,7 @@ private:
                   << ", Sample Interval (ms): " << sample_milliseconds_
                   << ", Samples: " << queue_samples_
                   << "; Average Queue Size:" << std::setprecision(2) << averageSize();
-    streamOut(MessageType::INFO, stats_message.str());
+    workflowStreamOut(MessageType::INFO, stats_message.str());
 
   }
 
@@ -235,7 +183,7 @@ private:
                           << " Size: " << sample_size
                           << " Stalled (no consumer activity) for milliseconds: "
                           << (queue_samples_ * sample_milliseconds_);
-          streamOut(MessageType::INFO, stalled_message.str());
+          workflowStreamOut(MessageType::INFO, stalled_message.str());
 
         }
 
@@ -310,7 +258,7 @@ public:
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&BoundedQueueMonitor::SampleQueue, this));
       std::stringstream begin_message;
       begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
-      streamOut(MessageType::INFO, begin_message.str());
+      workflowStreamOut(MessageType::INFO, begin_message.str());
 
     }
 
@@ -438,7 +386,7 @@ private:
                   << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
                   << "Av. Size: (" << std::setprecision(0) <<  averageSize() << ") "
                   << std::setprecision(0) << avUtilization() << "%";
-    streamOut(MessageType::INFO, stats_message.str());
+    workflowStreamOut(MessageType::INFO, stats_message.str());
 
   }
 
@@ -490,7 +438,7 @@ private:
                           << " Size: " << sample_size
                           << " Stalled (no consumer activity) for milliseconds: "
                           << (queue_samples_ * sample_milliseconds_);
-          streamOut(MessageType::INFO, stalled_message.str());
+          workflowStreamOut(MessageType::INFO, stalled_message.str());
 
         }
 

@@ -26,6 +26,6 @@ std::unique_ptr<kel::Logger> kpl::PhyloExecEnv::createLogger() {
 
 bool kpl::PhyloExecEnv::parseCommandLine(int argc, char const ** argv) {
 
-  strom_app_.parseCommandLine(argc, argv);
+  return strom_app_.parseCommandLine(argc, argv);
 
 }
