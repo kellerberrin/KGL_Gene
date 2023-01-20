@@ -173,7 +173,7 @@ struct SyncExample1{
 using SyncExample1Type = std::unique_ptr<SyncExample1>;
 
 // The actual work performed by the workflow threads.
-auto task_lambda = [](SyncExample1Type t) ->SyncExample1Type {
+auto task_lambda = [](SyncExample1Type t) ->std::optional<SyncExample1Type> {
 
   // Check for the last stop token.
   if (not t) return t;
@@ -288,7 +288,7 @@ struct SyncExample2Task {
 void syncBoundedExample2() {
 
   // Create the workflow with a bounded tidal input queue and a nullptr stop token.
-  auto workflow_ptr = std::make_shared<kel::WorkflowSyncBounded<SyncExample2Type, SyncExample2OutputType>>(nullptr);
+  auto workflow_ptr = std::make_shared<kel::WorkflowSync<SyncExample2Type, SyncExample2OutputType>>(nullptr);
 
   // An instance of the SyncExample2Task object.
   SyncExample2Task task_object;

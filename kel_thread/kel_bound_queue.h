@@ -43,12 +43,15 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+constexpr static const size_t BOUNDED_QUEUE_DEFAULT_HIGH_TIDE{10000};
+constexpr static const size_t BOUNDED_QUEUE_DEFAULT_LOW_TIDE{2000};
+
 template<typename T> requires std::move_constructible<T> class BoundedMtQueue {
 
 public:
 
-  explicit BoundedMtQueue( size_t high_tide = DEFAULT_HIGH_TIDE
-                         , size_t low_tide = DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
+  explicit BoundedMtQueue( size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
+                         , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
 
   // This constructor attaches a queue monitor for a 'stalled' queue condition and generates tidal statistics.
   BoundedMtQueue( size_t high_tide
@@ -120,8 +123,6 @@ public:
   [[nodiscard]] size_t highTide() const { return high_tide_; }
   [[nodiscard]] size_t lowTide() const { return low_tide_; }
 
-  constexpr static const size_t DEFAULT_HIGH_TIDE{10000};
-  constexpr static const size_t DEFAULT_LOW_TIDE{2000};
 
 private:
 

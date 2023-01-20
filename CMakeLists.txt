@@ -107,7 +107,10 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_rest_api.cpp
         kel_utility/kel_rest_api.h
         kel_utility/kel_date_time.cpp
-        kel_utility/kel_date_time.h)
+        kel_utility/kel_date_time.h
+        kel_utility/kel_bzip_workflow.cpp
+        kel_utility/kel_bzip_workflow.h
+        kel_utility/kel_bzip_verify.cpp)
 
 set(THREAD_SOURCE_FILES
         kel_thread/kel_mt_queue.h
@@ -289,7 +292,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES

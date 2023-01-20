@@ -1,12 +1,15 @@
 //
-// Created by kellerberrin on 13/12/20.
+// Created by kellerberrin on 17/01/23.
 //
 
-#ifndef KEL_BZIP_H
-#define KEL_BZIP_H
+#ifndef KEL_BZIP_WORKFLOW_H
+#define KEL_BZIP_WORKFLOW_H
+
 
 #include "kel_bound_queue.h"
 #include "kel_thread_pool.h"
+#include "kel_workflow_sync.h"
+
 #include "kel_basic_io.h"
 
 
@@ -27,9 +30,9 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// This struct maps to the byte structure of the gzip header and we need to be careful about any structure byte padding.
+// This struct maps to the byte structure of the gzip header. We need to be very careful about any structure byte padding.
 // The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
-// But this could be a source of grief with another compiler with different byte padding rules to GCC.
+// But this could be a source of grief with another compiler with different struct byte padding rules to GCC.
 
 struct BGZHeaderblock {
 
@@ -57,25 +60,39 @@ struct BGZTrailerBlock {
 
 };
 
-// Returned from the data decompression threads wrapped in a std::future.
+constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
+using BGZDecompressedData = std::array<char, MAX_UNCOMPRESSED_SIZE_>;
+// Returned from the data decompression threads.
 // If the eof flag is set, processing terminates.
-struct UncompressedBlock {
+struct DecompressedBlock {
 
-  UncompressedBlock() =default;
-  ~UncompressedBlock() =default;
-  UncompressedBlock(UncompressedBlock&& copy) noexcept {
+  DecompressedBlock() = default;
+  ~DecompressedBlock() = default;
 
-    block_id = copy.block_id;
-    parsed_records = std::move(copy.parsed_records);
-    eof_flag = copy.eof_flag;
-
-  }
-
-  size_t block_id{0};
-  std::vector<std::unique_ptr<std::string>> parsed_records;
-  bool eof_flag{false};
+  size_t block_id_{0};
+  size_t data_size_{0};
+  BGZDecompressedData decompressed_data_;
+  std::vector<std::string_view> parsed_lines_;
+  bool decompress_success_{true};
 
 };
+
+using BGZCompressedData = std::array<std::byte, MAX_UNCOMPRESSED_SIZE_>;
+// A single compressed BGZ block with header, compressed data and trailer blocks.
+struct CompressedBlock {
+
+  CompressedBlock() = default;
+  ~CompressedBlock() = default;
+
+  size_t block_id_{0};
+  size_t data_size_{0};
+  bool io_success_{true};
+  BGZHeaderblock header_block_;
+  BGZCompressedData compressed_data_;
+  BGZTrailerBlock trailer_block_;
+
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,12 +107,23 @@ struct UncompressedBlock {
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class BGZReader : public BaseStreamIO {
+class BGZStream : public BaseStreamIO {
+
+  // Convenience alias.
+  using CompressedType = std::unique_ptr<CompressedBlock>;
+  using DecompressedType = std::unique_ptr<DecompressedBlock>;
+  using DecompressionWorkFlow = WorkflowSync<CompressedType, DecompressedType>;
+
 
 public:
 
-  explicit BGZReader(size_t thread_count = DEFAULT_THREADS) : thread_count_(thread_count) {}
-  ~BGZReader() override { close(); }
+  explicit BGZStream(size_t thread_count = DEFAULT_THREADS)
+  : thread_count_(thread_count) {
+
+    decompression_workflow_.activateWorkflow(thread_count_, &BGZStream::decompressBlock, this);
+
+  }
+  ~BGZStream() override { close(); }
 
   // Guaranteed sequential line reader. Does not block on eof.
   IOLineRecord readLine() override;
@@ -106,11 +134,8 @@ public:
 
   bool good() const { return not decompression_error_; }
 
-  // Checks the internal data structures of a VCF bgz file.
+  // Checks the internal data structures of a bgz file.
   static bool verify(const std::string &file_name, bool silent = true);
-
-  // Seems about right.
-  constexpr static const size_t DEFAULT_THREADS{15};
 
 private:
 
@@ -119,28 +144,31 @@ private:
   size_t thread_count_;
   WorkflowThreads reader_thread_{1};
   std::future<bool> reader_return_;
-
-  // Blocks are queued here to be decompressed.
-  // Queue high tide and low tide markers are guessed as reasonable values.
-  constexpr static const size_t QUEUE_LOW_TIDE_{2000};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
-  constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
-  BoundedMtQueue<std::future<UncompressedBlock>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
-
+  WorkflowThreads assemble_records_thread_{1};
+  std::future<bool> assemble_return_;
+  // The Synchronous decompression workflow.
+  DecompressionWorkFlow decompression_workflow_{nullptr, QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
   // Queues parsed line records.
-  constexpr static const size_t LINE_LOW_TIDE_{10000};
-  constexpr static const size_t LINE_HIGH_TIDE_{20000};
-  constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{500};
   BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
-  // Flag set for shutdown.
-  bool shutdown_{false};
+  // Seems about right.
+  constexpr static const size_t DEFAULT_THREADS{15};
   // Flag set if problems decompressing a gzip block.
   bool decompression_error_{false};
   // Flag set if EOF marker received on the line queue.
   bool line_eof_{false};
+
+  // Queue and workflow parameters.
+  // Queue high tide and low tide markers are guessed as reasonable values.
+  constexpr static const size_t QUEUE_LOW_TIDE_{2000};
+  constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
+  constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Workflow"};
+  constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
+
+  constexpr static const size_t LINE_LOW_TIDE_{10000};
+  constexpr static const size_t LINE_HIGH_TIDE_{20000};
+  constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{500};
 
   // These constants are used to verify the structure of the .bgz file.
   // Don't change these constants
@@ -159,21 +187,20 @@ private:
                                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
   constexpr static const size_t HEADER_SIZE_{sizeof(BGZHeaderblock)};
   constexpr static const size_t TRAILER_SIZE_{sizeof(BGZTrailerBlock)};
-  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
   constexpr static const size_t BLOCK_SIZE_ADJUST_{HEADER_SIZE_ + TRAILER_SIZE_ - 1};
   constexpr static const size_t INFLATE_WINDOW_FLAG_ = 15 + 32;
   constexpr static const char EOL_MARKER_ = '\n';
 
-  // Decompresses a VCF bgz file using multiple threads and enqueues the decompressed data blocks.
-  bool decompressGZBlockFile();
-  // Thread pool worker function, calls the zlib inflate function.
-  [[nodiscard]] UncompressedBlock decompressBlock( size_t block_count,
-                                                   std::shared_ptr<std::vector<std::byte>> compressed_data,
-                                                   size_t compressed_data_size,
-                                                   bool eof_flag);
-  // Assemble records last + first and queue as complete records.
+  // Read and decompress the entire bgz file.
+  [[nodiscard]] bool readDecompressFile();
+  // Read a bgz block.
+  [[nodiscard]] CompressedType readCompressedBlock(size_t block_count);
+  // Decompress a bgz block.
+  [[nodiscard]] std::optional<DecompressedType > decompressBlock(CompressedType compressed_ptr);
+  // Assemble line records and queue as complete records.
   void assembleRecords();
-
+  // Check the trailing EOF_MARKER_
+  bool checkEOFMarker(size_t remaining_chars);
 
 };
 
@@ -182,4 +209,4 @@ private:
 } // Namespace.
 
 
-#endif //KEL_BZIP_H
+#endif //KEL_BZIP_WORKFLOW_H

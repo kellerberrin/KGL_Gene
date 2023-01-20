@@ -2,13 +2,13 @@
 // Created by kellerberrin on 13/12/20.
 //
 
-#include "zlib.h"
-
-#include <fstream>
-
 #include "kel_bzip.h"
 #include "kel_exec_env.h"
 #include "kel_utility.h"
+
+#include "zlib.h"
+#include <fstream>
+
 
 namespace kel = kellerberrin;
 
@@ -109,7 +109,7 @@ bool kel::BGZReader::verify(const std::string &file_name, bool silent) {
 
     ++block_count;
     // Read header.
-    GZHeaderblock header_block;
+    BGZHeaderblock header_block;
     bgz_file.read(reinterpret_cast<char*>(&header_block), HEADER_SIZE_);
     file_offset += HEADER_SIZE_;
     // Check the header values.
@@ -167,7 +167,7 @@ bool kel::BGZReader::verify(const std::string &file_name, bool silent) {
     total_compressed_size += compressed_data_size;
 
     // Read the trailer block
-    GZTrailerBlock trailer_block;
+    BGZTrailerBlock trailer_block;
     bgz_file.read(reinterpret_cast<char*>(&trailer_block), TRAILER_SIZE_);
     file_offset += TRAILER_SIZE_;
     total_uncompressed_size += trailer_block.uncompressed_size;
@@ -234,7 +234,7 @@ bool kel::BGZReader::decompressGZBlockFile() {
 
   if (not bgz_file_.good()) {
 
-    ExecEnv::log().error("BGZReader::decompressGZBlockFile; failed to open bgz file: {}", file_name_);
+    ExecEnv::log().error("BGZReader::readDecompressFile; failed to open bgz file: {}", file_name_);
     decompression_error_ = true;
 
   }
@@ -259,14 +259,14 @@ bool kel::BGZReader::decompressGZBlockFile() {
     bgz_file_.read(reinterpret_cast<char *>(&(read_vector_ptr->at(0))), HEADER_SIZE_);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("BGZReader::decompressGZBlockFile; Block {}, header file read error", block_count);
+      ExecEnv::log().error("BGZReader::readDecompressFile; Block {}, header file read error", block_count);
       decompression_error_ = true;
       break;
 
     }
 
     // Nasty but necessary.
-    auto header_block_ptr = reinterpret_cast<GZHeaderblock *>(&(read_vector_ptr->at(0)));
+    auto header_block_ptr = reinterpret_cast<BGZHeaderblock *>(&(read_vector_ptr->at(0)));
     // Read the compressed data
     size_t compressed_data_size = header_block_ptr->block_size + 1;
     char *read_ptr = reinterpret_cast<char *>(&(read_vector_ptr->at(HEADER_SIZE_)));
@@ -276,7 +276,7 @@ bool kel::BGZReader::decompressGZBlockFile() {
     bgz_file_.read(read_ptr, read_data_size);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("BGZReader::decompressGZBlockFile; Block {}, data file read error", block_count);
+      ExecEnv::log().error("BGZReader::readDecompressFile; Block {}, data file read error", block_count);
       decompression_error_ = true;
       break;
 
@@ -320,7 +320,7 @@ bool kel::BGZReader::decompressGZBlockFile() {
   // Not terminated so verify the EOF block.
   if (remaining_chars != EOF_MARKER_SIZE_) {
 
-    ExecEnv::log().error("BGZReader::decompressGZBlockFile; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
+    ExecEnv::log().error("BGZReader::readDecompressFile; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
                          block_count, remaining_chars, EOF_MARKER_SIZE_);
   } else {
 
@@ -331,7 +331,7 @@ bool kel::BGZReader::decompressGZBlockFile() {
 
       if (EOF_MARKER_[index] != eof_marker[index]) {
 
-        ExecEnv::log().error("BGZReader::decompressGZBlockFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
+        ExecEnv::log().error("BGZReader::readDecompressFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
                              index, eof_marker[index], EOF_MARKER_[index]);
       }
 

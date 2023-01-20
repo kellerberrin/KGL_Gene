@@ -209,6 +209,10 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+constexpr static const size_t BOUNDED_QUEUE_MONITOR_DISABLE{0};
+constexpr static const bool BOUNDED_QUEUE_MONITOR_STALL{true};
+constexpr static const char* BOUNDED_QUEUE_DEFAULT_NAME{"BoundedMtQueue"};
+
 // Forward queue declaration.
 template<typename T> requires std::move_constructible<T> class BoundedMtQueue;
 
@@ -238,8 +242,8 @@ public:
 
   void launchStats(BoundedMtQueue<T> *queue_ptr
                    , size_t sample_milliseconds
-                   , std::string queue_name = DEFAULT_QUEUE_NAME
-                   , bool monitor_stalled = true) {
+                   , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
+                   , bool monitor_stalled = BOUNDED_QUEUE_MONITOR_STALL) {
 
     queue_ptr_ = queue_ptr;
     sample_milliseconds_ = sample_milliseconds;
@@ -253,7 +257,7 @@ public:
 
     }
 
-    if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
+    if (sample_milliseconds_ != BOUNDED_QUEUE_MONITOR_DISABLE) {
 
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&BoundedQueueMonitor::SampleQueue, this));
       std::stringstream begin_message;
@@ -277,8 +281,6 @@ public:
 
   }
 
-  constexpr static const size_t DISABLE_QUEUE_MONITOR{0};
-  constexpr static const char* DEFAULT_QUEUE_NAME{"BoundedMtQueue"};
 
 private:
 
@@ -384,7 +386,7 @@ private:
                   << std::setprecision(2) << (averageLowTide() * 100.0) << "%"
                   << ", Empty (<=" << std::setprecision(0) << empty_size_ << "): "
                   << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
-                  << "Av. Size: (" << std::setprecision(0) <<  averageSize() << ") "
+                  << " Av. Size: (" << std::setprecision(0) <<  averageSize() << ") "
                   << std::setprecision(0) << avUtilization() << "%";
     workflowStreamOut(MessageType::INFO, stats_message.str());
 

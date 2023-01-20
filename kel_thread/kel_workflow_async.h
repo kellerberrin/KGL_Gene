@@ -51,7 +51,7 @@ enum class AsyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 // The object queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
 template<typename QueuedObj, template <typename> typename Queue = MtQueue>
 requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedObj>)
-class WorkflowBase
+class WorkflowAsync
 {
 
   using WorkProc = std::function<void(QueuedObj)>;
@@ -61,10 +61,10 @@ public:
   // The constructor requires that a top token is specified.
   // If the Object is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
   // The queue will be either a MtQueue (unbounded) or BondedMtQueue (a bounded tidal queue).
-  explicit WorkflowBase(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
+  explicit WorkflowAsync(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
-  ~WorkflowBase() {
+  ~WorkflowAsync() {
 
     // If any active threads then push the stop token onto the workflow queue.
     if (workflow_state_ != AsyncWorkflowState::STOPPED) {
@@ -215,7 +215,7 @@ private:
     // Queue the worker threads,
     for (size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&WorkflowBase::threadProlog, this);
+      threads_.emplace_back(&WorkflowAsync::threadProlog, this);
 
     }
     active_threads_.store(threads);
@@ -283,15 +283,15 @@ private:
 };
 
 
-// Convenience Asynchronous workflow typedefs.
+// Convenience Asynchronous workflow alias.
 
 // Implemented with a bounded tidal queue.
 template<typename WorkObj> using BoundedAsync = BoundedMtQueue<WorkObj>;
-template<typename WorkObj> using WorkflowAsyncBounded = WorkflowBase<WorkObj, BoundedAsync>;
+template<typename WorkObj> using WorkflowAsyncBounded = WorkflowAsync<WorkObj, BoundedAsync>;
 
 // Implemented with an unbounded queue.
 template<typename WorkObj> using AsyncQueue = MtQueue<WorkObj>;
-template<typename WorkObj> using WorkflowAsync = WorkflowBase<WorkObj, AsyncQueue>;
+template<typename WorkObj> using WorkflowAsyncUnbounded = WorkflowAsync<WorkObj, AsyncQueue>;
 
 
 }   // end namespace

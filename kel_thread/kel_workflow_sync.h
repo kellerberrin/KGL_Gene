@@ -35,14 +35,15 @@ namespace kellerberrin {  //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A threaded workflow for std::move constructable objects (such as std::unique_ptr<T>).
-// These queues guarantee that the output objects are removed from the output queue in exactly the same order in which
-// the matching input object was presented to the input workflow queue.
+// This workflow guarantees that the output objects are removed from the output queue in exactly the same order in which
+// the matching input object was presented to the workflow.
 //
-// At the end of processing the WorkflowSynchQueue is STOPPED by a stop_token being pushed onto the workflow queue.
-// The stop_token is defined in the WorkflowSynchQueue constructor. This will be a nullptr in the usual case of the
+// At the end of processing the WorkflowSynch is STOPPED by a stop_token being pushed onto the workflow queue.
+// The stop_token is defined in the WorkflowSynch constructor. This will be a nullptr in the usual case of the
 // InputObject being a pointer (std::unique_ptr<T>).
 //
-// In many use cases the InputObject and OutputObject will be the same type (and the same object).
+// In many use cases the InputObject and OutputObject will be the same type (and possibly the same object).
+// Note that the processing function std::optional(ly) queues output objects for each input object.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +51,7 @@ namespace kellerberrin {  //  organization level namespace
 // The workflow is STOPPED if there are no active work threads.
 // The workflow is STOPPED on object creation and before activating the workflow with a task function.
 // The workflow is in a SHUTDOWN state if a stop token has been received.
-// SHUTDOWN is a temporary state that will transition to STOPPED.
+// SHUTDOWN is a temporary state that will transition to STOPPED once the input queue has been emptied and all threads are stopped.
 // The workflow is ACTIVE if a task function has been supplied and all threads are ready for processing.
 
 enum class SyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
@@ -61,41 +62,48 @@ enum class SyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 using WorkFlowObjectCounter = __uint128_t;
 //using WorkFlowObjectCounter = uint64_t;
 
+
 // The input and output objects must be std::move constructable. In addition, the input object should be comparable
 // to enable the detection of a stop token placed on the input queue.
 // The input queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
-template<typename InputObject, typename OutputObject, template <typename> typename InputQueue>
-requires (std::move_constructible<InputObject> && std::equality_comparable<InputObject>)
-         && std::move_constructible<OutputObject>
-class WorkflowSyncQueue
+template<typename InputObject, typename OutputObject>
+requires (std::move_constructible<InputObject> && std::equality_comparable<InputObject>) && std::move_constructible<OutputObject>
+class WorkflowSync
 {
 
+  // User supplied function must std::optional(ly) return an output object (possibly the same object).
+  // The output object is std::optional, if missing (std::nullopt) then no object is forwarded to the output queue.
+  using WorkProc = std::function<std::optional<OutputObject>(InputObject)>;
+  // Convenience alias
+  template<typename Input> using SyncInputQueue = BoundedMtQueue<std::pair<WorkFlowObjectCounter, Input>>;
+  // Convenience alias.
+  using OutOptPair = std::pair<WorkFlowObjectCounter, std::optional<OutputObject>>;
   // A custom ordering used by std::priority_queue.
   struct CompareProcessed {
-    bool operator()(const std::pair<WorkFlowObjectCounter, OutputObject> &lhs, const std::pair<WorkFlowObjectCounter, OutputObject> &rhs) const {
+    bool operator()(const OutOptPair &lhs, const OutOptPair &rhs) const {
       return lhs.first > rhs.first;
     }
   };
-
-  // User supplied function must return an output object (possibly the same object).
-  using WorkProc = std::function<OutputObject(InputObject)>;
 
 public:
 
   // The constructor requires that an input stop token is specified.
   // If the InputObject is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
-  // The input queue will be either a MtQueue (unbounded) or BoundedMtQueue (a bounded tidal queue).
-  explicit WorkflowSyncQueue(InputObject input_stop_token
-      , std::unique_ptr<InputQueue<InputObject>> input_queue_ptr = std::make_unique<InputQueue<InputObject>>())
-      : input_stop_token_(std::move(input_stop_token))
-      , input_queue_ptr_(std::move(input_queue_ptr)) {}
+  // A bounded input queue is always used for a synchronised workflow.
+  explicit WorkflowSync(InputObject input_stop_token
+                       , size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
+                       , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE
+                       , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
+                       , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE)
+                       : input_stop_token_(std::move(input_stop_token))
+                       , input_queue_(high_tide, low_tide, queue_name, sample_frequency) {}
 
-  ~WorkflowSyncQueue() {
+  ~WorkflowSync() {
 
     if (workflow_state_ != SyncWorkflowState::STOPPED) {
 
       // This stop token is not processed by the workflow function.
-      input_queue_ptr_->push({0, std::move(input_stop_token_)});
+      input_queue_.push({0, std::move(input_stop_token_)});
 
     }
 
@@ -153,7 +161,8 @@ public:
   }
 
 
-  // Does not block, the input object is returned to the caller if the workflow is not active.
+  // The input object is returned to the caller if the workflow is not active.
+  // This function can still block (temporarily) if the input queue is at high-tide.
   [[nodiscard]] std::optional<InputObject> pushNoBlock(InputObject input_obj) {
 
     // Input objects cannot be pushed onto a stopped/shutdown workflow.
@@ -191,7 +200,7 @@ public:
     } // End of critical code.
 
     // The order of objects pushed onto the input queue does not matter as the input objects have already been tagged.
-    input_queue_ptr_->push({input_tag, std::move(input_obj)});
+    input_queue_.push({input_tag, std::move(input_obj)});
 
     // The input object has been consumed.
     return std::nullopt;
@@ -236,7 +245,7 @@ public:
 
 
   // Input and output queue const access. All const public functions on these queues are thread safe.
-  [[nodiscard]] const InputQueue<InputObject>& inputQueue() const { return *input_queue_ptr_; }
+  [[nodiscard]] const SyncInputQueue<InputObject>& inputQueue() const { return input_queue_; }
   [[nodiscard]] const MtQueue<OutputObject>& outputQueue() const { return output_queue_; }
 
 private:
@@ -250,15 +259,11 @@ private:
   WorkProc workflow_callback_;
   std::mutex process_mutex_;
 
-  // Input queue. This can be a bounded (tidal) queue to control queue size and balance CPU load.
-  std::unique_ptr<InputQueue<InputObject>> input_queue_ptr_;
+  // Input queue. This is a bounded (tidal) queue to control queue size and balance CPU load.
+  SyncInputQueue<InputObject> input_queue_;
   // Custom comparators ensure lower counter values are at the top of the priority queues.
-  std::priority_queue< WorkFlowObjectCounter
-      , std::vector<WorkFlowObjectCounter>
-      , std::greater<>> ordered_requests_;
-  std::priority_queue< std::pair<WorkFlowObjectCounter, OutputObject>
-      , std::vector<std::pair<WorkFlowObjectCounter, OutputObject>>
-      , CompareProcessed > processed_objects_;
+  std::priority_queue< WorkFlowObjectCounter, std::vector<WorkFlowObjectCounter>, std::greater<>> ordered_requests_;
+  std::priority_queue< OutOptPair, std::vector<OutOptPair>, CompareProcessed > processed_objects_;
   // Output queue, note that this queue can grow without bound.
   MtQueue<OutputObject> output_queue_;
 
@@ -278,7 +283,7 @@ private:
     // Queue the worker threads,
     for(size_t i = 0; i < threads; ++i) {
 
-      threads_.emplace_back(&WorkflowSyncQueue::threadProlog,  this);
+      threads_.emplace_back(&WorkflowSync::threadProlog, this);
 
     }
     active_threads_.store(threads);
@@ -295,8 +300,8 @@ private:
     while(true) {
 
       // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
-      // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
-      std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_ptr_->waitAndPop();
+      // If not a stop token then call the user supplied workflow function and manage the input/output_opt synchronization logic.
+      std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_.waitAndPop();
 
       // If stop token then shutdown the thread.
       if (work_item.second == input_stop_token_) {
@@ -304,11 +309,17 @@ private:
         // Check if the last thread active.
         if (active_threads_.fetch_sub(1) != 1) {
 
-          input_queue_ptr_->push(std::move(work_item)); // Re-queue the stop token.
+          input_queue_.push(std::move(work_item)); // Re-queue the stop token.
 
         } else {
 
-          output_queue_.push(std::move(workflow_callback_(std::move(work_item.second))));
+          // Process the stop token and optionally push it onto the output queue.
+          std::optional<OutputObject> out_opt = workflow_callback_(std::move(work_item.second));
+          if (out_opt.has_value()) {
+
+            output_queue_.push(std::move(out_opt.value()));
+
+          }
 
           // Workflow is now stopped
           {
@@ -323,17 +334,22 @@ private:
       }
 
       // Call the user supplied workflow function. Note that CPU work is done outside the critical code section.
-      std::pair<WorkFlowObjectCounter, OutputObject> output(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
+      OutOptPair output_opt(work_item.first, std::move(workflow_callback_(std::move(work_item.second))));
 
       // Mutex protected critical code.
       {
         std::scoped_lock lock(process_mutex_);
 
         // Is the processed object the next ordered (earliest) request?
-        if (output.first == ordered_requests_.top()) {
+        if (output_opt.first == ordered_requests_.top()) {
 
           ordered_requests_.pop();
-          output_queue_.push(std::move(output.second));
+          // If the std::optional returned value exists then push it onto the output_opt queue.
+          if (output_opt.second.has_value()) {
+
+            output_queue_.push(std::move(output_opt.second.value()));
+
+          }
 
           // Dequeue any processed requests that match the request priority queue.
           while(not ordered_requests_.empty() and not processed_objects_.empty()) {
@@ -341,10 +357,15 @@ private:
             if (ordered_requests_.top() == processed_objects_.top().first) {
 
               ordered_requests_.pop();
-              // Should be able to std::move a std::unique_ptr from a std::priority_queue without resorting to this unpleasantness.
-              std::pair<WorkFlowObjectCounter, OutputObject> processed = std::move(const_cast<std::pair<WorkFlowObjectCounter, OutputObject> &>(processed_objects_.top()));
+              // Should be able to std::move from a std::priority_queue without resorting to this unpleasantness.
+              OutOptPair processed_opt = std::move(const_cast<OutOptPair &>(processed_objects_.top()));
               processed_objects_.pop();
-              output_queue_.push(std::move(processed.second));
+              // If the std::optional popped value exists then push it onto the output_opt queue.
+              if (processed_opt.second.has_value()) {
+
+                output_queue_.push(std::move(processed_opt.second.value()));
+
+              }
 
             } else {
 
@@ -356,7 +377,7 @@ private:
 
         } else { // Place the processed object onto the internal re-ordering std::priority_queue.
 
-          processed_objects_.emplace(output.first, std::move(output.second));
+          processed_objects_.emplace(output_opt.first, std::move(output_opt.second));
 
         }
 
@@ -380,16 +401,6 @@ private:
   }
 
 };
-
-// Convenience synchronous workflow typedefs.
-
-// Implemented with a bounded tidal input queue.
-template<typename WorkObj> using BoundedSyncInput = BoundedMtQueue<std::pair<WorkFlowObjectCounter, WorkObj>>;
-template<typename WorkInput, typename WorkOutput> using WorkflowSyncBounded = WorkflowSyncQueue<WorkInput, WorkOutput, BoundedSyncInput>;
-
-// Implemented with an unbounded input queue.
-template<typename WorkObj> using SyncInputQueue = MtQueue<std::pair<WorkFlowObjectCounter, WorkObj>>;
-template<typename WorkInput, typename WorkOutput> using WorkflowSync = WorkflowSyncQueue<WorkInput, WorkOutput, SyncInputQueue>;
 
 
 }   // end namespace
