@@ -27,56 +27,6 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// This struct maps to the byte structure of the gzip header and we need to be careful about any structure byte padding.
-// The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
-// But this could be a source of grief with another compiler with different byte padding rules to GCC.
-
-struct BGZHeaderblock {
-
-  uint8_t block_id_1;                       // aligned on a single byte, value 31
-  uint8_t block_id_2;                       // aligned on a single byte, value 139
-  uint8_t compression_method;               // aligned on a single byte, value 8
-  uint8_t flags;                            // aligned on a single byte, value 4.
-  uint32_t mtime;                           // aligned on 4 byte boundary, OK because preceded by 4 single bytes.
-  uint8_t extra_flags;                      // aligned on a single byte
-  uint8_t operating_system;                 // aligned on a single byte
-  uint16_t length_extra_blocks;             // aligned on 2 byte boundary, OK, value is 6.
-  uint8_t subfield_id_1;                    // aligned on a single byte, value 66
-  uint8_t subfield_id_2;                    // aligned on a single byte, value 67
-  uint16_t subfield_length;                 // aligned on 2 byte boundary, OK, value 2.
-  // Total Block SIZE (include header + trailer) minus 1.
-  uint16_t block_size;                      // aligned on 2 byte boundary,
-  // Variable compressed data size is block_size - (header_size + trailer_size - 1)
-
-};
-
-struct BGZTrailerBlock {
-
-  uint32_t crc_check;                     // CRC of decompressed data.
-  uint32_t uncompressed_size;             // For compressed VCF files must be in the range [1, 65536]
-
-};
-
-// Returned from the data decompression threads wrapped in a std::future.
-// If the eof flag is set, processing terminates.
-struct UncompressedBlock {
-
-  UncompressedBlock() =default;
-  ~UncompressedBlock() =default;
-  UncompressedBlock(UncompressedBlock&& copy) noexcept {
-
-    block_id = copy.block_id;
-    parsed_records = std::move(copy.parsed_records);
-    eof_flag = copy.eof_flag;
-
-  }
-
-  size_t block_id{0};
-  std::vector<std::unique_ptr<std::string>> parsed_records;
-  bool eof_flag{false};
-
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -91,6 +41,56 @@ struct UncompressedBlock {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class BGZReader : public BaseStreamIO {
+
+  // This struct maps to the byte structure of the gzip header and we need to be careful about any structure byte padding.
+  // The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
+  // But this could be a source of grief with another compiler with different byte padding rules to GCC.
+
+  struct BGZHeaderblock {
+
+    uint8_t block_id_1;                       // aligned on a single byte, value 31
+    uint8_t block_id_2;                       // aligned on a single byte, value 139
+    uint8_t compression_method;               // aligned on a single byte, value 8
+    uint8_t flags;                            // aligned on a single byte, value 4.
+    uint32_t mtime;                           // aligned on 4 byte boundary, OK because preceded by 4 single bytes.
+    uint8_t extra_flags;                      // aligned on a single byte
+    uint8_t operating_system;                 // aligned on a single byte
+    uint16_t length_extra_blocks;             // aligned on 2 byte boundary, OK, value is 6.
+    uint8_t subfield_id_1;                    // aligned on a single byte, value 66
+    uint8_t subfield_id_2;                    // aligned on a single byte, value 67
+    uint16_t subfield_length;                 // aligned on 2 byte boundary, OK, value 2.
+    // Total Block SIZE (include header + trailer) minus 1.
+    uint16_t block_size;                      // aligned on 2 byte boundary,
+    // Variable compressed data size is block_size - (header_size + trailer_size - 1)
+
+  };
+
+  struct BGZTrailerBlock {
+
+    uint32_t crc_check;                     // CRC of decompressed data.
+    uint32_t uncompressed_size;             // For compressed VCF files must be in the range [1, 65536]
+
+  };
+
+  // Returned from the data decompression threads wrapped in a std::future.
+  // If the eof flag is set, processing terminates.
+  struct UncompressedBlock {
+
+    UncompressedBlock() =default;
+    ~UncompressedBlock() =default;
+    UncompressedBlock(UncompressedBlock&& copy) noexcept {
+
+      block_id = copy.block_id;
+      parsed_records = std::move(copy.parsed_records);
+      eof_flag = copy.eof_flag;
+
+    }
+
+    size_t block_id{0};
+    std::vector<std::unique_ptr<std::string>> parsed_records;
+    bool eof_flag{false};
+
+  };
 
 public:
 
@@ -111,6 +111,9 @@ public:
 
   // Seems about right.
   constexpr static const size_t DEFAULT_THREADS{15};
+
+  const BoundedMtQueue<std::future<UncompressedBlock>>& decompressQueue() const { return decompress_queue_; }
+  const BoundedMtQueue<IOLineRecord>& lineQueue() const { return line_queue_; }
 
 private:
 

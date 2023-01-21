@@ -110,7 +110,7 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_date_time.h
         kel_utility/kel_bzip_workflow.cpp
         kel_utility/kel_bzip_workflow.h
-        kel_utility/kel_bzip_verify.cpp)
+        kel_utility/kel_bzip_workflow_verify.cpp)
 
 set(THREAD_SOURCE_FILES
         kel_thread/kel_mt_queue.h
@@ -292,7 +292,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_bzip_verify.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -575,9 +575,11 @@ add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
 target_link_libraries (kol_test kol_ontology kel_utility kel_thread ${Boost_LIBRARIES})
 
-add_executable(workflows kel_thread/kel_workflow_example.cpp)
+#add_executable(workflows kel_thread/kel_workflow_example.cpp)
 
-target_link_libraries (workflows kel_utility kel_thread)
+add_executable(workflows kel_thread/kel_workflow_bgztest.cpp)
+
+target_link_libraries (workflows kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 
 ############################################################################################################

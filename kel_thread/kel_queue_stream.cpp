@@ -21,7 +21,7 @@
 // Replace the spdlog based messaging system.
 enum class MessageType { INFO, WARNING, ERROR};
 
-#define WORKFLOW_STAND_ALONE 1
+//#define WORKFLOW_STAND_ALONE 1
 #ifdef WORKFLOW_STAND_ALONE
 
 void workflowStreamOut(MessageType type, const std::string& message) {

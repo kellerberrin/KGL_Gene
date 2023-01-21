@@ -1,10 +1,9 @@
 //
-// Created by kellerberrin on 21/01/23.
+// Created by kellerberrin on 17/01/23.
 //
 
 
-
-#include "kel_bzip.h"
+#include "kel_bzip_workflow.h"
 
 #include "kel_exec_env.h"
 #include "kel_utility.h"
@@ -15,7 +14,7 @@
 namespace kel = kellerberrin;
 
 
-bool kel::BGZReader::verify(const std::string &file_name, bool silent) {
+bool kel::BGZStream::verify(const std::string &file_name, bool silent) {
 
   std::ifstream bgz_file(file_name, std::ios::binary | std::ios::ate);
 

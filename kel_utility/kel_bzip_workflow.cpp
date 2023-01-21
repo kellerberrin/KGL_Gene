@@ -16,11 +16,7 @@ namespace kel = kellerberrin;
 
 bool kel::BGZStream::close() {
 
-  // Empty the queues to flush through the eof markers and shutdown the worker threads.
-  if (not line_queue_.empty()) while(readLine());
-
   bgz_file_.close();
-
   return true;
 
 }
@@ -49,7 +45,9 @@ bool kel::BGZStream::open(const std::string &file_name) {
   }
 
   // File is open so start processing.
+  // Begin decompressing blocks of data.
   reader_return_ = reader_thread_.enqueueTask(&BGZStream::readDecompressFile, this);
+  // Begin queueing decompressed text records.
   assemble_records_thread_.enqueueWork(&BGZStream::assembleRecords, this);
 
   return true;
@@ -93,8 +91,7 @@ bool kel::BGZStream::readDecompressFile() {
       return false;
     }
 
-    file_offset += compressed_ptr->data_size_ + HEADER_SIZE_ + TRAILER_SIZE_;
-
+    file_offset += compressed_ptr->data_size_;
     decompression_workflow_.push(std::move(compressed_ptr));
 
   } // While compressed blocks available
@@ -142,7 +139,7 @@ bool kel::BGZStream::checkEOFMarker(size_t remaining_chars) {
 
 
 
-std::unique_ptr<kel::CompressedBlock> kel::BGZStream::readCompressedBlock(size_t block_count) {
+kel::BGZStream::CompressedType kel::BGZStream::readCompressedBlock(size_t block_count) {
 
   // First read the header.
   //  Must be created for each iteration
@@ -160,11 +157,10 @@ std::unique_ptr<kel::CompressedBlock> kel::BGZStream::readCompressedBlock(size_t
 
   // Using the header block_size, now read the compressed byte data.
   // Nasty but necessary.
-  size_t total_block_size = read_vector_ptr->header_block_.block_size + 1;
-  size_t compressed_data_size = total_block_size - (HEADER_SIZE_ + TRAILER_SIZE_);
+  int32_t total_block_size = read_vector_ptr->header_block_.block_size + 1;
+  int32_t compressed_data_size = total_block_size - HEADER_SIZE_;
   // Nasty but necessary.
-  char *read_ptr = reinterpret_cast<char *>(&(read_vector_ptr->compressed_data_));
-
+  char *read_ptr = reinterpret_cast<char *>(&(read_vector_ptr->compressed_block_[HEADER_SIZE_]));
   bgz_file_.read(read_ptr, compressed_data_size);
   if (not bgz_file_.good()) {
 
@@ -174,17 +170,7 @@ std::unique_ptr<kel::CompressedBlock> kel::BGZStream::readCompressedBlock(size_t
 
   }
 
-  // Finally read the trailer block.
-  bgz_file_.read(reinterpret_cast<char *>(&(read_vector_ptr->trailer_block_)), TRAILER_SIZE_);
-  if (not bgz_file_.good()) {
-
-    ExecEnv::log().error("BGZStream::readCompressedBlock; Block {}, trailing block read error", block_count);
-    read_vector_ptr->io_success_ = false;
-    return read_vector_ptr;
-
-  }
-
-  read_vector_ptr->data_size_ = compressed_data_size;
+  read_vector_ptr->data_size_ = total_block_size;
   read_vector_ptr->io_success_ = true;
 
   return read_vector_ptr;
@@ -192,7 +178,7 @@ std::unique_ptr<kel::CompressedBlock> kel::BGZStream::readCompressedBlock(size_t
 }
 
 
-std::optional<std::unique_ptr<kel::DecompressedBlock>> kel::BGZStream::decompressBlock(std::unique_ptr<CompressedBlock> compressed_ptr) {
+std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(CompressedType compressed_ptr) {
 
   // Check if a stop token.
   if (not compressed_ptr) {
@@ -206,7 +192,7 @@ std::optional<std::unique_ptr<kel::DecompressedBlock>> kel::BGZStream::decompres
   z_stream_s zlib_params;
 
   // Inflate the compressed data.
-  zlib_params.next_in = reinterpret_cast<unsigned char*>(&(compressed_ptr->compressed_data_[0]));
+  zlib_params.next_in = reinterpret_cast<unsigned char*>(&(compressed_ptr->compressed_block_[0]));
   zlib_params.avail_in = compressed_ptr->data_size_;
   zlib_params.next_out = reinterpret_cast<unsigned char*>(&(decompressed_ptr->decompressed_data_[0]));
   zlib_params.avail_out = MAX_UNCOMPRESSED_SIZE_;
@@ -255,8 +241,14 @@ std::optional<std::unique_ptr<kel::DecompressedBlock>> kel::BGZStream::decompres
   decompressed_ptr->decompress_success_ = true;
 
   std::string_view block_view(&(decompressed_ptr->decompressed_data_[0]), decompressed_ptr->data_size_);
-  // Important note; if a final '\n' then the view tokenizer allocates an empty string view.
-  decompressed_ptr->parsed_lines_ = Utility::view_tokenizer(block_view, EOL_MARKER_);
+  // Important note; if a final '\n' then the view parser allocates an empty string view.
+  std::vector<std::string_view> view_vector = Utility::view_tokenizer(block_view, EOL_MARKER_);
+  for (auto const& view : view_vector) {
+
+    decompressed_ptr->parsed_lines_.push_back(std::make_unique<std::string>(view));
+
+  }
+
 
   return decompressed_ptr;
 
@@ -297,7 +289,7 @@ void kel::BGZStream::assembleRecords() {
     // If the previous line record is defined, then concatenate with the first line record and queue.
     if (previous_line_record and not block_ptr->parsed_lines_.empty()) {
 
-      previous_line_record->append(block_ptr->parsed_lines_.front());
+      previous_line_record->append(*(block_ptr->parsed_lines_.front()));
 
       if ( block_ptr->parsed_lines_.size() >= 2) {
 
@@ -310,8 +302,7 @@ void kel::BGZStream::assembleRecords() {
     } else if (not block_ptr->parsed_lines_.empty()) {
 
       ++record_counter_;
-      auto line_ptr = std::make_unique<std::string>(block_ptr->parsed_lines_.front());
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_ptr)));
+      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block_ptr->parsed_lines_.front())));
       previous_line_record = nullptr;
 
     }
@@ -321,8 +312,7 @@ void kel::BGZStream::assembleRecords() {
     for (size_t index = 1; index < line_count-1; ++index) {
 
       ++record_counter_;
-      auto line_ptr = std::make_unique<std::string>(block_ptr->parsed_lines_[index]);
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_ptr)));
+      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block_ptr->parsed_lines_[index])));
 
     }
 
@@ -330,7 +320,7 @@ void kel::BGZStream::assembleRecords() {
 
       // If this block is complete then queue the line and clear the previous_line_record.
       // Store the last record in the previous_line_record.
-      previous_line_record = std::make_unique<std::string>(block_ptr->parsed_lines_.back());
+      previous_line_record = std::move(block_ptr->parsed_lines_.back());
 
     }
 
