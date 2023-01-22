@@ -249,7 +249,6 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
 
   }
 
-
   return decompressed_ptr;
 
 }

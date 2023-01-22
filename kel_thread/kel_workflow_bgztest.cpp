@@ -76,7 +76,7 @@ void ExecEnvBGZ::executeApp() {
   ExecEnv::log().info("End Workflow, Lines Read: {}", count);
 
   ExecEnv::log().info("Begin Reader Parsing BGZ file: {}", getArgs().bgz_file_name);
-  BGZReader test_reader(15);
+  BGZReader test_reader(10);
   test_reader.open(getArgs().bgz_file_name);
   count =  0;
   while(true) {

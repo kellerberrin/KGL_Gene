@@ -26,7 +26,7 @@ namespace kellerberrin {   //  organization::project level namespace
 // This is the format used in compressing large genome VCF files.
 // This code will not decompress standard .gz files.
 // The Block gzip (.bgz) decompression object below reads and verifies compressed .bgz (RFC1952) files.
-// The file is decompresses the data blocks using a multi-threaded workflow.
+// The file is decompressed the using a multi-threaded workflow.
 // This avoids a bottleneck in processing large VCF files as library decompression code only uses
 // a single thread to decompress large VCF files.
 // The workflow enqueues the decompressed (using zlib) data in a thread safe queue.
@@ -69,32 +69,31 @@ class BGZStream : public BaseStreamIO {
 
   };
 
-
-  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
-  using BGZDecompressedData = std::array<char, MAX_UNCOMPRESSED_SIZE_>;
   // Returned from the data decompression threads.
   // If the eof flag is set, processing terminates.
+  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
+  using BGZDecompressedData = std::array<char, MAX_UNCOMPRESSED_SIZE_>;
   struct DecompressedBlock {
 
-    size_t block_id_{0};
-    size_t data_size_{0};
     BGZDecompressedData decompressed_data_;
     std::vector<std::unique_ptr<std::string>> parsed_lines_;
+    size_t block_id_{0};
+    size_t data_size_{0};
     bool decompress_success_{false};
 
   };
 
+  // Holds the compressed read directly from file. Note the union to hold the header block.
   using BGZCompressedData = std::array<std::byte, MAX_UNCOMPRESSED_SIZE_>;
-  // A single compressed BGZ block with header, compressed data and trailer blocks.
   struct CompressedBlock {
 
-    size_t block_id_{0};
-    size_t data_size_{0};
-    bool io_success_{false};
     union {
       BGZHeaderblock header_block_;
       BGZCompressedData compressed_block_;
     };
+    size_t block_id_{0};
+    size_t data_size_{0};
+    bool io_success_{false};
 
   };
 
@@ -154,12 +153,12 @@ private:
   // Queue high tide and low tide markers are guessed as reasonable values.
   constexpr static const size_t QUEUE_LOW_TIDE_{2000};
   constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
-  constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Workflow"};
+  constexpr static const char* QUEUE_NAME_{"BGZWorkflow Decompress Workflow"};
   constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
 
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{20000};
-  constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
+  constexpr static const char* LINE_QUEUE_NAME_{"BGZWorkflow Line Record Queue"};
   constexpr static const size_t LINE_SAMPLE_FREQ_{500};
 
   // These constants are used to verify the structure of the .bgz file.
