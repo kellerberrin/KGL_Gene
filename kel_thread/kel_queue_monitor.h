@@ -217,7 +217,7 @@ constexpr static const char* BOUNDED_QUEUE_DEFAULT_NAME{"BoundedMtQueue"};
 template<typename T> requires std::move_constructible<T> class BoundedMtQueue;
 
 // Realtime queue monitor
-template<typename T> class BoundedQueueMonitor {
+template<typename Queue> class BoundedQueueMonitor {
 
 public:
 
@@ -240,7 +240,7 @@ public:
 
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats(BoundedMtQueue<T> *queue_ptr
+  void launchStats(Queue *queue_ptr
                    , size_t sample_milliseconds
                    , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
                    , bool monitor_stalled = BOUNDED_QUEUE_MONITOR_STALL) {
@@ -284,7 +284,7 @@ public:
 
 private:
 
-  BoundedMtQueue<T> *queue_ptr_;
+  Queue *queue_ptr_;
   size_t sample_milliseconds_;
   bool monitor_stalled_{true};
   std::string queue_name_;
@@ -386,8 +386,8 @@ private:
                   << std::setprecision(2) << (averageLowTide() * 100.0) << "%"
                   << ", Empty (<=" << std::setprecision(0) << empty_size_ << "): "
                   << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
-                  << " Av. Size: (" << std::setprecision(0) <<  averageSize() << ") "
-                  << std::setprecision(0) << avUtilization() << "%";
+                  << " Av. Size: (" << std::setprecision(2) <<  averageSize() << ") "
+                  << std::setprecision(2) << avUtilization() << "%";
     workflowStreamOut(MessageType::INFO, stats_message.str());
 
   }
@@ -438,6 +438,7 @@ private:
           std::stringstream stalled_message;
           stalled_message << "Monitor Queue: " <<  queue_name_
                           << " Size: " << sample_size
+                          << " Queue State: " << (queue_ptr_->queueState() ? "flood tide" : "ebb tide")
                           << " Stalled (no consumer activity) for milliseconds: "
                           << (queue_samples_ * sample_milliseconds_);
           workflowStreamOut(MessageType::INFO, stalled_message.str());

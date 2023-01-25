@@ -22,6 +22,12 @@
 #include "kel_mt_queue.h"
 #include "kel_queue_monitor.h"
 
+#include <iostream>
+#include <cstddef>
+#include <array>
+#include <optional>
+#include <queue>
+#include <utility>
 
 namespace kellerberrin {   //  organization level namespace
 
@@ -43,6 +49,125 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The bounded (tidal) queue implemented using a std::queue.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+constexpr static const size_t TIDAL_QUEUE_DEFAULT_HIGH_TIDE{10000};
+constexpr static const size_t TIDAL_QUEUE_DEFAULT_LOW_TIDE{2000};
+
+template<typename T> requires std::move_constructible<T>
+class TidalQueue {
+
+public:
+
+  explicit TidalQueue( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
+                     , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
+
+  // This constructor attaches a queue monitor for a 'stalled' queue condition and generates tidal statistics.
+  TidalQueue( size_t high_tide
+      , size_t low_tide
+      , std::string queue_name
+      , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
+
+    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<TidalQueue<T>>>();
+    monitor_ptr_->launchStats(this, sample_frequency, queue_name);
+
+  }
+  ~TidalQueue() { monitor_ptr_ = nullptr; }
+
+  // Enqueue function can be called by multiple threads.
+  // These threads will block if the queue has reached high-tide size until the queue size reaches low-tide (ebb-tide)..
+  // Once the queue has reached low-tide through consumer activity the producer threads are once again unblocked (flood-tide).
+  void push(T new_value) {
+
+    { // Mutex
+      std::unique_lock<std::mutex> lock(queue_mutex_);
+      tide_cond_.wait(lock, [this]()->bool{ return queue_state_; });
+
+      queue_.push(std::move(new_value));
+      ++queue_size_;
+      ++queue_activity_;
+      queue_state_ = queue_size_ <= high_tide_;
+
+    } // ~Mutex
+
+    empty_cond_.notify_one();
+
+  }
+
+  // Dequeue function can be called by multiple threads.
+  // These threads will only block if the queue is empty.
+  [[nodiscard]] T waitAndPop() {
+
+    std::unique_lock<std::mutex> lock(queue_mutex_); // Mutex
+    empty_cond_.wait(lock, [this]()->bool{ return queue_size_ > 0; });
+    T value(std::move(queue_.front()));
+    queue_.pop();
+    --queue_size_;
+    ++queue_activity_;
+    if (not queue_state_) {
+
+      queue_state_ = queue_size_ <= low_tide_;
+
+    }
+    lock.unlock();  // ~Mutex
+
+    tide_cond_.notify_one();
+
+    return value;
+
+  }
+
+  // All of these functions are thread safe.
+  [[nodiscard]] bool empty() const { return queue_size_ == 0; }
+  [[nodiscard]] size_t size() const { return queue_size_; }
+  [[nodiscard]] size_t activity() const { return queue_activity_; }
+
+  [[nodiscard]] bool queueState() const { return queue_state_; }
+  [[nodiscard]] size_t highTide() const { return high_tide_; }
+  [[nodiscard]] size_t lowTide() const { return low_tide_; }
+
+
+private:
+
+  // Tidal limits,
+  const size_t high_tide_;
+  const size_t low_tide_;
+
+  // Actual queue implementation.
+  std::queue<T> queue_;
+
+  // If the queue state is 'true' then producer threads can push() onto the queue ('flood tide').
+  // If the queue state is 'false' the producer threads are blocked and are waiting to push() onto the queue ('ebb tide').
+  bool queue_state_{true};
+  size_t queue_size_{0};
+  size_t queue_activity_{0};
+
+  // Condition variable blocks queue producers on 'high tide' and subsequent 'ebb tide' conditions.
+  std::condition_variable tide_cond_;
+  // Condition variable blocks queue consumers on queue empty.
+  std::condition_variable empty_cond_;
+  std::mutex queue_mutex_;
+
+  // Held in a pointer for explicit object lifetime.
+  std::unique_ptr<BoundedQueueMonitor<TidalQueue<T>>> monitor_ptr_;
+
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The bounded queue implemented using an MtQueue.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 constexpr static const size_t BOUNDED_QUEUE_DEFAULT_HIGH_TIDE{10000};
 constexpr static const size_t BOUNDED_QUEUE_DEFAULT_LOW_TIDE{2000};
 
@@ -59,7 +184,7 @@ public:
                 , std::string queue_name
                 , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
-    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<T>>();
+    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<BoundedMtQueue<T>>>();
     monitor_ptr_->launchStats(this, sample_frequency, queue_name);
 
   }
@@ -98,7 +223,7 @@ public:
 
   // Dequeue function can be called by multiple threads.
   // These threads will only block if the queue is empty.
-  T waitAndPop() {
+  [[nodiscard]] T waitAndPop() {
 
     T value = mt_queue_.waitAndPop();
     { // Locked block to modify condition variable.
@@ -108,7 +233,7 @@ public:
         queue_state_ = size() <= low_tide_;
 
       }
-    }
+    } // ~Locked.
     tide_cond_.notify_one();
     return value;
 
@@ -141,7 +266,7 @@ private:
   mutable std::mutex tide_mutex_;
 
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<BoundedQueueMonitor<T>> monitor_ptr_;
+  std::unique_ptr<BoundedQueueMonitor<BoundedMtQueue<T>>> monitor_ptr_;
 
 
 };

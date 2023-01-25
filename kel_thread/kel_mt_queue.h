@@ -111,7 +111,7 @@ public:
 private:
 
   std::mutex mutex_;
-  std::queue<T> data_queue_;
+  std::queue<T> data_queue_; // Implemented as a std::deque.
   std::condition_variable data_cond_;
   std::atomic<size_t> size_{0};
   std::atomic<size_t> activity_{0};
