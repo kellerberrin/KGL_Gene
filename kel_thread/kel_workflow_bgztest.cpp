@@ -164,7 +164,7 @@ template <typename QueueType> void testBoundedTidal(std::string queue_name) {
 
 void ExecEnvBGZ::executeApp() {
 
-  const size_t thread_count{5};
+  const size_t thread_count{10};
   testWorkflowReader<BGZStream>("Workflow", thread_count);
   testWorkflowReader<BGZReader>("Reader", thread_count);
 
