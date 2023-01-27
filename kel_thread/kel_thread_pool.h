@@ -24,7 +24,6 @@
 
 #include "kel_mt_queue.h"
 
-#include <condition_variable>
 #include <functional>
 #include <future>
 #include <vector>

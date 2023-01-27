@@ -65,7 +65,8 @@ using WorkFlowObjectCounter = __uint128_t;
 
 // The input and output objects must be std::move constructable. In addition, the input object should be comparable
 // to enable the detection of a stop token placed on the input queue.
-// The input queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
+// The input queue is a BoundedMtQueue (bounded tidal) queue.
+// The output queue is default unbounded but can be constrained to a specified (approximate) size.
 template<typename InputObject, typename OutputObject>
 requires (std::move_constructible<InputObject> && std::equality_comparable<InputObject>) && std::move_constructible<OutputObject>
 class WorkflowSync
@@ -89,20 +90,23 @@ public:
 
   // The constructor requires that an input stop token is specified.
   // If the InputObject is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
-  // A bounded input queue is always used for a synchronised workflow.
+  // A bounded (tidal) queue is used to buffer input.
+  // The output queue can be optionally limited in size.
   explicit WorkflowSync(InputObject input_stop_token
                        , size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
                        , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE
                        , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
-                       , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE)
+                       , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE
+                       , size_t max_output_size = WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE)
                        : input_stop_token_(std::move(input_stop_token))
-                       , input_queue_(high_tide, low_tide, queue_name, sample_frequency) {}
+                       , input_queue_(high_tide, low_tide, queue_name, sample_frequency)
+                       , max_output_queue_size_(max_output_size) {}
 
   ~WorkflowSync() {
 
     if (workflow_state_ != SyncWorkflowState::STOPPED) {
 
-      // This stop token is not processed by the workflow function.
+      // Push a stop token to shut down the active threads so that they can be joined.
       input_queue_.push({0, std::move(input_stop_token_)});
 
     }
@@ -212,12 +216,17 @@ public:
   // receives an input stop token. The dequeue thread can then stop requesting further output objects.
   [[nodiscard]] OutputObject waitAndPop() {
 
+    if (max_output_queue_size_.load() != WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE) {
+
+      output_condition_.notify_one();
+
+    }
     return output_queue_.waitAndPop();
 
   }
 
   // This function is not thread safe! A race condition potentially exists.
-  // If a producer thread has pushed a stop token, another thread calling this function may still return ACTIVE.
+  // If the producer thread has pushed a stop token, another thread calling this function may still return ACTIVE.
   // Consider using waitOnStopped() or waitOnActive() instead.
    [[nodiscard]] SyncWorkflowState workflowState() const { return workflow_state_.load(); }
 
@@ -248,6 +257,9 @@ public:
   [[nodiscard]] const SyncInputQueue<InputObject>& inputQueue() const { return input_queue_; }
   [[nodiscard]] const MtQueue<OutputObject>& outputQueue() const { return output_queue_; }
 
+  // A value of zero means the output queue can grow without bound.
+  constexpr static const size_t WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE{0};
+
 private:
 
   InputObject input_stop_token_;
@@ -258,14 +270,19 @@ private:
   WorkFlowObjectCounter object_counter_{0};
   WorkProc workflow_callback_;
   std::mutex process_mutex_;
+  std::condition_variable output_condition_;  // Blocks when then output queue exceeds a specified size.
 
   // Input queue. This is a bounded (tidal) queue to control queue size and balance CPU load.
   SyncInputQueue<InputObject> input_queue_;
   // Custom comparators ensure lower counter values are at the top of the priority queues.
   std::priority_queue< WorkFlowObjectCounter, std::vector<WorkFlowObjectCounter>, std::greater<>> ordered_requests_;
   std::priority_queue< OutOptPair, std::vector<OutOptPair>, CompareProcessed > processed_objects_;
-  // Output queue, note that this queue can grow without bound.
+  // Output queue, note that the default is that this queue can grow without bound if not explicitly constrained.
   MtQueue<OutputObject> output_queue_;
+  // Optional limit on the approximate maximum size of the output queue.
+  // Placing an upper limit on the output queue size may result in the input queue blocking.
+  // Defaults to an unbounded (0 size) output queue size.
+  const std::atomic<size_t> max_output_queue_size_{WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE};
 
   // Threads can wait on workflow queue state.
   std::atomic<SyncWorkflowState> workflow_state_{SyncWorkflowState::STOPPED };
@@ -299,8 +316,19 @@ private:
   // Loop until a stop token is encountered and then recursively shutdown the active threads.
     while(true) {
 
+      // We control the approximate max output queue size by blocking reading the input queue.
+      // The output queue cannot be blocked directly as it is filled in a critical code section.
+      if (max_output_queue_size_.load() != WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE) {
+
+        {
+          std::unique_lock lock(process_mutex_);
+          output_condition_.wait(lock, [this]{ return output_queue_.size() < max_output_queue_size_.load(); });
+        }
+
+      }
+
       // Get the next input object. If it is a stop token then recursively shutdown all the work threads.
-      // If not a stop token then call the user supplied workflow function and manage the input/output_opt synchronization logic.
+      // If not a stop token then call the user supplied workflow function and manage the input/output synchronization logic.
       std::pair<WorkFlowObjectCounter, InputObject> work_item = input_queue_.waitAndPop();
 
       // If stop token then shutdown the thread.

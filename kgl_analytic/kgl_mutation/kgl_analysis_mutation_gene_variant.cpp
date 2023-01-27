@@ -255,7 +255,7 @@ bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const Po
       auto& [population, tail_value] = *upper_find;
       if (tail_value != 0.0 and total_success > 0) {
 
-        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero upper tail statistic: {}, population: {}, ",
+        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero upper tail_ statistic: {}, population: {}, ",
                              tail_value,  population);
         tail_value = upper_tail;
         tail_result = false;
@@ -278,7 +278,7 @@ bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const Po
       auto& [population, tail_value] = *lower_find;
       if (tail_value != 0.0 and total_success != 0) {
 
-        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero lower tail statistic: {}, population: {}",
+        ExecEnv::log().error("GeneVariants::processSummaryStatistics; found unexpected non-zero lower tail_ statistic: {}, population: {}",
                              tail_value, population);
         tail_value = lower_tail;
         tail_result = false;

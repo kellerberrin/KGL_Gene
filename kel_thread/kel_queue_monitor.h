@@ -386,7 +386,7 @@ private:
                   << std::setprecision(2) << (averageLowTide() * 100.0) << "%"
                   << ", Empty (<=" << std::setprecision(0) << empty_size_ << "): "
                   << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
-                  << " Av. Size: (" << std::setprecision(2) <<  averageSize() << ") "
+                  << ", Av. Size: (" <<  static_cast<size_t>(averageSize()) << ") "
                   << std::setprecision(2) << avUtilization() << "%";
     workflowStreamOut(MessageType::INFO, stats_message.str());
 

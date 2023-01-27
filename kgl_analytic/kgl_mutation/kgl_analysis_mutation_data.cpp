@@ -172,13 +172,13 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
     { "ENSG00000274000", "LILRA2" }, //	LILRA2	leukocyte immunoglobulin like receptor A2
     { "ENSG00000274935", "LILRA1" }, //	LILRA1	leukocyte immunoglobulin like receptor A1
     { "ENSG00000278555", "LILRB4" },  // 	LILRB4	leukocyte immunoglobulin like receptor B4
-    { "ENSG00000276433", "KIR3DL3" }, //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
-    { "ENSG00000273947", "KIR2DL3" }, //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
-    { "ENSG00000276820", "KIR2DL1" }, //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
-    { "ENSG00000276779", "KIR2DL4" }, //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
-    { "ENSG00000273775", "KIR3DL1" }, //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
-    {"ENSG00000274324", "KIR2DS4" }, //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
-    { "ENSG00000273735",	"KIR3DL2"}  // KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+    { "ENSG00000276433", "KIR3DL3" }, //	KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 3
+    { "ENSG00000273947", "KIR2DL3" }, //	KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 3
+    { "ENSG00000276820", "KIR2DL1" }, //	KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 1
+    { "ENSG00000276779", "KIR2DL4" }, //	KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 4
+    { "ENSG00000273775", "KIR3DL1" }, //	KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 1
+    {"ENSG00000274324", "KIR2DS4" }, //	KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail_ 4
+    { "ENSG00000273735",	"KIR3DL2"}  // KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 2
 
 };
 
@@ -197,13 +197,13 @@ const std::vector<std::string> kgl::MutationAnalysisData::alt_LILRB1_ensembl_sym
     "ENSG00000239998", //	Alt LILRA2	leukocyte immunoglobulin like receptor A2
     "ENSG00000104974", //	Alt LILRA1	leukocyte immunoglobulin like receptor A1
     "ENSG00000186818",  // 	Alt LILRB4	leukocyte immunoglobulin like receptor B4
-    "ENSG00000242019", //	Alt KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 3
-    "ENSG00000243772", //	Alt KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 3
-    "ENSG00000125498", //	Alt KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 1
-    "ENSG00000189013", //	Alt KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail 4
-    "ENSG00000167633", //	Alt KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 1
-    "ENSG00000221957", //	Alt KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail 4
-    "ENSG00000240403"	// Alt KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail 2
+    "ENSG00000242019", //	Alt KIR3DL3	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 3
+    "ENSG00000243772", //	Alt KIR2DL3	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 3
+    "ENSG00000125498", //	Alt KIR2DL1	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 1
+    "ENSG00000189013", //	Alt KIR2DL4	killer cell immunoglobulin like receptor%2C two Ig domains and long cytoplasmic tail_ 4
+    "ENSG00000167633", //	Alt KIR3DL1	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 1
+    "ENSG00000221957", //	Alt KIR2DS4	killer cell immunoglobulin like receptor%2C two Ig domains and short cytoplasmic tail_ 4
+    "ENSG00000240403"	// Alt KIR3DL2	killer cell immunoglobulin like receptor%2C three Ig domains and long cytoplasmic tail_ 2
 
 };
 

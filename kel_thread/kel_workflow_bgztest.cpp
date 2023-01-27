@@ -18,8 +18,8 @@ struct CmdLineArgs {
 
   std::string workDirectory{"./"};
   std::string logFile{"test_bgz.log"};
-  int max_error_count{1000};
-  int max_warn_count{1000};
+  int max_error_count{100};
+  int max_warn_count{100};
   std::string bgz_file_name{"/media/kellerberrin/DataGenome/Genetics/Genome/HomoSapien/GRCh38/Gnomad3_1/gnomad.genomes.v3.1.2.sites.chr2.vcf.bgz"};
 };
 
@@ -52,14 +52,15 @@ private:
 };
 
 
-void testWorkflowReader() {
+template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name, size_t thread_count) {
 
   size_t count{0};
-  std::chrono::time_point<std::chrono::system_clock> prior = std::chrono::system_clock::now();
-  ExecEnv::log().info("Begin Workflow Parsing BGZ file: {}", ExecEnvBGZ::getArgs().bgz_file_name);
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+  ExecEnv::log().info("{} begins Parsing BGZ file: {}", decoder_name, ExecEnvBGZ::getArgs().bgz_file_name);
 
-  BGZStream test_stream(20);
+  BGZdecoder test_stream(thread_count);
   test_stream.open(ExecEnvBGZ::getArgs().bgz_file_name);
+  std::chrono::time_point<std::chrono::system_clock> prior = std::chrono::system_clock::now();
   while (true) {
 
     auto line = test_stream.readLine();
@@ -70,34 +71,19 @@ void testWorkflowReader() {
       std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
       auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - prior);
       prior = now;
-      ExecEnv::log().info("Workflow, Lines Read: {}, WF Input Size: {}, WF Output Size: {}, Line Queue Size: {}, Elapsed Time (ms): {}", count, test_stream.workFlow().inputQueue().size(), test_stream.workFlow().outputQueue().size(), test_stream.lineQueue().size(), milliseconds.count());
+      ExecEnv::log().info("{}, Lines Read: {}, Line queue size: {}, Elapsed Time (ms): {}"
+                          , decoder_name, count, test_stream.lineQueue().size(), milliseconds.count());
 
     }
 
-  }
-
-  ExecEnv::log().info("End Workflow, Lines Read: {}", count);
-
-  ExecEnv::log().info("Begin Reader Parsing BGZ file: {}", ExecEnvBGZ::getArgs().bgz_file_name);
-  BGZReader test_reader(15);
-  test_reader.open(ExecEnvBGZ::getArgs().bgz_file_name);
-  count = 0;
-  while (true) {
-
-    auto line = test_reader.readLine();
-    if (not line) break;
-    ++count;
-    if (count % 1000000 == 0) {
-
-      std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-      auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - prior);
-      prior = now;
-      ExecEnv::log().info("Reader, Lines Read: {}, Decompress Queue Size: {}, Line Queue Size: {}, Elapsed Time (ms): {}", count, test_reader.decompressQueue().size(), test_reader.lineQueue().size(), milliseconds.count());
-
-    }
+//    std::this_thread::sleep_for(std::chrono::milliseconds{1});
 
   }
-  ExecEnv::log().info("End Reader, Lines Read: {}", count);
+
+  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+  auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+  ExecEnv::log().info("{} ends, elapsed time (sec): {}, Lines Read: {}, Thread count:{}"
+                      , decoder_name, elapsed.count(), count, thread_count);
 
 }
 
@@ -117,9 +103,11 @@ template <typename QueueType> void testBoundedTidal(std::string queue_name) {
   QueueType tidal_queue(QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, queue_name, QUEUE_SAMPLE_FREQ_);
   auto push_lambda = [&]()->bool{
 
-    while (producer_count.fetch_add(1) < iterations) {
+    size_t iter = producer_count.fetch_add(1);
+    while (iter < iterations) {
 
-      tidal_queue.push(std::make_unique<size_t>(0));
+      tidal_queue.push(std::make_unique<size_t>(iter));
+      iter = producer_count.fetch_add(1);
 
     }
     return true;
@@ -127,9 +115,17 @@ template <typename QueueType> void testBoundedTidal(std::string queue_name) {
   };
   auto pop_lambda = [&]()->bool{
 
+    static size_t next_count{0};
+
     while (consumer_count.fetch_add(1) < iterations) {
 
-      tidal_queue.waitAndPop();
+      auto dequeued = tidal_queue.waitAndPop();
+      if (*dequeued != next_count) {
+
+//        ExecEnv::log().error("Out of Sequence; expected: {}, dequeued : {}", next_count, *dequeued);
+
+      }
+      ++next_count;
 
     }
     return true;
@@ -168,14 +164,18 @@ template <typename QueueType> void testBoundedTidal(std::string queue_name) {
 
 void ExecEnvBGZ::executeApp() {
 
-//  testWorkflowReader();
-  while (true) {
+  const size_t thread_count{5};
+  testWorkflowReader<BGZStream>("Workflow", thread_count);
+  testWorkflowReader<BGZReader>("Reader", thread_count);
 
-    testBoundedTidal<BoundedMtQueue<std::unique_ptr<size_t>>>("BoundedMtQueue<size_t>");
-    testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
+  /*
+    while (true) {
 
-  }
+      testBoundedTidal<BoundedMtQueue<std::unique_ptr<size_t>>>("BoundedMtQueue<size_t>");
+      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
 
+    }
+  */
 }
 
 
