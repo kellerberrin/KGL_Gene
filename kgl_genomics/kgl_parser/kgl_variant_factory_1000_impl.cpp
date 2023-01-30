@@ -80,7 +80,7 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
 
   }
 
-  std::vector<std::string> alt_vector = Utility::char_tokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
+  std::vector<std::string> alt_vector = Utility::charTokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
 
   if (alt_vector.empty()) {
 
@@ -177,7 +177,7 @@ std::pair<size_t, size_t> kgl::Genome1000VCFImpl::alternateIndex( const std::str
   // The phenotype size or the first ":" if that exists.
   std::string_view unphased_view(trim_genotype.c_str(), GT_size);
   // Look for the "|" phase separator.
-  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
+  std::vector<std::string_view> phase_vector = Utility::viewTokenizer(unphased_view, PHASE_MARKER_);
 
   size_t phase_A_alt{REFERENCE_VARIANT_INDEX_};
   size_t phase_B_alt{REFERENCE_VARIANT_INDEX_};

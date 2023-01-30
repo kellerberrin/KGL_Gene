@@ -224,7 +224,7 @@ kel::BGZReader::DecompressedType  kel::BGZReader::decompressBlock(std::shared_pt
 
   std::string_view block_view(uncompressed_data, uncompressed_size);
   // Important note; if a final '\n' then the view parser allocates an empty string view.
-  std::vector<std::string_view> view_vector = Utility::view_tokenizer(block_view, EOL_MARKER_);
+  std::vector<std::string_view> view_vector = Utility::viewTokenizer(block_view, EOL_MARKER_);
   for (auto const& view : view_vector) {
 
     uncompressed_ptr->parsed_records.push_back(std::make_unique<std::string>(view));
@@ -283,7 +283,7 @@ void kel::BGZReader::assembleRecords() {
 
     }
 
-    // Queue the 2nd to 2nd last last records.
+    // Queue the 2nd to 2nd last records.
     size_t line_count = block->parsed_records.size();
     for (size_t index = 1; index < line_count-1; ++index) {
 

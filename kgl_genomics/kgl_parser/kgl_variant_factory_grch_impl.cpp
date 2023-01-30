@@ -107,7 +107,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   } else {
 
-    std::vector<std::string> alt_vector = Utility::char_tokenizer(vcf_record.alt, MULIPLE_ALT_SEPARATOR_);
+    std::vector<std::string> alt_vector = Utility::charTokenizer(vcf_record.alt, MULIPLE_ALT_SEPARATOR_);
 
     if (alt_vector.empty()) {
 

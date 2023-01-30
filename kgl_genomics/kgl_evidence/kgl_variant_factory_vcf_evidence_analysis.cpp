@@ -87,7 +87,7 @@ std::vector<double> kgl::InfoEvidenceAnalysis::stringBinToFloat(const std::vecto
 
   if (bin_data.size() >= 1) {
 
-    std::vector<std::string> bin_strings = Utility::char_tokenizer(bin_data.front(), BIN_DELIMITER_);
+    std::vector<std::string> bin_strings = Utility::charTokenizer(bin_data.front(), BIN_DELIMITER_);
 
     if (bin_strings.size() != expected_bin_size) {
 
@@ -171,7 +171,7 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
 
 const std::vector<std::string_view> kgl::VEPSubFieldEvidence::vepSubFields(const std::string& vep_field) {
 
-  return Utility::view_tokenizer(vep_field, VEPSubFieldHeader::VEP_DELIMITER_CHAR);
+  return Utility::viewTokenizer(vep_field, VEPSubFieldHeader::VEP_DELIMITER_CHAR);
 
 }
 

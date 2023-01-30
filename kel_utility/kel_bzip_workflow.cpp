@@ -242,7 +242,7 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
 
   std::string_view block_view(&(decompressed_ptr->decompressed_data_[0]), decompressed_ptr->data_size_);
   // Important note; if a final '\n' then the view parser allocates an empty string view.
-  std::vector<std::string_view> view_vector = Utility::view_tokenizer(block_view, EOL_MARKER_);
+  std::vector<std::string_view> view_vector = Utility::viewTokenizer(block_view, EOL_MARKER_);
   for (auto const& view : view_vector) {
 
     decompressed_ptr->parsed_lines_.push_back(std::make_unique<std::string>(view));

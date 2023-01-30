@@ -44,7 +44,7 @@ public:
   [[nodiscard]] Node::PtrNode getNode(size_t node_index);    // Only used in TreeManip.
   [[nodiscard]] Node::PtrNode getRootNode() const { return _root; }
   [[nodiscard]] Node::PtrVector getNodes();
-  [[nodiscard]] Node::PtrVector& getPreOrder() { return _preorder; }
+  [[nodiscard]] const Node::PtrVector& getPreOrder() const { return _preorder; }
   void clearPreOrder() { _preorder.clear(); }
   void pushPreOrder(Node::PtrNode node) { _preorder.push_back(node); }
   void clearLevelOrder() { _levelorder.clear(); }

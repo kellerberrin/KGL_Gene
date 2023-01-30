@@ -72,9 +72,9 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -DBOOST_MATH_DISABLE_FLOAT1
 set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_PROFILE}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_PROFILE}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_PROFILE}")
 
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
@@ -113,9 +113,9 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_bzip_workflow_verify.cpp)
 
 set(THREAD_SOURCE_FILES
-        kel_thread/kel_mt_queue.h
-        kel_thread/kel_thread_pool.h
-        kel_thread/kel_bound_queue.h
+        kel_thread/kel_queue_safe.h
+        kel_thread/kel_workflow_threads.h
+        kel_thread/kel_queue_tidal.h
         kel_thread/kel_workflow_async.h
         kel_thread/kel_workflow_sync.h
         kel_thread/kel_queue_monitor.h

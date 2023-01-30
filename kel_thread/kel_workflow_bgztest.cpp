@@ -6,7 +6,7 @@
 #include "kel_exec_env_app.h"
 #include "kel_bzip.h"
 #include "kel_bzip_workflow.h"
-#include "kel_thread_pool.h"
+#include "kel_workflow_threads.h"
 
 
 
@@ -61,11 +61,13 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
   BGZdecoder test_stream(thread_count);
   test_stream.open(ExecEnvBGZ::getArgs().bgz_file_name);
   std::chrono::time_point<std::chrono::system_clock> prior = std::chrono::system_clock::now();
+  size_t total_char_size{0};
   while (true) {
 
     auto line = test_stream.readLine();
     if (not line) break;
     ++count;
+    total_char_size += line.value().second->size();
     if (count % 1000000 == 0) {
 
       std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -82,100 +84,116 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-  ExecEnv::log().info("{} ends, elapsed time (sec): {}, Lines Read: {}, Thread count:{}"
-                      , decoder_name, elapsed.count(), count, thread_count);
+  ExecEnv::log().info("{} ends, Elapsed time (sec): {}, Lines Read: {}, Total char size: {}, Thread count:{}"
+                      , decoder_name, elapsed.count(), count, total_char_size, thread_count);
 
 }
 
 
-template <typename QueueType> void testBoundedTidal(std::string queue_name) {
+template <template<typename> typename Queue, typename Type> void testBoundedTidal( const std::string queue_name
+                                                                                 , const size_t producers
+                                                                                 , const size_t consumers
+                                                                                 , const size_t iterations) {
 
-  constexpr static const size_t QUEUE_LOW_TIDE_{2000};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{100};
+  const size_t QUEUE_LOW_TIDE_{2000};
+  const size_t QUEUE_HIGH_TIDE_{4000};
+  const size_t QUEUE_SAMPLE_FREQ_{100};
+  std::vector<std::thread> thread_vector;
+//  auto queue_ptr = std::make_unique<Queue<Type>>(QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, queue_name, QUEUE_SAMPLE_FREQ_);
+  auto queue_ptr = std::make_unique<Queue<Type>>();
 
-  std::atomic<size_t> producer_count{0};
-  std::atomic<size_t> consumer_count{0};
-  const size_t iterations = 10000000;
-  WorkflowThreads consumers(10);
-  WorkflowThreads producers(40);
-  std::vector<std::future<bool>> thread_pool_futures;
-  QueueType tidal_queue(QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, queue_name, QUEUE_SAMPLE_FREQ_);
-  auto push_lambda = [&]()->bool{
+  class PushPull {
 
-    size_t iter = producer_count.fetch_add(1);
-    while (iter < iterations) {
+  public:
 
-      tidal_queue.push(std::make_unique<size_t>(iter));
-      iter = producer_count.fetch_add(1);
+    PushPull(size_t iterations, std::unique_ptr<Queue<Type>> queue_ptr) : iterations_(iterations), queue_ptr_(std::move(queue_ptr)) {}
 
-    }
-    return true;
+    void push() {
 
-  };
-  auto pop_lambda = [&]()->bool{
+      while (producer_count.fetch_add(1) < iterations_) {
 
-    static size_t next_count{0};
-
-    while (consumer_count.fetch_add(1) < iterations) {
-
-      auto dequeued = tidal_queue.waitAndPop();
-      if (*dequeued != next_count) {
-
-//        ExecEnv::log().error("Out of Sequence; expected: {}, dequeued : {}", next_count, *dequeued);
+        queue_ptr_->push(Type());
 
       }
-      ++next_count;
+
+    };
+
+    void pull() {
+
+      static size_t next_count{0};
+
+      while (consumer_count.fetch_add(1) < iterations_) {
+
+        auto volatile dequeued = queue_ptr_->waitAndPop();
+        //      if (*dequeued != next_count) {
+
+        //        ExecEnv::log().error("Out of Sequence; expected: {}, dequeued : {}", next_count, *dequeued);
+
+        //      }
+        ++next_count;
+
+      }
 
     }
-    return true;
 
-  };
+  private:
 
-  ExecEnv::log().info("Queue: {} Begins; iterations: {}", queue_name, iterations);
+    const size_t iterations_;
+    std::atomic<size_t> producer_count{0};
+    std::atomic<size_t> consumer_count{0};
+    std::unique_ptr<Queue<Type>> queue_ptr_;
+
+  };   // ~PushPull
+  PushPull push_pull(iterations, std::move(queue_ptr));
+
+  ExecEnv::log().info("Queue: {} Begins; Producers: {}, Consumers: {}, iterations: {}", queue_name, producers, consumers, iterations);
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 
   // queue the thread pools
-  for (size_t i = 0; i < consumers.threadCount(); ++i) {
+  for (size_t i = 0; i < producers; ++i) {
 
-    thread_pool_futures.push_back(consumers.enqueueTask(pop_lambda));
+    thread_vector.emplace_back(&PushPull::push, &push_pull);
 
   }
-  for (size_t i = 0; i < producers.threadCount(); ++i) {
+  for (size_t i = 0; i < consumers; ++i) {
 
-    thread_pool_futures.push_back(producers.enqueueTask(push_lambda));
+    thread_vector.emplace_back(&PushPull::pull, &push_pull);
 
   }
 
 // Do the work and finish.
+  for (size_t i = 0; i < thread_vector.size(); ++i) {
 
-  for (size_t i = 0; i < thread_pool_futures.size(); ++i) {
-
-    thread_pool_futures[i].get();
+    thread_vector[i].join();
 
   }
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  ExecEnv::log().info("Queue: {} Size: {}, Elapsed Time (ms): {}", queue_name, tidal_queue.size(), elapsed_ms.count());
+  ExecEnv::log().info("Queue: {}, Elapsed Time (ms): {}", queue_name, elapsed_ms.count());
 
 }
 
 
 void ExecEnvBGZ::executeApp() {
 
-  const size_t thread_count{10};
-  testWorkflowReader<BGZStream>("Workflow", thread_count);
-  testWorkflowReader<BGZReader>("Reader", thread_count);
+//  const size_t thread_count{25};
+//  testWorkflowReader<BGZStream>("Workflow", thread_count);
+//  testWorkflowReader<BGZReader>("Reader", thread_count);
 
-  /*
-    while (true) {
+//  return;
 
-      testBoundedTidal<BoundedMtQueue<std::unique_ptr<size_t>>>("BoundedMtQueue<size_t>");
-      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
+  constexpr const size_t producers{20};
+  constexpr const size_t consumers{20};
+  constexpr const size_t iterations{100000000};
 
-    }
-  */
+  while (true) {
+
+    testBoundedTidal<MtQueue, size_t>("BoundedMtQueue<size_t>", producers, consumers, iterations);
+//      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
+
+  }
+
 }
 
 

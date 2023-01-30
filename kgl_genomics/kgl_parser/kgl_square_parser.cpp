@@ -191,7 +191,7 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
 
     }
 
-    std::vector<std::string> row_fields = Utility::char_tokenizer(record_str, delimiter);
+    std::vector<std::string> row_fields = Utility::charTokenizer(record_str, delimiter);
     square_text_ptr->getRowVector().push_back(std::move(row_fields));
 
     ++counter;

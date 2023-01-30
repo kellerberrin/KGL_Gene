@@ -52,7 +52,7 @@ using AnalysisMap = std::map<std::string, AnalysisFuncPtr>;
 
 private:
 
-  static constexpr const char* ANALYSIS_SEPARATORS_ = ",;-";
+  static constexpr char ANALYSIS_SEPARATORS_ = ',';
   // Analysis dispatcher. Perform each individual analysis
   void dispatchAnalysis(const std::string& analysis_type);
 

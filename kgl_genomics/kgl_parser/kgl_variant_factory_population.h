@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_POPULATION_H
 
 
-#include "../../kel_thread/kel_mt_queue.h"
+#include "../../kel_thread/kel_queue_safe.h"
 #include "kgl_variant.h"
 #include "kgl_variant_db_population.h"
 

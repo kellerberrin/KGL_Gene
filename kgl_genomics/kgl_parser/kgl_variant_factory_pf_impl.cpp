@@ -108,7 +108,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
   for (auto const& genotype : record.genotypeInfos)
   {
 
-    std::vector<std::string_view> genotype_formats = Utility::view_tokenizer(genotype, FORMAT_SEPARATOR_);
+    std::vector<std::string_view> genotype_formats = Utility::viewTokenizer(genotype, FORMAT_SEPARATOR_);
 
     // Require GT format field.
     if (genotype_formats.size() <= GT_offset_opt.value()) {
@@ -120,7 +120,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
     }
 
     std::string GT_format(genotype_formats[GT_offset_opt.value()]);
-    std::vector<std::string> gt_vector = Utility::char_tokenizer(GT_format, GT_FIELD_SEPARATOR_CHAR_);
+    std::vector<std::string> gt_vector = Utility::charTokenizer(GT_format, GT_FIELD_SEPARATOR_CHAR_);
     if (gt_vector.size() != DIPLOID_) {
 
       ExecEnv::log().error("PfVCFImpl::ParseRecord; GT format field: {} is not diploid.", GT_format, genotype);
@@ -215,7 +215,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
       // Get ad allele depths.
       std::string AD_text(genotype_formats[AD_offset_opt.value()]);
-      std::vector<std::string> ad_vector = Utility::char_tokenizer(AD_text, AD_FIELD_SEPARATOR_CHAR_);
+      std::vector<std::string> ad_vector = Utility::charTokenizer(AD_text, AD_FIELD_SEPARATOR_CHAR_);
 
       // Allele depths should be the number of alleles + the reference
       if (ad_vector.size() != (recordParser.alleles().size() + 1)) {

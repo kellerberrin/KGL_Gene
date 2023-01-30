@@ -17,8 +17,8 @@
 #ifndef KEL_WORKFLOW_ASYNC_H
 #define KEL_WORKFLOW_ASYNC_H
 
-#include "kel_mt_queue.h"
-#include "kel_bound_queue.h"
+#include "kel_queue_safe.h"
+#include "kel_queue_tidal.h"
 
 #include <functional>
 #include <vector>

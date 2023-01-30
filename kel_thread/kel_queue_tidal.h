@@ -19,7 +19,7 @@
 #define KEL_BOUND_QUEUE_H
 
 
-#include "kel_mt_queue.h"
+#include "kel_queue_safe.h"
 #include "kel_queue_monitor.h"
 #include "kel_exec_env.h"
 
@@ -57,100 +57,31 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
-class RingBuffer {
+constexpr static const size_t BOUNDED_QUEUE_DEFAULT_HIGH_TIDE{10000};
+constexpr static const size_t BOUNDED_QUEUE_DEFAULT_LOW_TIDE{2000};
 
-public:
-
-  explicit RingBuffer(size_t buf_size) : buffer_size_(buf_size), data_(buf_size) {}
-  ~RingBuffer() = default;
-
-  [[nodiscard]] T front() {
-
-    if (empty()) {
-      ExecEnv::log().critical("Attempted to access empty ringbuffer");
-    }
-
-    return std::move(data_[tail_]);
-
-  }
-
-  void push(T item) {
-
-    if (is_full_) {
-      ExecEnv::log().critical("Attempted to push full ringbuffer");
-    }
-
-    data_[head_] = std::move(item);
-    head_ = (head_ + 1) % buffer_size_;
-    is_full_ = head_ == tail_;
-
-  }
-
-  void pop() {
-
-    if (empty()) {
-      ExecEnv::log().critical("Attempted to pop empty ringbuffer");
-    }
-    tail_ = (tail_ + 1) % buffer_size_;
-    is_full_ = false;
-
-  }
-
-  [[nodiscard]] bool empty() const noexcept { return !is_full_ && tail_ == head_; }
-
-  [[nodiscard]] size_t capacity() { return buffer_size_; }
-
-  [[nodiscard]] size_t size() const {
-
-    if (is_full_) return buffer_size_;
-
-    if (head_ >= tail_) return head_ - tail_;
-
-    return buffer_size_ + head_ - tail_;
-
-  }
-
-private:
-
-  const size_t buffer_size_;
-  std::vector<T> data_;
-  size_t head_{0};
-  size_t tail_{0};
-  bool is_full_{false};
-
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-constexpr static const size_t TIDAL_QUEUE_DEFAULT_HIGH_TIDE{10000};
-constexpr static const size_t TIDAL_QUEUE_DEFAULT_LOW_TIDE{2000};
+//#define NO_MT_QUEUE 1
+#ifdef NO_MT_QUEUE
 
 template<typename T> requires std::move_constructible<T>
-class TidalQueue {
+class BoundedMtQueue {
 
 public:
 
-  explicit TidalQueue( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
-                     , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide), queue_(high_tide) {}
+  explicit BoundedMtQueue( size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
+                       , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
 
   // This constructor attaches a queue monitor for a 'stalled' queue condition and generates tidal statistics.
-  TidalQueue( size_t high_tide
-      , size_t low_tide
-      , std::string queue_name
-      , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide), queue_(high_tide) {
+  BoundedMtQueue( size_t high_tide
+              , size_t low_tide
+              , std::string queue_name
+              , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
-    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<TidalQueue<T>>>();
+    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<BoundedMtQueue<T>>>();
     monitor_ptr_->launchStats(this, sample_frequency, queue_name);
 
   }
-  ~TidalQueue() { monitor_ptr_ = nullptr; }
+  ~BoundedMtQueue() { monitor_ptr_ = nullptr; }
 
   // Enqueue function can be called by multiple threads.
   // These threads will block if the queue has reached high-tide size until the queue size reaches low-tide (ebb-tide)..
@@ -195,7 +126,7 @@ public:
 
   }
 
-  // All of these functions are thread safe but not guaranteed to show the current state of an active queue.
+  // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return queue_size_ == 0; }
   [[nodiscard]] size_t size() const { return queue_size_; }
   [[nodiscard]] size_t activity() const { return queue_activity_; }
@@ -211,8 +142,7 @@ private:
   const size_t low_tide_;
 
   // Actual queue implementation.
-//  std::queue<T> queue_;
-  RingBuffer<T> queue_;
+  std::queue<T> queue_;
 
   // If the queue state is 'true' then producer threads can push() onto the queue ('flood tide').
   // If the queue state is 'false' the producer threads are blocked and are waiting to push() onto the queue ('ebb tide').
@@ -227,11 +157,12 @@ private:
   std::mutex queue_mutex_;
 
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<BoundedQueueMonitor<TidalQueue<T>>> monitor_ptr_;
+  std::unique_ptr<BoundedQueueMonitor<BoundedMtQueue<T>>> monitor_ptr_;
 
 
 };
 
+#else
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -240,10 +171,8 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-constexpr static const size_t BOUNDED_QUEUE_DEFAULT_HIGH_TIDE{10000};
-constexpr static const size_t BOUNDED_QUEUE_DEFAULT_LOW_TIDE{2000};
-
-template<typename T> requires std::move_constructible<T> class BoundedMtQueue {
+template<typename T> requires std::move_constructible<T>
+class BoundedMtQueue {
 
 public:
 
@@ -343,7 +272,7 @@ private:
 
 };
 
-
+#endif
 
 } // namespace
 

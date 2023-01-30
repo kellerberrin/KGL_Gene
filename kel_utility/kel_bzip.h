@@ -5,8 +5,8 @@
 #ifndef KEL_BZIP_H
 #define KEL_BZIP_H
 
-#include "kel_bound_queue.h"
-#include "kel_thread_pool.h"
+#include "kel_queue_tidal.h"
+#include "kel_workflow_threads.h"
 #include "kel_basic_io.h"
 
 

@@ -60,7 +60,7 @@ std::vector<std::shared_ptr<const kol::GAFRecord>> kol::ParserAnnotationGaf::rea
 
     }
 
-    auto view_vector = Utility::view_tokenizer(line, TAB_FIELD_DELIMITER_);
+    auto view_vector = Utility::viewTokenizer(line, TAB_FIELD_DELIMITER_);
     if (view_vector.size() != EXPECTED_FIELD_COUNT_) {
 
       ExecEnv::log().error("ParserAnnotationGaf::readAnnotationFile; line: {}, expected fields: {}, found: {}, file: {}",

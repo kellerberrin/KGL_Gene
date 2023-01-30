@@ -18,7 +18,7 @@
 #ifndef KEL_QUEUE_MONITOR_H
 #define KEL_QUEUE_MONITOR_H
 
-#include "kel_mt_queue.h"
+#include "kel_queue_safe.h"
 
 #include <mutex>
 #include <condition_variable>
@@ -150,7 +150,7 @@ private:
     stats_message << "Queue Name: " <<  queue_name_
                   << ", Sample Interval (ms): " << sample_milliseconds_
                   << ", Samples: " << queue_samples_
-                  << "; Average Queue Size:" << std::setprecision(2) << averageSize();
+                  << "; Average Queue Size: " << static_cast<size_t>(averageSize());
     workflowStreamOut(MessageType::INFO, stats_message.str());
 
   }

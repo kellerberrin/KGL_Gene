@@ -131,7 +131,7 @@ void kgl::OntologyDatabaseTest::checkICs() const {
 
   while (not std::getline(ic_file, line).eof()) {
 
-    std::vector<std::string> tokens = Utility::char_tokenizer(line, ',');
+    std::vector<std::string> tokens = Utility::charTokenizer(line, ',');
 
     if (tokens.size() != 2) {
 

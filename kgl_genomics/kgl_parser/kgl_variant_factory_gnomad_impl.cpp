@@ -80,7 +80,7 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRec
 
   }
 
-  std::vector<std::string> alt_vector = Utility::char_tokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
+  std::vector<std::string> alt_vector = Utility::charTokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
 
   if (alt_vector.empty()) {
 
@@ -169,7 +169,7 @@ std::pair<size_t, size_t> kgl::GenomeGnomadVCFImpl::alternateIndex(const std::st
   // The first 3 characters or the first ":" if that exists.
   std::string_view unphased_view(genotype.c_str(), GT_size);
   // Look for the "/" phase separator.
-  std::vector<std::string_view> phase_vector = Utility::view_tokenizer(unphased_view, PHASE_MARKER_);
+  std::vector<std::string_view> phase_vector = Utility::viewTokenizer(unphased_view, PHASE_MARKER_);
 
   // Init to Ref allele (which is a no-op).
   size_t phase_A_alt{REFERENCE_VARIANT_INDEX_};

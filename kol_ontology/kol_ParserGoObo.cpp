@@ -205,13 +205,13 @@ kol::GoTermMap ParserGoOboImpl::parseGoTermFile(const std::string &file_name, co
 
     } else if (key == CHILD_TOKEN) {
 
-      auto view_vector = kel::Utility::view_tokenizer(value, SEPARATOR_SPACE);
+      auto view_vector = kel::Utility::viewTokenizer(value, SEPARATOR_SPACE);
       std::pair<std::string, kol::GO::Relationship> relation{ std::string(view_vector[0]),  kol::GO::Relationship::IS_A};
       term_record_ptr->relations(relation);
 
     } else if (key == RELATIONSHIP_TOKEN) {
 
-      auto view_vector = kel::Utility::view_tokenizer(value, SEPARATOR_SPACE);
+      auto view_vector = kel::Utility::viewTokenizer(value, SEPARATOR_SPACE);
       if (view_vector.size() < 2) {
 
         kel::ExecEnv::log().error("ParserGoObo::parseGoFile; unable to parse relationship: {}, line: {}", value, line_count);

@@ -22,7 +22,7 @@
 #ifndef KEL_THREAD_POOL_H
 #define KEL_THREAD_POOL_H
 
-#include "kel_mt_queue.h"
+#include "kel_queue_safe.h"
 
 #include <functional>
 #include <future>
@@ -54,7 +54,7 @@ public:
   [[nodiscard]] static size_t defaultThreads(size_t job_size) { return (job_size > 0 ? std::min<size_t>(defaultThreads(), job_size) : 1); }
 
   // Assumes the work function has a void return type and therefore does not return a future.
-  template<typename F, typename... Args>
+  template<typename F, typename... Args> requires std::invocable<F, Args...>
   void enqueueWork(F&& f, Args&&... args)
   {
 
@@ -65,7 +65,7 @@ public:
 
 
   // Returns a std::future holding the work function return value.
-  template<typename F, typename... Args>
+  template<typename F, typename... Args> requires std::invocable<F, Args...>
   [[nodiscard]] auto enqueueTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
   {
 

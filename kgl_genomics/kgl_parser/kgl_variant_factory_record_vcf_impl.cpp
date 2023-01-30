@@ -17,13 +17,13 @@ kgl::ParseVCFRecord::ParseVCFRecord( const VcfRecord& vcf_record,
                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   // Get the format fields for Genetype analysis.
-  format_fields_ = Utility::char_tokenizer(vcf_record.format, FORMAT_SEPARATOR_);
+  format_fields_ = Utility::charTokenizer(vcf_record.format, FORMAT_SEPARATOR_);
 
   // Get the reference DNA
   reference_ = vcf_record.ref;
 
   // Get the allelle DNA vector.
-  alleles_ = Utility::char_tokenizer(vcf_record.alt, ALLELE_SEPARATOR_);
+  alleles_ = Utility::charTokenizer(vcf_record.alt, ALLELE_SEPARATOR_);
 
   // Get the offset.
   allele_offset_ = vcf_record.offset;

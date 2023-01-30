@@ -194,7 +194,7 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
 std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record(std::unique_ptr<std::string>&& gff_line) {
 
   std::unique_ptr<GffRecord> gff_record_ptr(std::make_unique<GffRecord>());
-  std::vector<std::string_view> row_fields = Utility::view_tokenizer(*gff_line, GFF3_FIELD_DELIM_);
+  std::vector<std::string_view> row_fields = Utility::viewTokenizer(*gff_line, GFF3_FIELD_DELIM_);
 
   if (row_fields.size() != GFF3_FIELD_COUNT_) {
 
@@ -230,12 +230,12 @@ std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record
   parse_result = parse_result and gff_record_ptr->phase(phase_field);
 
   const std::string_view& tag_field = row_fields[GFF3_TAG_FIELD_IDX_];
-  const std::vector<std::string_view> tag_items = Utility::view_tokenizer(tag_field, GFF3_TAG_FIELD_DELIMITER_);
+  const std::vector<std::string_view> tag_items = Utility::viewTokenizer(tag_field, GFF3_TAG_FIELD_DELIMITER_);
 
   std::vector<std::pair<std::string_view, std::string_view>> tag_value_vec;
   for (auto const& item : tag_items) {
 
-    std::vector<std::string_view> tag_name = Utility::view_tokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
+    std::vector<std::string_view> tag_name = Utility::viewTokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
     if (tag_name.size() != GFF3_ITEM_TAG_NAME_) {
 
       ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad 'tag=name' sub field: {}", item);

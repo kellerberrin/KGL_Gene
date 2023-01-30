@@ -190,7 +190,7 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
     }
 
-    std::vector<std::string_view> row_fields = Utility::view_tokenizer(record_str, DELIMITER_);
+    std::vector<std::string_view> row_fields = Utility::viewTokenizer(record_str, DELIMITER_);
 
     if (row_fields.size() != COLUMN_COUNT_) {
 

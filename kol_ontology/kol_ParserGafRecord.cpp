@@ -13,7 +13,7 @@ namespace kol = kellerberrin::ontology;
 
 bool kol::GAFRecord::parseGafRecord(const std::string& gaf_line_record) {
 
-  std::vector<std::string> field_vec = Utility::char_tokenizer(gaf_line_record, FIELD_SEPARATOR_);
+  std::vector<std::string> field_vec = Utility::charTokenizer(gaf_line_record, FIELD_SEPARATOR_);
 
   if (field_vec.size() != GO_FIELD_COUNT_) {
 

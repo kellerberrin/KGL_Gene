@@ -36,7 +36,7 @@ bool kgl::VEPSubFieldHeader::parseHeader(const std::string& description) {
 
   std::string unparsed_header = description.substr(header_offset);
 
-  sub_fields_headers_ = Utility::char_tokenizer(unparsed_header, VEP_DELIMITER_CHAR);
+  sub_fields_headers_ = Utility::charTokenizer(unparsed_header, VEP_DELIMITER_CHAR);
 
   size_t index{0};
   for (auto const& sub_field : sub_fields_headers_) {

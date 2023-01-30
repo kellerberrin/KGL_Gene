@@ -6,9 +6,6 @@
 #include "kel_utility.h"
 #include "kel_exec_env.h"
 
-#define BOOST_FILESYSTEM_NO_DEPRECATED 1 // Recommended by boost filesystem documentation.
-#include <boost/filesystem.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <unistd.h>
@@ -16,11 +13,12 @@
 #include <string>
 #include <numeric>
 #include <fstream>
+#include <filesystem>
 
 
-namespace fs = boost::filesystem;
 namespace bt = boost::timer;
 namespace kel = kellerberrin;
+namespace fs = std::filesystem;
 
 
 // Given a file name as "path/file", returns "path"
@@ -45,15 +43,7 @@ std::string kel::Utility::filePath(const std::string& file_name, const std::stri
 // Check that a file exists at the file path.
 bool kel::Utility::fileExists(const std::string& file_path) {
 
-  boost::system::error_code error_code;
-  bool file_exists = fs::exists(fs::path(file_path), error_code);
-
-  if (error_code.value() != boost::system::errc::success) {
-
-    return false;
-
-  }
-
+  bool file_exists = fs::exists(fs::path(file_path));
   return file_exists;
 
 }
@@ -64,7 +54,6 @@ bool kel::Utility::fileExistsCreate(const std::string& file_path) {
   if (not fileExists(file_path)) {
 
     std::ofstream empty_file(file_path);
-
     return empty_file.good();
 
   }
@@ -84,30 +73,14 @@ bool kel::Utility::directoryExists(const std::string& path) {
 // Create directory at the specified path, returns true if directory already exists.
 bool kel::Utility::createDirectory(const std::string& path) {
 
-  boost::system::error_code error_code;
-  fs::create_directory(fs::path(path), error_code);
-  if (error_code.value() != boost::system::errc::success) {
-
-    return false;
-
-  }
-
-  return true;
+  return fs::create_directory(fs::path(path));
 
 }
 
 // Recursively delete the contents of a directory and then the directory.
 bool kel::Utility::deleteDirectory(const std::string& path) {
 
-  boost::system::error_code error_code;
-  fs::remove_all(fs::path(path), error_code);
-  if (error_code.value() != boost::system::errc::success) {
-
-    return false;
-
-  }
-
-  return true;
+  return fs::remove_all(fs::path(path));
 
 }
 
@@ -141,6 +114,24 @@ std::string kel::Utility::fileName(const std::string& file_name) {
 
 }
 
+
+std::optional<std::string> kel::Utility::getEnvironment(const std::string& env_var) {
+
+  const char *val = std::getenv(env_var.c_str());
+
+  if (val == nullptr ) {
+
+    return std::nullopt;
+
+  }
+  else {
+
+    return std::string(val);
+
+  }
+
+}
+
 // Returns uppercase string.
 std::string kel::Utility::toupper(const std::string& s) {
 
@@ -164,7 +155,7 @@ std::string kel::Utility::trimAllWhiteSpace(const std::string &s) {
 }
 
 // Returns a string with all nc char removed.
-std::string kel::Utility::trimAllChar(const std::string &s, const char nc) {
+std::string kel::Utility::trimAllChar(const std::string &s, char nc) {
 
   std::string mod_string;
   auto lambda_not_char = [nc](unsigned char c){ return c != nc; };
@@ -252,23 +243,38 @@ std::string kel::Utility::findAndReplaceAll(const std::string& source, const std
 }
 
 
-std::vector<std::string> kel::Utility::tokenizer(const std::string& str, const std::string& delims) {
+std::vector<std::string_view> kel::Utility::viewTokenizer(const std::string_view& str_view, char delim) {
 
-  if (delims.size() == 1) {
+  std::vector<std::string_view> token_vector;
+  size_t token_index{0};
+  size_t index{0};
 
-    return char_tokenizer(str, delims[0]);
+  for (; index < str_view.size(); ++index) {
+
+    if (str_view[index] == delim) {
+
+      token_vector.emplace_back(&str_view[token_index], (index-token_index));
+      token_index = index + 1;
+
+    }
 
   }
 
-  std::vector<std::string> token_vector;
-  boost::tokenizer<boost::char_separator<char>> tokens(str, boost::char_separator<char>(delims.c_str()));
-  std::copy(tokens.begin(), tokens.end(), std::back_inserter(token_vector));
+  if (token_index > index) {
+
+    token_vector.emplace_back();
+
+  } else {
+
+    token_vector.emplace_back(&str_view[token_index], (index-token_index));
+
+  }
 
   return token_vector;
 
 }
 
-
+/*
 std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_view& str_view, const char delim) {
 
   std::vector<std::string_view> token_vector;
@@ -293,18 +299,18 @@ std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_vie
 
   if (token_index + token_count != str_view.size()) {
 
-    ExecEnv::log().error("Utility::view_tokenizer, final token index: {}, token count: {} does not equal string_view size: {}",
+    ExecEnv::log().error("Utility::viewTokenizer, final token index: {}, token count: {} does not equal string_view size: {}",
                          token_index, token_count, str_view.size());
 
   } else {
 
     if (token_count == 0) {
 
-      token_vector.emplace_back(std::string_view());
+      token_vector.emplace_back();
 
     } else {
 
-      token_vector.emplace_back(str_view.substr(token_index, token_count));
+      token_vector.emplace_back(&str_view[token_index], token_count);
 
     }
 
@@ -313,16 +319,16 @@ std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_vie
   return token_vector;
 
 }
+*/
 
+std::vector<std::string> kel::Utility::charTokenizer(const std::string& str, char delim) {
 
-std::vector<std::string> kel::Utility::char_tokenizer(const std::string& str, const char delim) {
-
-  std::vector<std::string_view> view_vector = view_tokenizer(str, delim);
+  std::vector<std::string_view> view_vector = viewTokenizer(str, delim);
   std::vector<std::string> str_vector;
   str_vector.reserve(view_vector.size());
   for (auto const& view : view_vector) {
 
-    str_vector.emplace_back(std::string(view));
+    str_vector.emplace_back(view);
 
   }
 

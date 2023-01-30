@@ -18,8 +18,8 @@
 #ifndef KEL_WORKFLOW_SYNC_H
 #define KEL_WORKFLOW_SYNC_H
 
-#include "kel_mt_queue.h"
-#include "kel_bound_queue.h"
+#include "kel_queue_safe.h"
+#include "kel_queue_tidal.h"
 
 #include <functional>
 #include <vector>
@@ -95,11 +95,12 @@ public:
   explicit WorkflowSync(InputObject input_stop_token
                        , size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
                        , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE
-                       , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
+                       , std::string workflow_name = BOUNDED_QUEUE_DEFAULT_NAME
                        , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE
                        , size_t max_output_size = WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE)
                        : input_stop_token_(std::move(input_stop_token))
-                       , input_queue_(high_tide, low_tide, queue_name, sample_frequency)
+                       , input_queue_(high_tide, low_tide, workflow_name + "_input_queue", sample_frequency)
+                       , output_queue_(workflow_name + "_output_queue", sample_frequency)
                        , max_output_queue_size_(max_output_size) {}
 
   ~WorkflowSync() {
@@ -118,7 +119,8 @@ public:
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
-  // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
+  // If the queue has been STOPPED with a stop token, this function can be called with different workflow functions
+  // and thread counts and the workflow will re-activate.
   // Calling this function on a workflow that is not STOPPED will return false and fail.
   template<typename F, typename... Args>
   bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
@@ -270,7 +272,7 @@ private:
   WorkFlowObjectCounter object_counter_{0};
   WorkProc workflow_callback_;
   std::mutex process_mutex_;
-  std::condition_variable output_condition_;  // Blocks when then output queue exceeds a specified size.
+  std::condition_variable output_condition_;  // Blocks when then output queue (optionally) exceeds a specified size.
 
   // Input queue. This is a bounded (tidal) queue to control queue size and balance CPU load.
   SyncInputQueue<InputObject> input_queue_;
@@ -317,7 +319,7 @@ private:
     while(true) {
 
       // We control the approximate max output queue size by blocking reading the input queue.
-      // The output queue cannot be blocked directly as it is filled in a critical code section.
+      // The output queue cannot be blocked directly as it is accessed in a critical code section.
       if (max_output_queue_size_.load() != WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE) {
 
         {

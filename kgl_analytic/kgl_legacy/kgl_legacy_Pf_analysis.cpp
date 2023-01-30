@@ -125,7 +125,7 @@ const kgl::GenomeId_t analysis_genome = "Pf3D7_47";
 
 void kgl::PhylogeneticAnalysis::performAnalysis(const std::string& analysis_type) {
 
-std::vector<std::string> analysis_ids = Utility::tokenizer(analysis_type, ANALYSIS_SEPARATORS_);
+std::vector<std::string> analysis_ids = Utility::charTokenizer(analysis_type, ANALYSIS_SEPARATORS_);
 
 if (analysis_ids.empty()) {
 

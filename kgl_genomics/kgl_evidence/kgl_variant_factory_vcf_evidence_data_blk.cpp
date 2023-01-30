@@ -227,8 +227,8 @@ void kgl::DataMemoryBlock::storeString(const InfoResourceHandle& handle, std::op
       }
 
       // Parse out the strings.
-      std::vector<std::string_view> string_vector = Utility::view_tokenizer(token.value().first,
-                                                                            VCFInfoParser::INFO_VECTOR_DELIMITER_);
+      std::vector<std::string_view> string_vector = Utility::viewTokenizer(token.value().first,
+                                                                           VCFInfoParser::INFO_VECTOR_DELIMITER_);
 
       // Ensure the array block is the same size as the parsed string count.
       if (array_index.infoSize() != string_vector.size()) {
@@ -348,8 +348,8 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
         }
 
         // Parse out the strings.
-        std::vector<std::string_view> string_vector = Utility::view_tokenizer(token.value().first,
-                                                                              VCFInfoParser::INFO_VECTOR_DELIMITER_);
+        std::vector<std::string_view> string_vector = Utility::viewTokenizer(token.value().first,
+                                                                             VCFInfoParser::INFO_VECTOR_DELIMITER_);
 
         if (array_index.infoSize() != string_vector.size()) {
 
@@ -407,8 +407,8 @@ void kgl::DataMemoryBlock::storeInteger(const InfoResourceHandle& handle, std::o
     if (token) {
 
       // Parse out the strings.
-      std::vector<std::string_view> string_vector = Utility::view_tokenizer(token.value().first,
-                                                                            VCFInfoParser::INFO_VECTOR_DELIMITER_);
+      std::vector<std::string_view> string_vector = Utility::viewTokenizer(token.value().first,
+                                                                           VCFInfoParser::INFO_VECTOR_DELIMITER_);
 
       if (array_index.infoSize() != string_vector.size()) {
 
@@ -504,8 +504,8 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
         }
 
         // Parse out the strings.
-        std::vector<std::string_view> string_vector = Utility::view_tokenizer(token.value().first,
-                                                                              VCFInfoParser::INFO_VECTOR_DELIMITER_);
+        std::vector<std::string_view> string_vector = Utility::viewTokenizer(token.value().first,
+                                                                             VCFInfoParser::INFO_VECTOR_DELIMITER_);
 
         if (array_index.infoSize() != string_vector.size()) {
 
@@ -563,8 +563,8 @@ void kgl::DataMemoryBlock::storeFloat(const InfoResourceHandle& handle, std::opt
     if (token) {
 
       // Parse out the strings.
-      std::vector<std::string_view> string_vector = Utility::view_tokenizer(token.value().first,
-                                                                            VCFInfoParser::INFO_VECTOR_DELIMITER_);
+      std::vector<std::string_view> string_vector = Utility::viewTokenizer(token.value().first,
+                                                                           VCFInfoParser::INFO_VECTOR_DELIMITER_);
 
       if (array_index.infoSize() != string_vector.size()) {
 

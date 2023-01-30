@@ -68,7 +68,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
       if (line_prefix == FIELD_NAME_FRAGMENT_) {
 
         found_header = true;
-        std::vector<std::string> field_vector = Utility::char_tokenizer(record_str, RECORD_FIELD_LIST_SEPARATOR_);
+        std::vector<std::string> field_vector = Utility::charTokenizer(record_str, RECORD_FIELD_LIST_SEPARATOR_);
         size_t field_count = 0;
         for(auto const& field :field_vector) {
 

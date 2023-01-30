@@ -120,7 +120,7 @@ std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::stri
 
     std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
 
-    std::vector<std::string_view> field_views = Utility::view_tokenizer(line_record, VCF_FIELD_DELIMITER_CHAR_);
+    std::vector<std::string_view> field_views = Utility::viewTokenizer(line_record, VCF_FIELD_DELIMITER_CHAR_);
 
     if (field_views.size() < MINIMUM_VCF_FIELDS_) {
 
