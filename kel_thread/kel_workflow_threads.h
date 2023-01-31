@@ -22,7 +22,7 @@
 #ifndef KEL_THREAD_POOL_H
 #define KEL_THREAD_POOL_H
 
-#include "kel_queue_safe.h"
+#include "kel_queue_mt_safe.h"
 
 #include <functional>
 #include <future>
@@ -83,7 +83,7 @@ public:
 private:
 
   std::vector<std::thread> threads_;
-  MtQueue<Proc> work_queue_;
+  QueueMtSafe<Proc> work_queue_;
 
   void queueThreads(size_t threads)
   {

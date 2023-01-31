@@ -113,7 +113,7 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_bzip_workflow_verify.cpp)
 
 set(THREAD_SOURCE_FILES
-        kel_thread/kel_queue_safe.h
+        kel_thread/kel_queue_mt_safe.h
         kel_thread/kel_workflow_threads.h
         kel_thread/kel_queue_tidal.h
         kel_thread/kel_workflow_async.h

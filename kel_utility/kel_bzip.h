@@ -112,8 +112,8 @@ public:
   constexpr static const size_t DEFAULT_THREADS{15};
 
   // Examine the queues for optimal tidal size and thread allocation.
-  const BoundedMtQueue<std::future<DecompressedType>>& decompressQueue() const { return decompress_queue_; }
-  const BoundedMtQueue<IOLineRecord>& lineQueue() const { return line_queue_; }
+  const QueueTidal<std::future<DecompressedType>>& decompressQueue() const { return decompress_queue_; }
+  const QueueTidal<IOLineRecord>& lineQueue() const { return line_queue_; }
 
 private:
 
@@ -130,14 +130,14 @@ private:
   constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
   constexpr static const char* QUEUE_NAME_{"BGZReader Decompress Block Queue"};
   constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
-  BoundedMtQueue<std::future<DecompressedType>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
+  QueueTidal<std::future<DecompressedType>> decompress_queue_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
 
   // Queues parsed line records.
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{20000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZReader Line Record Queue"};
   constexpr static const size_t LINE_SAMPLE_FREQ_{500};
-  BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
+  QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // These constants are used to verify the structure of the .bgz file.
   // Don't change these constants

@@ -103,8 +103,8 @@ struct ExampleAsyncTask {
   }
 
   // Will be simultaneously accessed by all output workflow threads.
-  // This is OK, MtQueue and BoundedMtQueue can be accessed by multiple consumer and producer threads.
-  kel::MtQueue<ExampleAsyncType> output_queue_;
+  // This is OK, QueueMtSafe and QueueTidal can be accessed by multiple consumer and producer threads.
+  kel::QueueMtSafe<ExampleAsyncType> output_queue_;
 
 };
 

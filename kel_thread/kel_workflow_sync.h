@@ -18,7 +18,7 @@
 #ifndef KEL_WORKFLOW_SYNC_H
 #define KEL_WORKFLOW_SYNC_H
 
-#include "kel_queue_safe.h"
+#include "kel_queue_mt_safe.h"
 #include "kel_queue_tidal.h"
 
 #include <functional>
@@ -65,7 +65,7 @@ using WorkFlowObjectCounter = __uint128_t;
 
 // The input and output objects must be std::move constructable. In addition, the input object should be comparable
 // to enable the detection of a stop token placed on the input queue.
-// The input queue is a BoundedMtQueue (bounded tidal) queue.
+// The input queue is a QueueTidal (bounded tidal) queue.
 // The output queue is default unbounded but can be constrained to a specified (approximate) size.
 template<typename InputObject, typename OutputObject>
 requires (std::move_constructible<InputObject> && std::equality_comparable<InputObject>) && std::move_constructible<OutputObject>
@@ -76,7 +76,7 @@ class WorkflowSync
   // The output object is std::optional, if missing (std::nullopt) then no object is forwarded to the output queue.
   using WorkProc = std::function<std::optional<OutputObject>(InputObject)>;
   // Convenience alias
-  template<typename Input> using SyncInputQueue = BoundedMtQueue<std::pair<WorkFlowObjectCounter, Input>>;
+  template<typename Input> using SyncInputQueue = QueueTidal<std::pair<WorkFlowObjectCounter, Input>>;
   // Convenience alias.
   using OutOptPair = std::pair<WorkFlowObjectCounter, std::optional<OutputObject>>;
   // A custom ordering used by std::priority_queue.
@@ -93,8 +93,8 @@ public:
   // A bounded (tidal) queue is used to buffer input.
   // The output queue can be optionally limited in size.
   explicit WorkflowSync(InputObject input_stop_token
-                       , size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
-                       , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE
+                       , size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
+                       , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE
                        , std::string workflow_name = BOUNDED_QUEUE_DEFAULT_NAME
                        , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE
                        , size_t max_output_size = WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE)
@@ -257,7 +257,7 @@ public:
 
   // Input and output queue const access. All const public functions on these queues are thread safe.
   [[nodiscard]] const SyncInputQueue<InputObject>& inputQueue() const { return input_queue_; }
-  [[nodiscard]] const MtQueue<OutputObject>& outputQueue() const { return output_queue_; }
+  [[nodiscard]] const QueueMtSafe<OutputObject>& outputQueue() const { return output_queue_; }
 
   // A value of zero means the output queue can grow without bound.
   constexpr static const size_t WORKFLOW_OUT_QUEUE_UNBOUNDED_SIZE{0};
@@ -280,7 +280,7 @@ private:
   std::priority_queue< WorkFlowObjectCounter, std::vector<WorkFlowObjectCounter>, std::greater<>> ordered_requests_;
   std::priority_queue< OutOptPair, std::vector<OutOptPair>, CompareProcessed > processed_objects_;
   // Output queue, note that the default is that this queue can grow without bound if not explicitly constrained.
-  MtQueue<OutputObject> output_queue_;
+  QueueMtSafe<OutputObject> output_queue_;
   // Optional limit on the approximate maximum size of the output queue.
   // Placing an upper limit on the output queue size may result in the input queue blocking.
   // Defaults to an unbounded (0 size) output queue size.

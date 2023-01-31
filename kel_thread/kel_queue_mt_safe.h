@@ -38,25 +38,26 @@ namespace kellerberrin {   //  organization level namespace
 
 
 
-template<typename T> requires std::move_constructible<T> class MtQueue {
+template<typename T> requires std::move_constructible<T>
+class QueueMtSafe {
 
 public:
 
-  MtQueue() = default;
-  // Create the MtQueue with an asynchronous queue monitor that checks for 'stalled' queues and collects queue statistics.
-  MtQueue(std::string queue_name, size_t sample_frequency)  {
+  QueueMtSafe() = default;
+  // Create the QueueMtSafe with an asynchronous queue monitor that checks for 'stalled' queues and collects queue statistics.
+  QueueMtSafe(std::string queue_name, size_t sample_frequency)  {
 
-    monitor_ptr_ = std::make_unique<MtQueueMonitor<T>>();
+    monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>();
     monitor_ptr_->launchStats(this, sample_frequency, queue_name);
 
   }
 
-  ~MtQueue() = default;
+  ~QueueMtSafe() = default;
 
   // Copy constructors are removed.
-  MtQueue(const MtQueue&) = delete;
-  MtQueue(MtQueue&&) = delete;
-  MtQueue& operator=(const MtQueue&) = delete;
+  QueueMtSafe(const QueueMtSafe&) = delete;
+  QueueMtSafe(QueueMtSafe&&) = delete;
+  QueueMtSafe& operator=(const QueueMtSafe&) = delete;
 
   // Enqueue function can be called by multiple threads, this queue can potentially grow without bound.
   // These threads will only block on other producer thread enqueue activity.
@@ -117,7 +118,7 @@ private:
   std::atomic<size_t> activity_{0};
 
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<MtQueueMonitor<T>> monitor_ptr_;
+  std::unique_ptr<MonitorMtSafe<T>> monitor_ptr_;
 
 };
 

@@ -18,7 +18,7 @@
 #ifndef KEL_QUEUE_MONITOR_H
 #define KEL_QUEUE_MONITOR_H
 
-#include "kel_queue_safe.h"
+#include "kel_queue_mt_safe.h"
 
 #include <mutex>
 #include <condition_variable>
@@ -36,21 +36,21 @@ namespace kellerberrin {   //  organization level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The MtQueue monitor collects queue statistics to facilitate optimal producer-consumer thread utilization.
+// The QueueMtSafe monitor collects queue statistics to facilitate optimal producer-consumer thread utilization.
 // The monitor also detects stalled queue conditions - blocked consumer threads.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward queue declaration.
-template<typename T> requires std::move_constructible<T> class MtQueue;
+template<typename T> requires std::move_constructible<T> class QueueMtSafe;
 
 // Realtime queue monitor
-template<typename T> class MtQueueMonitor {
+template<typename T> class MonitorMtSafe {
 
 public:
 
-  MtQueueMonitor() = default;
-  ~MtQueueMonitor() {
+  MonitorMtSafe() = default;
+  ~MonitorMtSafe() {
 
     stopStats();
     if (queue_samples_ > MIN_SAMPLES_) {
@@ -66,7 +66,7 @@ public:
   [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats( MtQueue<T> *queue_ptr
+  void launchStats(QueueMtSafe<T> *queue_ptr
                    , size_t sample_milliseconds
                    , std::string queue_name = DEFAULT_QUEUE_NAME
                    , bool monitor_stalled = true) {
@@ -84,7 +84,7 @@ public:
 
     if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
 
-      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MtQueueMonitor::SampleQueue, this));
+      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorMtSafe::SampleQueue, this));
 
       std::stringstream begin_message;
       begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
@@ -108,11 +108,11 @@ public:
   }
 
   constexpr static const size_t DISABLE_QUEUE_MONITOR{0};
-  constexpr static const char* DEFAULT_QUEUE_NAME{"MtQueue"};
+  constexpr static const char* DEFAULT_QUEUE_NAME{"QueueMtSafe"};
 
 private:
 
-  MtQueue<T> *queue_ptr_;
+  QueueMtSafe<T> *queue_ptr_;
   size_t sample_milliseconds_;
   bool monitor_stalled_{true};
   std::string queue_name_;
@@ -211,18 +211,18 @@ private:
 
 constexpr static const size_t BOUNDED_QUEUE_MONITOR_DISABLE{0};
 constexpr static const bool BOUNDED_QUEUE_MONITOR_STALL{true};
-constexpr static const char* BOUNDED_QUEUE_DEFAULT_NAME{"BoundedMtQueue"};
+constexpr static const char* BOUNDED_QUEUE_DEFAULT_NAME{"QueueTidal"};
 
 // Forward queue declaration.
-template<typename T> requires std::move_constructible<T> class BoundedMtQueue;
+template<typename T> requires std::move_constructible<T> class QueueTidal;
 
 // Realtime queue monitor
-template<typename Queue> class BoundedQueueMonitor {
+template<typename Queue> class MonitorTidal {
 
 public:
 
-  BoundedQueueMonitor() = default;
-  ~BoundedQueueMonitor() {
+  MonitorTidal() = default;
+  ~MonitorTidal() {
 
     stopStats();
     if (queue_samples_ > MIN_SAMPLES_) {
@@ -259,7 +259,7 @@ public:
 
     if (sample_milliseconds_ != BOUNDED_QUEUE_MONITOR_DISABLE) {
 
-      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&BoundedQueueMonitor::SampleQueue, this));
+      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorTidal::SampleQueue, this));
       std::stringstream begin_message;
       begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
       workflowStreamOut(MessageType::INFO, begin_message.str());

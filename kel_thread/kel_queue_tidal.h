@@ -19,7 +19,7 @@
 #define KEL_BOUND_QUEUE_H
 
 
-#include "kel_queue_safe.h"
+#include "kel_queue_mt_safe.h"
 #include "kel_queue_monitor.h"
 #include "kel_exec_env.h"
 
@@ -57,31 +57,31 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr static const size_t BOUNDED_QUEUE_DEFAULT_HIGH_TIDE{10000};
-constexpr static const size_t BOUNDED_QUEUE_DEFAULT_LOW_TIDE{2000};
+constexpr static const size_t TIDAL_QUEUE_DEFAULT_HIGH_TIDE{10000};
+constexpr static const size_t TIDAL_QUEUE_DEFAULT_LOW_TIDE{2000};
 
-//#define NO_MT_QUEUE 1
-#ifdef NO_MT_QUEUE
+//#define NO_QUEUE_MT_SAFE 1
+#ifdef NO_QUEUE_MT_SAFE
 
 template<typename T> requires std::move_constructible<T>
-class BoundedMtQueue {
+class QueueTidal {
 
 public:
 
-  explicit BoundedMtQueue( size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
-                       , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
+  explicit QueueTidal( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
+                       , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
 
   // This constructor attaches a queue monitor for a 'stalled' queue condition and generates tidal statistics.
-  BoundedMtQueue( size_t high_tide
+  QueueTidal( size_t high_tide
               , size_t low_tide
               , std::string queue_name
               , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
-    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<BoundedMtQueue<T>>>();
+    monitor_ptr_ = std::make_unique<MonitorTidal<QueueTidal<T>>>();
     monitor_ptr_->launchStats(this, sample_frequency, queue_name);
 
   }
-  ~BoundedMtQueue() { monitor_ptr_ = nullptr; }
+  ~QueueTidal() { monitor_ptr_ = nullptr; }
 
   // Enqueue function can be called by multiple threads.
   // These threads will block if the queue has reached high-tide size until the queue size reaches low-tide (ebb-tide)..
@@ -157,7 +157,7 @@ private:
   std::mutex queue_mutex_;
 
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<BoundedQueueMonitor<BoundedMtQueue<T>>> monitor_ptr_;
+  std::unique_ptr<MonitorTidal<QueueTidal<T>>> monitor_ptr_;
 
 
 };
@@ -166,30 +166,30 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The bounded queue implemented using an MtQueue.
+// The bounded queue implemented using an QueueMtSafe.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 template<typename T> requires std::move_constructible<T>
-class BoundedMtQueue {
+class QueueTidal {
 
 public:
 
-  explicit BoundedMtQueue( size_t high_tide = BOUNDED_QUEUE_DEFAULT_HIGH_TIDE
-                         , size_t low_tide = BOUNDED_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
+  explicit QueueTidal( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
+                     , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
 
   // This constructor attaches a queue monitor for a 'stalled' queue condition and generates tidal statistics.
-  BoundedMtQueue( size_t high_tide
+  QueueTidal(size_t high_tide
                 , size_t low_tide
                 , std::string queue_name
                 , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
-    monitor_ptr_ = std::make_unique<BoundedQueueMonitor<BoundedMtQueue<T>>>();
+    monitor_ptr_ = std::make_unique<MonitorTidal<QueueTidal<T>>>();
     monitor_ptr_->launchStats(this, sample_frequency, queue_name);
 
   }
-  ~BoundedMtQueue() { monitor_ptr_ = nullptr; }
+  ~QueueTidal() { monitor_ptr_ = nullptr; }
 
   // Enqueue function can be called by multiple threads.
   // These threads will block if the queue has reached high-tide size until the queue size reaches low-tide (ebb-tide)..
@@ -256,7 +256,7 @@ private:
   const size_t low_tide_;
 
   // Multi-thread queue is safe for multiple consumer and producer threads.
-  MtQueue<T> mt_queue_;
+  QueueMtSafe<T> mt_queue_;
 
   // If the queue state is 'true' then producer threads can push() onto the queue ('flood tide').
   // If the queue state is 'false' the producer threads are blocked and are waiting to push() onto the queue ('ebb tide').
@@ -267,7 +267,7 @@ private:
   mutable std::mutex tide_mutex_;
 
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<BoundedQueueMonitor<BoundedMtQueue<T>>> monitor_ptr_;
+  std::unique_ptr<MonitorTidal<QueueTidal<T>>> monitor_ptr_;
 
 
 };

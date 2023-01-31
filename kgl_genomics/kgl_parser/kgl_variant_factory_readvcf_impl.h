@@ -12,7 +12,7 @@
 #include <functional>
 
 #include "kel_exec_env.h"
-#include "../../kel_thread/kel_queue_safe.h"
+#include "../../kel_thread/kel_queue_mt_safe.h"
 #include "../../kel_thread/kel_workflow_threads.h"
 
 #include "kgl_variant_file_vcf_impl.h"

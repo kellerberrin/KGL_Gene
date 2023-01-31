@@ -189,7 +189,7 @@ void ExecEnvBGZ::executeApp() {
 
   while (true) {
 
-    testBoundedTidal<MtQueue, size_t>("BoundedMtQueue<size_t>", producers, consumers, iterations);
+    testBoundedTidal<QueueMtSafe, size_t>("QueueMtSafe<size_t>", producers, consumers, iterations);
 //      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
 
   }

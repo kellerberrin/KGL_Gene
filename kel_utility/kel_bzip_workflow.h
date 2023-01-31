@@ -128,7 +128,7 @@ public:
   static bool verify(const std::string &file_name, bool silent = true);
 
   [[nodiscard]] const DecompressionWorkFlow& workFlow() const { return decompression_workflow_; }
-  [[nodiscard]] const BoundedMtQueue<IOLineRecord>& lineQueue() const { return line_queue_; }
+  [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_queue_; }
 
 private:
 
@@ -140,7 +140,7 @@ private:
   // The Synchronous decompression workflow.
   DecompressionWorkFlow decompression_workflow_{nullptr, QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_, MAX_OUTPUT_QUEUE_SIZE_};
   // Queues parsed line records.
-  BoundedMtQueue<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
+  QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Seems about right.
   constexpr static const size_t DEFAULT_THREADS{15};

@@ -17,7 +17,7 @@
 #ifndef KEL_WORKFLOW_ASYNC_H
 #define KEL_WORKFLOW_ASYNC_H
 
-#include "kel_queue_safe.h"
+#include "kel_queue_mt_safe.h"
 #include "kel_queue_tidal.h"
 
 #include <functional>
@@ -48,8 +48,8 @@ enum class AsyncWorkflowState { ACTIVE, SHUTDOWN, STOPPED};
 
 // The objects must be std::move constructable. In addition, the objects should be comparable
 // to enable the detection of a stop token placed on the workflow queue.
-// The object queue can be specified as MtQueue (unbounded) or BoundedMtQueue (bounded tidal).
-template<typename QueuedObj, template <typename> typename Queue = MtQueue>
+// The object queue can be specified as QueueMtSafe (unbounded) or QueueTidal (bounded tidal).
+template<typename QueuedObj, template <typename> typename Queue = QueueMtSafe>
 requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedObj>)
 class WorkflowAsync
 {
@@ -60,7 +60,7 @@ public:
 
   // The constructor requires that a top token is specified.
   // If the Object is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
-  // The queue will be either a MtQueue (unbounded) or BondedMtQueue (a bounded tidal queue).
+  // The queue will be either a QueueMtSafe (unbounded) or BondedMtQueue (a bounded tidal queue).
   explicit WorkflowAsync(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token))
     , queue_ptr_(std::move(queue_ptr)) {}
@@ -154,7 +154,7 @@ public:
   }
 
   // Underlying object queue access routine.
-  // All const public members of MtQueue and BoundedMtQueue are thread safe.
+  // All const public members of QueueMtSafe and QueueTidal are thread safe.
   [[nodiscard]] const Queue<QueuedObj>& objectQueue() const { return *queue_ptr_; }
 
   // This function is not thread safe! A race condition potentially exists.
@@ -286,11 +286,11 @@ private:
 // Convenience Asynchronous workflow alias.
 
 // Implemented with a bounded tidal queue.
-template<typename WorkObj> using BoundedAsync = BoundedMtQueue<WorkObj>;
+template<typename WorkObj> using BoundedAsync = QueueTidal<WorkObj>;
 template<typename WorkObj> using WorkflowAsyncBounded = WorkflowAsync<WorkObj, BoundedAsync>;
 
 // Implemented with an unbounded queue.
-template<typename WorkObj> using AsyncQueue = MtQueue<WorkObj>;
+template<typename WorkObj> using AsyncQueue = QueueMtSafe<WorkObj>;
 template<typename WorkObj> using WorkflowAsyncUnbounded = WorkflowAsync<WorkObj, AsyncQueue>;
 
 

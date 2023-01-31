@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_POPULATION_H
 
 
-#include "../../kel_thread/kel_queue_safe.h"
+#include "../../kel_thread/kel_queue_mt_safe.h"
 #include "kgl_variant.h"
 #include "kgl_variant_db_population.h"
 
@@ -45,11 +45,11 @@ public:
 private:
 
   const std::shared_ptr<UnphasedPopulation> population_ptr_;
-  BoundedMtQueue<QueuedVariant> variant_queue_; // Parsed variant queue
+  QueueTidal<QueuedVariant> variant_queue_; // Parsed variant queue
   std::unique_ptr<std::thread> index_thread_ptr_;
 
 
-  static constexpr const long HIGH_TIDE_{1000000};          // Maximum BoundedMtQueue size
+  static constexpr const long HIGH_TIDE_{1000000};          // Maximum QueueTidal size
   static constexpr const long LOW_TIDE_{100000};            // Low water mark to begin queueing VCF records
   // Placed onto the queue by the producers to signal the end of processing.
   // Must be one of these for each producer thread.
