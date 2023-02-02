@@ -18,8 +18,6 @@
 #ifndef KEL_QUEUE_MONITOR_H
 #define KEL_QUEUE_MONITOR_H
 
-#include "kel_queue_mt_safe.h"
-
 #include <mutex>
 #include <condition_variable>
 #include <thread>

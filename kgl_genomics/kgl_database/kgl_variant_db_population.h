@@ -164,7 +164,7 @@ bool PopulationDB::processAll_MT(Obj object, Func objFunc)  const {
   // Queue a thread for each genome.
   for (const auto& [genome_id, genome_ptr] : getMap()) {
 
-    std::future<std::pair<bool,std::string>> future = thread_pool.enqueueTask(&genomeClass::processGenome, genome_ptr, object, objFunc);
+    std::future<std::pair<bool,std::string>> future = thread_pool.enqueueFuture(&genomeClass::processGenome, genome_ptr, object, objFunc);
     future_vector.push_back(std::move(future));
 
   }

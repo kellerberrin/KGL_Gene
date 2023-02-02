@@ -78,7 +78,7 @@ void kgl::GeneratePopulationAllele::processPopulation( const std::shared_ptr<con
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
     // Function ptr, args by value.
-    std::future<std::pair<std::string, std::set<std::string>>> future = thread_pool.enqueueTask( &GeneratePopulationAllele::getGenomePublications,
+    std::future<std::pair<std::string, std::set<std::string>>> future = thread_pool.enqueueFuture(&GeneratePopulationAllele::getGenomePublications,
                                                                                                   genome_ptr,
                                                                                                   disease_allele_ptr);
     future_vector.push_back(std::move(future));

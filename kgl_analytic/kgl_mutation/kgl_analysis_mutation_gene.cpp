@@ -180,15 +180,15 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   // Queue a thread for each gene.
   for (auto& gene_mutation : gene_vector_) {
 
-    std::future<GeneMutation> future = thread_pool.enqueueTask(&GenomeMutation::geneSpanAnalysis,
-                                                               this,
-                                                               population_ptr,
-                                                               unphased_population_ptr,
-                                                               clinvar_population_ptr,
-                                                               genome_aux_data,
-                                                               allele_citation_ptr,
-                                                               ensembl_index_map_ptr,
-                                                               gene_mutation);
+    std::future<GeneMutation> future = thread_pool.enqueueFuture(&GenomeMutation::geneSpanAnalysis,
+                                                                 this,
+                                                                 population_ptr,
+                                                                 unphased_population_ptr,
+                                                                 clinvar_population_ptr,
+                                                                 genome_aux_data,
+                                                                 allele_citation_ptr,
+                                                                 ensembl_index_map_ptr,
+                                                                 gene_mutation);
     future_vector.push_back(std::move(future));
 
   } // for genes

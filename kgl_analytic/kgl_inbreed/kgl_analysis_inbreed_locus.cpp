@@ -230,11 +230,11 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Pop
 
   for (auto const& super_pop : FrequencyDatabaseRead::superPopulations()) {
 
-    auto return_future = threadpool.enqueueTask(&InbreedSampling::getLocusList,
-                                                unphased_ptr,
-                                                contig_id,
-                                                super_pop,
-                                                locii_args);
+    auto return_future = threadpool.enqueueFuture(&InbreedSampling::getLocusList,
+                                                  unphased_ptr,
+                                                  contig_id,
+                                                  super_pop,
+                                                  locii_args);
 
     futures_vec.push_back(std::move(return_future));
 

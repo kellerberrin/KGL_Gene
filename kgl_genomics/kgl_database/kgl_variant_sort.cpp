@@ -280,7 +280,7 @@ std::shared_ptr<kgl::VariantGenomeIndexMap> kgl::VariantSort::variantGenomeIndex
 
   for (auto const&[genome_id, genome_ptr] : population_ptr->getMap()) {
 
-    GenomeIndexFuture future = thread_pool.enqueueTask(&IndexMap::indexGenome, genome_ptr);
+    GenomeIndexFuture future = thread_pool.enqueueFuture(&IndexMap::indexGenome, genome_ptr);
     future_vector.emplace_back(genome_id, std::move(future));
 
   }

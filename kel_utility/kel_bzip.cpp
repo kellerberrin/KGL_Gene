@@ -46,9 +46,9 @@ bool kel::BGZReader::open(const std::string &file_name) {
 
   // File is open so start processing.
   // Start decompressing bgz blocks.
-  reader_thread_.enqueueWork(&BGZReader::decompressGZBlockFile, this);
+  reader_thread_.enqueueVoid(&BGZReader::decompressGZBlockFile, this);
   // Unpacks the decompressed data and queues line records.
-  line_asssemble_thread_.enqueueWork(&BGZReader::assembleRecords, this);
+  line_asssemble_thread_.enqueueVoid(&BGZReader::assembleRecords, this);
 
   return true;
 
@@ -92,7 +92,7 @@ void kel::BGZReader::decompressGZBlockFile() {
 
       ExecEnv::log().error("BGZReader::readDecompressFile; Block {}, header file read error", block_count);
       // nullptr signals EOF downstream.
-      decompress_queue_.push(decompress_threads_.enqueueTask(&BGZReader::decompressBlock, nullptr));
+      decompress_queue_.push(decompress_threads_.enqueueFuture(&BGZReader::decompressBlock, nullptr));
       return;
 
     }
@@ -109,7 +109,7 @@ void kel::BGZReader::decompressGZBlockFile() {
 
       ExecEnv::log().error("BGZReader::readDecompressFile; Block {}, data file read error", block_count);
       // nullptr signals EOF downstream.
-      decompress_queue_.push(decompress_threads_.enqueueTask(&BGZReader::decompressBlock, nullptr));
+      decompress_queue_.push(decompress_threads_.enqueueFuture(&BGZReader::decompressBlock, nullptr));
       return;
 
     }
@@ -120,7 +120,7 @@ void kel::BGZReader::decompressGZBlockFile() {
     file_offset += compressed_data_size;
 
     // Decompress the data.
-    std::future<DecompressedType> future = decompress_threads_.enqueueTask(&BGZReader::decompressBlock, read_vector_ptr);
+    std::future<DecompressedType> future = decompress_threads_.enqueueFuture(&BGZReader::decompressBlock, read_vector_ptr);
     // Queue for processing.
     decompress_queue_.push(std::move(future));
 
@@ -130,7 +130,7 @@ void kel::BGZReader::decompressGZBlockFile() {
   checkEOFMarker(remaining_chars);
 
   // nullptr signals EOF downstream.
-  decompress_queue_.push(decompress_threads_.enqueueTask(&BGZReader::decompressBlock, nullptr));
+  decompress_queue_.push(decompress_threads_.enqueueFuture(&BGZReader::decompressBlock, nullptr));
 
 }
 

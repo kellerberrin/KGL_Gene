@@ -36,7 +36,7 @@ void kgl::VCFReaderMT::readVCFFile(const std::string& vcf_file_name) {
   std::vector<std::future<void>> thread_futures;
   for (size_t index = 0; index < parser_threads_.threadCount(); ++index) {
 
-    thread_futures.push_back(parser_threads_.enqueueTask(&VCFReaderMT::VCFConsumer, this));
+    thread_futures.push_back(parser_threads_.enqueueFuture(&VCFReaderMT::VCFConsumer, this));
 
   }
 

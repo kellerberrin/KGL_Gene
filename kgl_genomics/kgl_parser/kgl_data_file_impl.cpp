@@ -37,7 +37,7 @@ bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
   }
 
   // Activate the worker threads.
-  launch_token_ = detached_launch_.enqueueTask(&FileDataIO::launchThreads, this);
+  launch_token_ = detached_launch_.enqueueFuture(&FileDataIO::launchThreads, this);
 
   return true;
 
@@ -51,7 +51,7 @@ void kgl::FileDataIO::launchThreads() {
   std::vector<std::future<void>> thread_futures;
   for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
 
-    thread_futures.push_back(vcf_record_threads.enqueueTask(&FileDataIO::rawDataIO, this));
+    thread_futures.push_back(vcf_record_threads.enqueueFuture(&FileDataIO::rawDataIO, this));
 
   }
 

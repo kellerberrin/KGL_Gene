@@ -108,11 +108,11 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
         if (contig_opt) {
 
 
-          std::future<LocusResults> future = thread_pool.enqueueTask(algorithm_opt.value(),
-                                                                     genome_id,
-                                                                     contig_opt.value(),
-                                                                     super_pop_id,
-                                                                     locus_list );
+          std::future<LocusResults> future = thread_pool.enqueueFuture(algorithm_opt.value(),
+                                                                       genome_id,
+                                                                       contig_opt.value(),
+                                                                       super_pop_id,
+                                                                       locus_list);
           future_vector.push_back(std::move(future));
 
         }

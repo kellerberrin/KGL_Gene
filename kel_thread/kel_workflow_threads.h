@@ -55,7 +55,7 @@ public:
 
   // Assumes the work function has a void return type and therefore does not return a future.
   template<typename F, typename... Args> requires std::invocable<F, Args...>
-  void enqueueWork(F&& f, Args&&... args)
+  void enqueueVoid(F&& f, Args&&... args)
   {
 
     auto task = std::bind_front(f, args...);
@@ -63,10 +63,23 @@ public:
 
   }
 
+  // Convenience routine assumes that all task arguments are identical.
+  template<typename F, typename... Args> requires std::invocable<F, Args...>
+  void enqueueVoid(const size_t task_count, F&& f, Args&&... args)
+  {
+
+    auto task = std::bind_front(f, args...);
+    for (size_t i = 0; i < task_count; ++i) {
+
+      work_queue_.push([task]()->void{ task(); });
+
+    }
+
+  }
 
   // Returns a std::future holding the work function return value.
   template<typename F, typename... Args> requires std::invocable<F, Args...>
-  [[nodiscard]] auto enqueueTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
+  [[nodiscard]] auto enqueueFuture(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
   {
 
     using return_type = typename std::result_of<F(Args...)>::type;
@@ -75,6 +88,21 @@ public:
     std::future<return_type> future = task_ptr->get_future();
     work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
     return future;
+
+  }
+
+
+  void joinThreads() {
+
+    work_queue_.push(nullptr);
+
+    for(auto& thread : threads_) {
+
+      thread.join();
+
+    }
+
+    threads_.clear();
 
   }
 
@@ -120,17 +148,6 @@ private:
 
   }
 
-  void joinThreads() {
-
-    work_queue_.push(nullptr);
-
-    for(auto& thread : threads_) {
-
-      thread.join();
-
-    }
-
-  }
 
 };
 

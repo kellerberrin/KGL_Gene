@@ -90,6 +90,79 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 }
 
 
+template <template<typename> typename Queue, typename Type> class PushPull {
+
+public:
+
+  PushPull(size_t iterations) : iterations_(iterations), queue_ptr_(std::make_unique<Queue<Type>>(5000, 2000, "tidal queue", 100)) {}
+  ~PushPull() = default;
+
+  void push() {
+
+    while (producer_count_.fetch_add(1) < iterations_) {
+
+      queue_ptr_->push(Type());
+
+      ++push_count_;
+
+    }
+
+  };
+
+
+  void pullNoWait() {
+
+
+    while (consumer_count_ < iterations_) {
+
+      auto dequeued = queue_ptr_->pop();
+      if (not dequeued.has_value()) {
+
+        ++no_value_count_;
+
+      } else {
+
+        ++consumer_count_;
+
+      }
+
+      ++pull_count_;
+
+    }
+
+  }
+
+  void pullWait() {
+
+    while (consumer_count_.fetch_add(1) < iterations_) {
+
+      auto dequeued = queue_ptr_->waitAndPop();
+      ++pull_count_;
+
+    }
+
+  }
+
+
+
+  [[nodiscard]] size_t noValueCount() const { return no_value_count_; }
+  [[nodiscard]] size_t pushCount() const { return push_count_; }
+  [[nodiscard]] size_t pullCount() const { return pull_count_; }
+  [[nodiscard]] size_t queueSize() const { return queue_ptr_->size(); }
+
+
+private:
+
+  const size_t iterations_;
+  std::atomic<size_t> no_value_count_{0};
+  std::atomic<size_t> pull_count_{0};
+  std::atomic<size_t> push_count_{0};
+  std::atomic<size_t> producer_count_{0};
+  std::atomic<size_t> consumer_count_{0};
+  std::unique_ptr<Queue<Type>> queue_ptr_;
+
+};   // ~PushPull
+
 template <template<typename> typename Queue, typename Type> void testBoundedTidal( const std::string queue_name
                                                                                  , const size_t producers
                                                                                  , const size_t consumers
@@ -99,78 +172,25 @@ template <template<typename> typename Queue, typename Type> void testBoundedTida
   const size_t QUEUE_HIGH_TIDE_{4000};
   const size_t QUEUE_SAMPLE_FREQ_{100};
   std::vector<std::thread> thread_vector;
-//  auto queue_ptr = std::make_unique<Queue<Type>>(QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, queue_name, QUEUE_SAMPLE_FREQ_);
-  auto queue_ptr = std::make_unique<Queue<Type>>();
 
-  class PushPull {
-
-  public:
-
-    PushPull(size_t iterations, std::unique_ptr<Queue<Type>> queue_ptr) : iterations_(iterations), queue_ptr_(std::move(queue_ptr)) {}
-
-    void push() {
-
-      while (producer_count.fetch_add(1) < iterations_) {
-
-        queue_ptr_->push(Type());
-
-      }
-
-    };
-
-    void pull() {
-
-      static size_t next_count{0};
-
-      while (consumer_count.fetch_add(1) < iterations_) {
-
-        auto volatile dequeued = queue_ptr_->waitAndPop();
-        //      if (*dequeued != next_count) {
-
-        //        ExecEnv::log().error("Out of Sequence; expected: {}, dequeued : {}", next_count, *dequeued);
-
-        //      }
-        ++next_count;
-
-      }
-
-    }
-
-  private:
-
-    const size_t iterations_;
-    std::atomic<size_t> producer_count{0};
-    std::atomic<size_t> consumer_count{0};
-    std::unique_ptr<Queue<Type>> queue_ptr_;
-
-  };   // ~PushPull
-  PushPull push_pull(iterations, std::move(queue_ptr));
+  PushPull<Queue, Type> push_pull(iterations);
 
   ExecEnv::log().info("Queue: {} Begins; Producers: {}, Consumers: {}, iterations: {}", queue_name, producers, consumers, iterations);
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 
-  // queue the thread pools
-  for (size_t i = 0; i < producers; ++i) {
+  WorkflowThreads producer_threads(producers);
+  producer_threads.enqueueVoid(producers, &PushPull<Queue, Type>::push, &push_pull);
 
-    thread_vector.emplace_back(&PushPull::push, &push_pull);
+  WorkflowThreads consumer_threads(consumers);
+  consumer_threads.enqueueVoid(consumers, &PushPull<Queue, Type>::pullWait, &push_pull);
 
-  }
-  for (size_t i = 0; i < consumers; ++i) {
-
-    thread_vector.emplace_back(&PushPull::pull, &push_pull);
-
-  }
-
-// Do the work and finish.
-  for (size_t i = 0; i < thread_vector.size(); ++i) {
-
-    thread_vector[i].join();
-
-  }
+  producer_threads.joinThreads();
+  consumer_threads.joinThreads();
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  ExecEnv::log().info("Queue: {}, Elapsed Time (ms): {}", queue_name, elapsed_ms.count());
+  ExecEnv::log().info("Queue: {}, Elapsed Time (ms): {}, Push Count: {}, Pull Count: {}, No Value Pull: {}, Queue Size: {}"
+                      , queue_name, elapsed_ms.count(), push_pull.pushCount(), push_pull.pullCount(), push_pull.noValueCount(), push_pull.queueSize());
 
 }
 
@@ -183,14 +203,16 @@ void ExecEnvBGZ::executeApp() {
 
 //  return;
 
-  constexpr const size_t producers{20};
-  constexpr const size_t consumers{20};
+  constexpr const size_t producers{35};
+  constexpr const size_t consumers{10};
   constexpr const size_t iterations{100000000};
 
   while (true) {
 
-    testBoundedTidal<QueueMtSafe, size_t>("QueueMtSafe<size_t>", producers, consumers, iterations);
-//      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
+    testBoundedTidal<QueueTidal, size_t>("QueueTidal<size_t>", producers, consumers, iterations);
+    testBoundedTidal<QueueTidal, size_t>("QueueTidal<size_t>", consumers, producers, iterations);
+
+    //      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
 
   }
 

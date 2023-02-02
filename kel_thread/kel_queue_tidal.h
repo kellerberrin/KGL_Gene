@@ -57,10 +57,17 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// The current state of the tidal queue.
+// If the queue is in the 'FLOOD_TIDE' state, producers can push objects onto the queue until 'high tide' is reached
+// then the queue reverts to 'EBB_TIDE' state.
+// If the queue is at 'EBB_TIDE' state then producers are blocked and the queue is drained by consumers until 'low tide'
+// is reached. Then the queue reverts to the 'FLOOD_TIDE' state and producers are re-enabled.
+enum class QueueTidalState { FLOOD_TIDE, EBB_TIDE };
+
 constexpr static const size_t TIDAL_QUEUE_DEFAULT_HIGH_TIDE{10000};
 constexpr static const size_t TIDAL_QUEUE_DEFAULT_LOW_TIDE{2000};
 
-//#define NO_QUEUE_MT_SAFE 1
+#define NO_QUEUE_MT_SAFE 1
 #ifdef NO_QUEUE_MT_SAFE
 
 template<typename T> requires std::move_constructible<T>
@@ -90,12 +97,18 @@ public:
 
     { // Mutex
       std::unique_lock<std::mutex> lock(queue_mutex_);
-      tide_cond_.wait(lock, [this]()->bool{ return queue_state_; });
+      tide_cond_.wait(lock, [this]()->bool{ return queue_tidal_state_ == QueueTidalState::FLOOD_TIDE; });
 
       queue_.push(std::move(new_value));
+
       ++queue_size_;
       ++queue_activity_;
-      queue_state_ = queue_size_ < high_tide_;
+
+      if (queue_size_ >= high_tide_) {
+
+        queue_tidal_state_ = QueueTidalState::EBB_TIDE;
+
+      }
 
     } // ~Mutex
 
@@ -104,20 +117,52 @@ public:
   }
 
   // Dequeue function can be called by multiple threads.
+  // This function return the null value if the queue is empty.
+  [[nodiscard]] std::optional<T> pop() {
+
+    std::unique_lock<std::mutex> lock(queue_mutex_); // Mutex
+
+    if (empty()) return std::nullopt;
+
+    T value(std::move(queue_.front()));
+    queue_.pop();
+
+    --queue_size_;
+    ++queue_activity_;
+
+    if (queue_tidal_state_ == QueueTidalState::EBB_TIDE and queue_size_ <= low_tide_) {
+
+      queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
+
+    }
+
+    lock.unlock();  // ~Mutex
+
+    tide_cond_.notify_one();
+
+    return value;
+
+  }
+
+  // Dequeue function can be called by multiple threads.
   // These threads will only block if the queue is empty.
   [[nodiscard]] T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(queue_mutex_); // Mutex
-    empty_cond_.wait(lock, [this]()->bool{ return queue_size_ > 0; });
+    empty_cond_.wait(lock, [this]()->bool{ return not empty(); });
+
     T value(std::move(queue_.front()));
     queue_.pop();
+
     --queue_size_;
     ++queue_activity_;
-    if (not queue_state_) {
 
-      queue_state_ = queue_size_ < low_tide_;
+    if (queue_tidal_state_ == QueueTidalState::EBB_TIDE and queue_size_ <= low_tide_) {
+
+      queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
 
     }
+
     lock.unlock();  // ~Mutex
 
     tide_cond_.notify_one();
@@ -130,7 +175,8 @@ public:
   [[nodiscard]] bool empty() const { return queue_size_ == 0; }
   [[nodiscard]] size_t size() const { return queue_size_; }
   [[nodiscard]] size_t activity() const { return queue_activity_; }
-  [[nodiscard]] bool queueState() const { return queue_state_; }
+  [[nodiscard]] QueueTidalState queueTidalState() const { return queue_tidal_state_; }
+  [[nodiscard]] bool queueState() const { return queue_tidal_state_ == QueueTidalState::FLOOD_TIDE; }
 
   [[nodiscard]] size_t highTide() const { return high_tide_; }
   [[nodiscard]] size_t lowTide() const { return low_tide_; }
@@ -144,9 +190,9 @@ private:
   // Actual queue implementation.
   std::queue<T> queue_;
 
-  // If the queue state is 'true' then producer threads can push() onto the queue ('flood tide').
-  // If the queue state is 'false' the producer threads are blocked and are waiting to push() onto the queue ('ebb tide').
-  std::atomic<bool> queue_state_{true};
+  // If the queue state is FLOOD_TIDE then producer threads can push() onto the queue.
+  // If the queue state is EBB_TIDE the producer threads are blocked and are waiting to push() onto the queue.
+  std::atomic<QueueTidalState> queue_tidal_state_{QueueTidalState::FLOOD_TIDE};
   std::atomic<size_t> queue_size_{0};
   std::atomic<size_t> queue_activity_{0};
 
@@ -194,11 +240,12 @@ public:
   // Enqueue function can be called by multiple threads.
   // These threads will block if the queue has reached high-tide size until the queue size reaches low-tide (ebb-tide)..
   // Once the queue has reached low-tide through consumer activity the producer threads are once again unblocked (flood-tide).
+  // The code below contains possible race conditions with size() >= high_tide but this is considered unimportant.
   void push(T new_value) {
 
-    if (queue_state_) {
+    if (queue_state_ == QueueTidalState::FLOOD_TIDE) {
 
-      if (size() < high_tide_) {  // Possible race condition with size() >= high_tide is considered unimportant.
+      if (size() < high_tide_) {
 
         mt_queue_.push(std::move(new_value));
         return;
@@ -206,7 +253,7 @@ public:
       }
       else {
 
-        queue_state_ = false;
+        queue_state_ = QueueTidalState::EBB_TIDE;
 
       }
 
@@ -214,11 +261,30 @@ public:
 
     {
       std::unique_lock<std::mutex> lock(tide_mutex_);
-      tide_cond_.wait(lock, [this] ()->bool { return queue_state_; });
+      tide_cond_.wait(lock, [this] ()->bool { return queue_state_ == QueueTidalState::FLOOD_TIDE; });
     }
 
     mt_queue_.push(std::move(new_value));
     tide_cond_.notify_one();
+
+  }
+
+
+  // Dequeue function can be called by multiple threads.
+  // These threads will only block if the queue is empty.
+  [[nodiscard]] std::optional<T> pop() {
+
+    std::optional<T> value = mt_queue_.pop();
+    { // Locked block to modify condition variable.
+      std::scoped_lock lock(tide_mutex_);
+      if (queue_state_ == QueueTidalState::EBB_TIDE and size() <= low_tide_) {
+
+        queue_state_ = QueueTidalState::FLOOD_TIDE;
+
+      }
+    } // ~Locked.
+    tide_cond_.notify_one();
+    return value;
 
   }
 
@@ -229,9 +295,9 @@ public:
     T value = mt_queue_.waitAndPop();
     { // Locked block to modify condition variable.
       std::scoped_lock lock(tide_mutex_);
-      if (not queue_state_) {
+      if (queue_state_ == QueueTidalState::EBB_TIDE and size() <= low_tide_) {
 
-        queue_state_ = size() <= low_tide_;
+        queue_state_ = QueueTidalState::FLOOD_TIDE;
 
       }
     } // ~Locked.
@@ -245,7 +311,7 @@ public:
   [[nodiscard]] size_t size() const { return mt_queue_.size(); }
   [[nodiscard]] size_t activity() const { return mt_queue_.activity(); }
 
-  [[nodiscard]] bool queueState() const { return queue_state_; }
+  [[nodiscard]] bool queueState() const { return queue_state_ == QueueTidalState::FLOOD_TIDE; }
   [[nodiscard]] size_t highTide() const { return high_tide_; }
   [[nodiscard]] size_t lowTide() const { return low_tide_; }
 
@@ -260,7 +326,7 @@ private:
 
   // If the queue state is 'true' then producer threads can push() onto the queue ('flood tide').
   // If the queue state is 'false' the producer threads are blocked and are waiting to push() onto the queue ('ebb tide').
-  std::atomic<bool> queue_state_{true};
+  std::atomic<QueueTidalState> queue_state_{QueueTidalState::FLOOD_TIDE};
 
   // Condition variable blocks queue producers on 'high tide' and subsequent 'ebb tide' conditions.
   std::condition_variable tide_cond_;

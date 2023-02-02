@@ -99,7 +99,7 @@ size_t kgl::PopulationDB::variantCount() const {
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    std::future<size_t> future = thread_pool.enqueueTask(&CountClass::countGenome, genome_ptr);
+    std::future<size_t> future = thread_pool.enqueueFuture(&CountClass::countGenome, genome_ptr);
     future_vector.push_back(std::move(future));
 
   }
@@ -155,7 +155,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
     std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
-    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueTask(&FilterClass::filterGenome, genome_ptr, filter_ptr);
+    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(&FilterClass::filterGenome, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
   }
@@ -216,7 +216,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   for (auto& [genome_id, genome_ptr] : getMap()) {
 
     std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueTask(&FilterClass::inSituFilterGenome, genome_ptr, filter_ptr);
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(&FilterClass::inSituFilterGenome, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
   }
@@ -316,9 +316,9 @@ std::pair<size_t, size_t> kgl::PopulationDB::validate(const std::shared_ptr<cons
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
     // function, object_ptr, arg1
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueTask(&GenomeDB::validate,
-                                                                            genome_ptr,
-                                                                            genome_db);
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(&GenomeDB::validate,
+                                                                              genome_ptr,
+                                                                              genome_db);
     future_vector.push_back(std::move(future));
 
   }

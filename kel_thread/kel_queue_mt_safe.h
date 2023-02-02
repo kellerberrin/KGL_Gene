@@ -16,13 +16,14 @@
 //
 //
 
-#ifndef KEL_MT_QUEUE_H
-#define KEL_MT_QUEUE_H
+#ifndef KEL_QUEUE_MT_SAFE_H
+#define KEL_QUEUE_MT_SAFE_H
 
 #include "kel_queue_monitor.h"
 
 #include <queue>
 #include <mutex>
+#include <optional>
 #include <condition_variable>
 #include <memory>
 
@@ -52,7 +53,8 @@ public:
 
   }
 
-  ~QueueMtSafe() = default;
+  // Explicitly shutdown the monitor, if present.
+  ~QueueMtSafe() { monitor_ptr_ = nullptr; }
 
   // Copy constructors are removed.
   QueueMtSafe(const QueueMtSafe&) = delete;
@@ -66,7 +68,7 @@ public:
     // Scope for RAII locking/unlocking.
     {
 
-      std::scoped_lock lock(mutex_);
+      std::scoped_lock lock(data_mutex_);
 
       data_queue_.push(std::move(value));
       ++size_;
@@ -81,10 +83,36 @@ public:
   }
 
   // Dequeue function can be called by multiple threads.
+  // If the queue is empty, no dequeued object is returned.
+  [[nodiscard]] std::optional<T> pop() {
+
+    std::unique_lock<std::mutex> lock(data_mutex_);
+
+    // Queue may have been emptied before acquiring the mutex.
+    if (empty()) return std::nullopt;
+
+    --size_;
+    ++activity_;
+
+    T value(std::move(data_queue_.front()));
+    data_queue_.pop();
+
+    // Unlock the mutex.
+    lock.unlock();
+
+    // Notify waiting threads after the queue is unlocked.
+    data_cond_.notify_one();
+
+    return value;
+
+  }
+
+
+  // Dequeue function can be called by multiple threads.
   // These threads will only block if the queue is empty or on other consumer thread dequeue activity.
   [[nodiscard]] T waitAndPop() {
 
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(data_mutex_);
     // Wait on non-empty queue.
     data_cond_.wait(lock, [this]{ return not empty(); });
 
@@ -111,11 +139,12 @@ public:
 
 private:
 
-  std::mutex mutex_;
   std::queue<T> data_queue_; // Implemented as a std::deque.
+  std::mutex data_mutex_;
   std::condition_variable data_cond_;
   std::atomic<size_t> size_{0};
   std::atomic<size_t> activity_{0};
+
 
   // Held in a pointer for explicit object lifetime.
   std::unique_ptr<MonitorMtSafe<T>> monitor_ptr_;

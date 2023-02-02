@@ -90,7 +90,7 @@ bool kgl::JsonAnalysis::finalizeAnalysis() {
 
   for (auto const& json_file : json_file_names_) {
 
-    FutureResult future = thread_pool.enqueueTask(&JsonAnalysis::parseJsonFile, json_file);
+    FutureResult future = thread_pool.enqueueFuture(&JsonAnalysis::parseJsonFile, json_file);
 
     future_vector.push_back(std::move(future));
 

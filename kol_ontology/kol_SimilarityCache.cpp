@@ -134,11 +134,11 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const T
 
     const std::string &column_term = ontology_terms_ptr->at(column);
 
-    FutureResult future = thread_pool.enqueueTask(&TermSimilarityCache::calcColumn,
-                                                  column,
-                                                  column_term,
-                                                  term_similarity_ptr,
-                                                  ontology_terms_ptr);
+    FutureResult future = thread_pool.enqueueFuture(&TermSimilarityCache::calcColumn,
+                                                    column,
+                                                    column_term,
+                                                    term_similarity_ptr,
+                                                    ontology_terms_ptr);
 
     future_vector.push_back(std::move(future));
 

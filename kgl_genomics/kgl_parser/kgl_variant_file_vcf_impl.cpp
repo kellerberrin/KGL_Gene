@@ -41,7 +41,7 @@ bool RecordVCFIO::commenceVCFIO(const std::string& vcf_file_name) {
 
   }
 
-  launch_token_ = detached_launch_.enqueueTask(&RecordVCFIO::launchThreads, this);
+  launch_token_ = detached_launch_.enqueueFuture(&RecordVCFIO::launchThreads, this);
 
   return true;
 
@@ -56,7 +56,7 @@ void RecordVCFIO::launchThreads() {
   std::vector<std::future<void>> thread_futures;
   for (size_t index = 0; index < vcf_record_threads.threadCount(); ++index) {
 
-    thread_futures.push_back(vcf_record_threads.enqueueTask(&RecordVCFIO::enqueueVCFRecord, this));
+    thread_futures.push_back(vcf_record_threads.enqueueFuture(&RecordVCFIO::enqueueVCFRecord, this));
 
   }
 

@@ -160,10 +160,10 @@ bool kol::SimilarityCacheAsymmetric::termSimilarityCache(const std::vector<std::
 
     const std::string &row_term = unique_row_terms[row];
 
-    FutureResult future = thread_pool.enqueueTask(&SimilarityCacheAsymmetric::calcColumn,
-                                                  row_term,
-                                                  term_similarity_ptr,
-                                                  column_terms_ptr);
+    FutureResult future = thread_pool.enqueueFuture(&SimilarityCacheAsymmetric::calcColumn,
+                                                    row_term,
+                                                    term_similarity_ptr,
+                                                    column_terms_ptr);
 
     future_vector.push_back(std::move(future));
 

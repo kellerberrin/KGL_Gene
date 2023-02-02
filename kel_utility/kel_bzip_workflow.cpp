@@ -46,9 +46,9 @@ bool kel::BGZStream::open(const std::string &file_name) {
 
   // File is open so start processing.
   // Begin decompressing blocks of data.
-  reader_return_ = reader_thread_.enqueueTask(&BGZStream::readDecompressFile, this);
+  reader_return_ = reader_thread_.enqueueFuture(&BGZStream::readDecompressFile, this);
   // Begin queueing decompressed text records.
-  assemble_records_thread_.enqueueWork(&BGZStream::assembleRecords, this);
+  assemble_records_thread_.enqueueVoid(&BGZStream::assembleRecords, this);
 
   return true;
 
