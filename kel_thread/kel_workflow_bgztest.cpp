@@ -203,8 +203,8 @@ void ExecEnvBGZ::executeApp() {
 
 //  return;
 
-  constexpr const size_t producers{2};
-  constexpr const size_t consumers{1};
+  constexpr const size_t producers{5};
+  constexpr const size_t consumers{7};
   constexpr const size_t iterations{100000000};
 
   while (true) {
