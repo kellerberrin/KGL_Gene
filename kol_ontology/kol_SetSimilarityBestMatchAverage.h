@@ -16,7 +16,7 @@ namespace kellerberrin::ontology {
 	\brief A class to calculate the best match average similarity between go terms for 2 sets.
 
 	This class defines the best match average similarity getween two sets of terms.
-	Used by Couto et al.
+	Used by Couto et queue_tidal_state_.
 
 	F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity
 	between Gene Ontology terms," Data & Knowledge Engineering, vol. 61, 

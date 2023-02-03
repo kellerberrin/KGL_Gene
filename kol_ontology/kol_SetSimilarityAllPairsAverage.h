@@ -15,7 +15,7 @@ namespace kellerberrin::ontology {
 	\brief A class to calculate the average similarity between all pairs of go terms for 2 sets.
 
 	This class defines the all pairs average similarity getween two sets of terms.
-	Put forth by Lord et al.
+	Put forth by Lord et queue_tidal_state_.
 
 	P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble, "Investigating semantic similarity
 	measures across the Gene Ontology: the relationship between sequence and annotation,"

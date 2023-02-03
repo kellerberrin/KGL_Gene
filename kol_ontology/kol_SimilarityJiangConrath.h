@@ -29,7 +29,7 @@ namespace kellerberrin::ontology {
 	distance = IC(termA) + IC(termB) - 2*IC(MICA)
 	maxDistance = 2*IC(single annotation)
 	similarity = 1 - distance/maxDistance
-	(see Lord et al.)
+	(see Lord et queue_tidal_state_.)
 
 */
 class SimilarityJiangConrath : public SimilarityInterface {

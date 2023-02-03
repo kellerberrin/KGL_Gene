@@ -16,10 +16,10 @@ namespace kellerberrin::ontology {
 	\brief A class to calculate the max similarity between all pairs of go terms for 2 sets.
 
 	This class defines the all pairs max similarity between two sets of terms.
-	Used by Sevilla et al.
+	Used by Sevilla et queue_tidal_state_.
 	
 	J. L. Sevilla, V. Segura, A. Podhorski, E. Guruceaga, J. M. Mato, 
-	 L. A. Martinez-Cruz, et al., "Correlation between gene expression and
+	 L. A. Martinez-Cruz, et queue_tidal_state_., "Correlation between gene expression and
 	 GO semantic similarity," IEEE/ACM Trans Comput Biol Bioinform, 
 	 vol. 2, pp. 330-8, Oct-Dec 2005.
 
