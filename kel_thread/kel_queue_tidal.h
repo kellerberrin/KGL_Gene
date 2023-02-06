@@ -171,6 +171,22 @@ public:
 
   }
 
+  void clear() {
+
+    { // Mutex
+
+      std::scoped_lock<std::mutex> lock(queue_mutex_);
+      while(not queue_.empty()) queue_.pop();
+      queue_size_ = 0;
+      queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
+
+    } // ~Mutex
+
+    tide_cond_.notify_one();
+
+  }
+
+
   // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return queue_size_ == 0; }
   [[nodiscard]] size_t size() const { return queue_size_; }
@@ -306,6 +322,15 @@ public:
     } // ~Locked.
     tide_cond_.notify_one();
     return value;
+
+  }
+
+  void clear() {
+
+    mt_queue_.clear();
+    queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
+
+    tide_cond_.notify_one();
 
   }
 

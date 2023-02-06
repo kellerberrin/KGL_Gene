@@ -16,6 +16,8 @@ namespace kel = kellerberrin;
 
 bool kel::BGZStream::close() {
 
+  close_stream_ = true; // stop processing
+  while (readLine().has_value()); // drain the queues.
   bgz_file_.close();
   return true;
 
@@ -24,9 +26,12 @@ bool kel::BGZStream::close() {
 
 bool kel::BGZStream::open(const std::string &file_name) {
 
-  try {
+  record_counter_ = 0;
+  file_name_ = file_name;
+  close_stream_ = false;
+  line_eof_ = false;
 
-    file_name_ = file_name;
+  try {
 
     // Open input file.
     bgz_file_.open(file_name_, std::ios::binary | std::ios::ate);
@@ -82,6 +87,15 @@ bool kel::BGZStream::readDecompressFile() {
   size_t block_count{0};
 
   while (file_offset < (bgz_file_size - EOF_MARKER_SIZE_) and not bgz_file_.eof()) {
+
+    // Close down the stream gracefully.
+    if (close_stream_) {
+
+      // Push the eof marker.
+      decompression_workflow_.push(nullptr);
+      return true;
+
+    }
 
     ++block_count;
     auto compressed_ptr = readCompressedBlock(block_count);

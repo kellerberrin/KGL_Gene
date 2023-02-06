@@ -73,6 +73,11 @@ bool kel::Utility::directoryExists(const std::string& path) {
 // Create directory at the specified path, returns true if directory already exists.
 bool kel::Utility::createDirectory(const std::string& path) {
 
+  if (directoryExists(path)) {
+
+    return true;
+
+  }
   return fs::create_directory(fs::path(path));
 
 }

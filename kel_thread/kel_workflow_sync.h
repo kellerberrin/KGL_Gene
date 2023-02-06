@@ -137,7 +137,16 @@ public:
 
     } // ~mutex scope
 
+    // Clear the threads (they are already shutdown).
     joinAndDeleteThreads();
+
+    // Clear the queues
+    input_queue_.clear();
+    while(not ordered_requests_.empty()) ordered_requests_.pop();
+    while(not processed_objects_.empty()) processed_objects_.pop();
+    output_queue_.clear();
+
+    // Set up the work function and requeue the work threads.
     workflow_callback_ = std::bind_front(f, args...);
     queueThreads(threads);
 

@@ -132,6 +132,16 @@ public:
 
   }
 
+  void clear() {
+
+    std::scoped_lock<std::mutex> lock(data_mutex_);
+
+    while(not data_queue_.empty()) data_queue_.pop();
+    size_ = 0;
+
+  }
+
+
   // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return size_ == 0; }
   [[nodiscard]] size_t size() const { return size_; }

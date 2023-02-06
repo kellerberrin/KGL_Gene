@@ -148,6 +148,8 @@ private:
   bool decompression_error_{false};
   // Flag set if EOF marker received on the line queue.
   bool line_eof_{false};
+  std::atomic<bool> close_stream_{false};
+
 
   // Queue and workflow parameters.
   // Queue high tide and low tide markers are guessed as reasonable values.

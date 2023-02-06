@@ -12,23 +12,27 @@
 
 namespace kel = kellerberrin;
 
-
+// Stops processing and empties queues, the BGZReader can again be re-opened after being closed.
 bool kel::BGZReader::close() {
 
-  bgz_file_.close();
+  close_stream_ = true; // Stop processing and set eof condition.
+  while (readLine().has_value()); // Drain the queues.
+  bgz_file_.close(); // Close the physical file.
   return true;
 
 }
 
-
+// Begin processing and decompressing.
 bool kel::BGZReader::open(const std::string &file_name) {
+
+  record_counter_ = 0;
+  file_name_ = file_name;
+  close_stream_ = false;
+  line_eof_ = false;
 
   try {
 
-    record_counter_ = 0;
-    file_name_ = file_name;
-    // Open input file.
-
+    // Open input '.bgz' file in a try block to catch any unexpected I/O exceptions.
     bgz_file_.open(file_name_, std::ios::binary | std::ios::ate);
     if (not bgz_file_.good()) {
 
@@ -54,7 +58,7 @@ bool kel::BGZReader::open(const std::string &file_name) {
 
 }
 
-
+// Remove decompressed line records from the BGZreader.
 kel::IOLineRecord kel::BGZReader::readLine() {
 
 // Dont block if eof reached.
@@ -64,7 +68,7 @@ kel::IOLineRecord kel::BGZReader::readLine() {
 
 }
 
-
+// Physically read the '.bgz' file, check the file structure for errors, and submit compressed data blocks to be decompressed.
 void kel::BGZReader::decompressGZBlockFile() {
 
   if (not bgz_file_.good()) {
@@ -81,11 +85,21 @@ void kel::BGZReader::decompressGZBlockFile() {
   size_t file_offset{0};
   size_t block_count{0};
 
-  while (file_offset < (bgz_file_size - EOF_MARKER_SIZE_) and not bgz_file_.eof()) {
+  while (file_offset < (bgz_file_size - EOF_MARKER_SIZE_) and bgz_file_.good()) {
+
+    // Close down the stream gracefully.
+    if (close_stream_) {
+
+      // Push the eof marker.
+      decompress_queue_.push(decompress_threads_.enqueueFuture(&BGZReader::decompressBlock, nullptr));
+      return;
+
+    }
 
     ++block_count;
 
-    //  Must be created for each iteration
+    // Nasty but necessary.
+    //  Read the header block.
     auto read_vector_ptr = std::make_shared<CompressedBlock>();
     bgz_file_.read(reinterpret_cast<char *>(&(read_vector_ptr->header_block_)), HEADER_SIZE_);
     if (not bgz_file_.good()) {
@@ -234,7 +248,6 @@ kel::BGZReader::DecompressedType  kel::BGZReader::decompressBlock(std::shared_pt
   return uncompressed_ptr;
 
 }
-
 
 void kel::BGZReader::assembleRecords() {
 

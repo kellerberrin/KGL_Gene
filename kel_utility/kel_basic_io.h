@@ -35,7 +35,12 @@ public:
   virtual IOLineRecord readLine() = 0;
 
   // Returns an IO stream that is either a normal stream or a compressed stream based on the file name extension.
-  // If '.gz' or '.bgz' then it assumes a gzipped file and decompresses as it reads.
+  // If '.bgz' then it uses a multithreaded and memory efficient algorithm to decompress as it reads.
+  // Very large '.bgz' files can be decompressed and streamed to the relevant parser for further analysis.
+  // If '.gz' then the file is analyzed to see if it is in '.bgz' format.
+  // If not in '.bgz' format then a standard (boost) single thread decompression algorithm is used.
+  // If '.bz2' then Burrows-Wheeler compression is assumed.
+  // If the file is not one of the above types, it is assumed to be an uncompressed record based text file.
   // Note the stream is returned open and ready for processing, std::nullopt is returned if there is a problem.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getReaderStream(const std::string& file_name);
 
@@ -43,7 +48,7 @@ protected:
 
   size_t record_counter_{0};
 
-  constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed.
+  constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed (checked for '.bgz' format).
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.
   constexpr static const char* BZ2_FILE_EXTENSTION_ = ".BZ2"; // Burrows-Wheeler compression assumed.
 

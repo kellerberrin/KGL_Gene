@@ -20,7 +20,8 @@ struct CmdLineArgs {
   std::string logFile{"test_bgz.log"};
   int max_error_count{100};
   int max_warn_count{100};
-  std::string bgz_file_name{"/media/kellerberrin/DataGenome/Genetics/Genome/HomoSapien/GRCh38/Gnomad3_1/gnomad.genomes.v3.1.2.sites.chr2.vcf.bgz"};
+  std::string bgz_small_{"/media/kellerberrin/DataGenome/Genetics/Research/Genomic/Genome/HomoSapien/GRCh38/GRCh38_latest/GRCh38_latest_clinvar.vcf.gz"};
+  std::string bgz_large_{"/media/kellerberrin/DataGenome/Genetics/Genome/HomoSapien/GRCh38/Gnomad3_1/gnomad.genomes.v3.1.2.sites.chr2.vcf.bgz"};
 };
 
 // The Runtime environment.
@@ -52,15 +53,14 @@ private:
 };
 
 
-template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name, size_t thread_count) {
+template <typename BGZdecoder> void openWorkflowReader(const std::string& decoder_name, size_t thread_count, BGZdecoder& test_stream ) {
 
-  size_t count{0};
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
-  ExecEnv::log().info("{} begins Parsing BGZ file: {}", decoder_name, ExecEnvBGZ::getArgs().bgz_file_name);
+  ExecEnv::log().info("{} begins Parsing BGZ file: {}", decoder_name, ExecEnvBGZ::getArgs().bgz_large_);
 
-  BGZdecoder test_stream(thread_count);
-  test_stream.open(ExecEnvBGZ::getArgs().bgz_file_name);
+
   std::chrono::time_point<std::chrono::system_clock> prior = std::chrono::system_clock::now();
+  size_t count{0};
   size_t total_char_size{0};
   while (true) {
 
@@ -74,18 +74,38 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
       auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - prior);
       prior = now;
       ExecEnv::log().info("{}, Lines Read: {}, Line queue size: {}, Elapsed Time (ms): {}"
-                          , decoder_name, count, test_stream.lineQueue().size(), milliseconds.count());
+          , decoder_name, count, test_stream.lineQueue().size(), milliseconds.count());
 
     }
 
-//    std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    //    std::this_thread::sleep_for(std::chrono::milliseconds{1});
 
   }
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
   ExecEnv::log().info("{} ends, Elapsed time (sec): {}, Lines Read: {}, Total char size: {}, Thread count:{}"
-                      , decoder_name, elapsed.count(), count, total_char_size, thread_count);
+      , decoder_name, elapsed.count(), count, total_char_size, thread_count);
+
+}
+
+
+template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name, size_t thread_count) {
+
+
+  BGZdecoder test_stream(thread_count);
+
+  while(true) {
+
+    test_stream.open(ExecEnvBGZ::getArgs().bgz_large_);
+    openWorkflowReader(decoder_name, thread_count, test_stream);
+    test_stream.close();
+
+    test_stream.open(ExecEnvBGZ::getArgs().bgz_small_);
+    openWorkflowReader(decoder_name, thread_count, test_stream);
+    test_stream.close();
+
+  }
 
 }
 
@@ -197,12 +217,12 @@ template <template<typename> typename Queue, typename Type> void testBoundedTida
 
 void ExecEnvBGZ::executeApp() {
 
-//  const size_t thread_count{25};
-//  testWorkflowReader<BGZStream>("Workflow", thread_count);
+  const size_t thread_count{15};
+  testWorkflowReader<BGZStream>("Workflow", thread_count);
 //  testWorkflowReader<BGZReader>("Reader", thread_count);
 
 //  return;
-
+/*
   constexpr const size_t producers{5};
   constexpr const size_t consumers{7};
   constexpr const size_t iterations{100000000};
@@ -212,9 +232,8 @@ void ExecEnvBGZ::executeApp() {
     testBoundedTidal<QueueTidal, size_t>("QueueTidal<size_t>", producers, consumers, iterations);
     testBoundedTidal<QueueTidal, size_t>("QueueTidal<size_t>", consumers, producers, iterations);
 
-    //      testBoundedTidal<TidalQueue<std::unique_ptr<size_t>>>("TidalQueue<size_t>");
-
   }
+*/
 
 }
 
