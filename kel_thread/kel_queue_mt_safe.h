@@ -136,7 +136,7 @@ public:
 
     std::scoped_lock<std::mutex> lock(data_mutex_);
 
-    while(not data_queue_.empty()) data_queue_.pop();
+    data_queue_ = {};
     size_ = 0;
 
   }

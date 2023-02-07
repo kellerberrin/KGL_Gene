@@ -36,42 +36,59 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Current state of the object, 'ACTIVE' and processing after open() or 'STOPPED' before open() or after close().
+// Note that the object is still 'ACTIVE' on an eof condition. It is only 'STOPPED' after calling close().
+// This object can read multiple '.bgz' files by calling close() and then open().
+enum class BGZStreamState { ACTIVE, STOPPED};
 
 class BGZStream : public BaseStreamIO {
 
   // This struct maps to the byte structure of the gzip header. We need to be very careful about any structure byte padding.
   // The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
   // But this could be a source of grief with another compiler with different struct byte padding rules to GCC.
-
+  // Hopefully the alignas(alignof(...)) specifiers below will suppress any compiler specific structure padding.
   struct BGZHeaderblock {
 
-    uint8_t block_id_1;                       // aligned on a single byte, value 31
-    uint8_t block_id_2;                       // aligned on a single byte, value 139
-    uint8_t compression_method;               // aligned on a single byte, value 8
-    uint8_t flags;                            // aligned on a single byte, value 4.
-    uint32_t mtime;                           // aligned on 4 byte boundary, OK because preceded by 4 single bytes.
-    uint8_t extra_flags;                      // aligned on a single byte
-    uint8_t operating_system;                 // aligned on a single byte
-    uint16_t length_extra_blocks;             // aligned on 2 byte boundary, OK, value is 6.
-    uint8_t subfield_id_1;                    // aligned on a single byte, value 66
-    uint8_t subfield_id_2;                    // aligned on a single byte, value 67
-    uint16_t subfield_length;                 // aligned on 2 byte boundary, OK, value 2.
+    alignas(alignof(uint8_t)) uint8_t block_id_1;                // aligned on a single byte, value 31
+    alignas(alignof(uint8_t)) uint8_t block_id_2;                // aligned on a single byte, value 139
+    alignas(alignof(uint8_t)) uint8_t compression_method;        // aligned on a single byte, value 8
+    alignas(alignof(uint8_t)) uint8_t flags;                     // aligned on a single byte, value 4.
+    alignas(alignof(uint32_t)) uint32_t mtime;                   // aligned on 4 byte boundary, OK because preceded by 4 single bytes.
+    alignas(alignof(uint8_t)) uint8_t extra_flags;               // aligned on a single byte
+    alignas(alignof(uint8_t)) uint8_t operating_system;          // aligned on a single byte
+    alignas(alignof(uint16_t)) uint16_t length_extra_blocks;     // aligned on 2 byte boundary, OK, value is 6.
+    alignas(alignof(uint8_t)) uint8_t subfield_id_1;             // aligned on a single byte, value 66
+    alignas(alignof(uint8_t)) uint8_t subfield_id_2;             // aligned on a single byte, value 67
+    alignas(alignof(uint16_t)) uint16_t subfield_length;         // aligned on 2 byte boundary, OK, value 2.
     // Total Block SIZE (include header + trailer) minus 1.
-    uint16_t block_size;                      // aligned on 2 byte boundary,
+    alignas(alignof(uint16_t)) uint16_t block_size;              // aligned on 2 byte boundary,
     // Variable compressed data size is block_size - (header_size + trailer_size - 1)
 
   };
 
   struct BGZTrailerBlock {
 
-    uint32_t crc_check;                     // CRC of decompressed data.
-    uint32_t uncompressed_size;             // For compressed VCF files must be in the range [1, 65536]
+    alignas(alignof(uint32_t)) uint32_t crc_check;                // CRC of decompressed data.
+    alignas(alignof(uint32_t)) uint32_t uncompressed_size;        // For compressed VCF files must be in the range [1, 65536]
+
+  };
+
+  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
+  // Holds the compressed read directly from file. Note the union to hold the header block.
+  using BGZCompressedData = std::array<std::byte, MAX_UNCOMPRESSED_SIZE_>;
+  struct CompressedBlock {
+
+    union {
+      alignas(alignof(uint32_t)) BGZHeaderblock header_block_;
+      alignas(alignof(uint32_t)) BGZCompressedData compressed_block_;
+    };
+    size_t block_id_{0};
+    size_t data_size_{0};
+    bool io_success_{false};
 
   };
 
   // Returned from the data decompression threads.
-  // If the eof flag is set, processing terminates.
-  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
   using BGZDecompressedData = std::array<char, MAX_UNCOMPRESSED_SIZE_>;
   struct DecompressedBlock {
 
@@ -83,41 +100,23 @@ class BGZStream : public BaseStreamIO {
 
   };
 
-  // Holds the compressed read directly from file. Note the union to hold the header block.
-  using BGZCompressedData = std::array<std::byte, MAX_UNCOMPRESSED_SIZE_>;
-  struct CompressedBlock {
-
-    union {
-      BGZHeaderblock header_block_;
-      BGZCompressedData compressed_block_;
-    };
-    size_t block_id_{0};
-    size_t data_size_{0};
-    bool io_success_{false};
-
-  };
-
   // Convenience alias.
   using CompressedType = std::unique_ptr<CompressedBlock>;
   using DecompressedType = std::unique_ptr<DecompressedBlock>;
   using DecompressionWorkFlow = WorkflowSync<CompressedType, DecompressedType>;
 
-
 public:
 
-  explicit BGZStream(size_t thread_count = DEFAULT_THREADS) {
-
-    decompression_workflow_.activateWorkflow(thread_count, &BGZStream::decompressBlock, this);
-
-  }
+  explicit BGZStream(size_t thread_count = DEFAULT_THREADS) : decompression_threads_(thread_count) {}
   ~BGZStream() override { close(); }
 
   // Guaranteed sequential line reader. Does not block on eof.
   IOLineRecord readLine() override;
 
-  // Opens the .bgz file and begins decompressing the file.
+  // Opens the '.bgz' file and begins decompressing the file, the object is now 'ACTIVE'.
   bool open(const std::string &file_name) override;
 
+  // Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
   bool close();
 
   bool good() const { return not decompression_error_; }
@@ -127,6 +126,10 @@ public:
   // Reads and verifies the entire .bgz file, may be slow on very large files.
   static bool verify(const std::string &file_name, bool silent = true);
 
+  // Stream state, of the object, active or stopped.
+  BGZStreamState streamState() const { return stream_state_; }
+
+  // Access the underlying queues for diagnostics.
   [[nodiscard]] const DecompressionWorkFlow& workFlow() const { return decompression_workflow_; }
   [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_queue_; }
 
@@ -142,13 +145,15 @@ private:
   // Queues parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
-  // Seems about right.
+  // Number of threads used in the decompression pipeline.
   constexpr static const size_t DEFAULT_THREADS{15};
+  size_t decompression_threads_;
   // Flag set if problems decompressing a gzip block.
   bool decompression_error_{false};
   // Flag set if EOF marker received on the line queue.
   bool line_eof_{false};
   std::atomic<bool> close_stream_{false};
+  std::atomic<BGZStreamState> stream_state_{BGZStreamState::STOPPED};
 
 
   // Queue and workflow parameters.

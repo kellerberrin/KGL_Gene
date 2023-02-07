@@ -18,12 +18,21 @@ bool kel::BGZReader::close() {
   close_stream_ = true; // Stop processing and set eof condition.
   while (readLine().has_value()); // Drain the queues.
   bgz_file_.close(); // Close the physical file.
+  reader_state_ = BGZReaderState::STOPPED;
   return true;
 
 }
 
 // Begin processing and decompressing.
 bool kel::BGZReader::open(const std::string &file_name) {
+
+  // Cannot re-open an active object.
+  if (reader_state_ == BGZReaderState::ACTIVE) {
+
+    ExecEnv::log().error("BGZReader::open; stream is already active; call close().");
+    return false;
+
+  }
 
   record_counter_ = 0;
   file_name_ = file_name;
@@ -233,7 +242,7 @@ kel::BGZReader::DecompressedType  kel::BGZReader::decompressBlock(std::shared_pt
 
   uncompressed_size = MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out;
 
-  auto uncompressed_ptr = std::make_unique<UncompressedBlock>();
+  auto uncompressed_ptr = std::make_unique<DecompressedBlock>();
   uncompressed_ptr->block_id = compressed_data->block_id_;
 
   std::string_view block_view(uncompressed_data, uncompressed_size);

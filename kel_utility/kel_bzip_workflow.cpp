@@ -19,12 +19,21 @@ bool kel::BGZStream::close() {
   close_stream_ = true; // stop processing
   while (readLine().has_value()); // drain the queues.
   bgz_file_.close();
+  stream_state_ = BGZStreamState::STOPPED;
   return true;
 
 }
 
 
 bool kel::BGZStream::open(const std::string &file_name) {
+
+  // Cannot re-open the object.
+  if (stream_state_ == BGZStreamState::ACTIVE) {
+
+    ExecEnv::log().error("BGZStream::open; stream is already active; call close().");
+    return false;
+
+  }
 
   record_counter_ = 0;
   file_name_ = file_name;
@@ -50,10 +59,15 @@ bool kel::BGZStream::open(const std::string &file_name) {
   }
 
   // File is open so start processing.
+
+  // Activate the decompression workflow.
+  decompression_workflow_.activateWorkflow(decompression_threads_, &BGZStream::decompressBlock, this);
   // Begin decompressing blocks of data.
   reader_return_ = reader_thread_.enqueueFuture(&BGZStream::readDecompressFile, this);
   // Begin queueing decompressed text records.
   assemble_records_thread_.enqueueVoid(&BGZStream::assembleRecords, this);
+  // Set the object state.
+  stream_state_ = BGZStreamState::ACTIVE;
 
   return true;
 

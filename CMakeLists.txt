@@ -120,7 +120,7 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_workflow_sync.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
-        kel_thread/kel_queue_stream.cpp)
+        kel_thread/kel_queue_stream.cpp kel_thread/kel_workflow_future.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES

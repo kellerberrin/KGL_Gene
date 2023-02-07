@@ -39,6 +39,8 @@ namespace kellerberrin {  //  organization level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+enum class WorkflowThreadState { ACTIVE, STOPPED};
+
 class WorkflowThreads
 {
 
@@ -46,6 +48,7 @@ class WorkflowThreads
 
 public:
 
+  WorkflowThreads() = default;
   explicit WorkflowThreads(size_t threads) { queueThreads(threads); }
   ~WorkflowThreads() { joinThreads(); }
 
@@ -63,7 +66,7 @@ public:
 
   }
 
-  // Convenience routine assumes that all task arguments are identical.
+  // Convenience routine assumes that all tasks and arguments are identical.
   template<typename F, typename... Args> requires std::invocable<F, Args...>
   void enqueueVoid(const size_t task_count, F&& f, Args&&... args)
   {
@@ -91,7 +94,6 @@ public:
 
   }
 
-
   void joinThreads() {
 
     work_queue_.push(nullptr);
@@ -103,18 +105,19 @@ public:
     }
 
     threads_.clear();
+    work_queue_.clear();
+    workflow_thread_state_ = WorkflowThreadState::STOPPED;
 
   }
 
-  [[nodiscard]] size_t threadCount() const { return threads_.size(); }
-
-private:
-
-  std::vector<std::thread> threads_;
-  QueueMtSafe<Proc> work_queue_;
-
-  void queueThreads(size_t threads)
+  bool queueThreads(size_t threads)
   {
+
+    if (workflow_thread_state_ != WorkflowThreadState::STOPPED) {
+
+      return false;
+
+    }
 
     // Always have at least one worker thread queued.
     threads = std::max<size_t>(threads, 1);
@@ -126,7 +129,21 @@ private:
 
     }
 
+    workflow_thread_state_ = WorkflowThreadState::ACTIVE;
+
+    return true;
+
   }
+
+  [[nodiscard]] WorkflowThreadState threadState() const { return workflow_thread_state_; }
+  [[nodiscard]] const QueueMtSafe<Proc>& workQueue() const { return work_queue_; }
+  [[nodiscard]] size_t threadCount() const { return threads_.size(); }
+
+private:
+
+  std::vector<std::thread> threads_;
+  QueueMtSafe<Proc> work_queue_;
+  WorkflowThreadState workflow_thread_state_{WorkflowThreadState::STOPPED};
 
   void threadProlog() {
 

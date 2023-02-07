@@ -78,7 +78,7 @@ template <typename BGZdecoder> void openWorkflowReader(const std::string& decode
 
     }
 
-    //    std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    if (count > 45678000) break;
 
   }
 
@@ -95,7 +95,7 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 
   BGZdecoder test_stream(thread_count);
 
-  while(true) {
+  for (size_t i = 0; i < 10; ++i) {
 
     test_stream.open(ExecEnvBGZ::getArgs().bgz_large_);
     openWorkflowReader(decoder_name, thread_count, test_stream);

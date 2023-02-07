@@ -67,7 +67,7 @@ enum class QueueTidalState { FLOOD_TIDE, EBB_TIDE };
 constexpr static const size_t TIDAL_QUEUE_DEFAULT_HIGH_TIDE{10000};
 constexpr static const size_t TIDAL_QUEUE_DEFAULT_LOW_TIDE{2000};
 
-//#define NO_QUEUE_MT_SAFE 1
+#define NO_QUEUE_MT_SAFE 1
 #ifdef NO_QUEUE_MT_SAFE
 
 template<typename T> requires std::move_constructible<T>
@@ -176,7 +176,7 @@ public:
     { // Mutex
 
       std::scoped_lock<std::mutex> lock(queue_mutex_);
-      while(not queue_.empty()) queue_.pop();
+      queue_ = {};
       queue_size_ = 0;
       queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
 
