@@ -37,6 +37,9 @@ namespace kellerberrin {  //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // A general purpose thread pool class returns a std::future with user work function results.
+// Note that all supplied Args... must be std::copy_constructable<...>.
+// This is a limitation of the C++ 20 standard which will be removed in the upcoming C++ 23 standard.
+// In particular, this means that std::unique_ptr<...> arguments cannot be used and should be converted to std::shared_ptr<...>.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +65,7 @@ public:
   void enqueueVoid(F&& f, Args&&... args)
   {
 
-    auto task = std::bind_front(f, std::forward<Args>(args)...);
+    auto task = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
     work_queue_.push([task]()->void{ task(); });
 
   }
@@ -72,7 +75,7 @@ public:
   void enqueueVoid(const size_t task_count, F&& f, Args&&... args)
   {
 
-    auto task = std::bind_front(f, std::forward<Args>(args)...);
+    auto task = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
     for (size_t i = 0; i < task_count; ++i) {
 
       work_queue_.push([task]()->void{ task(); });
@@ -83,12 +86,13 @@ public:
 
   // Returns a std::future holding the work function return value.
   template<typename F, typename... Args> requires std::invocable<F, Args...>
-  [[nodiscard]] auto enqueueFuture(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F(Args...)>::type>
+  [[nodiscard]] auto enqueueFuture(F&& f,  Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
   {
 
-    using return_type = typename std::invoke_result<F(Args...)>::type;
+    using return_type = std::invoke_result_t<F, Args...>;
 
-    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(std::bind_front(std::forward<F>(f), std::forward<Args>(args)...));
+    auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(callable);
     std::future<return_type> future = task_ptr->get_future();
     work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
     return future;

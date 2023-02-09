@@ -136,7 +136,7 @@ private:
   std::ifstream bgz_file_;
   WorkflowThreads decompress_threads_;   // Multiple threads to decompress the bgz data blocks.
   WorkflowThreads reader_thread_{1}; // Reads from the file and passes compressed bgz blocks to the decompression threads.
-  WorkflowThreads line_asssemble_thread_{1};  // Assembles complete line records from the decompressed data.
+  WorkflowThreads line_assemble_thread_{1};  // Assembles complete line records from the decompressed data.
   std::atomic<bool> close_stream_{false};  // Set to gracefully shutdown the decompression pipeline when close() is called.
   std::atomic<BGZReaderState> reader_state_{BGZReaderState::STOPPED};
   bool line_eof_{false};  // Set on the file EOF condition when there are no more blocks to be decompressed.

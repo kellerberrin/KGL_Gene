@@ -61,7 +61,7 @@ bool kel::BGZReader::open(const std::string &file_name) {
   // Start decompressing bgz blocks.
   reader_thread_.enqueueVoid(&BGZReader::decompressGZBlockFile, this);
   // Unpacks the decompressed data and queues line records.
-  line_asssemble_thread_.enqueueVoid(&BGZReader::assembleRecords, this);
+  line_assemble_thread_.enqueueVoid(&BGZReader::assembleRecords, this);
 
   return true;
 

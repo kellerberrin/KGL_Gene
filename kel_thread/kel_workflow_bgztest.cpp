@@ -78,7 +78,7 @@ template <typename BGZdecoder> void openWorkflowReader(const std::string& decode
 
     }
 
-    if (count > 45678000) break;
+//    if (count > 45678000) break;
 
   }
 
@@ -218,8 +218,8 @@ template <template<typename> typename Queue, typename Type> void testBoundedTida
 void ExecEnvBGZ::executeApp() {
 
   const size_t thread_count{15};
+  testWorkflowReader<BGZReader>("Reader", thread_count);
   testWorkflowReader<BGZStream>("Workflow", thread_count);
-//  testWorkflowReader<BGZReader>("Reader", thread_count);
 
 //  return;
 /*

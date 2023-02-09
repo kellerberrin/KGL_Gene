@@ -102,9 +102,8 @@ class BGZStream : public BaseStreamIO {
   };
 
   // Convenience alias.
-  using CompressedType = std::unique_ptr<CompressedBlock>;
+  using CompressedType = std::shared_ptr<CompressedBlock>;
   using DecompressedType = std::unique_ptr<DecompressedBlock>;
-//  using DecompressionWorkFlow = WorkflowSync<CompressedType, DecompressedType>;
   using DecompressionWorkFlow = WorkflowFuture<CompressedType, DecompressedType>;
 
 public:
@@ -142,8 +141,7 @@ private:
   WorkflowThreads reader_thread_{1};
   std::future<bool> reader_return_;
   WorkflowThreads assemble_records_thread_{1};
-  // The Synchronous decompression workflow.
- // DecompressionWorkFlow decompression_workflow_{nullptr, QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_, MAX_OUTPUT_QUEUE_SIZE_};
+  // The Synchronous decompression pipeline.
   DecompressionWorkFlow decompression_workflow_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
   // Queues parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
@@ -155,6 +153,7 @@ private:
   bool decompression_error_{false};
   // Flag set if EOF marker received on the line queue.
   bool line_eof_{false};
+  // If set, then shutdown the decompression pipeline gracefully.
   std::atomic<bool> close_stream_{false};
   std::atomic<BGZStreamState> stream_state_{BGZStreamState::STOPPED};
 
@@ -170,9 +169,6 @@ private:
   constexpr static const size_t LINE_HIGH_TIDE_{20000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZWorkflow Line Record Queue"};
   constexpr static const size_t LINE_SAMPLE_FREQ_{500};
-
-  // Maximum number of decompressed lines queued to output.
-  constexpr static const size_t MAX_OUTPUT_QUEUE_SIZE_{10000};
 
 
   // These constants are used to verify the structure of the .bgz file.
