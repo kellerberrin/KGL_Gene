@@ -142,12 +142,12 @@ public:
 
     // Clear the queues
     input_queue_.clear();
-    while(not ordered_requests_.empty()) ordered_requests_.pop();
-    while(not processed_objects_.empty()) processed_objects_.pop();
+    ordered_requests_ = {};
+    processed_objects_ = {};
     output_queue_.clear();
 
     // Set up the work function and requeue the work threads.
-    workflow_callback_ = std::bind_front(f, args...);
+    workflow_callback_ = std::bind_front(f, std::forward<Args>(args)...);
     queueThreads(threads);
 
     { // mutex scope

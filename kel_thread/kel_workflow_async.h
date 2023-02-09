@@ -98,7 +98,7 @@ public:
 
     } // ~mutex scope
     joinAndDeleteThreads();
-    workflow_callback_ = std::bind_front(f, args...);
+    workflow_callback_ = std::bind_front(f, std::forward<Args>(args)...);
     queueThreads(threads);
     {
       std::scoped_lock<std::mutex> lock(state_mutex_);

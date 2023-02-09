@@ -9,6 +9,7 @@
 #include "kel_queue_tidal.h"
 #include "kel_workflow_threads.h"
 #include "kel_workflow_sync.h"
+#include "kel_workflow_future.h"
 
 #include "kel_basic_io.h"
 
@@ -103,7 +104,8 @@ class BGZStream : public BaseStreamIO {
   // Convenience alias.
   using CompressedType = std::unique_ptr<CompressedBlock>;
   using DecompressedType = std::unique_ptr<DecompressedBlock>;
-  using DecompressionWorkFlow = WorkflowSync<CompressedType, DecompressedType>;
+//  using DecompressionWorkFlow = WorkflowSync<CompressedType, DecompressedType>;
+  using DecompressionWorkFlow = WorkflowFuture<CompressedType, DecompressedType>;
 
 public:
 
@@ -141,7 +143,8 @@ private:
   std::future<bool> reader_return_;
   WorkflowThreads assemble_records_thread_{1};
   // The Synchronous decompression workflow.
-  DecompressionWorkFlow decompression_workflow_{nullptr, QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_, MAX_OUTPUT_QUEUE_SIZE_};
+ // DecompressionWorkFlow decompression_workflow_{nullptr, QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_, MAX_OUTPUT_QUEUE_SIZE_};
+  DecompressionWorkFlow decompression_workflow_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
   // Queues parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
