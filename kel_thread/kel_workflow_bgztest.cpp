@@ -199,10 +199,19 @@ template <template<typename> typename Queue, typename Type> void testBoundedTida
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 
   WorkflowThreads producer_threads(producers);
-  producer_threads.enqueueVoid(producers, &PushPull<Queue, Type>::push, &push_pull);
+  for (size_t i = 0; i < producers; ++i) {
+
+    producer_threads.enqueueVoid(&PushPull<Queue, Type>::push, &push_pull);
+
+  }
 
   WorkflowThreads consumer_threads(consumers);
-  consumer_threads.enqueueVoid(consumers, &PushPull<Queue, Type>::pullWait, &push_pull);
+  for (size_t i = 0; i < consumers; ++i) {
+
+    consumer_threads.enqueueVoid(&PushPull<Queue, Type>::pullWait, &push_pull);
+
+  }
+
 
   producer_threads.joinThreads();
   consumer_threads.joinThreads();

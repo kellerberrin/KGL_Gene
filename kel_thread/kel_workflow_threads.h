@@ -28,7 +28,7 @@
 #include <future>
 #include <vector>
 #include <thread>
-#include <optional>
+#include <type_traits>
 
 
 namespace kellerberrin {  //  organization level namespace
@@ -39,15 +39,22 @@ namespace kellerberrin {  //  organization level namespace
 // A general purpose thread pool class returns a std::future with user work function results.
 // Note that all supplied Args... must be std::copy_constructable<...>.
 // This is a limitation of the C++ 20 standard which will be removed in the upcoming C++ 23 standard.
-// In particular, this means that std::unique_ptr<...> arguments cannot be used and should be converted to std::shared_ptr<...>.
+// In particular, this means that std::unique_ptr<...> arguments cannot be used and should be
+// converted to std::shared_ptr<...>.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// This requirement will be removed when std::move_only_function can be used in C++ 23.
+template<typename... Args>
+concept copy_constructable_variadic = std::conjunction_v<std::is_copy_constructible<Args>...>;
+
+// Thread pool state.
 enum class WorkflowThreadState { ACTIVE, STOPPED};
 
 class WorkflowThreads
 {
 
+//  using Proc = std::move_only_function<void(void)>;
   using Proc = std::function<void(void)>;
 
 public:
@@ -61,7 +68,8 @@ public:
   [[nodiscard]] static size_t defaultThreads(size_t job_size) { return (job_size > 0 ? std::min<size_t>(defaultThreads(), job_size) : 1); }
 
   // Assumes the work function has a void return type and therefore does not return a future.
-  template<typename F, typename... Args> requires std::invocable<F, Args...>
+  template<typename F, typename... Args>
+  requires std::invocable<F, Args...> && copy_constructable_variadic<Args...>
   void enqueueVoid(F&& f, Args&&... args)
   {
 
@@ -70,22 +78,9 @@ public:
 
   }
 
-  // Convenience routine assumes that all tasks and arguments are identical.
-  template<typename F, typename... Args> requires std::invocable<F, Args...>
-  void enqueueVoid(const size_t task_count, F&& f, Args&&... args)
-  {
-
-    auto task = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-    for (size_t i = 0; i < task_count; ++i) {
-
-      work_queue_.push([task]()->void{ task(); });
-
-    }
-
-  }
-
   // Returns a std::future holding the work function return value.
-  template<typename F, typename... Args> requires std::invocable<F, Args...>
+  template<typename F, typename... Args>
+  requires std::invocable<F, Args...> && copy_constructable_variadic<Args...>
   [[nodiscard]] auto enqueueFuture(F&& f,  Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
   {
 
