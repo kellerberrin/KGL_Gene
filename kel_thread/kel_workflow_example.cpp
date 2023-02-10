@@ -15,7 +15,7 @@
 //
 //
 
-#include "kel_workflow_sync.h"
+#include "kel_workflow_pipeline.h"
 #include "kel_workflow_async.h"
 
 #include <iostream>
@@ -170,7 +170,7 @@ struct SyncExample1{
 
 };
 // Moving objects around on the workflow via a pointer is generally optimal.
-using SyncExample1Type = std::unique_ptr<SyncExample1>;
+using SyncExample1Type = std::shared_ptr<SyncExample1>;
 
 // The actual work performed by the workflow threads.
 auto task_lambda = [](SyncExample1Type t) ->std::optional<SyncExample1Type> {
@@ -195,7 +195,7 @@ void syncUnboundedExample1() {
 
   // An unbounded synchronised workflow. The nullptr has been specified as the stop token.
   // The same object type is used for both input and output queues.
-  kel::WorkflowSync<SyncExample1Type, SyncExample1Type> workflow_unbounded(nullptr);
+  kel::WorkflowPipeline<SyncExample1Type, SyncExample1Type> workflow_unbounded;
   workflow_unbounded.activateWorkflow(20, task_lambda);
 
   // Place some objects in the workflow.
@@ -225,8 +225,7 @@ void syncUnboundedExample1() {
   fill_thread.join();
 
   // Check the queue sizes. Input and Output queues should now be empty.
-  std::cout << "Unbounded Sync Queue, input queue size: " <<  workflow_unbounded.inputQueue().size()
-            << ", output queue size: " << workflow_unbounded.outputQueue().size()
+  std::cout << "Unbounded Sync Queue, output queue size: " << workflow_unbounded.outputQueue().size()
             << ", objects processed: " << count << std::endl;
 
 
@@ -250,7 +249,7 @@ struct SyncExample2{
 
 };
 // Moving objects around on the workflow via a pointer is generally optimal.
-using SyncExample2Type = std::unique_ptr<SyncExample2>;
+using SyncExample2Type = std::shared_ptr<SyncExample2>;
 
 // Simple example output object contains a string counter to check object ordering.
 struct SyncExample2Output{
@@ -288,7 +287,7 @@ struct SyncExample2Task {
 void syncBoundedExample2() {
 
   // Create the workflow with a bounded tidal input queue and a nullptr stop token.
-  auto workflow_ptr = std::make_shared<kel::WorkflowSync<SyncExample2Type, SyncExample2OutputType>>(nullptr);
+  auto workflow_ptr = std::make_shared<kel::WorkflowPipeline<SyncExample2Type, SyncExample2OutputType>>();
 
   // An instance of the SyncExample2Task object.
   SyncExample2Task task_object;
@@ -335,12 +334,8 @@ void syncBoundedExample2() {
   // Do the sequential output object check asynchronously.
   std::thread check_thread(check_lambda);
 
-  // Wait until all output objects have been checked and dequeued.
-  workflow_ptr->waitUntilStopped();
-
   // Input and output queues are empty here.
-  std::cout << "Bounded Sync Queue, input queue size: " << workflow_ptr->inputQueue().size()
-            << ", output queue size: " << workflow_ptr->outputQueue().size()
+  std::cout << "Bounded Sync Queue, output queue size: " << workflow_ptr->outputQueue().size()
             << ", objects processed: " << task_object.objects_processed_.load() << std::endl;
 
   check_thread.join();

@@ -18,24 +18,20 @@
 #ifndef KEL_QUEUE_MONITOR_H
 #define KEL_QUEUE_MONITOR_H
 
+#include "kel_exec_env.h"
+
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 #include <chrono>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 
-// Replace the spdlog based messaging system.
-enum class MessageType { INFO, WARNING, ERROR};
-void workflowStreamOut(MessageType type, const std::string& message);
 
 namespace kellerberrin {   //  organization level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // The QueueMtSafe monitor collects queue statistics to facilitate optimal producer-consumer thread utilization.
-// The monitor also detects stalled queue conditions - blocked consumer threads.
+// The monitor also detects stalled queue conditions - inactive consumer threads.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,10 +79,7 @@ public:
     if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
 
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorMtSafe::SampleQueue, this));
-
-      std::stringstream begin_message;
-      begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
-      workflowStreamOut(MessageType::INFO, begin_message.str());
+      ExecEnv::log().info("Sampling queue: {}, every milliseconds: {}", queue_name_, sample_milliseconds_);
 
     }
 
@@ -111,7 +104,7 @@ public:
 private:
 
   QueueMtSafe<T> *queue_ptr_;
-  size_t sample_milliseconds_;
+  size_t sample_milliseconds_{0};
   bool monitor_stalled_{true};
   std::string queue_name_;
   std::unique_ptr<std::thread> stats_thread_ptr_;
@@ -144,15 +137,10 @@ private:
 
   void displayQueueStats() const {
 
-    std::stringstream stats_message;
-    stats_message << "Queue Name: " <<  queue_name_
-                  << ", Sample Interval (ms): " << sample_milliseconds_
-                  << ", Samples: " << queue_samples_
-                  << "; Average Queue Size: " << static_cast<size_t>(averageSize());
-    workflowStreamOut(MessageType::INFO, stats_message.str());
+    ExecEnv::log().info("Queue Name: {}, Sample Interval (ms): {}, Samples: {}; Average Queue Size: {}",
+                        queue_name_, sample_milliseconds_, queue_samples_, static_cast<size_t>(averageSize()));
 
   }
-
 
   void SampleQueue() {
 
@@ -176,12 +164,8 @@ private:
         }
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          std::stringstream stalled_message;
-          stalled_message << "Monitor Queue: " <<  queue_name_
-                          << " Size: " << sample_size
-                          << " Stalled (no consumer activity) for milliseconds: "
-                          << (queue_samples_ * sample_milliseconds_);
-          workflowStreamOut(MessageType::INFO, stalled_message.str());
+          ExecEnv::log().warn( "Monitor Queue: {} Size: {} Stalled (no consumer activity) for milliseconds: {}"
+                             , queue_name_, sample_size, (queue_samples_ * sample_milliseconds_));
 
         }
 
@@ -258,9 +242,7 @@ public:
     if (sample_milliseconds_ != BOUNDED_QUEUE_MONITOR_DISABLE) {
 
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorTidal::SampleQueue, this));
-      std::stringstream begin_message;
-      begin_message << "Sampling queue: " << queue_name_ << " every milliseconds: " << sample_milliseconds_;
-      workflowStreamOut(MessageType::INFO, begin_message.str());
+      ExecEnv::log().info("Sampling queue: {}; every milliseconds: {}", queue_name_, sample_milliseconds_);
 
     }
 
@@ -283,11 +265,11 @@ public:
 private:
 
   Queue *queue_ptr_;
-  size_t sample_milliseconds_;
+  size_t sample_milliseconds_{0};
   bool monitor_stalled_{true};
   std::string queue_name_;
   constexpr static const double EMPTY_PROPORTION_ = 0.1; // Queue at 10% of high tide is considered empty.
-  size_t empty_size_;
+  size_t empty_size_{0};
   std::unique_ptr<std::thread> stats_thread_ptr_;
 
   std::mutex stats_mutex_;
@@ -373,20 +355,10 @@ private:
 
   void displayQueueStats() const {
 
-    std::stringstream stats_message;
-    stats_message << "Queue Name: " << queue_name_
-                  << ", Samples :" <<  queueSamples()
-                  << "; High Tide (" << queue_ptr_->highTide() <<"): "
-                  << std::setprecision(2) << (averageHighTide() * 100.0) << "%"
-                  << ", Flood Tide: " << (floodTide() * 100.0) << "%"
-                  << ", Ebbing Tide: " << (ebbingTide() * 100.0) << "%"
-                  << ", Low Tide (" << std::setprecision(0) << queue_ptr_->lowTide() << "): "
-                  << std::setprecision(2) << (averageLowTide() * 100.0) << "%"
-                  << ", Empty (<=" << std::setprecision(0) << empty_size_ << "): "
-                  << std::setprecision(2) << (averageEmpty() * 100.0) << "%"
-                  << ", Av. Size: (" <<  static_cast<size_t>(averageSize()) << ") "
-                  << std::setprecision(2) << avUtilization() << "%";
-    workflowStreamOut(MessageType::INFO, stats_message.str());
+    ExecEnv::log().info( "Queue Name: {},  High Tide: {}, Low Tide: {};  Samples: {}  Flood Tide: {}%, Ebbing Tide: {}%; Empty (<={}): {}%, Av. Util.: ({}) {}%"
+                       , queue_name_,   queue_ptr_->highTide(), queue_ptr_->lowTide()
+                       , queueSamples(), (floodTide() * 100.0), (ebbingTide() * 100.0)
+                       , empty_size_, (averageEmpty() * 100.0), static_cast<size_t>(averageSize()), avUtilization());
 
   }
 
@@ -433,13 +405,9 @@ private:
         }
         if (monitor_stalled_ and previous_count_ >= WARN_INACTIVE_COUNT_) {
 
-          std::stringstream stalled_message;
-          stalled_message << "Monitor Queue: " <<  queue_name_
-                          << " Size: " << sample_size
-                          << " Queue State: " << (queue_ptr_->queueState() ? "flood tide" : "ebb tide")
-                          << " Stalled (no consumer activity) for milliseconds: "
-                          << (queue_samples_ * sample_milliseconds_);
-          workflowStreamOut(MessageType::INFO, stalled_message.str());
+          ExecEnv::log().info( "Stalled Queue: {}, Size: {}, Queue State: {}, Stalled (no consumer activity) for milliseconds: {}"
+                             , queue_name_, sample_size, (queue_ptr_->queueState() ? "Flood Tide" : "Ebb Tide")
+                             , (queue_samples_ * sample_milliseconds_));
 
         }
 

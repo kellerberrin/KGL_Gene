@@ -8,8 +8,7 @@
 
 #include "kel_queue_tidal.h"
 #include "kel_workflow_threads.h"
-#include "kel_workflow_sync.h"
-#include "kel_workflow_future.h"
+#include "kel_workflow_pipeline.h"
 
 #include "kel_basic_io.h"
 
@@ -38,7 +37,7 @@ namespace kellerberrin {   //  organization::project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Current state of the object, 'ACTIVE' and processing after open() or 'STOPPED' before open() or after close().
-// Note that the object is still 'ACTIVE' on an eof condition. It is only 'STOPPED' after calling close().
+// Note that the object is still 'ACTIVE' on an EOF condition. It is only 'STOPPED' after calling close().
 // This object can read multiple '.bgz' files by calling close() and then open().
 enum class BGZStreamState { ACTIVE, STOPPED};
 
@@ -101,10 +100,10 @@ class BGZStream : public BaseStreamIO {
 
   };
 
-  // Convenience alias.
+  // Convenience typedefs.
   using CompressedType = std::shared_ptr<CompressedBlock>;
   using DecompressedType = std::unique_ptr<DecompressedBlock>;
-  using DecompressionWorkFlow = WorkflowFuture<CompressedType, DecompressedType>;
+  using DecompressionWorkFlow = WorkflowPipeline<CompressedType, DecompressedType>;
 
 public:
 
@@ -141,9 +140,9 @@ private:
   WorkflowThreads reader_thread_{1};
   std::future<bool> reader_return_;
   WorkflowThreads assemble_records_thread_{1};
-  // The Synchronous decompression pipeline.
+  // The synchronous decompression pipeline.
   DecompressionWorkFlow decompression_workflow_{QUEUE_HIGH_TIDE_, QUEUE_LOW_TIDE_, QUEUE_NAME_, QUEUE_SAMPLE_FREQ_};
-  // Queues parsed line records.
+  // Queue of parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Number of threads used in the decompression pipeline.
@@ -155,6 +154,7 @@ private:
   bool line_eof_{false};
   // If set, then shutdown the decompression pipeline gracefully.
   std::atomic<bool> close_stream_{false};
+  // Object state.
   std::atomic<BGZStreamState> stream_state_{BGZStreamState::STOPPED};
 
 

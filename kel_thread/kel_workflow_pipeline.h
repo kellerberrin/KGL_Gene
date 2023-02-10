@@ -25,8 +25,8 @@ namespace kellerberrin {  //  organization level namespace
 // output objects are (optionally) popped off the pipeline. The order of input objects to output objects is guaranteed.
 // Input objects must be std::copy_constructable (such as std::shared_ptr<T>), this is a limitation of C++ 20.
 // Output objects can be std::move_constructable (such as std::unique_ptr<T>).
-// This workflow guarantees that the output objects are removed from the output queue in exactly the same order in which
-// the matching input object was presented to the workflow.
+// This pipeline guarantees that the output objects are removed from the output queue in exactly the same order in which
+// the matching input object(s) was presented to the workflow.
 //
 //
 // In many use cases the InputObject and OutputObject will be the same type (and possibly the same object).
@@ -39,7 +39,7 @@ namespace kellerberrin {  //  organization level namespace
 template<typename InputObject, typename OutputObject>
 // The input object must be std::copy_constructible, this is a limitation of C++20 (that will be removed in C++ 23).
 requires std::copy_constructible<InputObject> && std::move_constructible<OutputObject>
-class WorkflowFuture
+class WorkflowPipeline
 {
 
   // User supplied function must std::optional(ly) return an output object (possibly the same object).
@@ -51,13 +51,13 @@ class WorkflowFuture
 public:
 
   // A bounded (tidal) queue is used to buffer ouput.
-  explicit WorkflowFuture( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
+  explicit WorkflowPipeline(size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
                          , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE
                          , std::string workflow_name = BOUNDED_QUEUE_DEFAULT_NAME
                          , size_t sample_frequency = BOUNDED_QUEUE_MONITOR_DISABLE)
                          : output_queue_(high_tide, low_tide, workflow_name + "_output_queue", sample_frequency) {}
 
-  ~WorkflowFuture() { workflow_threads_.joinThreads(); }
+  ~WorkflowPipeline() { pipeline_threads_.joinThreads(); }
 
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
   // If the work function is a non-static class member then the first of the ...args should be a
@@ -67,13 +67,13 @@ public:
   {
 
     // Clear any active threads.
-    workflow_threads_.joinThreads();
+    pipeline_threads_.joinThreads();
     // Clear the queue.
     output_queue_.clear();
     // Set up the work function and requeue the work threads.
-    workflow_callback_ = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+    pipeline_workfunc_ = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
     // Re-populate the thread pool.
-    workflow_threads_.queueThreads(threads);
+    pipeline_threads_.queueThreads(threads);
 
     return true;
 
@@ -82,7 +82,7 @@ public:
 
   void push(InputObject input_obj) {
 
-      auto future_output = workflow_threads_.enqueueFuture(workflow_callback_, std::move(input_obj));
+      auto future_output = pipeline_threads_.enqueueFuture(pipeline_workfunc_, std::move(input_obj));
       output_queue_.push(std::move(future_output));
 
   }
@@ -106,14 +106,15 @@ public:
 
   }
 
-  // Queue const access. All const public functions on the queue are thread safe.
+  // Diagnostic queue const access. All const public functions on the queue are thread safe.
   [[nodiscard]] const SyncOutputQueue<OutputObject>& outputQueue() const { return output_queue_; }
+  [[nodiscard]] const WorkflowThreads& pipelineThreads() const { return pipeline_threads_; }
 
 private:
 
   // Thread pool.
-  WorkflowThreads workflow_threads_;
-  WorkProc workflow_callback_;
+  WorkflowThreads pipeline_threads_;
+  WorkProc pipeline_workfunc_;
 
    // Output queue, this queue is tidal.
   SyncOutputQueue<OutputObject> output_queue_;

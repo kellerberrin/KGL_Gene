@@ -34,12 +34,13 @@ namespace kellerberrin {   //  organization level namespace
 //
 // Thread safe queue for multiple consumer and producer threads.
 // This queue can potentially grow without bound if producer threads can enqueue faster than consumer threads can dequeue.
-//
+// Objects on the queue can be move_constructible<T> (std::unique_ptr<...>).
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-template<typename T> requires std::move_constructible<T>
+template<typename T>
+requires std::move_constructible<T>
 class QueueMtSafe {
 
 public:
@@ -132,6 +133,7 @@ public:
 
   }
 
+  // Unconditionally empty the queue.
   void clear() {
 
     std::scoped_lock<std::mutex> lock(data_mutex_);

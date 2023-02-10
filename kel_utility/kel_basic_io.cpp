@@ -5,7 +5,7 @@
 #include <kel_exec_env.h>
 #include "kel_basic_io.h"
 #include "kel_utility.h"
-#include "kel_bzip.h"
+#include "kel_bzip_workflow.h"
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -232,10 +232,10 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
   if (file_ext == GZ_FILE_EXTENSTION_)  {
 
     std::unique_ptr<BaseStreamIO> gz_stream;
-    if (BGZReader::verify(file_name)) { // Check if block gzipped.
+    if (BGZStream::verify(file_name)) { // Check if block gzipped.
 
       ExecEnv::log().info("File structure verified as bgz format, parser uses bgz reader.");
-      gz_stream = std::make_unique<BGZReader>();
+      gz_stream = std::make_unique<BGZStream>();
 
     } else {
 
@@ -255,7 +255,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
   } else if (file_ext == BGZ_FILE_EXTENSTION_) { // .bgz extension is just assumed to be block gzipped.
 
-    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZReader>());
+    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZStream>());
     if (not gz_stream->open(file_name)) {
 
       return QUEUED_EOF_MARKER;

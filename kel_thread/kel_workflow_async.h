@@ -84,7 +84,7 @@ public:
   // If the queue has been STOPPED, this function can be called with different workflow functions and thread counts.
   // Calling this function on an active workflow queue will return false.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args) noexcept
+  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
 
     { // mutex scope
@@ -98,7 +98,7 @@ public:
 
     } // ~mutex scope
     joinAndDeleteThreads();
-    workflow_callback_ = std::bind_front(f, std::forward<Args>(args)...);
+    workflow_callback_ = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
     queueThreads(threads);
     {
       std::scoped_lock<std::mutex> lock(state_mutex_);
