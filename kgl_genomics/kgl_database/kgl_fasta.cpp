@@ -70,23 +70,23 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
   try {
 
     std::pair<std::string, std::string> fasta_id_comment;
-    std::vector<std::unique_ptr<std::string>> fasta_lines;
+    std::vector<std::unique_ptr<const std::string>> fasta_lines;
     // Initial parser state.
     ParserToken parser_token = ParserToken::FIND_FASTA_ID;
-    std::unique_ptr<std::string> record_ptr;
+    std::string record_text;
 
     do {
 
       if (parser_token != ParserToken::FIND_FASTA_ID_NO_READ) {
 
         IOLineRecord line_record = fasta_stream_opt.value()->readLine();
-        if (line_record) {
+        if (line_record.EOFRecord()) {
 
-          record_ptr = std::move(line_record.value().second);
+          parser_token = ParserToken::READ_IO_EOF;
 
         } else {
 
-          parser_token = ParserToken::READ_IO_EOF;
+          record_text = line_record.getString();
 
         }
 
@@ -100,23 +100,23 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
           // Skip line if zero-sized, whitespace or comment.
 
           parser_token = ParserToken::FIND_FASTA_ID;
-          if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == FASTA_COMMENT_) {
+          if (record_text.empty() or std::isspace(record_text.front()) != 0 or record_text.front() == FASTA_COMMENT_) {
 
             break;
 
           }
 
           // Expect to find '>' char, complain and signal an error if not found.
-          if (record_ptr->front() != FASTA_ID_) {
+          if (record_text.front() != FASTA_ID_) {
 
-            ExecEnv::log().error("ParseGffFasta::readFastaFile; Expected to find fasta id line, found: {}", *record_ptr);
+            ExecEnv::log().error("ParseGffFasta::readFastaFile; Expected to find fasta id line, found: {}", record_text);
             parser_token = ParserToken::FASTA_PARSE_ERROR;
             break;
 
           }
 
           // Remove the first char '>'
-          std::string id_line = *record_ptr;
+          std::string id_line = record_text;
           id_line.erase(id_line.begin());
           // Split into ID and comment on whitespace.
           fasta_id_comment = Utility::firstSplit(id_line);
@@ -140,7 +140,7 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
 
           //  If zero-sized or whitespace or comment or '>' then the fasta data block is complete.
           // Store the resultant festa record.
-          if (record_ptr->empty() or std::isspace(record_ptr->front()) != 0 or record_ptr->front() == FASTA_COMMENT_ or record_ptr->front() == FASTA_ID_) {
+          if (record_text.empty() or std::isspace(record_text.front()) != 0 or record_text.front() == FASTA_COMMENT_ or record_text.front() == FASTA_ID_) {
 
             // Suppress IO, we already have an ID line.
             parser_token = ParserToken::FIND_FASTA_ID_NO_READ;
@@ -150,7 +150,7 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
           } else {
 
             // Move the fasta data line into a vector of fasta lines.
-            fasta_lines.push_back(std::move(record_ptr));
+            fasta_lines.push_back(std::make_unique<std::string>(std::move(record_text)));
 
           }
 
@@ -160,13 +160,9 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
         case ParserToken::FASTA_PARSE_ERROR: {
 
           // Look for the next fasta id block.
-          if (record_ptr) {
+          if (record_text.front() == FASTA_ID_) {
 
-            if (record_ptr->front() == FASTA_ID_) {
-
-              parser_token = ParserToken::FIND_FASTA_ID;
-
-            }
+            parser_token = ParserToken::FIND_FASTA_ID;
 
           }
 
@@ -203,9 +199,9 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
 
 kgl::ReadFastaSequence kgl::ParseFasta::createFastaSequence( const std::string& fasta_id,
                                                              const std::string& fasta_comment,
-                                                             const std::vector<std::unique_ptr<std::string>>& fasta_lines) {
+                                                             const std::vector<std::unique_ptr<const std::string>>& fasta_lines) {
 
-  std::unique_ptr<std::string> fasta_data(std::make_unique<std::string>());
+  auto fasta_data = std::make_unique<std::string>();
   size_t fasta_size{0};
 
   for (const auto& line : fasta_lines) {

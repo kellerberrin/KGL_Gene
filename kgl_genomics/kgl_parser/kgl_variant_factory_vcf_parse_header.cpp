@@ -33,16 +33,16 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
     while (true) {
 
       IOLineRecord line_record = vcf_stream_opt.value()->readLine();
-      if (not line_record) break;
+      if (line_record.EOFRecord()) break;
 
-      std::string& record_str = *line_record.value().second;
+      std::string_view record_str_view = line_record.getView();
 
-      size_t pos = record_str.find_first_of(KEY_SEPARATOR_);
+      size_t pos = record_str_view.find_first_of(KEY_SEPARATOR_);
 
       if (pos != std::string::npos) {
 
-        std::string key = record_str.substr(0, pos);
-        std::string value = record_str.substr(pos, std::string::npos);
+        std::string key{record_str_view.substr(0, pos)};
+        std::string value{record_str_view.substr(pos, std::string::npos)};
 
         pos = value.find_first_of(KEY_SEPARATOR_);
 
@@ -64,17 +64,17 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
       }
 
-      std::string line_prefix = record_str.substr(0, FIELD_NAME_FRAGMENT_LENGTH_);
+      std::string line_prefix{record_str_view.substr(0, FIELD_NAME_FRAGMENT_LENGTH_)};
       if (line_prefix == FIELD_NAME_FRAGMENT_) {
 
         found_header = true;
-        std::vector<std::string> field_vector = Utility::charTokenizer(record_str, RECORD_FIELD_LIST_SEPARATOR_);
+        std::vector<std::string_view> field_vector = Utility::viewTokenizer(record_str_view, RECORD_FIELD_LIST_SEPARATOR_);
         size_t field_count = 0;
         for(auto const& field :field_vector) {
 
           if (field_count >= SKIP_FIELD_NAMES_) {
 
-            vcf_genomes_.push_back(field);
+            vcf_genomes_.emplace_back(field);
 
           }
 

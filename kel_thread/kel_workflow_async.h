@@ -198,15 +198,6 @@ private:
   mutable std::condition_variable active_condition_;
 
 
-  // Remove an object from the underlying workflow object queue.
-  // Blocks the calling thread if the queue is empty.
-  // Can be concurrently called by multiple consumer threads.
-  [[nodiscard]] QueuedObj waitAndPop() {
-
-    return queue_ptr_->waitAndPop();
-
-  }
-
   void queueThreads(size_t threads)
   {
 
@@ -228,7 +219,7 @@ private:
     while(true) {
 
       // Get the next work item from the underlying object queue.
-      QueuedObj work_item = waitAndPop();
+      QueuedObj work_item = queue_ptr_->waitAndPop();
 
       if (work_item == stop_token_) {
 

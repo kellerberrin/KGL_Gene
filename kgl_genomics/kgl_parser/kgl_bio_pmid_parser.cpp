@@ -170,19 +170,17 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
   while (true) {
 
     auto line_record = file_io.readIORecord();
-    if (not line_record) {
+    if (line_record.EOFRecord()) {
 
       break; // EOF reached.
 
     }
 
-    auto const& [line_count, line_ptr] = line_record.value();
+    const std::string_view& record_view = line_record.getView();
 
-    const std::string& record_str = *line_ptr;
+    if (not record_view.empty()) {
 
-    if (not record_str.empty()) {
-
-      if (record_str[0] == COMMENT_) {
+      if (record_view[0] == COMMENT_) {
 
         continue;  // Skip comment lines.
 
@@ -190,19 +188,19 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
     }
 
-    std::vector<std::string_view> row_fields = Utility::viewTokenizer(record_str, DELIMITER_);
+    std::vector<std::string_view> row_fields = Utility::viewTokenizer(record_view, DELIMITER_);
 
     if (row_fields.size() != COLUMN_COUNT_) {
 
       ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Incorrect field count: {}, expected: {}, line: {}, text: {}",
-                           row_fields.size(), COLUMN_COUNT_, line_count, record_str);
+                           row_fields.size(), COLUMN_COUNT_, line_record.lineCount(), record_view);
       continue;
 
     }
 
     if (not parseFields(row_fields)) {
 
-      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Problem parsing line: {}", line_count);
+      ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; Problem parsing line: {}", line_record.lineCount());
 
     }
 

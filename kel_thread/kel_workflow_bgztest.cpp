@@ -65,9 +65,9 @@ template <typename BGZdecoder> void openWorkflowReader(const std::string& decode
   while (true) {
 
     auto line = test_stream.readLine();
-    if (not line) break;
+    if (line.EOFRecord()) break;
     ++count;
-    total_char_size += line.value().second->size();
+    total_char_size += line.getView().size();
     if (count % 1000000 == 0) {
 
       std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -95,7 +95,7 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 
   BGZdecoder test_stream(thread_count);
 
-  for (size_t i = 0; i < 10; ++i) {
+  for (size_t i = 0; i < 1; ++i) {
 
     test_stream.open(ExecEnvBGZ::getArgs().bgz_large_);
     openWorkflowReader(decoder_name, thread_count, test_stream);

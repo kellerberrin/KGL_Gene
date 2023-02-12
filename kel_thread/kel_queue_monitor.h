@@ -355,7 +355,7 @@ private:
 
   void displayQueueStats() const {
 
-    ExecEnv::log().info( "Queue Name: {},  High Tide: {}, Low Tide: {};  Samples: {}  Flood Tide: {}%, Ebbing Tide: {}%; Empty (<={}): {}%, Av. Util.: ({}) {}%"
+    ExecEnv::log().info( "Queue Name: {},  High Tide: {}, Low Tide: {};  Samples: {}  Flood Tide: {:.2f}%, Ebb Tide: {:.2f}%; Empty (<={}): {:.2f}%, Av. Util.: ({}) {:.2f}%"
                        , queue_name_,   queue_ptr_->highTide(), queue_ptr_->lowTide()
                        , queueSamples(), (floodTide() * 100.0), (ebbingTide() * 100.0)
                        , empty_size_, (averageEmpty() * 100.0), static_cast<size_t>(averageSize()), avUtilization());

@@ -40,11 +40,11 @@ public:
     if (not std::getline(file_, *line_text_ptr).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
+      return IOLineRecord(record_counter_, std::move(line_text_ptr));
 
     } else {
 
-      return QUEUED_EOF_MARKER;
+      return IOLineRecord::createEOFMarker();
 
     }
 
@@ -104,11 +104,11 @@ public:
     if (not std::getline(gz_file_, *line_text_ptr).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
+      return IOLineRecord(record_counter_, std::move(line_text_ptr));
 
     } else {
 
-      return QUEUED_EOF_MARKER;
+      return IOLineRecord::createEOFMarker();
 
     }
 
@@ -173,11 +173,11 @@ public:
     if (not std::getline(bz2_file_, *line_text_ptr).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(line_text_ptr)));
+      return IOLineRecord(record_counter_, std::move(line_text_ptr));
 
     } else {
 
-      return QUEUED_EOF_MARKER;
+      return IOLineRecord::createEOFMarker();
 
     }
 
@@ -245,7 +245,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     }
     if (not gz_stream->open(file_name)) {
 
-      return QUEUED_EOF_MARKER;
+      return std::nullopt;
 
     } else {
 
@@ -258,7 +258,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZStream>());
     if (not gz_stream->open(file_name)) {
 
-      return QUEUED_EOF_MARKER;
+      return std::nullopt;
 
     } else {
 
@@ -272,7 +272,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
     if (not bz2_stream->open(file_name)) {
 
-      return QUEUED_EOF_MARKER;
+      return std::nullopt;
 
     } else {
 
@@ -280,12 +280,12 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
     }
 
-  } else {   // Assume a text file.
+  } else {   // Otherwise assume a text file.
 
     std::unique_ptr<BaseStreamIO> text_stream(std::make_unique<TextStreamIO>());
     if (not text_stream->open(file_name)) {
 
-      return QUEUED_EOF_MARKER;
+      return std::nullopt;
 
     } else {
 

@@ -17,13 +17,35 @@ namespace kellerberrin {   //  organization::project level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Plug one of the superclasses (defined in the implementation file) to read text or gzipped files.
 
-// Returns an optional pair of line count and a pointer to the line data.
-// The data is absent on EOF or read error.
-using IOLineRecord = std::optional<std::pair<size_t, std::unique_ptr<std::string>>>;
-// The eof marker.
-constexpr static const std::nullopt_t QUEUED_EOF_MARKER = std::nullopt;
+// StreamIO output is the file line number and associated line text wrapped in a lightweight object.
+class IOLineRecord {
+
+public:
+
+  IOLineRecord(size_t line_count, std::unique_ptr<std::string> line_data) : line_count_(line_count), line_data_(std::move(line_data)) {}
+  IOLineRecord(IOLineRecord&& line_record) noexcept : line_count_(line_record.line_count_), line_data_(std::move(line_record.line_data_)) {}
+  IOLineRecord(const IOLineRecord& line_record) = delete;
+  ~IOLineRecord() = default;
+
+  [[nodiscard]] std::string getString() { return {std::move(*line_data_)}; }
+  [[nodiscard]] size_t lineCount() const { return line_count_; }
+  [[nodiscard]] const std::string_view getView() const { return {*line_data_}; }
+  [[nodiscard]] bool EOFRecord() const { return not (line_count_ > 0 and line_data_); }
+
+  // Return the EOF marker.
+  [[nodiscard]] static IOLineRecord createEOFMarker() { return {}; }
+
+private:
+
+  IOLineRecord() = default; // Only create as an EOF marker.
+
+  size_t line_count_{0}; // Actual line counts begin at 1.
+  std::unique_ptr<std::string> line_data_; // This string is NOT '\n' terminated.
+
+};
 
 
+// The virtual IO object.
 class BaseStreamIO {
 
 public:

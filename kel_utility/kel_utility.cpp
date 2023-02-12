@@ -326,9 +326,9 @@ std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_vie
 }
 */
 
-std::vector<std::string> kel::Utility::charTokenizer(const std::string& str, char delim) {
+std::vector<std::string> kel::Utility::charTokenizer(const std::string_view& str_view, char delim) {
 
-  std::vector<std::string_view> view_vector = viewTokenizer(str, delim);
+  std::vector<std::string_view> view_vector = viewTokenizer(str_view, delim);
   std::vector<std::string> str_vector;
   str_vector.reserve(view_vector.size());
   for (auto const& view : view_vector) {

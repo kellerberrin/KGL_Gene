@@ -55,21 +55,21 @@ if (ZLIB_FOUND)
 endif()
 
 # Debug g++
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++20 -fPIC -fconcepts -ggdb")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++2b -fPIC -fconcepts -ggdb")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb")
 
 # Release g++
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++20 -O3 -s -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++2b -O3 -s -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-std=c++20 -fPIC -fconcepts -pg -g -ggdb -O3 -Xlinker -Map=output.map ")
+set(CMAKE_CXX_FLAGS_PROFILE "-std=c++2b -fPIC -fconcepts -pg -g -ggdb -O3 -Xlinker -Map=output.map ")
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -Xlinker -Map=output.map ")
 
 # All possible warnings
 #set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
 # Relax slightly to temporarily allow unused parameters.
-set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
+set(CMAKE_ERROR_WARNING_FLAGS "-std=c++2b -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")

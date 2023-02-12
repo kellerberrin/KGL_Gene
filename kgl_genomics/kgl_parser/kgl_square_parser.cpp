@@ -175,11 +175,9 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
   while (true) {
 
     auto line_record = file_io.readIORecord();
-    if (not line_record) break;
+    if (line_record.EOFRecord()) break;
 
-    auto const& [line_count, line_ptr] = line_record.value();
-
-    const std::string& record_str = *line_ptr;
+    const std::string_view record_str = line_record.getView();
 
     if (not record_str.empty()) {
 

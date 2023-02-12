@@ -43,7 +43,7 @@ public:
   [[nodiscard]] IOLineRecord readIORecord() { return raw_io_queue_.waitAndPop(); }
 
   // Push an eof marker onto the queue
-  void enqueueEOF() { raw_io_queue_.push(QUEUED_EOF_MARKER); }
+  void enqueueEOF() { raw_io_queue_.push(IOLineRecord::createEOFMarker()); }
 
 private:
 

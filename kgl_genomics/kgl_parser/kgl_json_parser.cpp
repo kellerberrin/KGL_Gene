@@ -76,7 +76,7 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
   while (true) {
 
     IOLineRecord line_record = file_data_.readIORecord();
-    if (not line_record) { // check for EOF condition.
+    if (line_record.EOFRecord()) { // check for EOF condition.
 
       // Push the EOF marker back on the queue for other threads.
       file_data_.enqueueEOF();
@@ -84,21 +84,21 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
 
     }
 
-    auto& [line_count, line_string_ptr] = line_record.value();
 
-    size_t line_length = line_string_ptr->size();
+    size_t line_length = line_record.getView().size();
     chars_processed += line_length;
     ++lines_processed;
 
     if (lines_processed % REPORT_INTERVAL_ == 0) {
 
       ExecEnv::log().info("JSONInfoParser processed line count: {}, text bytes: {}, file: {}",
-                          line_count, chars_processed, getFileName());
+                          line_record.lineCount(), chars_processed, getFileName());
 
     }
 
     rapidjson::Document document;
-    document.Parse(line_string_ptr->data(), line_string_ptr->size());
+    const std::string json_line = line_record.getString();
+    document.Parse(json_line.data(), json_line.size());
 
     if (document.HasParseError()) {
 

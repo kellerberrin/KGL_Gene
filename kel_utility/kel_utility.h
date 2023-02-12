@@ -40,7 +40,7 @@ public:
   [[nodiscard]] static std::string trimAllChar(const std::string &s, char nc); // Returns a string with all nc char removed.
   [[nodiscard]] static std::string findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace);
   [[nodiscard]] static std::vector<std::string_view> viewTokenizer(const std::string_view& str_view, char delim);
-  [[nodiscard]] static std::vector<std::string> charTokenizer(const std::string& str, char delim);
+  [[nodiscard]] static std::vector<std::string> charTokenizer(const std::string_view& str_view, char delim);
   // Split string on encountering char. Default version splits on first whitespace,
   [[nodiscard]] static std::pair<std::string, std::string> firstSplit(const std::string& source, bool(* char_delim_fn)(char c) = [](char c)->bool { return std::isspace(c) != 0; });
   [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.

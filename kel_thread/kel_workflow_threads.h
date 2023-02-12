@@ -54,7 +54,7 @@ enum class WorkflowThreadState { ACTIVE, STOPPED};
 class WorkflowThreads
 {
 
-//  using Proc = std::move_only_function<void(void)>;
+//  using NewProc = std::move_only_function<void(void)>;
   using Proc = std::function<void(void)>;
 
 public:

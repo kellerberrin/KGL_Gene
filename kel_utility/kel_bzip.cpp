@@ -16,7 +16,7 @@ namespace kel = kellerberrin;
 bool kel::BGZReader::close() {
 
   close_stream_ = true; // Stop processing and set eof condition.
-  while (readLine().has_value()); // Drain the queues.
+  while (not readLine().EOFRecord()); // Drain the queues.
   bgz_file_.close(); // Close the physical file.
   reader_state_ = BGZReaderState::STOPPED;
   return true;
@@ -71,7 +71,7 @@ bool kel::BGZReader::open(const std::string &file_name) {
 kel::IOLineRecord kel::BGZReader::readLine() {
 
 // Dont block if eof reached.
-  if (line_eof_ and line_queue_.empty()) return QUEUED_EOF_MARKER;
+  if (line_eof_ and line_queue_.empty()) return IOLineRecord::createEOFMarker();
 // Return next available sequential line record.
   return line_queue_.waitAndPop();
 
@@ -271,7 +271,7 @@ void kel::BGZReader::assembleRecords() {
     // Check for EOF.
     if (not block) {
       // Push the EOF marker.
-      line_queue_.push(QUEUED_EOF_MARKER);
+      line_queue_.push(IOLineRecord::createEOFMarker());
       line_eof_ = true;
       return;
     }
@@ -292,7 +292,7 @@ void kel::BGZReader::assembleRecords() {
       if ( block->parsed_records.size() >= 2) {
 
         ++record_counter_;
-        line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(previous_line_record)));
+        line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
         previous_line_record = nullptr;
 
       }
@@ -300,7 +300,7 @@ void kel::BGZReader::assembleRecords() {
     } else if (not block->parsed_records.empty()) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block->parsed_records.front())));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(block->parsed_records.front())));
       previous_line_record = nullptr;
 
     }
@@ -310,7 +310,7 @@ void kel::BGZReader::assembleRecords() {
     for (size_t index = 1; index < line_count-1; ++index) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block->parsed_records[index])));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(block->parsed_records[index])));
 
     }
 
@@ -330,11 +330,14 @@ void kel::BGZReader::assembleRecords() {
     if (not previous_line_record->empty()) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(previous_line_record)));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
 
     }
 
   }
+
+  // Push the eof marker.
+  line_queue_.push(IOLineRecord::createEOFMarker());
 
 }
 

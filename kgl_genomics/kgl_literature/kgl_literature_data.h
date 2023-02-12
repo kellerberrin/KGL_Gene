@@ -18,7 +18,7 @@ public:
 
   ImpliedCitation() = delete;
 
-  [[nodiscard]] static size_t implied(size_t actual_citations, size_t publication_months);
+  [[nodiscard]] static std::size_t implied(std::size_t actual_citations, std::size_t publication_months);
 
 private:
 
@@ -30,7 +30,7 @@ private:
   static const std::vector<double> MEAN_CITATION_ARRIVAL;
 
   // The estimated median citation count for research papers.
-  const static constexpr size_t MEDIAN_CITATION{30};
+  const static constexpr std::size_t MEDIAN_CITATION{30};
 
 };
 

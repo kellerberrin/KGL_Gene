@@ -78,7 +78,7 @@ void kgl::FileDataIO::rawDataIO() {
 
       // ReadLine() should not block on eof.
       IOLineRecord line_record = file_stream_opt_.value()->readLine();
-      if (not line_record) {
+      if (line_record.EOFRecord()) {
 
         // Terminate the read line loop.
         break;
@@ -86,9 +86,9 @@ void kgl::FileDataIO::rawDataIO() {
       }
 
       // Check we have a valid line record.
-      if (line_record.value().second->empty()) {
+      if (line_record.getView().size() == 0) {
 
-        ExecEnv::log().error("FileDataIO::rawDataIO; Empty Data record on line: {} - ignored", line_record.value().first);
+        ExecEnv::log().error("FileDataIO::rawDataIO; Empty Data record on line: {} - ignored", line_record.lineCount());
         continue;
 
       }

@@ -120,7 +120,7 @@ private:
 
   static ReadFastaSequence createFastaSequence( const std::string& fasta_id,
                                                 const std::string& fasta_comment,
-                                                const std::vector<std::unique_ptr<std::string>>& fasta_lines);
+                                                const std::vector<std::unique_ptr<const std::string>>& fasta_lines);
 
 
 };

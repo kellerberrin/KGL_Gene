@@ -44,7 +44,7 @@ public:
   [[nodiscard]] QueuedVCFRecord readVCFRecord() { return vcf_record_queue_.waitAndPop(); }
 
   // Push an eof marker onto the queue
-  void enqueueEOF() { vcf_record_queue_.push(QUEUED_EOF_MARKER); }
+   void enqueueEOF() { vcf_record_queue_.push(std::nullopt); }
 
   [[nodiscard]] [[maybe_unused]] const std::string& getFileName() const { return file_data_.fileName(); }
 
@@ -74,10 +74,21 @@ private:
   static constexpr const size_t MINIMUM_VCF_FIELDS_{8};   // At least 8 fields, any others are format and genotype fields (header specified).
   static constexpr const char VCF_FIELD_DELIMITER_CHAR_{'\t'};   // VCF Field separator (char).
   const std::string FIELD_NOT_PRESENT_{"."}; // no field value
+  // Mandatory Field Offsets.
+  static constexpr const size_t CONTIG_FIELD_IDX_{0};
+  static constexpr const size_t OFFSET_FIELD_IDX_{1};
+  static constexpr const size_t IDENT_FIELD_IDX_{2};
+  static constexpr const size_t REF_FIELD_IDX_{3};
+  static constexpr const size_t ALT_FIELD_IDX_{4};
+  static constexpr const size_t QUALITY_FIELD_IDX_{5};
+  static constexpr const size_t FILTER_FIELD_IDX_{6};
+  static constexpr const size_t INFO_FIELD_IDX_{7};
+  static constexpr const size_t FORMAT_FIELD_IDX_{8};
+
 
   void launchThreads();
   void enqueueVCFRecord(); // enqueue vcf_records.
-  std::optional<std::unique_ptr<VcfRecord>> moveToVcfRecord(std::string&& line_record);
+  std::optional<std::unique_ptr<VcfRecord>> moveToVcfRecord(std::string line_record);
 
 };
 

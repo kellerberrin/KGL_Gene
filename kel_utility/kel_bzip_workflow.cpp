@@ -17,7 +17,7 @@ namespace kel = kellerberrin;
 bool kel::BGZStream::close() {
 
   close_stream_ = true; // stop processing
-  while (readLine().has_value()); // drain the queues.
+  while (not readLine().EOFRecord()); // drain the queues.
   bgz_file_.close();
   stream_state_ = BGZStreamState::STOPPED;
   return true;
@@ -77,7 +77,7 @@ bool kel::BGZStream::open(const std::string &file_name) {
 kel::IOLineRecord kel::BGZStream::readLine() {
 
   // Dont block if eof reached.
-  if (line_eof_ and line_queue_.empty()) return QUEUED_EOF_MARKER;
+  if (line_eof_ and line_queue_.empty()) return IOLineRecord::createEOFMarker();
   // Return next available sequential line record.
   return line_queue_.waitAndPop();
 
@@ -321,7 +321,7 @@ void kel::BGZStream::assembleRecords() {
       if ( block_ptr->parsed_lines_.size() >= 2) {
 
         ++record_counter_;
-        line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(previous_line_record)));
+        line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
         previous_line_record = nullptr;
 
       }
@@ -329,7 +329,7 @@ void kel::BGZStream::assembleRecords() {
     } else if (not block_ptr->parsed_lines_.empty()) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block_ptr->parsed_lines_.front())));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(block_ptr->parsed_lines_.front())));
       previous_line_record = nullptr;
 
     }
@@ -339,7 +339,7 @@ void kel::BGZStream::assembleRecords() {
     for (size_t index = 1; index < line_count-1; ++index) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(block_ptr->parsed_lines_[index])));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(block_ptr->parsed_lines_[index])));
 
     }
 
@@ -359,14 +359,14 @@ void kel::BGZStream::assembleRecords() {
     if (not previous_line_record->empty()) {
 
       ++record_counter_;
-      line_queue_.push(std::pair<size_t, std::unique_ptr<std::string>>(record_counter_, std::move(previous_line_record)));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
 
     }
 
   }
 
   // Push the eof marker.
-  line_queue_.push(QUEUED_EOF_MARKER);
+  line_queue_.push(IOLineRecord::createEOFMarker());
 
 }
 

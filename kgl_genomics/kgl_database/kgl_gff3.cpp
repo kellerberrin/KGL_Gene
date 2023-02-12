@@ -74,7 +74,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   std::optional<std::shared_ptr<const kgl::ContigReference>> contig_opt = genome_db.getContigSequence(gff_record.contig());
   if (not contig_opt) {
 
-    ExecEnv::log().error("Could not find contig: {}", gff_record.contig());
+    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not find contig: {}", gff_record.contig());
     return false;
 
   }
@@ -82,7 +82,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   // Check that the type field "CDS" also has a valid phase.
   if (gff_record.type() == CDSFeature::CDS_TYPE and gff_record.phase() == GffRecord::INVALID_PHASE) {
 
-    ExecEnv::log().error("Mis-match between valid phase and CDS record type");
+    ExecEnv::log().error("ParseGff3::parseGffRecord; Mis-match between valid phase and CDS record type");
     return false;
 
   }
@@ -127,7 +127,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
 
   if (not result) {
 
-    ExecEnv::log().error("Could not add duplicate feature: {} to contig: {}", feature_id, gff_record.contig());
+    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not add duplicate feature: {} to contig: {}", feature_id, gff_record.contig());
     return false;
 
   }
@@ -153,11 +153,9 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
   while (true) {
 
     auto line_record = file_io.readIORecord();
-    if (not line_record) break;
+    if (line_record.EOFRecord()) break;
 
-    auto const& [line_count, line_ptr] = line_record.value();
-
-    const std::string& record_str = *line_ptr;
+    const std::string record_str = line_record.getString();
 
     if (not record_str.empty()) {
 
@@ -169,11 +167,11 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
 
     }
 
-    auto [parse_result, gff_record_ptr] = parseGff3Record(std::move(line_record.value().second));
+    auto [parse_result, gff_record_ptr] = parseGff3Record(record_str);
     result = result and parse_result;
     if (not parse_result) {
 
-      ExecEnv::log().error("ParseGffFasta::readGffFile; Bad row field format on line number: {}, text: {}", line_count, record_str);
+      ExecEnv::log().error("ParseGffFasta::readGffFile; Bad row field format on line number: {}, Line text: {}", line_record.lineCount());
       continue;
 
     }
@@ -191,14 +189,14 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
 }
 
 
-std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record(std::unique_ptr<std::string>&& gff_line) {
+std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record(const std::string& gff_line) {
 
   std::unique_ptr<GffRecord> gff_record_ptr(std::make_unique<GffRecord>());
-  std::vector<std::string_view> row_fields = Utility::viewTokenizer(*gff_line, GFF3_FIELD_DELIM_);
+  std::vector<std::string_view> row_fields = Utility::viewTokenizer(gff_line, GFF3_FIELD_DELIM_);
 
   if (row_fields.size() != GFF3_FIELD_COUNT_) {
 
-    ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), *gff_line);
+    ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), gff_line);
     return {false, std::move(gff_record_ptr)};
 
   }

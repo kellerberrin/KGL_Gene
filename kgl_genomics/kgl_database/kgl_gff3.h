@@ -100,7 +100,7 @@ public:
 
   static std::pair<bool, std::vector<std::unique_ptr<GffRecord>>> readGffFile(const std::string &file_name);
 
-  static std::pair<bool, std::unique_ptr<GffRecord>> parseGff3Record(std::unique_ptr<std::string> &&gff_line);
+  static std::pair<bool, std::unique_ptr<GffRecord>> parseGff3Record(const std::string& gff_line);
 
   static bool parseGffRecord(GenomeReference& genome_db, const GffRecord& gff_record);
 
