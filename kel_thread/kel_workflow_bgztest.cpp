@@ -110,6 +110,28 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 }
 
 
+
+void testMTStreamIO(std::string decoder_name, size_t thread_count) {
+
+
+  MTStreamIO test_stream;
+
+  for (size_t i = 0; i < 1; ++i) {
+
+    test_stream.open(ExecEnvBGZ::getArgs().bgz_large_, thread_count);
+    openWorkflowReader(decoder_name, thread_count, test_stream);
+    test_stream.close();
+
+    test_stream.open(ExecEnvBGZ::getArgs().bgz_small_, thread_count);
+    openWorkflowReader(decoder_name, thread_count, test_stream);
+    test_stream.close();
+
+  }
+
+}
+
+
+
 template <template<typename> typename Queue, typename Type> class PushPull {
 
 public:
@@ -229,8 +251,10 @@ void ExecEnvBGZ::executeApp() {
   const size_t thread_count{15};
   testWorkflowReader<BGZReader>("Reader", thread_count);
   testWorkflowReader<BGZStream>("Workflow", thread_count);
+  testMTStreamIO("MTStreamIO", thread_count);
 
-//  return;
+
+  //  return;
 /*
   constexpr const size_t producers{5};
   constexpr const size_t consumers{7};

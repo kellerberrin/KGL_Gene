@@ -83,30 +83,44 @@ void RecordVCFIO::enqueueVCFRecord() {
   while (true) {
 
     IOLineRecord line_record = file_data_.readIORecord();
-    if (line_record.EOFRecord()) { // check for EOF condition.
 
-      // push the eof marker back on the queue.
+    // Check for EOF condition.
+    if (line_record.EOFRecord()) {
+
+      // push the eof marker back on the queue and stop processing.
       file_data_.enqueueEOF();
       break;
 
     }
 
+    // Get the line record.
+    auto [line_count, line_string] = line_record.getLineData();
+
+    // Check for zero length lines.
+    if (line_string.empty()) {
+
+      ExecEnv::log().warn("RecordVCFIO::enqueueVCFRecord; unexpected zero length line found at line: {}", line_count);
+      continue;
+
+    }
+
     // Skip header records by examining the first char for '#'
-    std::string line_string = line_record.getString();
     if (line_string[0] == HEADER_CHAR_) {
 
       continue;
 
     }
 
+    // Parse the line into basic VCF fields.
     std::optional<std::unique_ptr<VcfRecord>> vcf_record_opt = moveToVcfRecord(std::move(line_string));
     if (not vcf_record_opt) {
 
-      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", file_data_.fileName(), line_record.lineCount());
+      ExecEnv::log().warn("FileVCFIO; Failed to parse VCF file: {} record line : {}", file_data_.fileName(), line_count);
 
     } else {
 
-      QueuedVCFRecord queue_record(std::pair<size_t, std::unique_ptr<VcfRecord>>(line_record.lineCount(), std::move(vcf_record_opt.value())));
+      // Queue the parsed VCF record for further processing.
+      QueuedVCFRecord queue_record(std::pair<size_t, std::unique_ptr<VcfRecord>>(line_count, std::move(vcf_record_opt.value())));
       vcf_record_queue_.push(std::move(queue_record));
 
     }
@@ -115,7 +129,7 @@ void RecordVCFIO::enqueueVCFRecord() {
 
 }
 
-
+// Parse the VCF line into basic VCF fields.
 std::optional<std::unique_ptr<VcfRecord>> RecordVCFIO::moveToVcfRecord(std::string line_record) {
 
   try {

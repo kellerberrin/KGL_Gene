@@ -578,7 +578,7 @@ target_link_libraries (kol_test kol_ontology kel_utility kel_thread ${Boost_LIBR
 
 add_executable(workflows kel_thread/kel_workflow_bgztest.cpp)
 
-target_link_libraries (workflows kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries (workflows kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
 
 
 ############################################################################################################

@@ -18,7 +18,7 @@ namespace bt = boost;
 bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 
   // Open input file. Plain text or compressed.
-  std::optional<std::unique_ptr<BaseStreamIO>> vcf_stream_opt = BaseStreamIO::getReaderStream(vcf_file_name);
+  std::optional<std::unique_ptr<BaseStreamIO>> vcf_stream_opt = BaseStreamIO::getStreamIO(vcf_file_name);
   if (not vcf_stream_opt) {
 
     ExecEnv::log().critical("I/O error; could not open VCF file: {}", vcf_file_name);

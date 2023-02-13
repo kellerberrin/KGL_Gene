@@ -26,7 +26,7 @@ kgl::FileDataIO::~FileDataIO() noexcept {
 bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
 
   read_file_name_ = std::move(read_file_name);
-  file_stream_opt_ = BaseStreamIO::getReaderStream(fileName());
+  file_stream_opt_ = BaseStreamIO::getStreamIO(fileName());
 
   if (not file_stream_opt_) {
 

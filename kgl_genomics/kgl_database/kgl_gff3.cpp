@@ -44,6 +44,135 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 }
 
 
+std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::readGffFile(const std::string& file_name) {
+
+  FileDataIO file_io;
+  std::vector<std::unique_ptr<GffRecord>> gff_records;
+  size_t record_counter{0};
+  bool result{true};
+
+  if (not file_io.commenceIO(file_name)) {
+
+    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_io.fileName());
+
+  }
+
+  while (true) {
+
+    // Get the line record.
+    auto line_record = file_io.readIORecord();
+
+    // Terminate on EOF
+    if (line_record.EOFRecord()) break;
+
+    // Get the line data.
+    auto const [line_count, record_str] = line_record.getLineData();
+
+    // Skip comments
+    if (record_str[0] == GFF_COMMENT_) {
+
+      continue;  // Skip comment lines.
+
+    }
+
+    // Check for empty string
+    if (record_str.empty()) {
+
+      ExecEnv::log().warn("ParseGffFasta::readGffFile; unexpected zero length line found at parser Line: {}", line_count);
+      continue;
+
+    }
+
+    // Parse the gff3 line.
+    auto [parse_result, gff_record_ptr] = parseGff3Record(record_str);
+
+    if (not parse_result) {
+
+      ExecEnv::log().error("ParseGffFasta::readGffFile; Bad row field format on line number: {}, Line text: {}", line_count, record_str);
+      continue;
+
+    }
+
+    gff_records.push_back(std::move(gff_record_ptr));
+
+    result = result and parse_result;
+
+    ++record_counter;
+
+  }
+
+  ExecEnv::log().info("ParseGffFasta::readGffFile; Parsed: {} lines, GFF3 records: {}", record_counter, gff_records.size());
+
+  return {result, std::move(gff_records)};
+
+}
+
+
+std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record(const std::string& gff_line) {
+
+  std::unique_ptr<GffRecord> gff_record_ptr(std::make_unique<GffRecord>());
+  std::vector<std::string_view> row_fields = Utility::viewTokenizer(gff_line, GFF3_FIELD_DELIM_);
+
+  if (row_fields.size() != GFF3_FIELD_COUNT_) {
+
+    ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), gff_line);
+    return {false, std::move(gff_record_ptr)};
+
+  }
+
+  bool parse_result{true};
+
+  const std::string_view& contig_field = row_fields[GFF3_CONTIG_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->contig(contig_field);
+
+  const std::string_view& source_field = row_fields[GFF3_SOURCE_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->source(source_field);
+
+  const std::string_view& type_field = row_fields[GFF3_TYPE_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->type(type_field);
+
+  const std::string_view& start_field = row_fields[GFF3_START_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->convertStartOffset(start_field);
+
+  const std::string_view& end_field = row_fields[GFF3_END_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->convertEndOffset(end_field);
+
+  const std::string_view& score_field = row_fields[GFF3_SCORE_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->score(score_field);
+
+  const std::string_view& strand_field = row_fields[GFF3_STRAND_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->strand(strand_field);
+
+  const std::string_view& phase_field = row_fields[GFF3_PHASE_FIELD_IDX_];
+  parse_result = parse_result and gff_record_ptr->phase(phase_field);
+
+  const std::string_view& tag_field = row_fields[GFF3_TAG_FIELD_IDX_];
+  const std::vector<std::string_view> tag_items = Utility::viewTokenizer(tag_field, GFF3_TAG_FIELD_DELIMITER_);
+
+  std::vector<std::pair<std::string_view, std::string_view>> tag_value_vec;
+  for (auto const& item : tag_items) {
+
+    std::vector<std::string_view> tag_name = Utility::viewTokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
+    if (tag_name.size() != GFF3_ITEM_TAG_NAME_) {
+
+      ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad 'tag=name' sub field: {}", item);
+      parse_result = false;
+
+    } else {
+
+      tag_value_vec.emplace_back(std::pair(tag_name[0], tag_name[1]));
+
+    }
+
+  }
+
+  parse_result = parse_result and gff_record_ptr->attributes(tag_value_vec);
+
+  return {parse_result, std::move(gff_record_ptr)};
+
+}
+
+
 // Valgrind indicates memory leaks ocurring in this function.
 // This could be due to the use of the FeatureSinkPtr function pointer to process
 // the genomic features.
@@ -133,123 +262,6 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   }
 
   return true;
-
-}
-
-
-std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::readGffFile(const std::string& file_name) {
-
-  FileDataIO file_io;
-  std::vector<std::unique_ptr<GffRecord>> gff_records;
-  size_t record_counter{0};
-  bool result{true};
-
-  if (not file_io.commenceIO(file_name)) {
-
-    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_io.fileName());
-
-  }
-
-  while (true) {
-
-    auto line_record = file_io.readIORecord();
-    if (line_record.EOFRecord()) break;
-
-    const std::string record_str = line_record.getString();
-
-    if (not record_str.empty()) {
-
-      if (record_str[0] == GFF_COMMENT_) {
-
-        continue;  // Skip comment lines.
-
-      }
-
-    }
-
-    auto [parse_result, gff_record_ptr] = parseGff3Record(record_str);
-    result = result and parse_result;
-    if (not parse_result) {
-
-      ExecEnv::log().error("ParseGffFasta::readGffFile; Bad row field format on line number: {}, Line text: {}", line_record.lineCount());
-      continue;
-
-    }
-
-    gff_records.push_back(std::move(gff_record_ptr));
-
-    ++record_counter;
-
-  }
-
-  ExecEnv::log().info("ParseGffFasta::readGffFile; Parsed: {} lines, GFF3 records: {}", record_counter, gff_records.size());
-
-  return {result, std::move(gff_records)};
-
-}
-
-
-std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record(const std::string& gff_line) {
-
-  std::unique_ptr<GffRecord> gff_record_ptr(std::make_unique<GffRecord>());
-  std::vector<std::string_view> row_fields = Utility::viewTokenizer(gff_line, GFF3_FIELD_DELIM_);
-
-  if (row_fields.size() != GFF3_FIELD_COUNT_) {
-
-    ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), gff_line);
-    return {false, std::move(gff_record_ptr)};
-
-  }
-
-  bool parse_result{true};
-
-  const std::string_view& contig_field = row_fields[GFF3_CONTIG_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->contig(contig_field);
-
-  const std::string_view& source_field = row_fields[GFF3_SOURCE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->source(source_field);
-
-  const std::string_view& type_field = row_fields[GFF3_TYPE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->type(type_field);
-
-  const std::string_view& start_field = row_fields[GFF3_START_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->convertStartOffset(start_field);
-
-  const std::string_view& end_field = row_fields[GFF3_END_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->convertEndOffset(end_field);
-
-  const std::string_view& score_field = row_fields[GFF3_SCORE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->score(score_field);
-
-  const std::string_view& strand_field = row_fields[GFF3_STRAND_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->strand(strand_field);
-
-  const std::string_view& phase_field = row_fields[GFF3_PHASE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->phase(phase_field);
-
-  const std::string_view& tag_field = row_fields[GFF3_TAG_FIELD_IDX_];
-  const std::vector<std::string_view> tag_items = Utility::viewTokenizer(tag_field, GFF3_TAG_FIELD_DELIMITER_);
-
-  std::vector<std::pair<std::string_view, std::string_view>> tag_value_vec;
-  for (auto const& item : tag_items) {
-
-    std::vector<std::string_view> tag_name = Utility::viewTokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
-    if (tag_name.size() != GFF3_ITEM_TAG_NAME_) {
-
-      ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad 'tag=name' sub field: {}", item);
-      parse_result = false;
-
-    } else {
-
-      tag_value_vec.emplace_back(std::pair(tag_name[0], tag_name[1]));
-
-    }
-
-  }
-
-  parse_result = parse_result and gff_record_ptr->attributes(tag_value_vec);
-
-  return {parse_result, std::move(gff_record_ptr)};
 
 }
 

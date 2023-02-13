@@ -14,10 +14,32 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <fstream>
+
 
 namespace bio = boost::iostreams;
 // Implementation file classes need to be defined within namespaces.
 namespace kellerberrin {
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// After moving data out of the object, it is empty() but not EOF().
+std::pair<size_t, std::string> IOLineRecord::getLineData() {
+
+  if (empty() or EOFRecord()) {
+
+    // Complain and return the empty string.
+    ExecEnv::log().warn("IOLineRecord::getLineData; attempt to move data from an empty()/EOFRecord() object");
+    return {0, {}};
+
+  }
+
+  size_t out_line = line_count_;
+  line_count_ = 0;
+  empty_ = true;
+  return {out_line, std::move(line_data_)};
+
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,11 +58,11 @@ public:
 
   IOLineRecord readLine() override {
 
-    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
-    if (not std::getline(file_, *line_text_ptr).eof()) {
+    std::string line_text;
+    if (not std::getline(file_, line_text).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(record_counter_, std::move(line_text_ptr));
+      return IOLineRecord(record_counter_, std::move(line_text));
 
     } else {
 
@@ -100,11 +122,11 @@ public:
 
   inline IOLineRecord readLine() override {
 
-    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
-    if (not std::getline(gz_file_, *line_text_ptr).eof()) {
+    std::string line_text;
+    if (not std::getline(gz_file_, line_text).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(record_counter_, std::move(line_text_ptr));
+      return IOLineRecord(record_counter_, std::move(line_text));
 
     } else {
 
@@ -169,11 +191,11 @@ public:
 
   inline IOLineRecord readLine() override {
 
-    std::unique_ptr<std::string> line_text_ptr(std::make_unique<std::string>());
-    if (not std::getline(bz2_file_, *line_text_ptr).eof()) {
+    std::string line_text;
+    if (not std::getline(bz2_file_, line_text).eof()) {
 
       ++record_counter_;
-      return IOLineRecord(record_counter_, std::move(line_text_ptr));
+      return IOLineRecord(record_counter_, std::move(line_text));
 
     } else {
 
@@ -222,20 +244,18 @@ bool BZ2StreamIO::open(const std::string &file_name) {
 }
 
 
-
-
-std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const std::string &file_name) {
+std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std::string &file_name, size_t decompression_threads) {
 
   std::string file_ext = Utility::toupper(Utility::fileExtension(file_name));
 
   // Open a compressed gzipped file based on the file extension.
-  if (file_ext == GZ_FILE_EXTENSTION_)  {
+  if (file_ext == GZ_FILE_EXTENSTION_) {
 
     std::unique_ptr<BaseStreamIO> gz_stream;
     if (BGZStream::verify(file_name)) { // Check if block gzipped.
 
       ExecEnv::log().info("File structure verified as bgz format, parser uses bgz reader.");
-      gz_stream = std::make_unique<BGZStream>();
+      gz_stream = std::make_unique<BGZStream>(decompression_threads);
 
     } else {
 
@@ -255,7 +275,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
 
   } else if (file_ext == BGZ_FILE_EXTENSTION_) { // .bgz extension is just assumed to be block gzipped.
 
-    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZStream>());
+    std::unique_ptr<BaseStreamIO> gz_stream(std::make_unique<BGZStream>(decompression_threads));
     if (not gz_stream->open(file_name)) {
 
       return std::nullopt;
@@ -294,6 +314,68 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getReaderStream(const
     }
 
   }
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+// Uses the filename extension heuristic documented above to open the underlying StreamIO
+// The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
+bool MTStreamIO::open(const std::string &file_name, size_t decompression_threads) {
+
+  auto stream_opt = BaseStreamIO::getStreamIO(file_name, decompression_threads);
+  if (not stream_opt) {
+
+    ExecEnv::log().error("MTStreamIO::open; could not open stream for file: {}", file_name);
+    return false;
+
+  }
+
+  EOF_received_ = false;
+  stream_ptr_ = std::move(stream_opt.value());
+  line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
+  line_io_thread_.enqueueVoid(&MTStreamIO::enqueueIOLineRecord, this);
+
+  return true;
+
+}
+
+void MTStreamIO::close() {
+
+  EOF_received_ = true;
+  line_io_thread_.joinThreads();
+  stream_ptr_ = nullptr;
+  line_io_queue_.clear();
+
+}
+
+void MTStreamIO::enqueueIOLineRecord() {
+
+  while(true) {
+
+    auto line_record = stream_ptr_->readLine();
+
+    if (line_record.EOFRecord()) {
+
+      EOF_received_ = true;
+      line_io_queue_.push(std::move(line_record));
+      break;
+
+    }
+
+    line_io_queue_.push(std::move(line_record));
+
+  }
+
+}
+
+IOLineRecord MTStreamIO::readLine() {
+
+  // Dont block on EOF
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (EOF_received_) return IOLineRecord::createEOFMarker();
+  return line_io_queue_.waitAndPop();
 
 }
 

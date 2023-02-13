@@ -292,7 +292,7 @@ void kel::BGZReader::assembleRecords() {
       if ( block->parsed_records.size() >= 2) {
 
         ++record_counter_;
-        line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
+        line_queue_.push(IOLineRecord(record_counter_, std::move(*previous_line_record)));
         previous_line_record = nullptr;
 
       }
@@ -300,7 +300,7 @@ void kel::BGZReader::assembleRecords() {
     } else if (not block->parsed_records.empty()) {
 
       ++record_counter_;
-      line_queue_.push(IOLineRecord(record_counter_, std::move(block->parsed_records.front())));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(*(block->parsed_records.front()))));
       previous_line_record = nullptr;
 
     }
@@ -310,7 +310,7 @@ void kel::BGZReader::assembleRecords() {
     for (size_t index = 1; index < line_count-1; ++index) {
 
       ++record_counter_;
-      line_queue_.push(IOLineRecord(record_counter_, std::move(block->parsed_records[index])));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(*(block->parsed_records[index]))));
 
     }
 
@@ -330,7 +330,7 @@ void kel::BGZReader::assembleRecords() {
     if (not previous_line_record->empty()) {
 
       ++record_counter_;
-      line_queue_.push(IOLineRecord(record_counter_, std::move(previous_line_record)));
+      line_queue_.push(IOLineRecord(record_counter_, std::move(*previous_line_record)));
 
     }
 

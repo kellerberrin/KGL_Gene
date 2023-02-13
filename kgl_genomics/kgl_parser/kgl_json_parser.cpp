@@ -78,26 +78,25 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
     IOLineRecord line_record = file_data_.readIORecord();
     if (line_record.EOFRecord()) { // check for EOF condition.
 
-      // Push the EOF marker back on the queue for other threads.
+      // Push the EOF marker back on the queue for other threads and stop processing.
       file_data_.enqueueEOF();
       break;
 
     }
 
+    auto const [line_count, json_line] = line_record.getLineData();
 
-    size_t line_length = line_record.getView().size();
-    chars_processed += line_length;
+    chars_processed += json_line.size();
     ++lines_processed;
 
     if (lines_processed % REPORT_INTERVAL_ == 0) {
 
       ExecEnv::log().info("JSONInfoParser processed line count: {}, text bytes: {}, file: {}",
-                          line_record.lineCount(), chars_processed, getFileName());
+                          line_count, chars_processed, getFileName());
 
     }
 
     rapidjson::Document document;
-    const std::string json_line = line_record.getString();
     document.Parse(json_line.data(), json_line.size());
 
     if (document.HasParseError()) {

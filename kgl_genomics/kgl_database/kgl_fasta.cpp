@@ -55,7 +55,7 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
 
   // Open input file. Plain text or compressed.
 
-  std::optional<std::unique_ptr<BaseStreamIO>> fasta_stream_opt = BaseStreamIO::getReaderStream(fasta_file_name);
+  std::optional<std::unique_ptr<BaseStreamIO>> fasta_stream_opt = BaseStreamIO::getStreamIO(fasta_file_name);
   if (fasta_stream_opt) {
 
     ExecEnv::log().info("ParseGffFasta::readFastaFile; Opened fasta file: {} for processing", fasta_file_name);
@@ -73,7 +73,7 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
     std::vector<std::unique_ptr<const std::string>> fasta_lines;
     // Initial parser state.
     ParserToken parser_token = ParserToken::FIND_FASTA_ID;
-    std::string record_text;
+    std::pair<size_t, std::string> line_data;
 
     do {
 
@@ -86,11 +86,13 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
 
         } else {
 
-          record_text = line_record.getString();
+          line_data = line_record.getLineData();
 
         }
 
       }
+
+      auto& [line_count, record_text] = line_data;
 
       switch (parser_token) {
 
