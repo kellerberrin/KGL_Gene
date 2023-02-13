@@ -5,10 +5,8 @@
 #ifndef KEL_BASIC_IO_H
 #define KEL_BASIC_IO_H
 
-#include "kel_queue_tidal.h"
-#include "kel_workflow_threads.h"
-
 #include <string>
+#include <memory>
 #include <string_view>
 #include <vector>
 #include <optional>
@@ -82,7 +80,7 @@ public:
   virtual ~BaseStreamIO() = default;
 
   virtual bool open(const std::string &file_name) = 0;
-  virtual IOLineRecord readLine() = 0; // This function is NOT multithreaded.
+  virtual IOLineRecord readLine() = 0; // In general, this function is NOT multithreaded or buffered.
 
   // Returns an IO stream that is either a normal stream or a compressed stream based on the file name extension.
   // If '.bgz' then it uses a multithreaded and memory efficient algorithm to decompress as it reads.
@@ -106,59 +104,6 @@ protected:
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed (checked for '.bgz' format).
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.
   constexpr static const char* BZ2_FILE_EXTENSTION_ = ".BZ2"; // Burrows-Wheeler compression assumed.
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A queued multi-thread adapter for text Stream IO.
-// A soon as the underlying stream is successfully opened, records are read and stored in a tidal queue and can be
-// retrieved using readLine().
-// This object cannot be copied.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class MTStreamIO {
-
-public:
-
-  MTStreamIO() = default;
-  ~MTStreamIO() = default;
-
-  // Uses the filename extension heuristic documented above to open the underlying StreamIO
-  // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  bool open(const std::string &file_name, size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS);
-  // After closing the object can be re-opened on another file.
-  void close();
-
-  // This is thread safe.
-  // If read by 1 thread then records are guaranteed to presented in file order.
-  // If read by multiple threads then there is no line order guarantee.
-  // This function will block on an empty queue and no EOF.
-  // After an EOF has been received, then subsequent calls will not block and will return EOF objects.
-  [[nodiscard]] IOLineRecord readLine();
-  // Access queue stats.
-  [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_io_queue_; }
-
-private:
-
-  // The tidal IO queue parameters.
-  static constexpr const size_t IO_HIGH_TIDE_{10000};          // Maximum QueueTidal size
-  static constexpr const size_t IO_LOW_TIDE_{2000};            // Low water mark to begin queueing data records
-  static constexpr const char* IO_QUEUE_NAME_{"MTStreamIO Queue"};      // The queue name
-  static constexpr const size_t IO_SAMPLE_RATE_{100};            // The queue monitor sampling rate (ms), zero (0) disables the monitor.
-  QueueTidal<IOLineRecord> line_io_queue_{IO_HIGH_TIDE_, IO_LOW_TIDE_, IO_QUEUE_NAME_, IO_SAMPLE_RATE_};
-  // Queues IOLineRecord objects to the queue.
-  static constexpr const size_t WORKER_THREAD_COUNT{1};
-  WorkflowThreads line_io_thread_;
-  // The StreamIO object.
-  std::unique_ptr<BaseStreamIO> stream_ptr_;
-  // Set if the stream is in an EOF condition.
-  std::atomic<bool> EOF_received_{false};
-  // Mutex for readLine()
-  std::mutex mutex_;
-  // The thread worker function.
-  void enqueueIOLineRecord();
 
 };
 

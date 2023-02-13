@@ -15,6 +15,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/include/eigen3
                     kel_utility         # Basic Infrastructure library
                     kel_thread          # multi-threading library
+                    kel_io              # file and network io library
                     kgl_genomics                  # Basic Genetic library
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
@@ -93,24 +94,15 @@ set(LIBRARY_SOURCE_FILES
         kel_utility/kel_property_tree.h
         kel_utility/kel_distribution.h
         kel_utility/kel_distribution.cpp
-        kel_utility/kel_basic_io.cpp
-        kel_utility/kel_basic_io.h
         kel_utility/kel_percentile.h
         kel_utility/kel_optimize.cpp
         kel_utility/kel_optimize.h
         kel_utility/kel_patterns.h
         kel_utility/kel_exec_env_app.h
-        kel_utility/kel_bzip.cpp
-        kel_utility/kel_bzip.h
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
-        kel_utility/kel_rest_api.cpp
-        kel_utility/kel_rest_api.h
         kel_utility/kel_date_time.cpp
-        kel_utility/kel_date_time.h
-        kel_utility/kel_bzip_workflow.cpp
-        kel_utility/kel_bzip_workflow.h
-        kel_utility/kel_bzip_workflow_verify.cpp)
+        kel_utility/kel_date_time.h)
 
 set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_mt_safe.h
@@ -120,6 +112,18 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
         kel_thread/kel_workflow_pipeline.h)
+
+
+set(IO_SOURCE_FILES
+        kel_io/kel_basic_io.cpp
+        kel_io/kel_basic_io.h
+        kel_io/kel_bzip.cpp
+        kel_io/kel_bzip.h
+        kel_io/kel_rest_api.cpp
+        kel_io/kel_rest_api.h
+        kel_io/kel_bzip_workflow.cpp
+        kel_io/kel_bzip_workflow.h
+        kel_io/kel_bzip_workflow_verify.cpp kel_io/kel_mt_buffer.cpp kel_io/kel_mt_buffer.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -291,7 +295,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_bzip_verify.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_io/kel_bzip_verify.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -553,6 +557,8 @@ add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
 
 add_library(kel_thread STATIC ${THREAD_SOURCE_FILES})
 
+add_library(kel_io STATIC ${IO_SOURCE_FILES})
+
 add_library(kgl_genomics STATIC ${GENETIC_LIBRARY_SOURCE_FILES})
 
 target_link_libraries(kgl_genomics kel_utility kel_thread)
@@ -565,20 +571,20 @@ target_link_libraries(kgl_analysis kgl_genomics kel_utility kel_thread)
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
 #generate libraries.
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
-target_link_libraries (kol_test kol_ontology kel_utility kel_thread ${Boost_LIBRARIES})
+target_link_libraries (kol_test kol_ontology kel_utility kel_thread kel_io ${Boost_LIBRARIES})
 
 #add_executable(workflows kel_thread/kel_workflow_example.cpp)
 
-add_executable(workflows kel_thread/kel_workflow_bgztest.cpp)
+add_executable(workflows kel_io/kel_workflow_bgztest.cpp)
 
-target_link_libraries (workflows kel_utility kel_thread ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
+target_link_libraries (workflows kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
 
 
 ############################################################################################################

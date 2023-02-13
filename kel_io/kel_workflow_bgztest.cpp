@@ -7,6 +7,7 @@
 #include "kel_bzip.h"
 #include "kel_bzip_workflow.h"
 #include "kel_workflow_threads.h"
+#include "kel_mt_buffer.h"
 
 
 
@@ -114,7 +115,7 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 void testMTStreamIO(std::string decoder_name, size_t thread_count) {
 
 
-  MTStreamIO test_stream;
+  StreamMTBuffer test_stream;
 
   for (size_t i = 0; i < 1; ++i) {
 
@@ -251,7 +252,7 @@ void ExecEnvBGZ::executeApp() {
   const size_t thread_count{15};
   testWorkflowReader<BGZReader>("Reader", thread_count);
   testWorkflowReader<BGZStream>("Workflow", thread_count);
-  testMTStreamIO("MTStreamIO", thread_count);
+  testMTStreamIO("StreamMTBuffer", thread_count);
 
 
   //  return;
