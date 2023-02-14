@@ -14,23 +14,23 @@
 namespace kel = kellerberrin;
 
 
-bool kel::BGZStream::close() {
+void kel::BGZStreamIO::close() {
 
+  record_counter_ = 0;
   close_stream_ = true; // stop processing
   while (not readLine().EOFRecord()); // drain the queues.
   bgz_file_.close();
   stream_state_ = BGZStreamState::STOPPED;
-  return true;
 
 }
 
 
-bool kel::BGZStream::open(const std::string &file_name) {
+bool kel::BGZStreamIO::open(const std::string &file_name) {
 
   // Cannot re-open the object.
   if (stream_state_ == BGZStreamState::ACTIVE) {
 
-    ExecEnv::log().error("BGZStream::open; stream is already active; call close().");
+    ExecEnv::log().error("BGZStreamIO::open; stream is already active; call close().");
     return false;
 
   }
@@ -46,14 +46,14 @@ bool kel::BGZStream::open(const std::string &file_name) {
     bgz_file_.open(file_name_, std::ios::binary | std::ios::ate);
     if (not bgz_file_.good()) {
 
-      ExecEnv::log().error("BGZStream::open; I/O error; could not open file: {}", file_name);
+      ExecEnv::log().error("BGZStreamIO::open; I/O error; could not open file: {}", file_name);
       return false;
 
     }
   }
   catch (std::exception const &e) {
 
-    ExecEnv::log().error("BGZStream::open; File: {} unexpected I/O exception: {}", file_name, e.what());
+    ExecEnv::log().error("BGZStreamIO::open; File: {} unexpected I/O exception: {}", file_name, e.what());
     return false;
 
   }
@@ -61,11 +61,11 @@ bool kel::BGZStream::open(const std::string &file_name) {
   // File is open so start processing.
 
   // Activate the decompression workflow.
-  decompression_workflow_.activateWorkflow(decompression_threads_, &BGZStream::decompressBlock, this);
+  decompression_workflow_.activateWorkflow(decompression_threads_, &BGZStreamIO::decompressBlock, this);
   // Begin decompressing blocks of data.
-  reader_return_ = reader_thread_.enqueueFuture(&BGZStream::readDecompressFile, this);
+  reader_return_ = reader_thread_.enqueueFuture(&BGZStreamIO::readDecompressFile, this);
   // Begin queueing decompressed text records.
-  assemble_records_thread_.enqueueVoid(&BGZStream::assembleRecords, this);
+  assemble_records_thread_.enqueueVoid(&BGZStreamIO::assembleRecords, this);
   // Set the object state.
   stream_state_ = BGZStreamState::ACTIVE;
 
@@ -74,7 +74,23 @@ bool kel::BGZStream::open(const std::string &file_name) {
 }
 
 
-kel::IOLineRecord kel::BGZStream::readLine() {
+std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::BGZStreamIO::getStreamIO( const std::string& file_name
+                                                                               , size_t decompression_threads) {
+
+  auto stream_ptr = std::make_unique<BGZStreamIO>(decompression_threads);
+  if (stream_ptr->open(file_name)) {
+
+    return stream_ptr;
+
+  }
+
+  ExecEnv::log().error("BGZStreamIO::getStreamIO; error opening file: {}", file_name);
+  return std::nullopt;
+
+}
+
+
+kel::IOLineRecord kel::BGZStreamIO::readLine() {
 
   // Dont block if eof reached.
   if (line_eof_ and line_queue_.empty()) return IOLineRecord::createEOFMarker();
@@ -84,11 +100,11 @@ kel::IOLineRecord kel::BGZStream::readLine() {
 }
 
 
-bool kel::BGZStream::readDecompressFile() {
+bool kel::BGZStreamIO::readDecompressFile() {
 
   if (not bgz_file_.good()) {
 
-    ExecEnv::log().error("BGZStream::readDecompressFile; failed to open bgz file: {}", file_name_);
+    ExecEnv::log().error("BGZStreamIO::readDecompressFile; failed to open bgz file: {}", file_name_);
     return false;
 
   }
@@ -115,7 +131,7 @@ bool kel::BGZStream::readDecompressFile() {
     auto compressed_ptr = readCompressedBlock(block_count);
     if (not compressed_ptr->io_success_) {
 
-      ExecEnv::log().error("BGZStream::readDecompressFile; Encountered I/O error reading compressed block {}", block_count);
+      ExecEnv::log().error("BGZStreamIO::readDecompressFile; Encountered I/O error reading compressed block {}", block_count);
       return false;
     }
 
@@ -133,12 +149,12 @@ bool kel::BGZStream::readDecompressFile() {
 }
 
 
-bool kel::BGZStream::checkEOFMarker(size_t remaining_chars) {
+bool kel::BGZStreamIO::checkEOFMarker(size_t remaining_chars) {
 
   // Not terminated so verify the EOF block.
   if (remaining_chars != EOF_MARKER_SIZE_) {
 
-    ExecEnv::log().error("BGZStream::readDecompressFile; EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
+    ExecEnv::log().error("BGZStreamIO::readDecompressFile; EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
                          remaining_chars, EOF_MARKER_SIZE_);
     return false;
 
@@ -151,7 +167,7 @@ bool kel::BGZStream::checkEOFMarker(size_t remaining_chars) {
 
       if (EOF_MARKER_[index] != eof_marker[index]) {
 
-        ExecEnv::log().error("BGZStream::readDecompressFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
+        ExecEnv::log().error("BGZStreamIO::readDecompressFile; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
                              index, eof_marker[index], EOF_MARKER_[index]);
         return false;
 
@@ -167,7 +183,7 @@ bool kel::BGZStream::checkEOFMarker(size_t remaining_chars) {
 
 
 
-kel::BGZStream::CompressedType kel::BGZStream::readCompressedBlock(size_t block_count) {
+kel::BGZStreamIO::CompressedType kel::BGZStreamIO::readCompressedBlock(size_t block_count) {
 
   // First read the header.
   //  Must be created for each iteration
@@ -177,7 +193,7 @@ kel::BGZStream::CompressedType kel::BGZStream::readCompressedBlock(size_t block_
   bgz_file_.read(reinterpret_cast<char *>(&(read_vector_ptr->header_block_)), HEADER_SIZE_);
   if (not bgz_file_.good()) {
 
-    ExecEnv::log().error("BGZStream::readCompressedBlock; Block {}, header file read error", block_count);
+    ExecEnv::log().error("BGZStreamIO::readCompressedBlock; Block {}, header file read error", block_count);
     read_vector_ptr->io_success_ = false;
     return read_vector_ptr;
 
@@ -192,7 +208,7 @@ kel::BGZStream::CompressedType kel::BGZStream::readCompressedBlock(size_t block_
   bgz_file_.read(read_ptr, compressed_data_size);
   if (not bgz_file_.good()) {
 
-    ExecEnv::log().error("BGZStream::readCompressedBlock; Block {}, data file read error", block_count);
+    ExecEnv::log().error("BGZStreamIO::readCompressedBlock; Block {}, data file read error", block_count);
     read_vector_ptr->io_success_ = false;
     return read_vector_ptr;
 
@@ -206,7 +222,7 @@ kel::BGZStream::CompressedType kel::BGZStream::readCompressedBlock(size_t block_
 }
 
 
-std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(CompressedType compressed_ptr) {
+std::optional<kel::BGZStreamIO::DecompressedType> kel::BGZStreamIO::decompressBlock(CompressedType compressed_ptr) {
 
   // Check if a stop token.
   if (not compressed_ptr) {
@@ -235,7 +251,7 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
   if (return_code < Z_OK) {
 
     std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-    ExecEnv::log().error("BGZStream::decompressBlock; ::inflateInit2() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+    ExecEnv::log().error("BGZStreamIO::decompressBlock; ::inflateInit2() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                          return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
     decompressed_ptr->decompress_success_ = false;
     return decompressed_ptr;
@@ -246,7 +262,7 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
   if (return_code != Z_STREAM_END) {
 
     std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-    ExecEnv::log().error("BGZStream::decompressBlock; ::inflate() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+    ExecEnv::log().error("BGZStreamIO::decompressBlock; ::inflate() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                          return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
     decompressed_ptr->decompress_success_ = false;
     return decompressed_ptr;
@@ -257,7 +273,7 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
   if (return_code < Z_OK) {
 
     std::string zlib_msg = zlib_params.msg != nullptr ? zlib_params.msg : "no msg";
-    ExecEnv::log().error("BGZStream::decompressBlock; ::inflateEnd() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
+    ExecEnv::log().error("BGZStreamIO::decompressBlock; ::inflateEnd() fail, return code: {}, msg: {}, Uncompressed: {}, Consumed: {}",
                          return_code, zlib_msg, MAX_UNCOMPRESSED_SIZE_ - zlib_params.avail_out, zlib_params.total_in);
     decompressed_ptr->decompress_success_ = false;
     return decompressed_ptr;
@@ -282,7 +298,7 @@ std::optional<kel::BGZStream::DecompressedType> kel::BGZStream::decompressBlock(
 }
 
 
-void kel::BGZStream::assembleRecords() {
+void kel::BGZStreamIO::assembleRecords() {
 
   record_counter_ = 0;
   size_t block_count{0};
@@ -301,7 +317,7 @@ void kel::BGZStream::assembleRecords() {
 
     if (not block_ptr->decompress_success_) {
 
-      ExecEnv::log().warn("BGZStream::assembleRecords; decompress error with block: {}", block_ptr->block_id_);
+      ExecEnv::log().warn("BGZStreamIO::assembleRecords; decompress error with block: {}", block_ptr->block_id_);
       return;
 
     }
@@ -309,7 +325,7 @@ void kel::BGZStream::assembleRecords() {
     ++block_count;
     if (block_ptr->block_id_ != block_count) {
 
-      ExecEnv::log().warn("BGZStream::assembleRecords; Block mismatch, Queued block: {}, Counted block: {}", block_ptr->block_id_, block_count);
+      ExecEnv::log().warn("BGZStreamIO::assembleRecords; Block mismatch, Queued block: {}, Counted block: {}", block_ptr->block_id_, block_count);
 
     }
 

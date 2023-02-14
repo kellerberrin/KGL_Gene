@@ -13,13 +13,13 @@
 namespace kel = kellerberrin;
 
 // Stops processing and empties queues, the BGZReader can again be re-opened after being closed.
-bool kel::BGZReader::close() {
+void kel::BGZReader::close() {
 
+  record_counter_ = 0;
   close_stream_ = true; // Stop processing and set eof condition.
   while (not readLine().EOFRecord()); // Drain the queues.
   bgz_file_.close(); // Close the physical file.
   reader_state_ = BGZReaderState::STOPPED;
-  return true;
 
 }
 
@@ -66,6 +66,23 @@ bool kel::BGZReader::open(const std::string &file_name) {
   return true;
 
 }
+
+
+std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::BGZReader::getStreamIO( const std::string& file_name
+                                                                             , size_t decompression_threads) {
+
+  auto stream_ptr = std::make_unique<BGZReader>(decompression_threads);
+  if (stream_ptr->open(file_name)) {
+
+    return stream_ptr;
+
+  }
+
+  ExecEnv::log().error("BGZReader::getStreamIO; error opening file: {}", file_name);
+  return std::nullopt;
+
+}
+
 
 // Remove decompressed line records from the BGZreader.
 kel::IOLineRecord kel::BGZReader::readLine() {

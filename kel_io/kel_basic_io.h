@@ -80,11 +80,12 @@ public:
   virtual ~BaseStreamIO() = default;
 
   virtual bool open(const std::string &file_name) = 0;
+  virtual void close() = 0;
+
   virtual IOLineRecord readLine() = 0; // In general, this function is NOT multithreaded or buffered.
 
   // Returns an IO stream that is either a normal stream or a compressed stream based on the file name extension.
-  // If '.bgz' then it uses a multithreaded and memory efficient algorithm to decompress as it reads.
-  // Very large '.bgz' files can be decompressed and streamed to the relevant parser for further analysis.
+  // If '.bgz' then it uses a multi-threaded and memory efficient algorithm to decompress as it reads.
   // If '.gz' then the file is analyzed to see if it is in '.bgz' format.
   // If not in '.bgz' format then a standard (boost) single thread decompression algorithm is used.
   // If '.bz2' then Burrows-Wheeler compression is assumed.
@@ -98,8 +99,6 @@ public:
   constexpr static const size_t BGZ_DEFAULT_THREADS{15};
 
 protected:
-
-  size_t record_counter_{0};
 
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed (checked for '.bgz' format).
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.

@@ -22,33 +22,41 @@ namespace kellerberrin {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// A queue buffered multi-thread adapter for text Stream IO.
-// A soon as the underlying stream is successfully opened, records are read and stored in a tidal queue and can be
+// A buffered multi-thread safe adapter for StreamIO objects.
+// As soon as the underlying stream is successfully opened, records are read and stored in a tidal queue and can be
 // retrieved using readLine().
 // This object cannot be copied.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class StreamMTBuffer {
+class StreamMTBuffer : public BaseStreamIO {
 
 public:
 
-  StreamMTBuffer() = default;
-  ~StreamMTBuffer() = default;
+  // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
+  explicit StreamMTBuffer(size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS) : decompression_threads_(decompression_threads) {}
+  ~StreamMTBuffer() override { close(); };
 
   // Uses the filename extension heuristic documented in kel_basic_io.h to open the underlying file stream.
-  // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  bool open(const std::string &file_name, size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS);
+  [[nodiscard]] bool open(const std::string &file_name) override;
   // After closing the object can be re-opened on another file.
-  void close();
+  void close() override;
 
   // This is thread safe and buffered.
-  // If read by 1 thread then records are guaranteed to presented in file order.
+  // If read by 1 thread then records are guaranteed to be retrieved in file order.
   // If read by multiple threads then there is no line order guarantee.
   // This function will block on an empty queue and no EOF.
   // After an EOF has been received, then subsequent calls will not block and will return EOF objects.
-  [[nodiscard]] IOLineRecord readLine();
+  [[nodiscard]] IOLineRecord readLine() override;
+
+  // Static constructors.
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
+                                                                               , size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS);
+  // Layer the stream buffer on top of an existing open StreamIO.
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr);
+
+
   // Access queue stats.
   [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_io_queue_; }
 
@@ -64,6 +72,7 @@ private:
   // Thread pool asynchronously queues IOLineRecord objects to the queue.
   static constexpr const size_t WORKER_THREAD_COUNT{1};
   WorkflowThreads line_io_thread_;
+  size_t decompression_threads_{BaseStreamIO::BGZ_DEFAULT_THREADS}; // For BGZStreamIO only.
   // The StreamIO object.
   std::unique_ptr<BaseStreamIO> stream_ptr_;
   // Set if the stream is in an EOF condition.

@@ -108,11 +108,15 @@ public:
   [[nodiscard]] IOLineRecord readLine() override;
 
   // Opens the '.bgz' file and begins decompressing the file, on success object is now 'ACTIVE'.
-  bool open(const std::string &file_name) override;
+  [[nodiscard]] bool open(const std::string &file_name) override;
 
   // Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
   // Once the object is closed, it may be re-opened to process another file.
-  bool close();
+  void close() override;
+
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
+                                                                               , size_t decompression_threads = BGZ_DEFAULT_THREADS);
+
 
   [[nodiscard]] bool good() const { return bgz_file_.good(); }
 
@@ -134,6 +138,7 @@ private:
 
   std::string file_name_;
   std::ifstream bgz_file_;
+  size_t record_counter_{0};
   WorkflowThreads decompress_threads_;   // Multiple threads to decompress the bgz data blocks.
   WorkflowThreads reader_thread_{1}; // Reads from the file and passes compressed bgz blocks to the decompression threads.
   WorkflowThreads line_assemble_thread_{1};  // Assembles complete line records from the decompressed data.

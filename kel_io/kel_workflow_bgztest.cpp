@@ -98,11 +98,19 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 
   for (size_t i = 0; i < 1; ++i) {
 
-    test_stream.open(ExecEnvBGZ::getArgs().bgz_large_);
+    if (not test_stream.open(ExecEnvBGZ::getArgs().bgz_large_)) {
+
+      ExecEnv::log().error("testWorkflowReader; error opening file: {}", ExecEnvBGZ::getArgs().bgz_large_);
+
+    }
     openWorkflowReader(decoder_name, thread_count, test_stream);
     test_stream.close();
 
-    test_stream.open(ExecEnvBGZ::getArgs().bgz_small_);
+    if (not test_stream.open(ExecEnvBGZ::getArgs().bgz_small_)) {
+
+      ExecEnv::log().error("testWorkflowReader; error opening file: {}", ExecEnvBGZ::getArgs().bgz_small_);
+
+    }
     openWorkflowReader(decoder_name, thread_count, test_stream);
     test_stream.close();
 
@@ -115,15 +123,23 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 void testMTStreamIO(std::string decoder_name, size_t thread_count) {
 
 
-  StreamMTBuffer test_stream;
+  StreamMTBuffer test_stream(thread_count);
 
   for (size_t i = 0; i < 1; ++i) {
 
-    test_stream.open(ExecEnvBGZ::getArgs().bgz_large_, thread_count);
+    if (not test_stream.open(ExecEnvBGZ::getArgs().bgz_large_)) {
+
+      ExecEnv::log().error("testMTStreamIO; error opening file: {}", ExecEnvBGZ::getArgs().bgz_large_);
+
+    }
     openWorkflowReader(decoder_name, thread_count, test_stream);
     test_stream.close();
 
-    test_stream.open(ExecEnvBGZ::getArgs().bgz_small_, thread_count);
+    if (not test_stream.open(ExecEnvBGZ::getArgs().bgz_small_)) {
+
+      ExecEnv::log().error("testMTStreamIO; error opening file: {}", ExecEnvBGZ::getArgs().bgz_small_);
+
+    }
     openWorkflowReader(decoder_name, thread_count, test_stream);
     test_stream.close();
 
@@ -251,7 +267,7 @@ void ExecEnvBGZ::executeApp() {
 
   const size_t thread_count{15};
   testWorkflowReader<BGZReader>("Reader", thread_count);
-  testWorkflowReader<BGZStream>("Workflow", thread_count);
+  testWorkflowReader<BGZStreamIO>("Workflow", thread_count);
   testMTStreamIO("StreamMTBuffer", thread_count);
 
 

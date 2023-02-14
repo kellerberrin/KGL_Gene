@@ -123,7 +123,7 @@ set(IO_SOURCE_FILES
         kel_io/kel_rest_api.h
         kel_io/kel_bzip_workflow.cpp
         kel_io/kel_bzip_workflow.h
-        kel_io/kel_bzip_workflow_verify.cpp kel_io/kel_mt_buffer.cpp kel_io/kel_mt_buffer.h)
+        kel_io/kel_bzip_workflow_verify.cpp kel_io/kel_mt_buffer.cpp kel_io/kel_mt_buffer.h kel_io/kel_file_io.cpp kel_io/kel_file_io.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES

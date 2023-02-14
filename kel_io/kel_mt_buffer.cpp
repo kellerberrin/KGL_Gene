@@ -13,9 +13,9 @@ namespace kel = kellerberrin;
 
 // Uses the filename extension heuristic documented above to open the underlying StreamIO
 // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-bool kel::StreamMTBuffer::open(const std::string &file_name, size_t decompression_threads) {
+bool kel::StreamMTBuffer::open(const std::string &file_name) {
 
-  auto stream_opt = BaseStreamIO::getStreamIO(file_name, decompression_threads);
+  auto stream_opt = BaseStreamIO::getStreamIO(file_name, decompression_threads_);
   if (not stream_opt) {
 
     ExecEnv::log().error("StreamMTBuffer::open; could not open stream for file: {}", file_name);
@@ -31,6 +31,34 @@ bool kel::StreamMTBuffer::open(const std::string &file_name, size_t decompressio
   return true;
 
 }
+
+std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStreamIO( const std::string& file_name,
+                                                                                    size_t decompression_threads) {
+
+  auto stream_ptr = std::make_unique<StreamMTBuffer>(decompression_threads);
+  if (stream_ptr->open(file_name)) {
+
+    return stream_ptr;
+
+  }
+
+  return std::nullopt;
+
+}
+
+
+std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr) {
+
+  auto stream_ptr = std::make_unique<StreamMTBuffer>();
+  stream_ptr->stream_ptr_ = std::move(open_stream_ptr);
+  stream_ptr->EOF_received_ = false;
+  stream_ptr->line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
+  stream_ptr->line_io_thread_.enqueueVoid(&StreamMTBuffer::enqueueIOLineRecord, stream_ptr.get());
+
+  return stream_ptr;
+
+}
+
 
 void kel::StreamMTBuffer::close() {
 

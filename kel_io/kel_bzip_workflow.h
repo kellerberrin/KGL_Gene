@@ -41,7 +41,7 @@ namespace kellerberrin {   //  organization::project level namespace
 // This object can read multiple '.bgz' files by calling close() and then open().
 enum class BGZStreamState { ACTIVE, STOPPED};
 
-class BGZStream : public BaseStreamIO {
+class BGZStreamIO : public BaseStreamIO {
 
   // This struct maps to the byte structure of the gzip header. We need to be very careful about any structure byte padding.
   // The layout of the structure and GCC struct padding rules seem to preclude any padding and so this appears to be OK.
@@ -107,27 +107,29 @@ class BGZStream : public BaseStreamIO {
 
 public:
 
-  explicit BGZStream(size_t thread_count = DEFAULT_THREADS) : decompression_threads_(thread_count) {}
-  ~BGZStream() override { close(); }
+  explicit BGZStreamIO(size_t thread_count = DEFAULT_THREADS) : decompression_threads_(thread_count) {}
+  ~BGZStreamIO() override { close(); }
 
   // Guaranteed sequential line reader. Does not block on eof.
-  IOLineRecord readLine() override;
+  [[nodiscard]] IOLineRecord readLine() override;
 
   // Opens the '.bgz' file and begins decompressing the file, the object is now 'ACTIVE'.
-  bool open(const std::string &file_name) override;
+  [[nodiscard]] bool open(const std::string &file_name) override;
 
   // Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
-  bool close();
+  void close() override;
 
-  bool good() const { return not decompression_error_; }
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
+                                                                              , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
   // Checks the internal structures of a .bgz file.
   // Returns true if the .bgz file conforms to the RFC1952 standard.
   // Reads and verifies the entire .bgz file, may be slow on very large files.
-  static bool verify(const std::string &file_name, bool silent = true);
+  [[nodiscard]] static bool verify(const std::string &file_name, bool silent = true);
 
+  [[nodiscard]] bool good() const { return not decompression_error_; }
   // Stream state, of the object, active or stopped.
-  BGZStreamState streamState() const { return stream_state_; }
+  [[nodiscard]] BGZStreamState streamState() const { return stream_state_; }
 
   // Access the underlying queues for diagnostics.
   [[nodiscard]] const DecompressionWorkFlow& workFlow() const { return decompression_workflow_; }
@@ -137,6 +139,7 @@ private:
 
   std::string file_name_;
   std::ifstream bgz_file_;
+  size_t record_counter_{0};
   WorkflowThreads reader_thread_{1};
   std::future<bool> reader_return_;
   WorkflowThreads assemble_records_thread_{1};
