@@ -41,8 +41,8 @@ public:
 
 private:
 
-  static std::string command_line_;
-  static std::unique_ptr<Logger> log_ptr_;
+  inline static std::string command_line_;
+  inline static std::unique_ptr<Logger> log_ptr_;
 
 };
 

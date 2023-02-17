@@ -10,10 +10,6 @@
 namespace kel = kellerberrin;
 
 
-// The ExecEnv private static variables.
-std::string kel::ExecEnv::command_line_;
-std::unique_ptr<kel::Logger> kel::ExecEnv::log_ptr_;
-
 
 std::unique_ptr<kel::Logger> kel::ExecEnv::createLogger( const std::string& module,
                                                          const std::string& log_file,

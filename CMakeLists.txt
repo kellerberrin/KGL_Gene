@@ -16,7 +16,9 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kel_utility         # Basic Infrastructure library
                     kel_thread          # multi-threading library
                     kel_io              # file and network io library
-                    kgl_genomics                  # Basic Genetic library
+                    kgl_genomics        # Basic Genetic library
+                    kel_app             # Application and logging
+                    kel_math            # Mathematical Code
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
@@ -46,7 +48,7 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 # Find the Boost packages used.
-find_package( Boost COMPONENTS system filesystem timer chrono program_options iostreams REQUIRED )
+find_package( Boost COMPONENTS filesystem system timer chrono program_options iostreams REQUIRED )
 
 
 # zlib for compressed VCF files.
@@ -82,28 +84,34 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 
+#Basic application setup with logger.
+set(RUNTIME_SOURCE_FILES
+        kel_app/kel_exec_env.h
+        kel_app/kel_exec_env.cpp
+        kel_app/kel_exec_env_app.h
+        kel_app/kel_logging.h
+        kel_app/kel_logging.cpp
+        kel_app/kel_property_tree.cpp
+        kel_app/kel_property_tree.h)
+
+set(MATHEMATICAL_SOURCE_FILES
+        kel_math/kel_distribution.h
+        kel_math/kel_distribution.cpp
+        kel_math/kel_percentile.h
+        kel_math/kel_optimize.cpp
+        kel_math/kel_optimize.h)
+
 # Basic infrastructure library
-set(LIBRARY_SOURCE_FILES
-        kel_utility/kel_logging.h
-        kel_utility/kel_logging.cpp
+set(UTILITY_SOURCE_FILES
         kel_utility/kel_utility.h
         kel_utility/kel_utility.cpp
-        kel_utility/kel_exec_env.h
-        kel_utility/kel_exec_env.cpp
-        kel_utility/kel_property_tree.cpp
-        kel_utility/kel_property_tree.h
-        kel_utility/kel_distribution.h
-        kel_utility/kel_distribution.cpp
-        kel_utility/kel_percentile.h
-        kel_utility/kel_optimize.cpp
-        kel_utility/kel_optimize.h
         kel_utility/kel_patterns.h
-        kel_utility/kel_exec_env_app.h
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_date_time.cpp
         kel_utility/kel_date_time.h)
 
+# Multi-threading library
 set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_mt_safe.h
         kel_thread/kel_workflow_threads.h
@@ -111,9 +119,9 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_workflow_async.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
-        kel_thread/kel_workflow_pipeline.h)
+        kel_thread/kel_workflow_pipeline.h kel_thread/kel_workflow_sync.cpp kel_thread/kel_workflow_sync.h)
 
-
+# The basic I/O library.
 set(IO_SOURCE_FILES
         kel_io/kel_basic_io.cpp
         kel_io/kel_basic_io.h
@@ -123,7 +131,12 @@ set(IO_SOURCE_FILES
         kel_io/kel_rest_api.h
         kel_io/kel_bzip_workflow.cpp
         kel_io/kel_bzip_workflow.h
-        kel_io/kel_bzip_workflow_verify.cpp kel_io/kel_mt_buffer.cpp kel_io/kel_mt_buffer.h kel_io/kel_file_io.cpp kel_io/kel_file_io.h)
+        kel_io/kel_bzip_verify.cpp
+        kel_io/kel_bzip_workflow_verify.cpp
+        kel_io/kel_mt_buffer.cpp
+        kel_io/kel_mt_buffer.h
+        kel_io/kel_file_io.cpp
+        kel_io/kel_file_io.h)
 
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
@@ -295,7 +308,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_fasta.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_io/kel_bzip_verify.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -520,14 +533,12 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h)
 
 # Deconvolution and mixture files.
-
 set(MIXTURE_SOURCE_FILES
         kgl_mixture/kgl_variant_classify.h
         kgl_mixture/kgl_variant_classify.cpp
         kgl_mixture/kgl_variant_classify_io.cpp
         kgl_mixture/kgl_read_phasing.h
         kgl_mixture/kgl_read_phasing.cpp)
-
 
 # Application level objects
 set(APPLICATION_SOURCE_FILES
@@ -553,7 +564,9 @@ set(APPLICATION_SOURCE_FILES
 
 
 
-add_library(kel_utility STATIC ${LIBRARY_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES} ${MATHEMATICAL_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+
+add_library(kel_app STATIC ${RUNTIME_SOURCE_FILES})
 
 add_library(kel_thread STATIC ${THREAD_SOURCE_FILES})
 
@@ -571,20 +584,20 @@ target_link_libraries(kgl_analysis kgl_genomics kel_utility kel_thread)
 add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
 
 # Specify the static libraries.
-target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
+target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_app kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
 #generate libraries.
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
-target_link_libraries (kol_test kol_ontology kel_utility kel_thread kel_io ${Boost_LIBRARIES})
+target_link_libraries (kol_test kol_ontology kel_app kel_utility kel_thread kel_io ${Boost_LIBRARIES})
 
 #add_executable(workflows kel_thread/kel_workflow_example.cpp)
 
 add_executable(workflows kel_io/kel_workflow_bgztest.cpp)
 
-target_link_libraries (workflows kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
+target_link_libraries (workflows kel_utility kel_thread kel_io kel_app ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
 
 
 ############################################################################################################
@@ -658,7 +671,9 @@ set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_mcmc_polytomyprior.cpp
         kpl_phylogenetic/kpl_mcmc_polytomyprior.h
         kpl_phylogenetic/kpl_tree_io.cpp
-        kpl_phylogenetic/kpl_tree_io.h kpl_phylogenetic/kpl_main_app.cpp kpl_phylogenetic/kpl_main_app.h)
+        kpl_phylogenetic/kpl_tree_io.h
+        kpl_phylogenetic/kpl_main_app.cpp
+        kpl_phylogenetic/kpl_main_app.h)
 
 add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
 
@@ -674,7 +689,7 @@ link_directories(/usr/local/lib/libhmsbeagle-1/lib)
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp)
 
 #specify link libraries.
-target_link_libraries(kpl kpl_library_lib kgl_genomics kel_utility kel_thread libncl.a ${Boost_LIBRARIES} hmsbeagle)
+target_link_libraries(kpl kpl_library_lib kgl_genomics kel_app kel_utility kel_thread libncl.a ${Boost_LIBRARIES} hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")

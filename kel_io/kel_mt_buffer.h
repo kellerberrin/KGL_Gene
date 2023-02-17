@@ -35,7 +35,7 @@ class StreamMTBuffer : public BaseStreamIO {
 public:
 
   // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  explicit StreamMTBuffer(size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS) : decompression_threads_(decompression_threads) {}
+  explicit StreamMTBuffer(size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS) : work_threads_(decompression_threads) {}
   ~StreamMTBuffer() override { close(); };
 
   // Uses the filename extension heuristic documented in kel_basic_io.h to open the underlying file stream.
@@ -72,7 +72,7 @@ private:
   // Thread pool asynchronously queues IOLineRecord objects to the queue.
   static constexpr const size_t WORKER_THREAD_COUNT{1};
   WorkflowThreads line_io_thread_;
-  size_t decompression_threads_{BaseStreamIO::BGZ_DEFAULT_THREADS}; // For BGZStreamIO only.
+  size_t work_threads_{BaseStreamIO::BGZ_DEFAULT_THREADS}; // For BGZStreamIO only.
   // The StreamIO object.
   std::unique_ptr<BaseStreamIO> stream_ptr_;
   // Set if the stream is in an EOF condition.

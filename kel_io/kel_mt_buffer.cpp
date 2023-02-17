@@ -15,7 +15,7 @@ namespace kel = kellerberrin;
 // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
 bool kel::StreamMTBuffer::open(const std::string &file_name) {
 
-  auto stream_opt = BaseStreamIO::getStreamIO(file_name, decompression_threads_);
+  auto stream_opt = BaseStreamIO::getStreamIO(file_name, work_threads_);
   if (not stream_opt) {
 
     ExecEnv::log().error("StreamMTBuffer::open; could not open stream for file: {}", file_name);
