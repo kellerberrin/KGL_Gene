@@ -70,7 +70,7 @@ public:
   // The second integer is the number variants that remain after filtering.
   std::pair<size_t, size_t> inSituFilter(const VariantFilter& filter);
 
-  // Return the underlying genome map.
+  // ReturnType the underlying genome map.
   [[nodiscard]] const GenomeDBMap& getMap() const { return genome_map_; }
 
   // Unconditionally adds a genome to the population, returns false if the genome already exists.

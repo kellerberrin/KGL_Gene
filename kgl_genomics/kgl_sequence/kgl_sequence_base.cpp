@@ -96,7 +96,7 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offs
 
     ExecEnv::log().warn("DNA5SequenceLinear::subSequence; sub sequence offset: {} and sub sequence size: {} too large for sequence length: {}",
                         offset, sub_length, length());
-    // Return an empty sequence
+    // ReturnType an empty sequence
     return sub_sequence;
 
   }
@@ -105,7 +105,7 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offs
 
     ExecEnv::log().warn("DNA5SequenceLinear::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
                         offset, sub_length, length());
-    // Return an empty sequence
+    // ReturnType an empty sequence
     return sub_sequence;
 
   }

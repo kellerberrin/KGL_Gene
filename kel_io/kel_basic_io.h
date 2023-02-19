@@ -49,7 +49,7 @@ public:
   [[nodiscard]] bool empty() const { return empty_; }
 
 
-  // Return the EOF marker.
+  // ReturnType the EOF marker.
   [[nodiscard]] static IOLineRecord createEOFMarker() { return {}; }
 
 private:

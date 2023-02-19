@@ -453,7 +453,7 @@ public:
 
   //! Get the root term for a particular term
   /*!
-    Return the root node for a term's ontology
+    ReturnType the root node for a term's ontology
   */
   [[nodiscard]] std::string getTermRoot(const std::string &term) const;
 

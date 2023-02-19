@@ -94,7 +94,7 @@ bool kol::TermSimilarityCache::termSimilarityCache(const std::shared_ptr<const T
                                                    const std::shared_ptr<const SimilarityInterface> &term_similarity_ptr,
                                                    GO::Ontology ontology) {
 
-  // Return the empty cache.
+  // ReturnType the empty cache.
   if (ontology == GO::Ontology::ONTO_ERROR) {
 
     return false;

@@ -774,7 +774,7 @@ namespace rapidxml
 
     protected:
 
-        // Return empty string
+        // ReturnType empty string
         static Ch *nullstr()
         {
             static Ch zero = Ch('\0');
@@ -1711,7 +1711,7 @@ namespace rapidxml
 
             }
 
-            // Return new end
+            // ReturnType new end
             text = src;
             return dest;
 
@@ -1934,7 +1934,7 @@ namespace rapidxml
         }
 
         // Parse and append data
-        // Return character that ends data.
+        // ReturnType character that ends data.
         // This is necessary because this character might have been overwritten by a terminating 0
         template<int Flags>
         Ch parse_and_append_data(xml_node<Ch> *node, Ch *&text, Ch *contents_start)
@@ -1986,10 +1986,10 @@ namespace rapidxml
             {
                 Ch ch = *text;
                 *end = Ch('\0');
-                return ch;      // Return character that ends data; this is required because zero terminator overwritten it
+                return ch;      // ReturnType character that ends data; this is required because zero terminator overwritten it
             }
 
-            // Return character that ends data
+            // ReturnType character that ends data
             return *text;
         }
 
@@ -2072,7 +2072,7 @@ namespace rapidxml
             if (!(Flags & parse_no_string_terminators))
                 element->name()[element->name_size()] = Ch('\0');
 
-            // Return parsed element
+            // ReturnType parsed element
             return element;
         }
 

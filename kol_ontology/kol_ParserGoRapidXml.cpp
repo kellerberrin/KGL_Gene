@@ -146,7 +146,7 @@ std::shared_ptr<kol::GoGraph> kol::GoParserRapidXml::parseGoFile(const std::stri
   //call to initialize the graph_impl_ptr's vertex to index maps
   graph_impl_ptr->initMaps();
 
-  // Return the encapsulated graph.
+  // ReturnType the encapsulated graph.
   return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
 }//end method parseGoFile

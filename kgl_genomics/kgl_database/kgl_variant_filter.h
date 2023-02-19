@@ -476,7 +476,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Return both variants if and only there are 2 variants at the location that are identical disregarding phase.
+// ReturnType both variants if and only there are 2 variants at the location that are identical disregarding phase.
 // Note If the the variants are phased then the filter will pass back 2 identical variants which may need to be
 // further filtered for uniqueness. The inSituFilter version deletes all variant offsets that are not homozygous.
 // The homozygous filter must be called first before any other filter and cannot be used in a compound filter.

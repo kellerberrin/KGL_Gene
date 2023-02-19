@@ -53,7 +53,7 @@ public:
 
   //! Method to test if the ids exist and have the same ontology in the map
   /*!
-    Return true the ids are found and the same ontology, false if not
+    ReturnType true the ids are found and the same ontology, false if not
   */
   [[nodiscard]] bool validateTerms(const std::string &id_termA, const std::string &id_termB) const override {
 

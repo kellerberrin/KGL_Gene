@@ -445,7 +445,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() con
 
   }
 
-  // Return the unique variant population.
+  // ReturnType the unique variant population.
   return  unique_variant_ptr->compressed_population_ptr_;
 
 }

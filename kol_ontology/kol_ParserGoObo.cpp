@@ -69,7 +69,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile(const std::string &f
   auto filtered_term_map = ParserGoOboImpl::filterTermMap(term_map, relationship_policy_);
   std::unique_ptr<GoGraphImpl> graph_impl_ptr(std::make_unique<GoGraphImpl>(filtered_term_map));
 
-  // Return the encapsulated graph.
+  // ReturnType the encapsulated graph.
   return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
 }
@@ -299,7 +299,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &
   // Check the relationship policy
   if (not relationship_policy_.validPolicy()) {
 
-    // Return the encapsulated graph_impl_ptr
+    // ReturnType the encapsulated graph_impl_ptr
     return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
   }
@@ -443,7 +443,7 @@ std::shared_ptr<kol::GoGraph> kol::ParserGoObo::parseGoFile2(const std::string &
   //call to initialize the graph_impl_ptr's vertex to index maps
   graph_impl_ptr->initMaps();
 
-  // Return the encapsulated graph_impl_ptr;
+  // ReturnType the encapsulated graph_impl_ptr;
   return std::make_shared<GoGraph>(std::move(graph_impl_ptr));
 
 }

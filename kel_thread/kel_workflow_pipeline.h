@@ -50,7 +50,7 @@ class WorkflowPipeline
 
 public:
 
-  // A bounded (tidal) queue is used to buffer ouput.
+  // A bounded (tidal) queue is used to buffer output.
   explicit WorkflowPipeline(size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
                          , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE
                          , std::string workflow_name = BOUNDED_QUEUE_DEFAULT_NAME

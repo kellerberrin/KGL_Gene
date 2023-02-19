@@ -76,7 +76,7 @@ public:
   // Count all alphabet symbols in sequence.
   [[nodiscard]] std::vector<std::pair<typename Alphabet::Alphabet, size_t>> countSymbols() const { return alphabet_string_.countSymbols(); }
 
-  // Return the count of ordered alphabet pairs (generally used for counting CpG islands).
+  // ReturnType the count of ordered alphabet pairs (generally used for counting CpG islands).
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const { return alphabet_string_.countTwoSymbols(first_symbol, second_symbol); }
 
   // find the longest common prefix.

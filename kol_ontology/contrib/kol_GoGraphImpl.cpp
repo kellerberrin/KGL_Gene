@@ -660,7 +660,7 @@ kol::OntologySetType<std::string> kol::GoGraphImpl::filterSetForOntology(const s
 
 //! Get the root term for a particular term
 /*!
-  Return the root node for a term's ontology
+  ReturnType the root node for a term's ontology
 */
 std::string kol::GoGraphImpl::getTermRoot(const std::string &term) const {
 

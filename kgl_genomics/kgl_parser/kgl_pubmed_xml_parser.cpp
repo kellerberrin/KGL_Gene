@@ -139,7 +139,7 @@ std::pair<bool, kgl::APIPublicationMap> kgl::ParsePublicationXMLImpl::parsePubli
     if (root_node == nullptr) {
 
       ExecEnv::log().error("PubmedRequester::parsePublicationXML; error parsing publication Root Node: {}", PUBLICATION_ROOT_NODE_);
-      return {false, publication_map}; // Return the empty map.
+      return {false, publication_map}; // ReturnType the empty map.
 
     }
 

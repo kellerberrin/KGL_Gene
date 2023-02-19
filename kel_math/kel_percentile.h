@@ -45,7 +45,7 @@ public:
   // Get a range of the sorted vector that corresponds to the percentiles, i.e. (0.0, 1.0) returns the entire vector.
   [[nodiscard]] std::vector<std::pair<Sortable, Payload>> getPercentileRange(double lower_percentile, double upper_percentile) const;
 
-  // Return the sorted percentile vector.
+  // ReturnType the sorted percentile vector.
   [[nodiscard]] const std::vector<std::pair<Sortable, Payload>>& getVector() const { conditionalSort(); return percentile_vector_; }
 
   // Given a sortable value find the corresponding percentile, 0.0 if an empty vector. Payload is not used.
@@ -68,7 +68,7 @@ private:
   // Runtime sort function, see above.
   ComparePercentile<Sortable, Payload> compare_;
 
-  // Return the vector element corresponding to a percentile.
+  // ReturnType the vector element corresponding to a percentile.
   [[nodiscard]] size_t index(double percentile) const;
   // Sort the vector if it has been updated.
   void conditionalSort() const;
@@ -77,7 +77,7 @@ private:
 
 };
 
-// Return a vector range between two percentiles.
+// ReturnType a vector range between two percentiles.
 template <typename Sortable, class Payload>
 std::vector<std::pair<Sortable, Payload>> Percentile<Sortable, Payload>::getPercentileRange(double lower_percentile, double upper_percentile) const {
 
@@ -96,7 +96,7 @@ std::vector<std::pair<Sortable, Payload>> Percentile<Sortable, Payload>::getPerc
 
 }
 
-// Return the record corresponding to the percentile.
+// ReturnType the record corresponding to the percentile.
 template <typename Sortable, class Payload>
 std::optional<std::pair<Sortable, Payload>> Percentile<Sortable, Payload>::percentile(double percentile_value) const {
 

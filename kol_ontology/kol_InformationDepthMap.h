@@ -53,7 +53,7 @@ public:
 
   //! Method to test if the id exists in the map
   /*!
-    Return true the id is found, false if not
+    ReturnType true the id is found, false if not
   */
   [[nodiscard]] bool hasTerm(const std::string &testTerm) const { return name_to_index_.find(testTerm) != name_to_index_.end(); }
 

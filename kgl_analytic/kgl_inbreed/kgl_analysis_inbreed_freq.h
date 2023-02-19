@@ -122,7 +122,7 @@ public:
 
   ~AlleleFreqVector() = default;
 
-  // Return the allele vector.
+  // ReturnType the allele vector.
   [[nodiscard]] const std::vector <AlleleFreqRecord> &alleleFrequencies() const { return allele_frequencies_; }
 
   // Sum of all minor alleles clamped to [0,1]
@@ -135,10 +135,10 @@ public:
   // The minor alleles must sum to 1.0 or less and the allele vector must be non-empty.
   [[nodiscard]] bool checkValidAlleleVector();
 
-  // Return the unadjusted allele class frequencies (may be -ve).
+  // ReturnType the unadjusted allele class frequencies (may be -ve).
   [[nodiscard]] AlleleClassFrequencies unadjustedAlleleClassFrequencies(double inbreeding) const;
 
-  // Return the allele class frequencies.
+  // ReturnType the allele class frequencies.
   [[nodiscard]] AlleleClassFrequencies alleleClassFrequencies(double inbreeding) const;
 
   // Randomly select an allele class outcome based on a unit [0, 1] random number.

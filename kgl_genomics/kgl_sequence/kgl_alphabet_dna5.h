@@ -87,10 +87,10 @@ public:
     V = V_NUCLEOTIDE
   };
 
-  // Return a boolean if the character is in the extended alphabet (defined as enum ExtendedAlphabet).
+  // ReturnType a boolean if the character is in the extended alphabet (defined as enum ExtendedAlphabet).
   [[nodiscard]] static bool isExtended(Nucleotide_t char_letter);
 
-  // Return a vector of all valid alphabet values.
+  // ReturnType a vector of all valid alphabet values.
   [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
   // Checks for possible memory corruption.
@@ -126,7 +126,7 @@ public:
   // Convert a base to an array offset.
   [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet nucleotide);
 
-  // Return nucleotide as a char.
+  // ReturnType nucleotide as a char.
   [[nodiscard]] static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
   // Converts an array offset into a base.

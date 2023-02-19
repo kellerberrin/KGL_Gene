@@ -69,7 +69,7 @@ double kol::SetSimilarityAverageBestMatch::calculateSimilarity(const OntologySet
 
   }
 
-  //Return the average of the 2 means from our accumulator
+  //ReturnType the average of the 2 means from our accumulator
   double mean_average = sum_max / static_cast<double>(column_terms.size() + row_terms.size());
 
   return mean_average;

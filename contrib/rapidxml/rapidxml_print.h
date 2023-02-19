@@ -160,7 +160,7 @@ namespace rapidxml
             if (!(flags & print_no_indenting))
                 *out = Ch('\n'), ++out;
 
-            // Return modified iterator
+            // ReturnType modified iterator
             return out;
         }
         

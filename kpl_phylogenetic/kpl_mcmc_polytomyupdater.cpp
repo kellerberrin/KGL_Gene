@@ -457,7 +457,7 @@ kpl::PolytomyUpdater::_partition_vect_t& kpl::PolytomyUpdater::computePolytomyDi
 void kpl::PolytomyUpdater::revert() {
 
   if (_add_edge_proposed) {
-    // Return all of _orig_lchild's child nodes to _orig_par, then return orig_lchild to storage
+    // ReturnType all of _orig_lchild's child nodes to _orig_par, then return orig_lchild to storage
     Node::PtrNode  child = _orig_lchild->getLeftChild();
 
     while (child) {

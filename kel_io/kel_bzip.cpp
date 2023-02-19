@@ -89,7 +89,7 @@ kel::IOLineRecord kel::BGZReader::readLine() {
 
 // Dont block if eof reached.
   if (line_eof_ and line_queue_.empty()) return IOLineRecord::createEOFMarker();
-// Return next available sequential line record.
+// ReturnType next available sequential line record.
   return line_queue_.waitAndPop();
 
 }

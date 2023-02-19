@@ -117,7 +117,7 @@ public:
   inline static constexpr Alphabet AMINO_STOP = Alphabet::_;
   inline static constexpr Alphabet AMINO_UNKNOWN = Alphabet::Z;
 
-  // Return a vector of all valid alphabet values (only the 20 'natural'
+  // ReturnType a vector of all valid alphabet values (only the 20 'natural'
   // and the 'unknown'  amino acids are returned).
   [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
@@ -132,7 +132,7 @@ public:
   // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   [[nodiscard]] static Alphabet convertChar(char chr_aa);
 
-  // Return amino acid as a char.
+  // ReturnType amino acid as a char.
   [[nodiscard]] static char convertToChar(Alphabet amino) { return static_cast<char>(amino); }
 
 };

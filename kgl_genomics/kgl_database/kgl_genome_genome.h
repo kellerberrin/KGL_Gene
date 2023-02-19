@@ -38,7 +38,7 @@ public:
   // Organism identifier and resource identifier
   [[nodiscard]] const GenomeId_t& genomeId() const { return identifier(); }
 
-  // Return false if contig already exists.
+  // ReturnType false if contig already exists.
   [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
   // Returns false if key not found.
   [[nodiscard]] std::optional<std::shared_ptr<const ContigReference>> getContigSequence(const ContigId_t& contig) const;

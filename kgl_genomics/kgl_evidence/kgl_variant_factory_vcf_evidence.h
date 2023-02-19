@@ -199,7 +199,7 @@ private:
   InfoMemoryResource resource_allocator_;
 
   // Copy the resource allocator and resolve all dynamic resource requests by examining the parsed data.
-  // Return the dynamically resolved resource object.
+  // ReturnType the dynamically resolved resource object.
   [[nodiscard]] InfoMemoryResource resolveResources(const VCFInfoParser& info_parser, const InfoEvidenceHeader& evidence_header) const;
 
 };

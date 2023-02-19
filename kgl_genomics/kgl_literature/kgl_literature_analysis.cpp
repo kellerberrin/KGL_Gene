@@ -365,7 +365,7 @@ kgl::CitationArrivals kgl::LiteratureAnalysis::publicationCitations(const std::s
   if (result == publication_map_.end()) {
 
     ExecEnv::log().error("LiteratureAnalysis::publicationCitations; publication: {} not found", pub_pmid);
-    // Return zero counts.
+    // ReturnType zero counts.
     CitationArrivals citation_arrivals;
     for (size_t month_index = 1; month_index <= CITATION_MONTHS; ++month_index) {
 
