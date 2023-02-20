@@ -119,7 +119,7 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_workflow_async.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
-        kel_thread/kel_workflow_pipeline.h kel_thread/kel_workflow_sync.h)
+        kel_thread/kel_workflow_pipeline.h kel_thread/kel_movefunction.h)
 
 # The basic I/O library.
 set(IO_SOURCE_FILES

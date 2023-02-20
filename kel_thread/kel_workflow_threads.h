@@ -23,6 +23,7 @@
 #define KEL_THREAD_POOL_H
 
 #include "kel_queue_mt_safe.h"
+#include "kel_movefunction.h"
 
 #include <functional>
 #include <future>
@@ -37,16 +38,12 @@ namespace kellerberrin {  //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // A general purpose thread pool class returns a std::future with user work function results.
-// Note that all supplied Args... must be std::copy_constructable<...>.
-// This is a limitation of the C++ 20 standard which will be removed in the upcoming C++ 23 standard.
-// In particular, this means that std::unique_ptr<...> arguments cannot be used and should be
-// converted to std::shared_ptr<...>.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // This requirement will be removed when std::move_only_function can be used in C++ 23.
 template<typename... Args>
-concept copy_constructable_variadic = std::conjunction_v<std::is_copy_constructible<Args>...>;
+concept move_constructable_variadic = std::conjunction_v<std::is_move_constructible<Args>...>;
 
 // Thread pool state.
 enum class WorkflowThreadState { ACTIVE, STOPPED};
@@ -55,7 +52,8 @@ class WorkflowThreads
 {
 
 //  using NewProc = std::move_only_function<void(void)>;
-  using Proc = std::function<void(void)>;
+  using Proc = MoveFunction<void(void)>;
+  using ThreadFuncPtr = std::unique_ptr<Proc>;
 
 public:
 
@@ -69,27 +67,31 @@ public:
 
   // Assumes the work function has a void return type and therefore does not return a future.
   template<typename F, typename... Args>
-  requires std::invocable<F, Args...> && copy_constructable_variadic<Args...>
+  requires std::invocable<F, Args...> && move_constructable_variadic<Args...>
   void enqueueVoid(F&& f, Args&&... args)
   {
 
-    auto task = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-    work_queue_.push([task]()->void{ task(); });
+    auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+//    work_queue_.push([task]()->void{ task(); });
+    work_queue_.push(std::make_unique<Proc>(std::move(callable)));
 
   }
 
   // Returns a std::future holding the work function return value.
   template<typename F, typename... Args>
-  requires std::invocable<F, Args...> && copy_constructable_variadic<Args...>
+  requires std::invocable<F, Args...> && move_constructable_variadic<Args...>
   [[nodiscard]] auto enqueueFuture(F&& f,  Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
   {
 
     using return_type = std::invoke_result_t<F, Args...>;
 
     auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(callable);
-    std::future<return_type> future = task_ptr->get_future();
-    work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
+//    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(callable);
+    auto task = std::packaged_task<return_type()>(callable);
+//    std::future<return_type> future = task_ptr->get_future();
+    std::future<return_type> future = task.get_future();
+    work_queue_.push(std::make_unique<Proc>(std::move(task)));
+    //    work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
     return future;
 
   }
@@ -137,13 +139,13 @@ public:
   }
 
   [[nodiscard]] WorkflowThreadState threadState() const { return workflow_thread_state_; }
-  [[nodiscard]] const QueueMtSafe<Proc>& workQueue() const { return work_queue_; }
+  [[nodiscard]] const QueueMtSafe<ThreadFuncPtr>& workQueue() const { return work_queue_; }
   [[nodiscard]] size_t threadCount() const { return threads_.size(); }
 
 private:
 
   std::vector<std::thread> threads_;
-  QueueMtSafe<Proc> work_queue_;
+  QueueMtSafe<ThreadFuncPtr> work_queue_;
   WorkflowThreadState workflow_thread_state_{WorkflowThreadState::STOPPED};
 
   void threadProlog() {
@@ -151,7 +153,7 @@ private:
     while(true)
     {
 
-      Proc workItem = work_queue_.waitAndPop();
+      ThreadFuncPtr workItem = work_queue_.waitAndPop();
 
       if (workItem == nullptr) {
 
@@ -160,7 +162,7 @@ private:
 
       }
 
-      workItem();
+      (*workItem)();
 
     }
 
