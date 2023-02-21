@@ -43,13 +43,13 @@ template<typename T> class MonitorMtSafe {
 
 public:
 
-  MonitorMtSafe() = default;
+  explicit MonitorMtSafe(QueueMtSafe<T> *queue_ptr) : queue_ptr_(queue_ptr) {}
   ~MonitorMtSafe() {
 
     stopStats();
     if (queue_samples_ > MIN_SAMPLES_) {
 
-      displayQueueStats();
+      displayStats();
 
     }
 
@@ -60,14 +60,12 @@ public:
   [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats(QueueMtSafe<T> *queue_ptr
-                   , size_t sample_milliseconds
-                   , std::string queue_name = DEFAULT_QUEUE_NAME
-                   , bool monitor_stalled = true) {
+  void launchStats( size_t sample_milliseconds
+                  , std::string queue_name = DEFAULT_QUEUE_NAME
+                  , bool monitor_stalled = true) {
 
-    queue_ptr_ = queue_ptr;
+    queue_name_ = (std::move(queue_name));
     sample_milliseconds_ = sample_milliseconds;
-    queue_name_ = std::move(queue_name);
     monitor_stalled_ = monitor_stalled;
 
     if (stats_thread_ptr_) {
@@ -97,6 +95,26 @@ public:
     }
 
   }
+
+  void displayQueueStats() const {
+
+    if (terminate_flag_) {
+
+      ExecEnv::log().info("Monitored Queue: {}, monitor is not active, no queue statistics available.");
+
+    } else if (queue_samples_ < MIN_SAMPLES_) {
+
+      ExecEnv::log().info( "Monitored Queue: {}, Sample Interval (ms): {}, Samples: {} (min {}); Insufficient for reliable statistics."
+                         , queue_name_, sample_milliseconds_, queue_samples_, MIN_SAMPLES_);
+
+    } else {
+
+      displayStats();
+
+    }
+
+  }
+
 
   constexpr static const size_t DISABLE_QUEUE_MONITOR{0};
   constexpr static const char* DEFAULT_QUEUE_NAME{"QueueMtSafe"};
@@ -134,20 +152,22 @@ private:
 
   }
 
+  void displayStats() const {
 
-  void displayQueueStats() const {
-
-    ExecEnv::log().info("Queue Name: {}, Sample Interval (ms): {}, Samples: {}; Average Queue Size: {}",
+    ExecEnv::log().info("Monitored Queue: {}, Sample Interval (ms): {}, Samples: {}; Average Queue Size: {}",
                         queue_name_, sample_milliseconds_, queue_samples_, static_cast<size_t>(averageSize()));
 
   }
 
   void SampleQueue() {
 
-    while (not terminate_flag_) {
+    while (true) {
 
-      std::unique_lock<std::mutex> lock(stats_mutex_);
-      stats_condition_.wait_for(lock, std::chrono::milliseconds(sample_milliseconds_));
+      { // Lock block.
+        std::unique_lock<std::mutex> lock(stats_mutex_);
+        stats_condition_.wait_for(lock, std::chrono::milliseconds(sample_milliseconds_));
+      }
+      if (terminate_flag_) break;
 
       ++queue_samples_;
       size_t sample_size = queue_ptr_->size();
@@ -191,25 +211,25 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr static const size_t BOUNDED_QUEUE_MONITOR_DISABLE{0};
-constexpr static const bool BOUNDED_QUEUE_MONITOR_STALL{true};
-constexpr static const char* BOUNDED_QUEUE_DEFAULT_NAME{"QueueTidal"};
+constexpr static const size_t TIDAL_QUEUE_MONITOR_DISABLE{0};
+constexpr static const bool TIDAL_QUEUE_MONITOR_STALL{true};
+constexpr static const char* TIDAL_QUEUE_DEFAULT_NAME{"QueueTidal"};
 
 // Forward queue declaration.
 template<typename T> requires std::move_constructible<T> class QueueTidal;
 
 // Realtime queue monitor
-template<typename Queue> class MonitorTidal {
+template<typename T> class MonitorTidal {
 
 public:
 
-  MonitorTidal() = default;
+  explicit MonitorTidal(QueueTidal<T> *queue_ptr) : queue_ptr_(queue_ptr) {}
   ~MonitorTidal() {
 
     stopStats();
     if (queue_samples_ > MIN_SAMPLES_) {
 
-      displayQueueStats();
+      displayStats();
 
     }
 
@@ -222,12 +242,10 @@ public:
 
   [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
 
-  void launchStats(Queue *queue_ptr
-                   , size_t sample_milliseconds
-                   , std::string queue_name = BOUNDED_QUEUE_DEFAULT_NAME
-                   , bool monitor_stalled = BOUNDED_QUEUE_MONITOR_STALL) {
+  void launchStats(  size_t sample_milliseconds
+                   , std::string queue_name = TIDAL_QUEUE_DEFAULT_NAME
+                   , bool monitor_stalled = TIDAL_QUEUE_MONITOR_STALL) {
 
-    queue_ptr_ = queue_ptr;
     sample_milliseconds_ = sample_milliseconds;
     monitor_stalled_ = monitor_stalled;
     queue_name_ = std::move(queue_name);
@@ -239,7 +257,7 @@ public:
 
     }
 
-    if (sample_milliseconds_ != BOUNDED_QUEUE_MONITOR_DISABLE) {
+    if (sample_milliseconds_ != TIDAL_QUEUE_MONITOR_DISABLE) {
 
       stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorTidal::SampleQueue, this));
       ExecEnv::log().info("Sampling queue: {}; every milliseconds: {}", queue_name_, sample_milliseconds_);
@@ -261,10 +279,28 @@ public:
 
   }
 
+  void displayQueueStats() const {
+
+    if (terminate_flag_) {
+
+      ExecEnv::log().info("Queue monitor is not active, no queue statistics available.");
+
+    } else if (queue_samples_ < MIN_SAMPLES_) {
+
+      ExecEnv::log().info( "Monitored Queue: {}, Sample Interval (ms): {}, Samples: {} (min {}); Insufficient for reliable statistics."
+          , queue_name_, sample_milliseconds_, queue_samples_, MIN_SAMPLES_);
+
+    } else {
+
+      displayStats();
+
+    }
+
+  }
 
 private:
 
-  Queue *queue_ptr_;
+  QueueTidal<T> *queue_ptr_;
   size_t sample_milliseconds_{0};
   bool monitor_stalled_{true};
   std::string queue_name_;
@@ -353,22 +389,24 @@ private:
 
   [[nodiscard]] double avUtilization() const { return (averageSize() * 100.0) / static_cast<double>(queue_ptr_->highTide()); }
 
-  void displayQueueStats() const {
+  void displayStats() const {
 
     ExecEnv::log().info( "Queue Name: {},  High Tide: {}, Low Tide: {};  Samples: {}  Flood Tide: {:.2f}%, Ebb Tide: {:.2f}%; Empty (<={}): {:.2f}%, Av. Util.: ({}) {:.2f}%"
-                       , queue_name_,   queue_ptr_->highTide(), queue_ptr_->lowTide()
-                       , queueSamples(), (floodTide() * 100.0), (ebbingTide() * 100.0)
-                       , empty_size_, (averageEmpty() * 100.0), static_cast<size_t>(averageSize()), avUtilization());
+        , queue_name_,   queue_ptr_->highTide(), queue_ptr_->lowTide()
+        , queueSamples(), (floodTide() * 100.0), (ebbingTide() * 100.0)
+        , empty_size_, (averageEmpty() * 100.0), static_cast<size_t>(averageSize()), avUtilization());
 
   }
 
-
   void SampleQueue() {
 
-    while (not terminate_flag_) {
+    while (true) {
 
-      std::unique_lock<std::mutex> lock(stats_mutex_);
-      stats_condition_.wait_for(lock, std::chrono::milliseconds(sample_milliseconds_));
+      { // Lock block.
+        std::unique_lock<std::mutex> lock(stats_mutex_);
+        stats_condition_.wait_for(lock, std::chrono::milliseconds(sample_milliseconds_));
+      }
+      if (terminate_flag_) break;
 
       ++queue_samples_;
       size_t sample_size = queue_ptr_->size();

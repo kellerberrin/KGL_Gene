@@ -19,7 +19,7 @@ namespace kellerberrin::ontology {
 	This class calculates Jiang Conrath similarity.
 	
 	Jiang, J. J., & Conrath, D. W. (1997). Semantic similarity based on corpus 
-	  statistics and lexical taxonomy. In Proc. of 10th International Conference
+	  statistics and lexical taxonomy. In ThreadFunc. of 10th International Conference
 	  on Research on Computational Linguistics, Taiwan.
 
 	P. W. Lord, R. D. Stevens, A. Brass, and C. A. Goble, 

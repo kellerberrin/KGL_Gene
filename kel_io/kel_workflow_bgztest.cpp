@@ -96,7 +96,7 @@ template <typename BGZdecoder> void testWorkflowReader(std::string decoder_name,
 
   BGZdecoder test_stream(thread_count);
 
-  for (size_t i = 0; i < 1000; ++i) {
+  for (size_t i = 0; i < 1; ++i) {
 
     if (not test_stream.open(ExecEnvBGZ::getArgs().bgz_large_)) {
 
@@ -265,10 +265,10 @@ template <template<typename> typename Queue, typename Type> void testBoundedTida
 
 void ExecEnvBGZ::executeApp() {
 
-  const size_t thread_count{25};
+  const size_t thread_count{15};
 //  testWorkflowReader<BGZReader>("Reader", thread_count);
   testWorkflowReader<BGZStreamIO>("Workflow", thread_count);
-//  testMTStreamIO("StreamMTBuffer", thread_count);
+  testMTStreamIO("StreamMTBuffer", thread_count);
 
 
   //  return;

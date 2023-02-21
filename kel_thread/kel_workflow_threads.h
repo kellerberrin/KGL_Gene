@@ -29,7 +29,6 @@
 #include <future>
 #include <vector>
 #include <thread>
-#include <type_traits>
 
 
 namespace kellerberrin {  //  organization level namespace
@@ -41,7 +40,6 @@ namespace kellerberrin {  //  organization level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// This requirement will be removed when std::move_only_function can be used in C++ 23.
 template<typename... Args>
 concept move_constructable_variadic = std::conjunction_v<std::is_move_constructible<Args>...>;
 
@@ -51,9 +49,10 @@ enum class WorkflowThreadState { ACTIVE, STOPPED};
 class WorkflowThreads
 {
 
-//  using NewProc = std::move_only_function<void(void)>;
-  using Proc = MoveFunction<void(void)>;
-  using ThreadFuncPtr = std::unique_ptr<Proc>;
+// Convert to std::move_only_function when compiling to c++23 standard.
+//  using ThreadFunc = std::move_only_function<void(void)>;
+  using ThreadFunc = MoveFunction<void(void)>;
+  using ThreadFuncPtr = std::unique_ptr<const ThreadFunc>;
 
 public:
 
@@ -72,8 +71,7 @@ public:
   {
 
     auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-//    work_queue_.push([task]()->void{ task(); });
-    work_queue_.push(std::make_unique<Proc>(std::move(callable)));
+    work_queue_.push(std::make_unique<ThreadFunc>(std::move(callable)));
 
   }
 
@@ -86,12 +84,10 @@ public:
     using return_type = std::invoke_result_t<F, Args...>;
 
     auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-//    auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(callable);
     auto task = std::packaged_task<return_type()>(callable);
-//    std::future<return_type> future = task_ptr->get_future();
     std::future<return_type> future = task.get_future();
-    work_queue_.push(std::make_unique<Proc>(std::move(task)));
-    //    work_queue_.push([task_ptr]()->void{ (*task_ptr)(); });
+    work_queue_.push(std::make_unique<ThreadFunc>(std::move(task)));
+
     return future;
 
   }

@@ -141,7 +141,8 @@ void asyncExample1() {
   };
   std::thread fill_thread(fill_lambda);
 
-  output_workflow_ptr->waitUntilStopped();
+  // Blocks until stop token received.
+  output_workflow_ptr->joinAndDeleteThreads();
   // The workflows are empty and stopped, so we can join on the fill thread.
   fill_thread.join();
 
@@ -173,7 +174,7 @@ struct SyncExample1{
 using SyncExample1Type = std::shared_ptr<SyncExample1>;
 
 // The actual work performed by the workflow threads.
-auto task_lambda = [](SyncExample1Type t) ->std::optional<SyncExample1Type> {
+auto task_lambda = [](SyncExample1Type t) ->SyncExample1Type {
 
   // Check for the last stop token.
   if (not t) return t;
@@ -334,12 +335,14 @@ void syncBoundedExample2() {
   // Do the sequential output object check asynchronously.
   std::thread check_thread(check_lambda);
 
+
+  fill_thread.join();
+  check_thread.join();
+
   // Input and output queues are empty here.
   std::cout << "Bounded Sync Queue, output queue size: " << workflow_ptr->outputQueue().size()
             << ", objects processed: " << task_object.objects_processed_.load() << std::endl;
 
-  check_thread.join();
-  fill_thread.join();
 
 }
 

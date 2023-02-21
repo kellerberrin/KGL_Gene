@@ -60,8 +60,11 @@ bool kel::BGZStreamIO::open(const std::string &file_name) {
 
   // File is open so start processing.
 
-  // Activate the decompression workflow.
-  decompression_workflow_.activateWorkflow(decompression_threads_, &BGZStreamIO::decompressBlock, this);
+  // Activate the decompression pipeline.
+  decompression_workflow_.activateWorkflow(decompression_threads_, &BGZStreamIO::decompressBlock);
+  // Enable queue stats for the pipeline.
+  decompression_workflow_.inputQueue().monitor().launchStats(PIPELINE_SAMPLE_FREQ_, std::string(PIPELINE_NAME_) + "_InputQueue");
+  decompression_workflow_.outputQueue().monitor().launchStats(PIPELINE_SAMPLE_FREQ_, std::string(PIPELINE_NAME_) + "_OutputQueue");
   // Begin decompressing blocks of data.
   reader_return_ = reader_thread_.enqueueFuture(&BGZStreamIO::readDecompressFile, this);
   // Begin queueing decompressed text records.
@@ -92,7 +95,7 @@ std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::BGZStreamIO::getStreamIO(
 
 kel::IOLineRecord kel::BGZStreamIO::readLine() {
 
-  // Dont block if eof reached.
+  // Don't block if eof reached.
   if (line_eof_ and line_queue_.empty()) return IOLineRecord::createEOFMarker();
   // ReturnType next available sequential line record.
   return line_queue_.waitAndPop();
@@ -222,7 +225,7 @@ kel::BGZStreamIO::CompressedType kel::BGZStreamIO::readCompressedBlock(size_t bl
 }
 
 
-std::optional<kel::BGZStreamIO::DecompressedType> kel::BGZStreamIO::decompressBlock(CompressedType compressed_ptr) {
+kel::BGZStreamIO::DecompressedType kel::BGZStreamIO::decompressBlock(CompressedType compressed_ptr) {
 
   // Check if a stop token.
   if (not compressed_ptr) {

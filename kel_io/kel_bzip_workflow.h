@@ -121,7 +121,7 @@ public:
   void close() override;
 
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
-                                                                              , size_t decompression_threads = BGZ_DEFAULT_THREADS);
+                                                                               , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
   // Checks the internal structures of a .bgz file.
   // Returns true if the .bgz file conforms to the RFC1952 standard.
@@ -165,15 +165,15 @@ private:
 
   // Queue and workflow parameters.
   // Queue high tide and low tide markers are guessed as reasonable values.
-  constexpr static const size_t QUEUE_LOW_TIDE_{2000};
-  constexpr static const size_t QUEUE_HIGH_TIDE_{4000};
-  constexpr static const char* QUEUE_NAME_{"BGZWorkflow Decompress Workflow"};
-  constexpr static const size_t QUEUE_SAMPLE_FREQ_{500};
+  constexpr static const size_t PIPELINE_LOW_TIDE_{2000};
+  constexpr static const size_t PIPELINE_HIGH_TIDE_{4000};
+  constexpr static const char* PIPELINE_NAME_{"BGZWorkflow Decompress Pipeline"};
+  constexpr static const size_t PIPELINE_SAMPLE_FREQ_{100};
 
   constexpr static const size_t LINE_LOW_TIDE_{10000};
   constexpr static const size_t LINE_HIGH_TIDE_{20000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZWorkflow Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{500};
+  constexpr static const size_t LINE_SAMPLE_FREQ_{100};
 
 
   // These constants are used to verify the structure of the .bgz file.
@@ -202,7 +202,7 @@ private:
   // Read a bgz block.
   [[nodiscard]] CompressedType readCompressedBlock(size_t block_count);
   // Decompress a bgz block.
-  [[nodiscard]] std::optional<DecompressedType> decompressBlock(CompressedType compressed_ptr);
+  [[nodiscard]] static DecompressedType decompressBlock(CompressedType compressed_ptr);
   // Assemble line records and queue as complete records.
   void assembleRecords();
   // Check the trailing EOF_MARKER_

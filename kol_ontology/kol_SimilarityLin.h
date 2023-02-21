@@ -18,7 +18,7 @@ namespace kellerberrin::ontology {
 
 	This class calculates Lin similarity.
 	
-	Lin, D. (1998) An information theoretic definition of similarity. In: Proc. of the
+	Lin, D. (1998) An information theoretic definition of similarity. In: ThreadFunc. of the
 	  15th Inernational Conference on Machine Learning. San Franscisco, CA:
 	  Morgan Kaufman. pp 296-304
 

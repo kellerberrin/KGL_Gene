@@ -20,7 +20,7 @@ namespace kellerberrin::ontology {
 	
 	V. Pekar and S. Staab, "Taxonomy learning: factoring the structure 
 	 of a taxonomy into a semantic classification decision," in 
-	 Proc. of 19th International Conference on Computational Linguistics. 
+	 ThreadFunc. of 19th International Conference on Computational Linguistics.
 	 Morristown NJ USA: Association for Computational Linguistics, pp. 1-7, 2002.
 
 	H. Yu, L. Gao, K. Tu, and Z. Guo, "Broadly predicting specific gene 

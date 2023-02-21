@@ -13,7 +13,7 @@ namespace kellerberrin::ontology {
 \brief A class to calculate Pesquita's SimGIC similarity between sets of go terms.
 
 Pesquita, C., Faria, D., Bastos, H., Falcao, A., & Couto, F. (2007, July).
-Evaluating GO-based semantic similarity measures. In Proc. 10th Annual
+Evaluating GO-based semantic similarity measures. In ThreadFunc. 10th Annual
 Bio-Ontologies Meeting (Vol. 37, No. 40, p. 38).
 
 */

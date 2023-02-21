@@ -21,7 +21,13 @@ namespace kellerberrin {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Output objects are guaranteed to be (optionally) sequential with associated input objects.
+// A pipeline is similar to a thread pool, the difference being is that homogenous InputObjects are enqueued
+// these are then transformed by a single supplied function 'auto f(args..., InputObject)->OutputObject)'
+// using multiple threads and the resultant OutputObjects can then be dequeued.
+// The Enqueue and Dequeue operations are thread safe, however the sequential ordering of input/output objects
+// is not guaranteed if multiple threads are used to Enqueue and Dequeue.
+// Conversely, if single threads are used to Enqueue and Dequeue objects, then sequential ordering of input-output
+// objects is guaranteed.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +36,8 @@ template<typename InputObject, typename OutputObject>
 requires std::move_constructible<InputObject> && std::move_constructible<OutputObject>
 class WorkflowPipeline {
 
-  using WorkflowFunc = MoveFunction<std::optional<OutputObject>(InputObject)>;
-  using WorkflowFuncPtr = std::shared_ptr<WorkflowFunc>;
+  using WorkflowFunc = MoveFunction<OutputObject(InputObject)>;
+  using WorkflowFuncPtr = std::shared_ptr<const WorkflowFunc>;
   // Simple functor object is queued and consumed by the active threads.
   class QueuedFunctor {
 
@@ -43,25 +49,25 @@ class WorkflowPipeline {
     ~QueuedFunctor() = default;
 
     void operator()() { result_promise_.set_value(fn_pointer_->operator()(std::move(input_object_))); }
-    [[nodiscard]] std::future<std::optional<OutputObject>> getFuture() { return result_promise_.get_future(); }
+    [[nodiscard]] std::future<OutputObject> getFuture() { return result_promise_.get_future(); }
 
   private:
 
-    WorkflowFuncPtr fn_pointer_; // A copy of this functional is held by all threads.
+    WorkflowFuncPtr fn_pointer_; // This functional is held by all threads via a shared_ptr.
     InputObject input_object_;
-    std::promise<std::optional<OutputObject>> result_promise_;
+    std::promise<OutputObject> result_promise_;
 
   };
 
 public:
 
-  WorkflowPipeline() = default;
+  WorkflowPipeline(size_t high_tide = HIGH_TIDE_, size_t low_tide = LOW_TIDE_) : high_tide_(high_tide), low_tide_(low_tide) {}
   ~WorkflowPipeline() { joinThreads(); }
 
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
   // If the work function is a non-static class member then the first of the ...args should be a
   // pointer (MyClass* this) to the class instance.
-  // The supplied function should be of the form 'std::optional<OutputObject> f(args..., InputObject)'.
+  // The supplied function should be of the form 'auto f(args..., InputObject)->OutputObject'.
   template<typename F, typename... Args>
   bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
@@ -79,18 +85,8 @@ public:
 
   [[nodiscard]] OutputObject waitAndPop() {
 
-    while (true) {
-
-      auto future_output = output_queue_.waitAndPop();
-      auto opt_output = future_output.get();
-      if (opt_output.has_value()) {
-
-        auto out_obj = std::move(opt_output.value());
-        return out_obj;
-
-      }
-
-    }
+    auto future_output = output_queue_.waitAndPop();
+    return future_output.get();
 
   }
 
@@ -105,20 +101,20 @@ public:
 
 
   // Access queue stats.
-  [[nodiscard]] const QueueTidal<std::future<std::optional<OutputObject>>>& outputQueue() const { return output_queue_; }
+  [[nodiscard]] const QueueTidal<std::future<OutputObject>>& outputQueue() const { return output_queue_; }
   [[nodiscard]] const QueueTidal<std::unique_ptr<QueuedFunctor>>& inputQueue() const { return input_queue_; }
 
 private:
 
-  // The tidal IO queue parameters.
+  // The default tidal IO queue parameters.
   static constexpr const size_t HIGH_TIDE_{10000};          // Maximum QueueTidal size
   static constexpr const size_t LOW_TIDE_{2000};            // Low water mark to begin queueing data records
-  static constexpr const char* QUEUE_NAME_{"Workflow Pipeline"};      // The queue name
-  static constexpr const size_t SAMPLE_RATE_{100};            // The queue monitor sampling rate (ms), zero (0) disables the monitor.
+  size_t high_tide_{HIGH_TIDE_};
+  size_t low_tide_{LOW_TIDE_};
   // Tidal queue holds buffered output objects.
-  QueueTidal<std::future<std::optional<OutputObject>>> output_queue_{HIGH_TIDE_, LOW_TIDE_, std::string(QUEUE_NAME_) + "_Output", SAMPLE_RATE_};
+  QueueTidal<std::future<OutputObject>> output_queue_{high_tide_, low_tide_};
   // Tidal queue holds buffered input objects.
-  QueueTidal<std::unique_ptr<QueuedFunctor>> input_queue_{HIGH_TIDE_, LOW_TIDE_, std::string(QUEUE_NAME_) + "_Input", SAMPLE_RATE_};
+  QueueTidal<std::unique_ptr<QueuedFunctor>> input_queue_{high_tide_, low_tide_};
   // Thread Pool.
   std::vector<std::thread> threads_;
   // The supplied processing function held in the simple std::MoveFunction functional object.

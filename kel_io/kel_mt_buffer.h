@@ -22,7 +22,7 @@ namespace kellerberrin {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// A buffered multi-thread safe adapter for StreamIO objects.
+// A buffered thread safe adapter for StreamIO objects.
 // As soon as the underlying stream is successfully opened, records are read and stored in a tidal queue and can be
 // retrieved using readLine().
 // This object cannot be copied.
@@ -36,6 +36,7 @@ public:
 
   // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
   explicit StreamMTBuffer(size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS) : work_threads_(decompression_threads) {}
+  StreamMTBuffer(const StreamMTBuffer&) = delete;
   ~StreamMTBuffer() override { close(); };
 
   // Uses the filename extension heuristic documented in kel_basic_io.h to open the underlying file stream.

@@ -70,7 +70,7 @@ public:
   MoveFunction(MoveFunction &&function) noexcept: callable_ptr_(std::move(function.callable_ptr_)) {}
   ~MoveFunction() = default;
 
-  [[nodiscard]] ReturnType operator()(Args &&... args) { return callable_ptr_->invoke(std::forward<Args>(args)...); }
+  [[nodiscard]] ReturnType operator()(Args &&... args) const { return callable_ptr_->invoke(std::forward<Args>(args)...); }
 
 private:
 

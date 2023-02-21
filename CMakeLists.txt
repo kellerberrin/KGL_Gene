@@ -10,7 +10,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     /usr/local/include/seqan3/submodules/cereal/include   # the cereal library required by seqan3.
                     /usr/local/include/seqan3/include
                     /usr/local/include/spdlog/include/
-                    contrib/edlib # 3rd party library for fast Levenshtein seqence matching.
+                    contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     /usr/include/eigen3
                     kel_utility         # Basic Infrastructure library
@@ -58,21 +58,21 @@ if (ZLIB_FOUND)
 endif()
 
 # Debug g++
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++2b -fPIC -fconcepts -ggdb")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++20 -fPIC -fconcepts -ggdb")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-ggdb")
 
 # Release g++
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++2b -O3 -s -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++20 -O3 -s -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE " -O3 -s -DNDEBUG")
 
 # Profile g++
-set(CMAKE_CXX_FLAGS_PROFILE "-std=c++2b -fPIC -fconcepts -pg -g -ggdb -O3 -Xlinker -Map=output.map ")
+set(CMAKE_CXX_FLAGS_PROFILE "-std=c++20 -fPIC -fconcepts -pg -g -ggdb -O3 -Xlinker -Map=output.map ")
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "-pg -g -ggdb -O3 -Xlinker -Map=output.map ")
 
 # All possible warnings
 #set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Werror -Wpedantic -pedantic-errors -Wstrict-aliasing -Wno-variadic-macros")
 # Relax slightly to temporarily allow unused parameters.
-set(CMAKE_ERROR_WARNING_FLAGS "-std=c++2b -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
+set(CMAKE_ERROR_WARNING_FLAGS "-std=c++20 -Wall -pthread -Wextra -Wpedantic -Wstrict-aliasing -Wno-variadic-macros")
 
 # Actually set the g++ flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${CMAKE_ERROR_WARNING_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -119,7 +119,8 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_workflow_async.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
-        kel_thread/kel_workflow_pipeline.h kel_thread/kel_movefunction.h)
+        kel_thread/kel_workflow_pipeline.h
+        kel_thread/kel_movefunction.h)
 
 # The basic I/O library.
 set(IO_SOURCE_FILES

@@ -45,16 +45,16 @@ class QueueMtSafe {
 
 public:
 
-  QueueMtSafe() = default;
+  QueueMtSafe() { monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>(this); }
   // Create the QueueMtSafe with an asynchronous queue monitor that checks for 'stalled' queues and collects queue statistics.
   QueueMtSafe(std::string queue_name, size_t sample_frequency)  {
 
-    monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>();
-    monitor_ptr_->launchStats(this, sample_frequency, queue_name);
+    monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>(this);
+    monitor_ptr_->launchStats(sample_frequency, queue_name);
 
   }
 
-  // Explicitly shutdown the monitor, if present.
+  // Explicitly shutdown the monitor.
   ~QueueMtSafe() { monitor_ptr_ = nullptr; }
 
   // Copy constructors are removed.
@@ -143,7 +143,7 @@ public:
 
   }
 
-
+  [[nodiscard]] MonitorMtSafe<T>& monitor() const { return *monitor_ptr_; };
   // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return size_ == 0; }
   [[nodiscard]] size_t size() const { return size_; }
@@ -156,8 +156,6 @@ private:
   std::condition_variable data_cond_;
   std::atomic<size_t> size_{0};
   std::atomic<size_t> activity_{0};
-
-
   // Held in a pointer for explicit object lifetime.
   std::unique_ptr<MonitorMtSafe<T>> monitor_ptr_;
 

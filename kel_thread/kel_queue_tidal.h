@@ -54,7 +54,7 @@ namespace kellerberrin {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // The bounded (tidal) queue implemented using a std::queue.
-// Objects on the queue can be std::move_constructible<T> (std::unique_ptr<...>).
+// Objects on the queue must be std::move_constructible<T> (std::unique_ptr<...>).
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,11 @@ class QueueTidal {
 public:
 
   explicit QueueTidal( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
-                       , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {}
+                       , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {
+
+    monitor_ptr_ = std::make_unique<MonitorTidal<T>>(this);
+
+  }
 
   // This constructor attaches a queue monitor to check for a 'stalled' condition and generates tidal statistics.
   QueueTidal( size_t high_tide
@@ -84,8 +88,8 @@ public:
               , std::string queue_name
               , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
-    monitor_ptr_ = std::make_unique<MonitorTidal<QueueTidal<T>>>();
-    monitor_ptr_->launchStats(this, sample_frequency, queue_name);
+    monitor_ptr_ = std::make_unique<MonitorTidal<T>>(this);
+    monitor_ptr_->launchStats(sample_frequency, queue_name);
 
   }
   ~QueueTidal() { monitor_ptr_ = nullptr; }
@@ -186,7 +190,7 @@ public:
 
   }
 
-
+  [[nodiscard]] MonitorTidal<T>& monitor() const { return *monitor_ptr_; };
   // All of these functions are thread safe.
   [[nodiscard]] bool empty() const { return queue_size_ == 0; }
   [[nodiscard]] size_t size() const { return queue_size_; }
@@ -221,7 +225,7 @@ private:
   // Queue monitor asynchronously gathers dynamic producer/consumer statistics.
   // it also (optionally) monitors for a 'stalled' queue where there is a possible deadlock condition and the queue is inactive.
   // Held in a pointer for explicit object lifetime.
-  std::unique_ptr<MonitorTidal<QueueTidal<T>>> monitor_ptr_;
+  std::unique_ptr<MonitorTidal<T>> monitor_ptr_;
 
 
 };

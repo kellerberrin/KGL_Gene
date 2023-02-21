@@ -279,52 +279,6 @@ std::vector<std::string_view> kel::Utility::viewTokenizer(const std::string_view
 
 }
 
-/*
-std::vector<std::string_view> kel::Utility::view_tokenizer(const std::string_view& str_view, const char delim) {
-
-  std::vector<std::string_view> token_vector;
-  size_t token_index{0};
-  size_t token_count{0};
-
-  for (size_t index = 0; index < str_view.size(); ++index) {
-
-    if (str_view[index] == delim) {
-
-      token_vector.emplace_back(str_view.substr(token_index, token_count));
-      token_index = index + 1;
-      token_count = 0;
-
-    } else {
-
-      ++token_count;
-
-    }
-
-  }
-
-  if (token_index + token_count != str_view.size()) {
-
-    ExecEnv::log().error("Utility::viewTokenizer, final token index: {}, token count: {} does not equal string_view size: {}",
-                         token_index, token_count, str_view.size());
-
-  } else {
-
-    if (token_count == 0) {
-
-      token_vector.emplace_back();
-
-    } else {
-
-      token_vector.emplace_back(&str_view[token_index], token_count);
-
-    }
-
-  }
-
-  return token_vector;
-
-}
-*/
 
 std::vector<std::string> kel::Utility::charTokenizer(const std::string_view& str_view, char delim) {
 

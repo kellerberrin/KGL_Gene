@@ -23,8 +23,8 @@ public:
   Utility()=delete;
   ~Utility()=delete;
 
-  [[nodiscard]] static std::string filePath(const std::string& file_name); // Input is "path/file" function returns "path"
-  [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // Utility to concatenate "path/file"
+  [[nodiscard]] static std::string filePath(const std::string& file_name); // Input is "path/file.ext" function returns "path"
+  [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // Utility to concatenate "path/file.ext"
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
   [[nodiscard]] static bool fileExistsCreate(const std::string& file_path); // Check that a file exists at the file path, creates zero sized file if not.
   [[nodiscard]] static bool directoryExists(const std::string& path); // Check that the directory exists at the specified path
@@ -45,7 +45,7 @@ public:
   [[nodiscard]] static std::pair<std::string, std::string> firstSplit(const std::string& source, bool(* char_delim_fn)(char c) = [](char c)->bool { return std::isspace(c) != 0; });
   [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
-  [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = first,  sample stdev = .second
+  [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = pair.first,  sample stdev = pair.second
   static void getRuntime(double &Clock, double &System, double &User);  // Times in seconds.
 
 private:
