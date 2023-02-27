@@ -126,13 +126,10 @@ set(THREAD_SOURCE_FILES
 set(IO_SOURCE_FILES
         kel_io/kel_basic_io.cpp
         kel_io/kel_basic_io.h
-        kel_io/kel_bzip.cpp
-        kel_io/kel_bzip.h
         kel_io/kel_rest_api.cpp
         kel_io/kel_rest_api.h
         kel_io/kel_bzip_workflow.cpp
         kel_io/kel_bzip_workflow.h
-        kel_io/kel_bzip_verify.cpp
         kel_io/kel_bzip_workflow_verify.cpp
         kel_io/kel_mt_buffer.cpp
         kel_io/kel_mt_buffer.h
@@ -593,12 +590,6 @@ add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
 target_link_libraries (kol_test kol_ontology kel_app kel_utility kel_thread kel_io ${Boost_LIBRARIES})
-
-#add_executable(workflows kel_thread/kel_workflow_example.cpp)
-
-add_executable(workflows kel_io/kel_workflow_bgztest.cpp)
-
-target_link_libraries (workflows kel_utility kel_thread kel_io kel_app ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} bz2)
 
 
 ############################################################################################################

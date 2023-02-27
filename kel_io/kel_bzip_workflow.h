@@ -9,10 +9,8 @@
 #include "kel_queue_tidal.h"
 #include "kel_workflow_threads.h"
 #include "kel_workflow_pipeline.h"
-#include "kel_workflow_pipeline.h"
 
 #include "kel_basic_io.h"
-
 
 #include <string>
 #include <memory>
@@ -27,7 +25,7 @@ namespace kellerberrin {   //  organization::project level namespace
 // This is the format used in compressing large genome VCF files.
 // This code will not decompress standard .gz files.
 // The Block gzip (.bgz) decompression object below reads and verifies compressed .bgz (RFC1952) files.
-// The file is decompressed the using a multi-threaded workflow.
+// The file is decompressed the using a multi-threaded pipeline.
 // This avoids a bottleneck in processing large VCF files as library decompression code only uses
 // a single thread to decompress large VCF files.
 // The workflow enqueues the decompressed (using zlib) data in a thread safe queue.
@@ -146,7 +144,6 @@ private:
   WorkflowThreads assemble_records_thread_{1};
   // The synchronous decompression pipeline.
   DecompressionWorkFlow decompression_workflow_;
-
   // Queue of parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
@@ -176,7 +173,7 @@ private:
   constexpr static const size_t LINE_SAMPLE_FREQ_{100};
 
 
-  // These constants are used to verify the structure of the .bgz file.
+  // These constants are used to verify the structure of the .bgz file and specified by standard RFC1952.
   // Don't change these constants
   constexpr static const uint8_t BLOCK_ID1_{31};
   constexpr static const uint8_t BLOCK_ID2_{139};
