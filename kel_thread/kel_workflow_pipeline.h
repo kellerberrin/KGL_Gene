@@ -1,9 +1,24 @@
+///
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 15/02/23.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//
 //
 
-#ifndef KEL_WORKFLOW_SYNC_H
-#define KEL_WORKFLOW_SYNC_H
+#ifndef KEL_WORKFLOW_PIPELINE_H
+#define KEL_WORKFLOW_PIPELINE_H
 
 
 #include "kel_queue_tidal.h"
@@ -61,7 +76,7 @@ class WorkflowPipeline {
 
 public:
 
-  WorkflowPipeline(size_t high_tide = HIGH_TIDE_, size_t low_tide = LOW_TIDE_) : high_tide_(high_tide), low_tide_(low_tide) {}
+  explicit WorkflowPipeline(size_t high_tide = HIGH_TIDE_, size_t low_tide = LOW_TIDE_) : high_tide_(high_tide), low_tide_(low_tide) {}
   ~WorkflowPipeline() { joinThreads(); }
 
   // Note that the variadic args... are presented to ALL active threads and must be thread safe (or made so).
@@ -76,8 +91,8 @@ public:
     joinThreads();
 
     auto callback_fn = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+    // This callable object is shared by all threads.
     fn_pointer_ = std::make_shared<WorkflowFunc>(std::move(callback_fn));
-
     // Re-populate the thread pool.
     return queueThreads(threads);
 
@@ -99,7 +114,13 @@ public:
 
   }
 
+  void clear() {
 
+    joinThreads();
+    input_queue_.clear();
+    output_queue_.clear();
+
+  }
   // Access queue stats.
   [[nodiscard]] const QueueTidal<std::future<OutputObject>>& outputQueue() const { return output_queue_; }
   [[nodiscard]] const QueueTidal<std::unique_ptr<QueuedFunctor>>& inputQueue() const { return input_queue_; }
@@ -117,7 +138,7 @@ private:
   QueueTidal<std::unique_ptr<QueuedFunctor>> input_queue_{high_tide_, low_tide_};
   // Thread Pool.
   std::vector<std::thread> threads_;
-  // The supplied processing function held in the simple std::MoveFunction functional object.
+  // The supplied processing function held in the std::MoveFunction functional object.
   WorkflowFuncPtr fn_pointer_;
 
 
@@ -181,4 +202,4 @@ private:
 
 
 
-#endif //KEL_WORKFLOW_SYNC_H
+#endif //KEL_WORKFLOW_PIPELINE_H

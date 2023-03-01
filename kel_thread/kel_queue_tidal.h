@@ -35,9 +35,9 @@ namespace kellerberrin {   //  organization level namespace
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// The bounded multi thread queue has a maximum of high_tide elements and a low tide
-// when the producer(s) can again start pushing elements after a high tide event.
-// Producer threads can push elements onto the queue until high tide is reached, the producer threads are then
+// The tidal multi thread queue has a maximum of high_tide elements and a low tide
+// when the producer(s) can again start enqueueing elements after a high tide event.
+// Producer threads can enqueue elements onto the queue until high tide is reached, the producer threads are then
 // blocked by a condition variable. The queue is then drained by consumer threads (ebbing tide) until the low tide
 // level is reached when the producer threads are unblocked and can once again push elements onto the queue (flood tide).
 // This automatically balances CPU usage between producer threads and consumer threads.
@@ -117,34 +117,6 @@ public:
     } // ~Mutex
 
     empty_cond_.notify_one();
-
-  }
-
-  // Dequeue function can be called by multiple threads.
-  // This function returns the null value if the queue is empty.
-  [[nodiscard]] std::optional<T> pop() {
-
-    std::unique_lock<std::mutex> lock(queue_mutex_);
-
-    if (empty()) return std::nullopt;
-
-    T value(std::move(queue_.front()));
-    queue_.pop();
-
-    --queue_size_;
-    ++queue_activity_;
-
-    if (queue_tidal_state_ == QueueTidalState::EBB_TIDE and queue_size_ <= low_tide_) {
-
-      queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
-
-    }
-
-    lock.unlock();  // ~Mutex
-
-    tide_cond_.notify_one();
-
-    return value;
 
   }
 

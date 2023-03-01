@@ -1,5 +1,20 @@
+
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 17/01/23.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//
 //
 
 #ifndef KEL_BZIP_WORKFLOW_H
@@ -102,12 +117,15 @@ class BGZStreamIO : public BaseStreamIO {
   // Convenience typedefs.
   using CompressedType = std::unique_ptr<CompressedBlock>;
   using DecompressedType = std::unique_ptr<DecompressedBlock>;
-  using DecompressionWorkFlow = WorkflowPipeline<CompressedType, DecompressedType>;
+  using DecompressionPipeline = WorkflowPipeline<CompressedType, DecompressedType>;
 
 public:
 
   explicit BGZStreamIO(size_t thread_count = DEFAULT_THREADS) : decompression_threads_(thread_count) {}
   ~BGZStreamIO() override { close(); }
+
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
+                                                                               , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
   // Guaranteed sequential line reader. Does not block on eof.
   [[nodiscard]] IOLineRecord readLine() override;
@@ -118,8 +136,6 @@ public:
   // Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
   void close() override;
 
-  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
-                                                                               , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
   // Checks the internal structures of a .bgz file.
   // Returns true if the .bgz file conforms to the RFC1952 standard.
@@ -131,7 +147,7 @@ public:
   [[nodiscard]] BGZStreamState streamState() const { return stream_state_; }
 
   // Access the underlying queues for diagnostics.
-  [[nodiscard]] const DecompressionWorkFlow& workFlow() const { return decompression_workflow_; }
+  [[nodiscard]] const DecompressionPipeline& workFlow() const { return decompression_pipeline_; }
   [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_queue_; }
 
 private:
@@ -139,11 +155,11 @@ private:
   std::string file_name_;
   std::ifstream bgz_file_;
   size_t record_counter_{0};
-  WorkflowThreads reader_thread_{1};
+  WorkflowThreads reader_thread_;
   std::future<bool> reader_return_;
-  WorkflowThreads assemble_records_thread_{1};
+  WorkflowThreads assemble_records_thread_;
   // The synchronous decompression pipeline.
-  DecompressionWorkFlow decompression_workflow_;
+  DecompressionPipeline decompression_pipeline_;
   // Queue of parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
@@ -195,7 +211,7 @@ private:
   constexpr static const char EOL_MARKER_ = '\n';
 
   // Read and decompress the entire bgz file.
-  [[nodiscard]] bool readDecompressFile();
+  void readDecompressFile();
   // Read a bgz block.
   [[nodiscard]] CompressedType readCompressedBlock(size_t block_count);
   // Decompress a bgz block.

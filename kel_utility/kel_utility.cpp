@@ -1,12 +1,23 @@
+// Copyright 2023 Kellerberrin
 //
-// Created by kellerberrin on 26/12/17.
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 //
 
 
 #include "kel_utility.h"
 #include "kel_exec_env.h"
-
-#include <boost/timer/timer.hpp>
 
 #include <unistd.h>
 #include <ios>
@@ -16,7 +27,6 @@
 #include <filesystem>
 
 
-namespace bt = boost::timer;
 namespace kel = kellerberrin;
 namespace fs = std::filesystem;
 
@@ -383,6 +393,48 @@ std::pair<double, double> kel::Utility::process_mem_usage()
 
 }
 
+// System and user CPU usage.
+std::pair<double, double> kel::Utility::process_time_usage()
+{
+
+  // 'file' stat seems to give the most reliable results
+  static const char* STAT_STREAM = "/proc/self/stat";
+
+
+  std::ifstream stat_stream(STAT_STREAM,std::ios_base::in);
+
+  if (not stat_stream.good()) {
+
+    ExecEnv::log().error("Utility::process_time_usage; Unable to open file stats: {}", STAT_STREAM);
+    return {0.0, 0.0};
+
+  }
+
+  // Dummy vars for leading entries in stat that we don't care about.
+  //
+  std::string pid, comm, state, ppid, pgrp, session, tty_nr;
+  std::string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+  std::string utime, stime, cutime, cstime, priority, nice;
+  std::string _o_, itrealvalue, starttime;
+
+  // The two fields we want
+  //
+  unsigned long vsize;
+  long rss;
+
+  stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+              >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+              >> utime >> stime >> cutime >> cstime >> priority >> nice
+              >> _o_ >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+
+  stat_stream.close();
+
+  double system_cpu = std::stod(stime) / 100.0;
+  double user_cpu = std::stod(utime) / 100.0;
+
+  return {system_cpu, user_cpu};
+
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -490,20 +542,6 @@ std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
   double variance = std::accumulate(vec.begin(), vec.end(), 0.0, variance_func) / (size - 1.0);
 
   return {mean, std::sqrt(variance) };
-}
-
-
-// Hide the boost cpu timer in an anonymous namespace.
-namespace {  bt::cpu_timer cpu_timer; }
-
-void kel::Utility::getRuntime(double &Clock, double &User, double &System) {
-
-  Clock = 0; User = 0; System = 0;
-  bt::cpu_times elapsedtime = cpu_timer.elapsed();
-  Clock = elapsedtime.wall / 1e09; // Convert from nanoseconds to seconds
-  User = elapsedtime.user / 1e09;
-  System = elapsedtime.system / 1e09;
-
 }
 
 

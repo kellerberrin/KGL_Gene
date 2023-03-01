@@ -1,6 +1,3 @@
-//
-// Created by kellerberrin on 25/7/20.
-//
 // Copyright 2023 Kellerberrin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated

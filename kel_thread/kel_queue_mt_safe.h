@@ -34,7 +34,8 @@ namespace kellerberrin {   //  organization level namespace
 //
 // Thread safe queue for multiple consumer and producer threads.
 // This queue can potentially grow without bound if producer threads can enqueue faster than consumer threads can dequeue.
-// Objects on the queue can be move_constructible<T> (std::unique_ptr<...>).
+// Objects on the queue must be move_constructible<T> (T=std::unique_ptr<QueuedObject>).
+//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -80,31 +81,6 @@ public:
     // The notification is sent after the queue is unlocked so that any threads on waitAndPop() can immediately execute.
     data_cond_.notify_one();
 
-
-  }
-
-  // Dequeue function can be called by multiple threads.
-  // If the queue is empty, no dequeued object is returned.
-  [[nodiscard]] std::optional<T> pop() {
-
-    std::unique_lock<std::mutex> lock(data_mutex_);
-
-    // Queue may have been emptied before acquiring the mutex.
-    if (empty()) return std::nullopt;
-
-    --size_;
-    ++activity_;
-
-    T value(std::move(data_queue_.front()));
-    data_queue_.pop();
-
-    // Unlock the mutex.
-    lock.unlock();
-
-    // Notify waiting threads after the queue is unlocked.
-    data_cond_.notify_one();
-
-    return value;
 
   }
 
@@ -165,4 +141,4 @@ private:
 }   // end namespace
 
 
-#endif // KGL_MtQueue_H
+#endif // KEL_QUEUE_MT_SAFE_H
