@@ -121,7 +121,7 @@ class BGZStreamIO : public BaseStreamIO {
 
 public:
 
-  explicit BGZStreamIO(size_t thread_count = DEFAULT_THREADS) : decompression_threads_(thread_count) {}
+  explicit BGZStreamIO(size_t thread_count = BGZ_DEFAULT_THREADS) : decompression_threads_(thread_count) {}
   ~BGZStreamIO() override { close(); }
 
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
@@ -164,7 +164,7 @@ private:
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
   // Number of threads used in the decompression pipeline.
-  constexpr static const size_t DEFAULT_THREADS{15};
+  constexpr static const size_t BGZ_DEFAULT_THREADS{15};
   size_t decompression_threads_;
   // Flag set if problems decompressing a gzip block.
   bool decompression_error_{false};

@@ -35,7 +35,7 @@ class StreamMTBuffer : public BaseStreamIO {
 public:
 
   // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  explicit StreamMTBuffer(size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS) : work_threads_(decompression_threads) {}
+  explicit StreamMTBuffer() {}
   StreamMTBuffer(const StreamMTBuffer&) = delete;
   ~StreamMTBuffer() override { close(); };
 
@@ -52,8 +52,7 @@ public:
   [[nodiscard]] IOLineRecord readLine() override;
 
   // Static constructors.
-  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
-                                                                               , size_t decompression_threads = BaseStreamIO::BGZ_DEFAULT_THREADS);
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
   // Layer the stream buffer on top of an existing open StreamIO.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr);
 
@@ -73,7 +72,6 @@ private:
   // Thread pool asynchronously queues IOLineRecord objects to the queue.
   static constexpr const size_t WORKER_THREAD_COUNT{1};
   WorkflowThreads line_io_thread_;
-  size_t work_threads_{BaseStreamIO::BGZ_DEFAULT_THREADS}; // For BGZStreamIO only.
   // The StreamIO object.
   std::unique_ptr<BaseStreamIO> stream_ptr_;
   // Set if the stream is in an EOF condition.

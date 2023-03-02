@@ -92,11 +92,8 @@ public:
   // If the file is not one of the above types, it is assumed to be an uncompressed record based text file.
   // Note the stream is returned open and ready for processing, std::nullopt is returned if there is a problem.
   // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
-                                                                               , size_t decompression_threads = BGZ_DEFAULT_THREADS);
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
 
-  // Default number of threads used in the '.bgz' decompression pipeline.
-  constexpr static const size_t BGZ_DEFAULT_THREADS{15};
 
 protected:
 
