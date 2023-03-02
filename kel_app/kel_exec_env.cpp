@@ -34,9 +34,9 @@ std::unique_ptr<kel::Logger> kel::ExecEnv::createLogger( const std::string& modu
 
   log_ptr = std::make_unique<Logger>(module, log_file);
 
-  log_ptr->SetMaxErrorMessages(max_error_messages);
+  log_ptr->setMaxErrorMessages(max_error_messages);
 
-  log_ptr->SetMaxWarningMessages(max_warning_messages);
+  log_ptr->setMaxWarningMessages(max_warning_messages);
 
   return log_ptr;
 

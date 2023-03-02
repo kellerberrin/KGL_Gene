@@ -35,15 +35,16 @@ public:
   ~FileDataIO() noexcept;
 
   // Begin reading records, spawns thread(s).
-  bool commenceIO(std::string read_file_name);
+  bool open(std::string read_file_name);
 
   [[nodiscard]] const std::string& fileName() const { return read_file_name_; }
 
   // Called by each reader thread
-  [[nodiscard]] IOLineRecord readIORecord() { return raw_io_queue_.waitAndPop(); }
+  [[nodiscard]] IOLineRecord readLine() { return raw_io_queue_.waitAndPop(); }
 
   // Push an eof marker onto the queue
   void enqueueEOF() { raw_io_queue_.push(IOLineRecord::createEOFMarker()); }
+//  void enqueueEOF() { }
 
 private:
 

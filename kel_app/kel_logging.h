@@ -40,11 +40,11 @@ public:
 
   enum class Severity { Trace, Info, Warn, Error, Critical };
 
-  void SetLevel(Severity level) noexcept;
-  void SetFormat(const std::string& message) noexcept;
+  void setLevel(Severity level) noexcept;
+  void setFormat(const std::string& message) noexcept;
 
-  void SetMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
-  void SetMaxWarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
+  void setMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
+  void setMaxWarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
 
 
   template<typename... Args> void trace(const std::string& message, Args... args) noexcept;
@@ -93,7 +93,7 @@ template<typename... Args> void Logger::warn(const std::string& message, Args...
 
   }
 
-  if (max_warn_messages_ >= 0 and warn_message_count_ > max_warn_messages_) {
+  if (max_warn_messages_ >= 0 and warn_message_count_ == max_warn_messages_) {
 
     plog_impl_->warn("Maximum warning messages: {} issued.", max_warn_messages_);
     plog_impl_->warn("Further warning messages will be suppressed.");
@@ -111,7 +111,7 @@ template<typename... Args> void Logger::error(const std::string& message, Args..
 
   ++error_message_count_;
 
-  if (max_error_messages_ >= 0 and error_message_count_ > max_error_messages_) {
+  if (max_error_messages_ >= 0 and error_message_count_ == max_error_messages_) {
 
     plog_impl_->error("Maximum error messages: {} issued.", max_error_messages_);
     plog_impl_->error("Program exits.");

@@ -51,7 +51,7 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
   size_t record_counter{0};
   bool result{true};
 
-  if (not file_io.commenceIO(file_name)) {
+  if (not file_io.open(file_name)) {
 
     ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_io.fileName());
 
@@ -60,7 +60,7 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
   while (true) {
 
     // Get the line record.
-    auto line_record = file_io.readIORecord();
+    auto line_record = file_io.readLine();
 
     // Terminate on EOF
     if (line_record.EOFRecord()) break;

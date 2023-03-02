@@ -30,8 +30,8 @@ namespace kel = kellerberrin;
 
 kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 
-  SetFormat(SPDLOG_DEFAULT_FORMAT);
-  SetLevel(Severity::Trace);
+  setFormat(SPDLOG_DEFAULT_FORMAT);
+  setLevel(Severity::Trace);
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stderr_sink_mt>());
   sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file));
@@ -40,7 +40,7 @@ kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 }
 
 
-void kel::Logger::SetLevel(Severity level) noexcept {
+void kel::Logger::setLevel(Severity level) noexcept {
 
   switch(level) {
 
@@ -68,7 +68,7 @@ void kel::Logger::SetLevel(Severity level) noexcept {
 
 }
 
-void kel::Logger::SetFormat(const std::string& log_format) noexcept {
+void kel::Logger::setFormat(const std::string& log_format) noexcept {
 
   spdlog::set_pattern(log_format);
 

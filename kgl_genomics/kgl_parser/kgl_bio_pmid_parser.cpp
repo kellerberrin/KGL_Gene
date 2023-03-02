@@ -160,7 +160,7 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
   FileDataIO file_io;
   size_t counter = 0;
 
-  if (not file_io.commenceIO(file_name)) {
+  if (not file_io.open(file_name)) {
 
     ExecEnv::log().error("ParseBioPMID::parseBioPMIDRecords; I/O error; could not open file: {}", file_name);
     return false;
@@ -169,7 +169,7 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
   while (true) {
 
-    auto line_record = file_io.readIORecord();
+    auto line_record = file_io.readLine();
     if (line_record.EOFRecord()) {
 
       break; // EOF reached.

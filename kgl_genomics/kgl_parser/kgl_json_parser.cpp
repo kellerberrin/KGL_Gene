@@ -47,7 +47,7 @@ bool kgl::JSONInfoParser::parseFile(const std::string& json_file_name, DBCitatio
 
 bool kgl::JSONInfoParser::commenceJSONIO(const std::string& json_file_name) {
 
-  if (not file_data_.commenceIO(json_file_name)) {
+  if (not file_data_.open(json_file_name)) {
 
     ExecEnv::log().error("JSONInfoParser::commenceJSONIO; problem processing JSON file: {}", json_file_name);
     return false;
@@ -75,7 +75,7 @@ void kgl::JSONInfoParser::parseJson(DBCitationMap& citation_map) {
 
   while (true) {
 
-    IOLineRecord line_record = file_data_.readIORecord();
+    IOLineRecord line_record = file_data_.readLine();
     if (line_record.EOFRecord()) { // check for EOF condition.
 
       // Push the EOF marker back on the queue for other threads and stop processing.

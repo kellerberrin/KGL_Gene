@@ -33,7 +33,7 @@ RecordVCFIO::~RecordVCFIO() noexcept {
 
 bool RecordVCFIO::commenceVCFIO(const std::string& vcf_file_name) {
 
-  if (not file_data_.commenceIO(vcf_file_name)) {
+  if (not file_data_.open(vcf_file_name)) {
 
     // Enqueue an eof marker further up the pipeline.
     enqueueEOF();
@@ -82,7 +82,7 @@ void RecordVCFIO::enqueueVCFRecord() {
 
   while (true) {
 
-    IOLineRecord line_record = file_data_.readIORecord();
+    IOLineRecord line_record = file_data_.readLine();
 
     // Check for EOF condition.
     if (line_record.EOFRecord()) {

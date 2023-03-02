@@ -11,7 +11,7 @@ namespace kgl = kellerberrin::genome;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::FileDataIO::~FileDataIO() noexcept {
+kgl::FileDataIO::~FileDataIO() {
 
   // Wait for completion, suppress any exceptions.
   try {
@@ -23,7 +23,7 @@ kgl::FileDataIO::~FileDataIO() noexcept {
 }
 
 
-bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
+bool kgl::FileDataIO::open(std::string read_file_name) {
 
   read_file_name_ = std::move(read_file_name);
   file_stream_opt_ = BaseStreamIO::getStreamIO(fileName());
@@ -31,7 +31,7 @@ bool kgl::FileDataIO::commenceIO(std::string read_file_name) {
   if (not file_stream_opt_) {
 
     ExecEnv::log().error("FileDataIO::rawDataIO; I/O error; could not open Data file: {}", fileName());
-    enqueueEOF();
+    raw_io_queue_.push(IOLineRecord::createEOFMarker());
     return false;
 
   }
@@ -63,7 +63,7 @@ void kgl::FileDataIO::launchThreads() {
   }
 
   // Enqueue an eof marker further up the pipeline.
-  enqueueEOF();
+  raw_io_queue_.push(IOLineRecord::createEOFMarker());
 
 }
 

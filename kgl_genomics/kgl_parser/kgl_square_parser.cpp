@@ -166,7 +166,7 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
   std::shared_ptr<SquareTextRows> square_text_ptr(std::make_shared<SquareTextRows>());
   size_t counter = 0;
 
-  if (not file_io.commenceIO(file_name)) {
+  if (not file_io.open(file_name)) {
 
     ExecEnv::log().critical("SquareTextParser::parseIndexedFile; I/O error; could not open file: {}", file_io.fileName());
 
@@ -174,7 +174,7 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
 
   while (true) {
 
-    auto line_record = file_io.readIORecord();
+    auto line_record = file_io.readLine();
     if (line_record.EOFRecord()) break;
 
     const std::string_view record_str = line_record.getView();
