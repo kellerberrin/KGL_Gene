@@ -94,7 +94,7 @@ bool kel::BGZStreamIO::open(const std::string &file_name) {
 
   // File is open so start processing.
   // Activate the decompression pipeline.
-  decompression_pipeline_.activateWorkflow(decompression_threads_, &BGZStreamIO::decompressBlock);
+  decompression_pipeline_.activatePipeline(decompression_threads_, &BGZStreamIO::decompressBlock);
   // Enable queue stats for the pipeline.
   decompression_pipeline_.inputQueue().monitor().launchStats(PIPELINE_SAMPLE_FREQ_, std::string(PIPELINE_NAME_) + "_InputQueue");
   decompression_pipeline_.outputQueue().monitor().launchStats(PIPELINE_SAMPLE_FREQ_, std::string(PIPELINE_NAME_) + "_OutputQueue");

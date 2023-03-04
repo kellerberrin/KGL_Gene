@@ -163,8 +163,6 @@ private:
   // Queue of parsed line records.
   QueueTidal<IOLineRecord> line_queue_{LINE_HIGH_TIDE_, LINE_LOW_TIDE_, LINE_QUEUE_NAME_, LINE_SAMPLE_FREQ_};
 
-  // Number of threads used in the decompression pipeline.
-  constexpr static const size_t BGZ_DEFAULT_THREADS{15};
   size_t decompression_threads_;
   // Flag set if problems decompressing a gzip block.
   bool decompression_error_{false};

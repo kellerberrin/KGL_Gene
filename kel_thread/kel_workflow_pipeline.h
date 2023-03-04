@@ -84,7 +84,7 @@ public:
   // pointer (MyClass* this) to the class instance.
   // The supplied function should be of the form 'auto f(args..., InputObject)->OutputObject'.
   template<typename F, typename... Args>
-  bool activateWorkflow(size_t threads, F&& f, Args&&... args)
+  bool activatePipeline(size_t threads, F&& f, Args&&... args)
   {
 
     // Clear any active threads.

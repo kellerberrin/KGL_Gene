@@ -1,22 +1,22 @@
 //
-// Created by kellerberrin on 21/4/20.
+// Created by kellerberrin on 3/03/23.
 //
 
-#ifndef KGL_VARIANT_FILE_VCF_IMPL_H
-#define KGL_VARIANT_FILE_VCF_IMPL_H
+#ifndef KGL_VARIANT_VCF_IMPL_H
+#define KGL_VARIANT_VCF_IMPL_H
 
 
 #include "kgl_genome_types.h"
-#include "kgl_data_file_impl.h"
+#include "kel_basic_io.h"
 #include "kgl_variant_vcf_record.h"
 #include "kgl_variant_factory_vcf_parse_header.h"
 
-#include "../../kel_thread/kel_queue_tidal.h"
+#include "kel_queue_tidal.h"
+#include "kel_workflow_pipeline.h"
 
 #include <memory>
 #include <string>
 #include <vector>
-
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -28,46 +28,44 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using QueuedVCFRecord = std::optional<std::pair<size_t, std::unique_ptr<const VcfRecord>>>;
+using VCFRecordPtr = std::unique_ptr<const VcfRecord>;
 
-class RecordVCFIO {
+class ParseVCF {
+
+  using VCFPipeline = WorkflowPipeline<IOLineRecord, VCFRecordPtr>;
 
 public:
 
-  RecordVCFIO() = default;
-  ~RecordVCFIO() noexcept;
+  ParseVCF() = default;
+  ~ParseVCF();
 
-  // Begin reading IO records, spawns threads.
-  bool commenceVCFIO(const std::string& vcf_file_name);
+  // Begin reading IO records, allocates threads to bgz decompression and parsing the VCF record.
+  bool open( const std::string& vcf_file_name,
+             size_t decompression_threads = DECOMPRESSION_THREADS_,
+             size_t vcf_parse_threads = PARSER_THREADS_);
 
-  // export parser VCF records further up the parser chain.
-  [[nodiscard]] QueuedVCFRecord readVCFRecord() { return vcf_record_queue_.waitAndPop(); }
+  // Export parsed VCF records further up the parser chain.
+  // Note that nullptr indicates an EOF condition.
+  [[nodiscard]] VCFRecordPtr readVCFRecord() { return vcf_pipeline_.waitAndPop(); }
 
   // Push an eof marker onto the queue
-   void enqueueEOF() { vcf_record_queue_.push(std::nullopt); }
+  void enqueueEOF() { vcf_pipeline_.push(IOLineRecord::createEOFMarker()); }
 
-  [[nodiscard]] [[maybe_unused]] const std::string& getFileName() const { return file_data_.fileName(); }
-
+  [[nodiscard]] const std::string& getFileName() const { return file_name_; }
 
 private:
 
-  // The downstream queue of line records.
-  FileDataIO file_data_;
-
-  // VCF queue parameters.
-  static constexpr const size_t VCF_HIGH_TIDE_{2000};     // Maximum QueueTidal size
-  static constexpr const size_t VCF_LOW_TIDE_{1000};       // Low water mark to begin queueing VCF records
-  static constexpr const char* VCF_NAME_{"VCF Record Queue"};    // The queue name
-  static constexpr const size_t VCF_SAMPLE_RATE_{500}; // Queue sample rate.
-  // Parsed VCF record queue
-  QueueTidal<QueuedVCFRecord> vcf_record_queue_{VCF_HIGH_TIDE_, VCF_LOW_TIDE_, VCF_NAME_, VCF_SAMPLE_RATE_};
-
+  // Stream to read decompressed VCF records.
+  std::unique_ptr<BaseStreamIO> stream_ptr_;
+  std::string file_name_;
+  // VCF queue worker threads
+  static constexpr const long DECOMPRESSION_THREADS_{15};         // Threads decompressing bgz records.
   // VCF queue worker threads
   static constexpr const long PARSER_THREADS_{15};         // Threads parsing into vcf_records.
-  // The detached main thread.
-  WorkflowThreads detached_launch_{1};
-  // Synchronize shutdown
-  std::future<void> launch_token_;
+  // Pipeline to parse the VCF line record into fields.
+  VCFPipeline vcf_pipeline_;
+  // Read the decompressed line records and enqueue them in the VCF parser pipeline (1 thread).
+  WorkflowThreads enqueue_thread_{1};
 
   // VCF record constants.
   static constexpr const char HEADER_CHAR_{'#'};          // If first char start with '#' then a header record (skip).
@@ -85,10 +83,8 @@ private:
   static constexpr const size_t INFO_FIELD_IDX_{7};
   static constexpr const size_t FORMAT_FIELD_IDX_{8};
 
-
-  void launchThreads();
-  void enqueueVCFRecord(); // enqueue vcf_records.
-  std::optional<std::unique_ptr<VcfRecord>> moveToVcfRecord(std::string line_record);
+  void enqueueLineRecord();
+  std::unique_ptr<VcfRecord> moveToVcfRecord(IOLineRecord line_record);
 
 };
 
@@ -97,5 +93,4 @@ private:
 } // end namespace
 
 
-
-#endif //KGL_KGL_VARIANT_FILE_VCF_IMPL_H
+#endif //KGL_VARIANT_VCF_IMPL_H

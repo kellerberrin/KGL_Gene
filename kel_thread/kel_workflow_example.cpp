@@ -197,7 +197,7 @@ void syncUnboundedExample1() {
   // An unbounded synchronised workflow. The nullptr has been specified as the stop token.
   // The same object type is used for both input and output queues.
   kel::WorkflowPipeline<SyncExample1Type, SyncExample1Type> workflow_unbounded;
-  workflow_unbounded.activateWorkflow(20, task_lambda);
+  workflow_unbounded.activatePipeline(20, task_lambda);
 
   // Place some objects in the workflow.
   auto fill_lambda = [&workflow_unbounded]()->void {
@@ -294,7 +294,7 @@ void syncBoundedExample2() {
   SyncExample2Task task_object;
   // Activate the workflow with 20 threads. This is best done before any input
   // objects are processed. Otherwise, the bounded input queue will block after it reaches high tide.
-  workflow_ptr->activateWorkflow(20, &SyncExample2Task::task, &task_object);
+  workflow_ptr->activatePipeline(20, &SyncExample2Task::task, &task_object);
 
   auto fill_lambda = [workflow_ptr]()->void { // Now place some objects in the input queue tagged with their position in the queue.
 

@@ -18,16 +18,27 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class VcfRecord {
+
 public:
 
-  // Default constructor.
-  VcfRecord() : offset(INVALID_POS), qual(MISSING_QUAL) {}
+  explicit VcfRecord(IOLineRecord&& line_record) noexcept {
+
+    auto [line_count, line_str] = line_record.getLineData();
+    line_count_ = line_count;
+    line_record_ptr = std::make_unique<std::string>(std::move(line_str));
+
+  }
 
   std::unique_ptr<const std::string> line_record_ptr;
-  // Numeric id of the reference sequence.
+  size_t line_count_{0};
+  bool EOF_{false};
+  //
+  // Parsed VCF fields
+  //
+  // Id of the reference sequence.
   ContigId_t contig_id;
   // Position on the reference.
-  ContigOffset_t offset;
+  ContigOffset_t offset{INVALID_POS};
   // Textual identifier of the variant.
   std::string id;
   // Bases in the reference.
@@ -35,7 +46,7 @@ public:
   // Bases in the alternatives, COMMA-separated.
   std::string alt;
   // Quality
-  double qual;
+  double qual{MISSING_QUAL};
   // Value of FILTER field.
   std::string filter;
   // Value of INFO field.
@@ -45,12 +56,19 @@ public:
   // The genotype infos.
   std::vector<std::string> genotypeInfos;
 
-
-private:
   // Constant for invalid position.
   static constexpr const ContigOffset_t INVALID_POS = std::numeric_limits<ContigOffset_t>::max();
   // Undefined quality number.
   static constexpr const double MISSING_QUAL = std::numeric_limits<double>::lowest();
+
+  [[nodiscard]] bool EOFRecord() const { return EOF_; }
+  // ReturnType the EOF marker.
+  [[nodiscard]] static VcfRecord createEOFMarker() { return {}; }
+
+private:
+
+  // Default constructor.
+  VcfRecord() { EOF_ = true; }
 
 };
 

@@ -6,9 +6,6 @@
 #include "kgl_literature_filter.h"
 #include "kgl_literature_analysis.h"
 
-#include "kel_utility.h"
-
-#include <numeric>
 
 namespace kgl = kellerberrin::genome;
 

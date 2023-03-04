@@ -8,7 +8,7 @@
 
 #include "kel_utility.h"
 #include "kgl_genome_genome.h"
-#include "kgl_variant_file_vcf_record.h"
+#include "kgl_variant_vcf_record.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

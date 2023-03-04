@@ -211,7 +211,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_genome_contig_aux.h
         kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.cpp
         kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.h
-        kgl_genomics/kgl_parser/kgl_variant_file_vcf_record.h
+        kgl_genomics/kgl_parser/kgl_variant_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.h
@@ -303,7 +303,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_gff3.cpp
         kgl_genomics/kgl_database/kgl_gff3.h
         kgl_genomics/kgl_database/kgl_fasta.cpp
-        kgl_genomics/kgl_database/kgl_fasta.h)
+        kgl_genomics/kgl_database/kgl_fasta.h kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

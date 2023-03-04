@@ -99,7 +99,7 @@ void RecordVCFIO::enqueueVCFRecord() {
     // Check for zero length lines.
     if (line_string.empty()) {
 
-      ExecEnv::log().warn("RecordVCFIO::enqueueVCFRecord; unexpected zero length line found at line: {}", line_count);
+      ExecEnv::log().warn("RecordVCFIO::enqueueLineRecord; unexpected zero length line found at line: {}", line_count);
       continue;
 
     }

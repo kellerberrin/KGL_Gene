@@ -47,7 +47,8 @@ std::pair<size_t, std::string> IOLineRecord::getLineData() {
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std::string &file_name) {
+std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std::string &file_name,
+                                                                       size_t decompression_threads) {
 
   std::string file_ext = Utility::toupper(Utility::fileExtension(file_name));
 
@@ -58,7 +59,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std
     if (BGZStreamIO::verify(file_name)) { // Check if block gzipped.
 
       ExecEnv::log().info("File structure verified as bgz format, parser uses bgz reader.");
-      return BGZStreamIO::getStreamIO(file_name);
+      return BGZStreamIO::getStreamIO(file_name, decompression_threads);
 
     } else {
 
@@ -69,7 +70,7 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std
 
   } else if (file_ext == BGZ_FILE_EXTENSTION_) { // .bgz extension is just assumed to be block gzipped.
 
-    return BGZStreamIO::getStreamIO(file_name);
+    return BGZStreamIO::getStreamIO(file_name, decompression_threads);
 
   } else if (file_ext == BZ2_FILE_EXTENSTION_) { // If .bz2 then use Burrows Wheeler decompression.
 

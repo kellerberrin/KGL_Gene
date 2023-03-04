@@ -81,8 +81,7 @@ public:
 
   virtual bool open(const std::string &file_name) = 0;
   virtual void close() = 0;
-
-  virtual IOLineRecord readLine() = 0; // In general, this function is NOT multithreaded or buffered.
+  virtual IOLineRecord readLine() = 0;
 
   // Returns an IO stream that is either a normal stream or a compressed stream based on the file name extension.
   // If '.bgz' then it uses a multi-threaded and memory efficient algorithm to decompress as it reads.
@@ -91,11 +90,15 @@ public:
   // If '.bz2' then Burrows-Wheeler compression is assumed.
   // If the file is not one of the above types, it is assumed to be an uncompressed record based text file.
   // Note the stream is returned open and ready for processing, std::nullopt is returned if there is a problem.
-  // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
+  // The default decompression threads are only used by the bgz decompression stream
+  [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
+                                                                                , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
 
 protected:
+
+  // Number of threads used in the decompression pipeline.
+  constexpr static const size_t BGZ_DEFAULT_THREADS{15};
 
   constexpr static const char* GZ_FILE_EXTENSTION_ = ".GZ"; // gzipped file assumed (checked for '.bgz' format).
   constexpr static const char* BGZ_FILE_EXTENSTION_ = ".BGZ"; // gzipped file assumed.
