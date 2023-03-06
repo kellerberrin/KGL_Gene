@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Process VCF header information.
-void kgl::PfVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
+void kgl::PfVCFImpl::processVCFHeader(const VCFHeaderInfo& header_info) {
 
   // Investigate header.
   VCFContigMap vcf_contig_map;
@@ -53,11 +53,11 @@ void kgl::PfVCFImpl::readParseVCFImpl(const std::string &vcf_file_name) {
 }
 
 // This is multithreaded code called from the reader defined above.
-void kgl::PfVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
+void kgl::PfVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
   try {
 
-    ParseRecord(vcf_record_count, vcf_record);
+    ParseRecord(std::move(vcf_record_ptr));
 
   }
   catch(const std::exception& e) {
@@ -70,9 +70,9 @@ void kgl::PfVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& 
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& record) {
+void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
-  ParseVCFRecord recordParser(record, genome_db_ptr_); //Each vcf record.
+  ParseVCFRecord recordParser(*vcf_record_ptr, genome_db_ptr_); //Each vcf record.
   if (not recordParser.parseResult()) {
 
     ExecEnv::log().warn("PfVCFImpl::ParseRecord; Problem parsing VCF record");
@@ -82,13 +82,13 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
-  auto mutable_info = const_cast<std::string&>(record.info);
+  auto mutable_info = const_cast<std::string&>(vcf_record_ptr->info);
   std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
-  if (getGenomeNames().size() != record.genotypeInfos.size()) {
+  if (getGenomeNames().size() != vcf_record_ptr->genotypeInfos.size()) {
 
     ExecEnv::log().warn("PfVCFImpl::ParseRecord; Genome Name Size: {}, Genotype count: {}",
-                        getGenomeNames().size(), record.genotypeInfos.size());
+                        getGenomeNames().size(), vcf_record_ptr->genotypeInfos.size());
 
   }
 
@@ -100,12 +100,12 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
   if (not GT_offset_opt or not AD_offset_opt) {
 
     ExecEnv::log().error("PfVCFImpl::ParseRecord; format: {} does not contain required format fields: {} and {}",
-                         record.format, ParseVCFRecord::FORMAT_GT, ParseVCFRecord::FORMAT_AD);
+                         vcf_record_ptr->format, ParseVCFRecord::FORMAT_GT, ParseVCFRecord::FORMAT_AD);
     return;
   }
 
   size_t genotype_count = 0;
-  for (auto const& genotype : record.genotypeInfos)
+  for (auto const& genotype : vcf_record_ptr->genotypeInfos)
   {
 
     std::vector<std::string_view> genotype_formats = Utility::viewTokenizer(genotype, FORMAT_SEPARATOR_);
@@ -114,7 +114,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
     if (genotype_formats.size() <= GT_offset_opt.value()) {
 
       ExecEnv::log().error( "PfVCFImpl::ParseRecord; record: {}, genotype format: {} does not contain required format field: {}",
-                            vcf_record_count, genotype, ParseVCFRecord::FORMAT_GT);
+                            vcf_record_ptr->line_number, genotype, ParseVCFRecord::FORMAT_GT);
       continue;
 
     }
@@ -205,7 +205,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
     if (genotype_formats.size()  <= AD_offset_opt.value()) {
 
       ExecEnv::log().error( "PfVCFImpl::ParseRecord; record: {}, genotype format: {} does not contain required format field: {}",
-                            vcf_record_count, genotype, ParseVCFRecord::FORMAT_AD);
+                            vcf_record_ptr->line_number, genotype, ParseVCFRecord::FORMAT_AD);
       continue;
 
     }
@@ -274,7 +274,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
                                                                                  GQ_value,
                                                                                  recordParser.quality()));
         // Setup the evidence object
-        VariantEvidence evidence(vcf_record_count,
+        VariantEvidence evidence(vcf_record_ptr->line_number,
                                  unphased_population_ptr_->dataSource(),
                                  recordParser.passedFilter(),
                                  info_evidence_ptr,
@@ -285,7 +285,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
         if (not createAddVariant(genome_name,
                                  recordParser.contigPtr(),
                                  recordParser.offset(),
-                                 record.id,
+                                 vcf_record_ptr->id,
                                  recordParser.reference(),
                                  allele,
                                  evidence)) {
@@ -322,7 +322,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
                                                                                  GQ_value,
                                                                                  recordParser.quality()));
         // Setup the evidence object.
-        VariantEvidence evidence(vcf_record_count,
+        VariantEvidence evidence(vcf_record_ptr->line_number,
                                  unphased_population_ptr_->dataSource(),
                                  recordParser.passedFilter(),
                                  info_evidence_ptr,
@@ -333,7 +333,7 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
         if (not createAddVariant(genome_name,
                                  recordParser.contigPtr(),
                                  recordParser.offset(),
-                                 record.id,
+                                 vcf_record_ptr->id,
                                  recordParser.reference(),
                                  allele,
                                  evidence)) {
@@ -353,9 +353,9 @@ void kgl::PfVCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& recor
 
   }
 
-  if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
+  if (vcf_record_ptr->line_number % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
+    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_ptr->line_number, variant_count_);
     ExecEnv::log().info("Contig: {}, offset: {}", recordParser.contigPtr()->contigId(), recordParser.offset());
 
   }

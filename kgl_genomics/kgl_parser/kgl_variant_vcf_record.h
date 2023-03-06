@@ -17,21 +17,26 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Basic VCF Record LIne.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class VcfRecord {
+class VCFRecord {
 
 public:
 
-  explicit VcfRecord(IOLineRecord&& line_record) noexcept {
+  explicit VCFRecord(IOLineRecord&& line_record) noexcept {
 
     auto [line_count, line_str] = line_record.getLineData();
-    line_count_ = line_count;
-    line_record_ptr = std::make_unique<std::string>(std::move(line_str));
+    line_number = line_count;
+    line_record_str = (std::move(line_str));
 
   }
+  ~VCFRecord() = default;
 
-  std::unique_ptr<const std::string> line_record_ptr;
-  size_t line_count_{0};
-  bool EOF_{false};
+  // Cannot copy this object.
+  VCFRecord(const VCFRecord& line_record) = delete;
+  VCFRecord& operator=(const VCFRecord&) = delete;
+
+  // The VCF text record and line count.
+  std::string line_record_str;
+  size_t line_number{0};
   //
   // Parsed VCF fields
   //
@@ -62,13 +67,15 @@ public:
   static constexpr const double MISSING_QUAL = std::numeric_limits<double>::lowest();
 
   [[nodiscard]] bool EOFRecord() const { return EOF_; }
-  // ReturnType the EOF marker.
-  [[nodiscard]] static VcfRecord createEOFMarker() { return {}; }
+  // Create an EOF marker.
+  [[nodiscard]] static std::unique_ptr<const VCFRecord> createEOFMarker() { return std::unique_ptr<const VCFRecord>(new VCFRecord()); }
 
 private:
 
-  // Default constructor.
-  VcfRecord() { EOF_ = true; }
+  // EOF record constructor.
+  VCFRecord() { EOF_ = true; }
+  // The record represents an EOF marker if this flag is set.
+  bool EOF_{false};
 
 };
 

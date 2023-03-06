@@ -10,7 +10,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Process VCF header information.
-void kgl::Genome1000VCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
+void kgl::Genome1000VCFImpl::processVCFHeader(const VCFHeaderInfo& header_info) {
 
   // Investigate header.
   VCFContigMap vcf_contig_map;
@@ -43,11 +43,11 @@ void kgl::Genome1000VCFImpl::readParseVCFImpl(const std::string &vcf_file_name) 
 }
 
 // This is multi-threaded code called from the reader defined above.
-void kgl::Genome1000VCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
+void kgl::Genome1000VCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
   try {
 
-    ParseRecord(vcf_record_count, vcf_record);
+    ParseRecord(std::move(vcf_record_ptr));
 
   }
   catch(const std::exception& e) {
@@ -60,38 +60,38 @@ void kgl::Genome1000VCFImpl::ProcessVCFRecord(size_t vcf_record_count, const Vcf
 
 
 // This is multithreaded code called from the reader defined above.
-void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecord& record) {
+void kgl::Genome1000VCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.
-  auto mutable_info = const_cast<std::string&>(record.info);
+  auto mutable_info = const_cast<std::string&>(vcf_record_ptr->info);
   std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));  // Each vcf record.
 
   // Look at the filter field for "Pass"
-  bool passed_filter = Utility::toupper(record.filter) == PASSED_FILTERS_;
+  bool passed_filter = Utility::toupper(vcf_record_ptr->filter) == PASSED_FILTERS_;
 
   // Convert VCF contig to genome contig.
-  std::string contig = contig_alias_map_.lookupAlias(record.contig_id);
+  std::string contig = contig_alias_map_.lookupAlias(vcf_record_ptr->contig_id);
 
-  if (getGenomeNames().size() != record.genotypeInfos.size()) {
+  if (getGenomeNames().size() != vcf_record_ptr->genotypeInfos.size()) {
 
     ExecEnv::log().warn("Genome Name Size: {}, Genotype count: {}",
-                        getGenomeNames().size(), record.genotypeInfos.size());
+                        getGenomeNames().size(), vcf_record_ptr->genotypeInfos.size());
 
   }
 
-  std::vector<std::string> alt_vector = Utility::charTokenizer(record.alt, MULTIPLE_ALT_SEPARATOR_);
+  std::vector<std::string> alt_vector = Utility::charTokenizer(vcf_record_ptr->alt, MULTIPLE_ALT_SEPARATOR_);
 
   if (alt_vector.empty()) {
 
-    ExecEnv::log().error("Genome1000VCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", record.alt);
+    ExecEnv::log().error("Genome1000VCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record_ptr->alt);
 
   }
 
   // For all genotypes.
   size_t genotype_count = 0;
   std::map<size_t, std::vector<GenomeId_t>> phase_A_map, phase_B_map;
-  for (auto const& genotype : record.genotypeInfos)
+  for (auto const& genotype : vcf_record_ptr->genotypeInfos)
   {
 
     auto indices = alternateIndex(contig, genotype, alt_vector);
@@ -116,29 +116,29 @@ void kgl::Genome1000VCFImpl::ParseRecord(size_t vcf_record_count, const VcfRecor
   addVariants(phase_A_map,
               contig,
               VariantPhase::DIPLOID_PHASE_A,
-              record.offset,
+              vcf_record_ptr->offset,
               passed_filter,
               info_evidence_ptr,
-              record.ref,
-              record.id,
+              vcf_record_ptr->ref,
+              vcf_record_ptr->id,
               alt_vector,
-              vcf_record_count);
+              vcf_record_ptr->line_number);
 
   addVariants(phase_B_map,
               contig,
               VariantPhase::DIPLOID_PHASE_B,
-              record.offset,
+              vcf_record_ptr->offset,
               passed_filter,
               info_evidence_ptr,
-              record.ref,
-              record.id,
+              vcf_record_ptr->ref,
+              vcf_record_ptr->id,
               alt_vector,
-              vcf_record_count);
+              vcf_record_ptr->line_number);
 
-  if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
+  if (vcf_record_ptr->line_number % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, Virtual variants processed: {}", vcf_record_count, variant_count_);
-    ExecEnv::log().info("Offset: {}, Actual variants: {}", record.offset, actual_variant_count_);
+    ExecEnv::log().info("Processed :{} records, Virtual variants processed: {}", vcf_record_ptr->line_number, variant_count_);
+    ExecEnv::log().info("Offset: {}, Actual variants: {}", vcf_record_ptr->offset, actual_variant_count_);
 
   }
 

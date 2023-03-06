@@ -30,9 +30,9 @@ public:
                                                            genome_db_ptr_(genome_db_ptr) {}
   ~Genome1000VCFImpl() override = default;
 
-  void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
+  void ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) override;
 
-  void processVCFHeader(const VcfHeaderInfo& header_info) override;
+  void processVCFHeader(const VCFHeaderInfo& header_info) override;
 
   void readParseVCFImpl(const std::string &vcf_file_name);
 
@@ -42,7 +42,7 @@ private:
   ContigAliasMap contig_alias_map_;
 
   // Processes the record in a try/catch block.
-  void ParseRecord(size_t vcf_record_count, const VcfRecord& record);
+  void ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr);
 
   // Progress counters.
   mutable size_t abstract_variant_count_{0};

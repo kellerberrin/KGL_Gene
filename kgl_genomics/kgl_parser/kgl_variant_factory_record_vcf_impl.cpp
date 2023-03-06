@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::ParseVCFRecord::ParseVCFRecord( const VcfRecord& vcf_record,
+kgl::ParseVCFRecord::ParseVCFRecord( const VCFRecord& vcf_record,
                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   // Get the format fields for Genetype analysis.

@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-void kgl::GrchVCFImpl::processVCFHeader(const VcfHeaderInfo& header_info) {
+void kgl::GrchVCFImpl::processVCFHeader(const VCFHeaderInfo& header_info) {
 
   // Investigate header.
   VCFContigMap vcf_contig_map;
@@ -52,30 +52,30 @@ void kgl::GrchVCFImpl::readParseVCFImpl(const std::string &vcf_file_name) {
 }
 
 
-void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) {
+void kgl::GrchVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
   // Parse the info fields into a map..
   // For performance reasons the info field is std::moved - don't reference again.
-  auto mutable_info = const_cast<std::string&>(vcf_record.info);
+  auto mutable_info = const_cast<std::string&>(vcf_record_ptr->info);
   std::shared_ptr<const DataMemoryBlock> info_evidence_ptr = evidence_factory_.createVariantEvidence(std::move(mutable_info));
 
   // Look at the filter field for "Pass"
-  bool passed_filter = Utility::toupper(vcf_record.filter) == PASSED_FILTERS_;
+  bool passed_filter = Utility::toupper(vcf_record_ptr->filter) == PASSED_FILTERS_;
 
   // Convert VCF contig to genome contig.
-  std::string contig = contig_alias_map_.lookupAlias(vcf_record.contig_id);
+  std::string contig = contig_alias_map_.lookupAlias(vcf_record_ptr->contig_id);
 
   // Check for multiple alt sequences
-  size_t position = vcf_record.alt.find_first_of(MULIPLE_ALT_SEPARATOR_);  // Check for ',' separators
+  size_t position = vcf_record_ptr->alt.find_first_of(MULIPLE_ALT_SEPARATOR_);  // Check for ',' separators
   // The alt field can be blank (deletion).
-  if (position == std::string::npos or vcf_record.alt.empty()) {
+  if (position == std::string::npos or vcf_record_ptr->alt.empty()) {
 
     // We have no format data and only 1 variant specified.
     // These variables declared to make this obvious.
     uint32_t variant_count = 1;
     uint32_t variant_index = 0;
 
-    VariantEvidence evidence(vcf_record_count,
+    VariantEvidence evidence(vcf_record_ptr->line_number,
                              unphased_population_ptr_->dataSource(),
                              passed_filter,
                              info_evidence_ptr,
@@ -84,13 +84,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                              variant_count);
     VariantEvidence evidence1(evidence);
     // Add the variant.
-    StringDNA5 reference_str(vcf_record.ref);
-    StringDNA5 alternate_str(vcf_record.alt);
+    StringDNA5 reference_str(vcf_record_ptr->ref);
+    StringDNA5 alternate_str(vcf_record_ptr->alt);
 
     std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
-                                                                                vcf_record.offset,
+                                                                                vcf_record_ptr->offset,
                                                                                 VariantPhase::UNPHASED,
-                                                                                vcf_record.id,
+                                                                                vcf_record_ptr->id,
                                                                                 std::move(reference_str),
                                                                                 std::move(alternate_str),
                                                                                 evidence));
@@ -107,11 +107,11 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   } else {
 
-    std::vector<std::string> alt_vector = Utility::charTokenizer(vcf_record.alt, MULIPLE_ALT_SEPARATOR_);
+    std::vector<std::string> alt_vector = Utility::charTokenizer(vcf_record_ptr->alt, MULIPLE_ALT_SEPARATOR_);
 
     if (alt_vector.empty()) {
 
-      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record.alt);
+      ExecEnv::log().error("GrchVCFImpl::ProcessVCFRecord, Zero sized alt vector, alt: {}", vcf_record_ptr->alt);
 
     }
 
@@ -121,7 +121,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
       // We have no format data and multiple alternate alleles.
       // Setup the evidence object.
-      VariantEvidence evidence(vcf_record_count,
+      VariantEvidence evidence(vcf_record_ptr->line_number,
                                unphased_population_ptr_->dataSource(),
                                passed_filter,
                                info_evidence_ptr,
@@ -130,13 +130,13 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
                                variant_count);
       VariantEvidence evidence1(evidence);
       // Add the variant.
-      StringDNA5 reference_str(vcf_record.ref);
+      StringDNA5 reference_str(vcf_record_ptr->ref);
       StringDNA5 alternate_str(alt);
 
       std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
-                                                                                  vcf_record.offset,
+                                                                                  vcf_record_ptr->offset,
                                                                                   VariantPhase::UNPHASED,
-                                                                                  vcf_record.id,
+                                                                                  vcf_record_ptr->id,
                                                                                   std::move(reference_str),
                                                                                   std::move(alternate_str),
                                                                                   evidence));
@@ -155,10 +155,10 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(size_t vcf_record_count, const VcfRecord
 
   }
 
-  if (vcf_record_count % VARIANT_REPORT_INTERVAL_ == 0) {
+  if (vcf_record_ptr->line_number % VARIANT_REPORT_INTERVAL_ == 0) {
 
-    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_count, variant_count_);
-    ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record.offset);
+    ExecEnv::log().info("Processed :{} records, total variants: {}", vcf_record_ptr->line_number, variant_count_);
+    ExecEnv::log().info("Contig: {}, offset: {}", contig, vcf_record_ptr->offset);
 
   }
 

@@ -30,9 +30,9 @@ public:
                                                    genome_db_ptr_(genome_db_ptr) {}
   ~PfVCFImpl() override = default;
 
-  void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord& vcf_record) override;
+  void ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) override;
 
-  void processVCFHeader(const VcfHeaderInfo& header_info) override;
+  void processVCFHeader(const VCFHeaderInfo& header_info) override;
 
   void readParseVCFImpl(const std::string &vcf_file_name);
 
@@ -41,7 +41,7 @@ private:
   EvidenceFactory evidence_factory_;
 
   // Processes the record in a try/catch block.
-  void ParseRecord(size_t vcf_record_count, const VcfRecord& record);
+  void ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr);
 
   constexpr static const char GT_FIELD_SEPARATOR_CHAR_{'/'};
   constexpr static const char AD_FIELD_SEPARATOR_CHAR_{','};

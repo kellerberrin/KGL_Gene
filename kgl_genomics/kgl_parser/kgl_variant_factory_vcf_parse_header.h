@@ -18,7 +18,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structure to return VCF header information as a vector of pair<key, value>
-using VcfHeaderInfo = std::vector<std::pair<std::string, std::string>>;
+using VCFHeaderInfo = std::vector<std::pair<std::string, std::string>>;
 // A map of contigs.
 using VCFContigMap = std::map<ContigId_t, ContigSize_t>;
 // A map of VCF INFO fields.
@@ -58,9 +58,9 @@ public:
 
   [[nodiscard]] const std::vector<std::string> &getGenomes() const { return vcf_genomes_; }
 
-  [[nodiscard]] const VcfHeaderInfo &getHeaderInfo() const { return vcf_header_info_; }
+  [[nodiscard]] const VCFHeaderInfo &getHeaderInfo() const { return vcf_header_info_; }
 
-  [[nodiscard]] static bool parseVcfHeader(const VcfHeaderInfo& header, VCFContigMap& vcf_contig_map, VCFInfoRecordMap& vcf_info_map);
+  [[nodiscard]] static bool parseVcfHeader(const VCFHeaderInfo& header, VCFContigMap& vcf_contig_map, VCFInfoRecordMap& vcf_info_map);
 
   [[nodiscard]] static bool checkVCFReferenceContigs(const VCFContigMap& vcf_contig_map, std::shared_ptr<const GenomeReference> reference_genome);
 
@@ -71,7 +71,7 @@ public:
 private:
 
   std::vector<std::string> vcf_genomes_;                // Field (genome) names for each VCF record
-  VcfHeaderInfo vcf_header_info_;
+  VCFHeaderInfo vcf_header_info_;
 
   // Parser constants.
   static constexpr const char *KEY_SEPARATOR_{"="};

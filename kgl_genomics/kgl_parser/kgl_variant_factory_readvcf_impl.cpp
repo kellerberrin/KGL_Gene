@@ -41,7 +41,12 @@ void kgl::VCFReaderMT::readVCFFile(const std::string& vcf_file_name) {
   }
 
   // start reading records asynchronously.
-  vcf_io_.commenceVCFIO(vcf_file_name);
+  if (not vcf_parser_.open(vcf_file_name)) {
+
+    ExecEnv::log().error("VCFReaderMT::readVCFFile; Problem opening VCF file: {}", vcf_file_name);
+    return;
+
+  }
 
   // Wait until processing is complete.
   for (auto const& future : thread_futures) {
@@ -60,16 +65,16 @@ void kgl::VCFReaderMT::VCFConsumer() {
   while (true) {
 
     // Dequeue the vcf record.
-    QueuedVCFRecord vcf_record = vcf_io_.readVCFRecord();
+    std::unique_ptr<const VCFRecord> vcf_record_ptr = vcf_parser_.readVCFRecord();
     // Terminate on EOF
-    if (not vcf_record) {
+    if (vcf_record_ptr->EOFRecord()) {
 
-      vcf_io_.enqueueEOF();
+      vcf_parser_.enqueueEOF();
       break;  // Eof encountered, terminate processing.
 
     }
 
-    if (vcf_record.value().second->contig_id.empty()) {
+    if (vcf_record_ptr->contig_id.empty()) {
 
       ExecEnv::log().error("Empty VCF_record encountered; consumer thread terminates.");
       break;
@@ -77,7 +82,7 @@ void kgl::VCFReaderMT::VCFConsumer() {
     }
 
     // Call the consumer object with the dequeued record.
-    ProcessVCFRecord(vcf_record.value().first, *vcf_record.value().second);
+    ProcessVCFRecord(std::move(vcf_record_ptr));
     ++final_count;
 
   }

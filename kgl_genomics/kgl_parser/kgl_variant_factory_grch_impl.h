@@ -36,9 +36,9 @@ public:
 
   ~GrchVCFImpl() override = default;
 
-  void ProcessVCFRecord(size_t vcf_record_count, const VcfRecord &vcf_record) override;
+  void ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) override;
 
-  void processVCFHeader(const VcfHeaderInfo &header_info) override;
+  void processVCFHeader(const VCFHeaderInfo &header_info) override;
 
   void readParseVCFImpl(const std::string &vcf_file_name);
 

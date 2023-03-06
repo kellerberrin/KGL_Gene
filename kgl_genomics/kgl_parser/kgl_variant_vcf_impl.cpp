@@ -62,7 +62,7 @@ void kgl::ParseVCF::enqueueLineRecord() {
     // Check for EOF condition.
     if (line_record.EOFRecord()) {
 
-      // push the eof marker back on the queue and stop processing.
+      // Push the EOF marker onto the pipeline and stop processing.
       enqueueEOF();
       break;
 
@@ -94,21 +94,23 @@ void kgl::ParseVCF::enqueueLineRecord() {
 }
 
 // Parse the VCF line into basic VCF fields.
-std::unique_ptr<kgl::VcfRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecord line) {
+std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecord line) {
 
+  // Check for EOF.
+  if (line.EOFRecord()) {
 
-  auto [line_num, line_record] = line.getLineData();
+    return VCFRecord::createEOFMarker();
 
-  std::unique_ptr<VcfRecord> vcf_record_ptr(std::make_unique<VcfRecord>());
+  }
 
-  vcf_record_ptr->line_num = line_num;
+  std::unique_ptr<VCFRecord> vcf_record_ptr(std::make_unique<VCFRecord>(std::move(line)));
 
-  std::vector<std::string_view> field_views = Utility::viewTokenizer(line_record, VCF_FIELD_DELIMITER_CHAR_);
+  std::vector<std::string_view> field_views = Utility::viewTokenizer(vcf_record_ptr->line_record_str, VCF_FIELD_DELIMITER_CHAR_);
 
   if (field_views.size() < MINIMUM_VCF_FIELDS_) {
 
     ExecEnv::log().error("ParseVCF::moveToVcfRecord; VCF file: {}, line: {}, record has less than the mandatory field count: {}"
-                         , getFileName(), line_num, MINIMUM_VCF_FIELDS_);
+                         , getFileName(), vcf_record_ptr->line_number, MINIMUM_VCF_FIELDS_);
     return nullptr;
 
   }
@@ -166,9 +168,6 @@ std::unique_ptr<kgl::VcfRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecord line
     }
 
   }
-
-  // Move the entire line record to the VCF field record.
-  vcf_record_ptr->line_record_ptr = std::make_unique<std::string>(std::move(line_record));
 
   return vcf_record_ptr;
 

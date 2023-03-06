@@ -24,11 +24,11 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // VCF Record parser object (multi-threaded) - uses multiple threads to parse queued file lines from the IO reader.
-// The line fields are tab delimited and are parsed into a VcfRecord which is then enqueued for further processing.
+// The line fields are tab delimited and are parsed into a VCFRecord which is then enqueued for further processing.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using VCFRecordPtr = std::unique_ptr<const VcfRecord>;
+using VCFRecordPtr = std::unique_ptr<const VCFRecord>;
 
 class ParseVCF {
 
@@ -84,7 +84,7 @@ private:
   static constexpr const size_t FORMAT_FIELD_IDX_{8};
 
   void enqueueLineRecord();
-  std::unique_ptr<VcfRecord> moveToVcfRecord(IOLineRecord line_record);
+  std::unique_ptr<const VCFRecord> moveToVcfRecord(IOLineRecord line_record);
 
 };
 

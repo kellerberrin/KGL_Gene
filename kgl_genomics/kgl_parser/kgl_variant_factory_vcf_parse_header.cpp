@@ -112,7 +112,7 @@ bool kgl::VCFParseHeader::parseHeader(const std::string& vcf_file_name) {
 }
 
 
-bool kgl::VCFParseHeader::parseVcfHeader(const VcfHeaderInfo& header_info, VCFContigMap& vcf_contig_map, VCFInfoRecordMap& vcf_info_map) {
+bool kgl::VCFParseHeader::parseVcfHeader(const VCFHeaderInfo& header_info, VCFContigMap& vcf_contig_map, VCFInfoRecordMap& vcf_info_map) {
 
   vcf_contig_map.clear();
 
