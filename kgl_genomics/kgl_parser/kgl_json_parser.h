@@ -7,10 +7,9 @@
 
 
 #include "kgl_genome_types.h"
-#include "kgl_data_file_impl.h"
 #include "kgl_data_file_type.h"
 
-#include "../../kel_thread/kel_queue_tidal.h"
+#include "kel_mt_buffer.h"
 
 #include <memory>
 #include <string>
@@ -67,12 +66,13 @@ public:
   [[nodiscard]] bool parseFile(const std::string& json_file_name, const std::shared_ptr<DBCitation>& db_citation_ptr);
   [[nodiscard]] bool parseFile(const std::string& json_file_name, DBCitationMap& citation_map);
 
-  [[nodiscard]] const std::string& getFileName() const { return file_data_.fileName(); }
+  [[nodiscard]] const std::string& getFileName() const { return file_name_; }
 
 private:
 
   // The upstream queue of line records.
-  FileDataIO file_data_;
+  StreamMTBuffer file_data_;
+  std::string file_name_;
 
   static const constexpr size_t REPORT_INTERVAL_{100000}; // Parser progress messages.
 

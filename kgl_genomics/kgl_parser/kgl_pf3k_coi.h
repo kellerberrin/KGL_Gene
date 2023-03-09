@@ -7,7 +7,6 @@
 
 
 #include "kgl_data_file_type.h"
-#include "kgl_data_file_impl.h"
 #include "kgl_square_parser.h"
 
 

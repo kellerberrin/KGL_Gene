@@ -51,11 +51,10 @@ public:
   // After an EOF has been received, then subsequent calls will not block and will return EOF objects.
   [[nodiscard]] IOLineRecord readLine() override;
 
-  // Static constructors.
+  // Static constructor.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
   // Layer the stream buffer on top of an existing open StreamIO.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr);
-
 
   // Access queue stats.
   [[nodiscard]] const QueueTidal<IOLineRecord>& lineQueue() const { return line_io_queue_; }

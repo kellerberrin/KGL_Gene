@@ -213,7 +213,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
-        kgl_genomics/kgl_parser/kgl_data_file_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_grch_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_grch_impl.h

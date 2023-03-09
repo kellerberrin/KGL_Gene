@@ -3,7 +3,7 @@
 //
 
 #include "kgl_bio_pmid_parser.h"
-#include "kgl_data_file_impl.h"
+#include "kel_mt_buffer.h"
 #include "kel_utility.h"
 
 
@@ -157,7 +157,7 @@ std::set<std::string> kgl::BioPMIDMaps::diseaseMeSHPMID(const std::string& disea
 
 bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
-  FileDataIO file_io;
+  StreamMTBuffer file_io;
   size_t counter = 0;
 
   if (not file_io.open(file_name)) {
@@ -214,7 +214,7 @@ bool kgl::ParseBioPMID::parseBioPMIDRecords(const std::string& file_name) {
 
   }
 
-  ExecEnv::log().info("Parsed: {} lines from text file: {}", counter, file_io.fileName());
+  ExecEnv::log().info("Parsed: {} lines from text file: {}", counter, file_name);
   return true;
 
 }

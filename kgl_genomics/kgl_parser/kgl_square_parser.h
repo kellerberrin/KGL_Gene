@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 #include <map>
-
-#include "kgl_data_file_impl.h"
+#include <optional>
+#include <memory>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

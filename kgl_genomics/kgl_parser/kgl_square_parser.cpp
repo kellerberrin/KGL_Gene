@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include "kgl_pfgenome_aux.h"
+#include "kel_mt_buffer.h"
 #include "kel_exec_env.h"
 
 
@@ -162,13 +163,13 @@ const std::vector<std::string>& kgl::SquareTextIndexed::getRow(const std::string
 
 std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const std::string& file_name, char delimiter) {
 
-  FileDataIO file_io;
+  StreamMTBuffer file_io;
   std::shared_ptr<SquareTextRows> square_text_ptr(std::make_shared<SquareTextRows>());
   size_t counter = 0;
 
   if (not file_io.open(file_name)) {
 
-    ExecEnv::log().critical("SquareTextParser::parseIndexedFile; I/O error; could not open file: {}", file_io.fileName());
+    ExecEnv::log().critical("SquareTextParser::parseIndexedFile; I/O error; could not open file: {}", file_name);
 
   }
 
@@ -196,7 +197,7 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
 
   }
 
-  ExecEnv::log().info("Parsed: {} lines from square text file: {}", counter, file_io.fileName());
+  ExecEnv::log().info("Parsed: {} lines from square text file: {}", counter, file_name);
 
   return square_text_ptr;
 

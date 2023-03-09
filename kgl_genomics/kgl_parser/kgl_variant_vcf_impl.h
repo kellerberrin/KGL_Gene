@@ -12,6 +12,7 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 
 #include "kel_queue_tidal.h"
+#include "kel_workflow_threads.h"
 #include "kel_workflow_pipeline.h"
 
 #include <memory>
@@ -45,7 +46,6 @@ public:
              size_t vcf_parse_threads = PARSER_THREADS_);
 
   // Export parsed VCF records further up the parser chain.
-  // Note that nullptr indicates an EOF condition.
   [[nodiscard]] VCFRecordPtr readVCFRecord() { return vcf_pipeline_.waitAndPop(); }
 
   // Push an eof marker onto the queue

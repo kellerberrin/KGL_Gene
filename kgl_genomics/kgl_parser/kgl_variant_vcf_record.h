@@ -6,6 +6,7 @@
 #define KGL_VARIANT_FILE_H
 
 #include "kgl_genome_types.h"
+#include "kel_basic_io.h"
 #include <string>
 #include <vector>
 

@@ -8,6 +8,7 @@
 #include "kel_exec_env.h"
 #include "kel_utility.h"
 #include "kgl_gff3.h"
+#include "kel_mt_buffer.h"
 
 #include <functional>
 #include <charconv>
@@ -46,14 +47,14 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 
 std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::readGffFile(const std::string& file_name) {
 
-  FileDataIO file_io;
+  StreamMTBuffer file_io;
   std::vector<std::unique_ptr<GffRecord>> gff_records;
   size_t record_counter{0};
   bool result{true};
 
   if (not file_io.open(file_name)) {
 
-    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_io.fileName());
+    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_name);
 
   }
 

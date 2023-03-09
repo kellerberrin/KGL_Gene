@@ -2,8 +2,10 @@
 // Created by kellerberrin on 28/09/22.
 //
 
+#include "kel_basic_io.h"
 #include "kel_utility.h"
 #include "kgl_fasta.h"
+
 
 
 namespace kgl = kellerberrin::genome;
