@@ -41,11 +41,12 @@ public:
   constexpr static const char* DESCRIPTION_KEY = "DESCRIPTION";
   constexpr static const char* NAME_KEY = "NAME";
   constexpr static const char* GENE_BIOTYPE_KEY = "GENE_BIOTYPE";
-
+  constexpr static const char SUPER_FEATURE_DELIMITER = ',';
 
   // Convenience access routines.
   [[nodiscard]] bool getIds(std::vector<std::string> &value_vec) const { return getAttributes(ID_KEY, value_vec); }
-  void getSuperFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(SUPER_FEATURE_KEY, value_vec); }
+  // Super features are further parsed by comma ','. For example; "PF3D7_0108400.1,PF3D7_0108400.2" returns 2 super features.
+  void getSuperFeatureIds(std::vector<std::string> &value_vec) const;
   void getAssignedFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
   bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
   bool getGeneBioType(std::vector<std::string> &value_vec) const { return getAttributes(GENE_BIOTYPE_KEY, value_vec); }

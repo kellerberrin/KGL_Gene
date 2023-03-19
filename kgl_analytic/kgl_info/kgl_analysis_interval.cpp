@@ -176,6 +176,19 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
                                                 const ActiveParameterList& named_parameters,
                                                 const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
+
+  // Setup and clear the directories to hold analysis output.
+  // The top level directory for this analysis type.
+  // This directory and sub-directories are recreated each time the analysis is executed.
+  // ALL PREVIOUS ANALYSIS FILES ARE DELETED.
+  ident_work_directory_ = work_directory + std::string("/") + ident();
+  if (not Utility::createDirectory(ident_work_directory_)) {
+
+    ExecEnv::log().critical("IntervalAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+                            ident_work_directory_);
+
+  }
+
   work_directory_ = work_directory;
 
   auto genome_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE);
@@ -229,7 +242,7 @@ bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
   bool analysis_result = variantIntervalCount(population);
 
   // Population specific output name.
-  std::string interval_file = Utility::filePath((population->populationId() + "_" + output_file_name_), work_directory_);
+  std::string interval_file = Utility::filePath((population->populationId() + "_" + output_file_name_), ident_work_directory_);
 
   // Write the results.
   bool file_result = writeResults(genome_, interval_file, false, OUTPUT_DELIMITER_);
@@ -414,23 +427,25 @@ bool kgl::IntervalAnalysis::writeResults( std::shared_ptr<const GenomeReference>
 
   if (not outfile.good()) {
 
-    ExecEnv::log().error("AggregateVariantDistribution; could not open results file: {}", output_file_name_);
+    ExecEnv::log().error("AggregateVariantDistribution; could not open results file: {}", output_file);
     return false;
 
   }
 
   if (not writeHeader(outfile, delimiter, display_sequence)) {
 
-    ExecEnv::log().error("AggregateVariantDistribution; could not write header to file: {}", output_file_name_);
+    ExecEnv::log().error("AggregateVariantDistribution; could not write header to file: {}", output_file);
     return false;
 
   }
   if (not writeData(genome_db, display_sequence, outfile, delimiter)) {
 
-    ExecEnv::log().error("AggregateVariantDistribution; could not write results to file: {}", output_file_name_);
+    ExecEnv::log().error("AggregateVariantDistribution; could not write results to file: {}", output_file);
     return false;
 
   }
+
+  ExecEnv::log().info("AggregateVariantDistribution; writing results to file: {}", output_file);
 
   return outfile.good();
 

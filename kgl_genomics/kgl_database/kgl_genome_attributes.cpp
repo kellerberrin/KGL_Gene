@@ -66,3 +66,22 @@ std::string kgl::Attributes::getHGNC() const {
   return hgnc_id;
 
 }
+
+void kgl::Attributes::getSuperFeatureIds(std::vector<std::string> &value_vec) const {
+
+  value_vec.clear();
+  std::vector<std::string> super_vec;
+  getAttributes(SUPER_FEATURE_KEY, super_vec);
+
+  for (auto const& super_feature : super_vec) {
+
+    auto parsed_features = Utility::charTokenizer(super_feature, SUPER_FEATURE_DELIMITER);
+    for (auto feature : parsed_features) {
+
+      value_vec.emplace_back(feature);
+
+    }
+
+  }
+
+}

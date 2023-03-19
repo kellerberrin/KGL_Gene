@@ -167,6 +167,7 @@ private:
   size_t interval_size_{0};
   std::string output_file_name_;
   std::string work_directory_;
+  std::string ident_work_directory_;
 
   // First count is Variants the second is SNPs.
   using IntervalVector = std::vector<IntervalData>;
