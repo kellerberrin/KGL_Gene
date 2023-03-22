@@ -143,7 +143,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
         if (resource_type == ONTOLOGY_DATABASE_) {
 
-          resources.emplace_back(RuntimeResourceType::ONTOLOGY_DATABASE, resource_identifier);
+          resources.emplace_back(RuntimeResourceType::HSAPIEN_ONTOLOGY, resource_identifier);
 
         } else if (resource_type == GENOME_DATABASE_) {
 
@@ -638,7 +638,11 @@ kgl::RuntimeResourceMap kgl::RuntimeProperties::getRuntimeResources() const {
 
       }
 
-    } // Genome Aux
+    } else if (tree_type != COMMENT_){
+
+      ExecEnv::log().warn("RuntimeProperties::getRuntimeResources, Unexpected resource: '{}'; ignored", tree_type);
+
+    }
 
   } // For all resources.
 

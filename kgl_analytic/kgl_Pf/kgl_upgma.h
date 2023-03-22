@@ -203,8 +203,6 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
   intron << "Gene" << delimiter
          << "description" << delimiter
-         << "Symbolic" << delimiter
-         << "AltSymbolic" << delimiter
          << "IStart" << delimiter
          << "IEnd" << delimiter
          << "IStrand" << delimiter
@@ -215,44 +213,46 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
          << "ISequence" << '\n';
 
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
+  size_t gene_count{0};
+  for (auto const& [genome_ident, genome_ptr] : genome_collection_ptr->getMap()) {
 
-  for (auto genome : genome_collection_ptr->getMap()) {
+    for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
 
-    std::shared_ptr<const GenomeReference> genome_db_ptr = genome.second;
+      ExecEnv::log().info("VarGeneFamilyTree; Contig: {} contains genes: {}", contig_ident, contig_ptr->getGeneMap().size());
 
-    for (auto contig : genome_db_ptr->getMap()) {
+      for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
-      for (auto gene : contig.second->getGeneMap()) {
+        auto description_vector = gene_ptr->getAttributes().getDescription();
+        if (description_vector.empty()) {
 
-        std::string alt_symbolic;
-        std::string symbolic;
-        std::string description;
+          continue;
 
-        continue;
+        }
+        std::string description = description_vector.front();
 
         // Is this gene a member of the requested family.
         if (Utility::toupper(description).find(protein_family) != std::string::npos) {
 
-          const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(
-          gene.second);
+          ++gene_count;
+
+          const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr);
 
           if (coding_seq_ptr->empty()) {
 
-            ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}",
-                                    gene.second->id());
+            ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
 
           }
 
           std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
           DNA5SequenceCoding coding_dna_sequence;
 
-          if (contig.second->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
+          if (contig_ptr->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
 
             // Do we have a valid intron (VAR only)?
-            std::vector<DNA5SequenceCoding> intron_sequence_array = contig.second->sequence().intronArraySequence(coding_sequence);
+            std::vector<DNA5SequenceCoding> intron_sequence_array = contig_ptr->sequence().intronArraySequence(coding_sequence);
             std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance,
-                                                                genome_db_ptr,
-                                                                gene.second,
+                                                                genome_ptr,
+                                                                gene_ptr,
                                                                 protein_family));
 
             StrandSense strand;
@@ -275,7 +275,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
 
             // Only add genes with valid coding sequences (no pseudo genes).
-            if (contig.second->verifyDNACodingSequence(coding_dna_sequence)) {
+            if (contig_ptr->verifyDNACodingSequence(coding_dna_sequence)) {
 
               // Only 1 intron (var genes)
               if (intron_sequence_array.size() == 1) {
@@ -316,10 +316,8 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
                   }
 
-                  intron << gene.second->id() << delimiter
+                  intron << gene_ptr->id() << delimiter
                          << description << delimiter
-                         << symbolic << delimiter
-                         << alt_symbolic << delimiter
                          << intron_seq.first << delimiter
                          << intron_seq.second << delimiter
                          << static_cast<char>(strand) << delimiter
@@ -360,6 +358,7 @@ void VarGeneFamilyTree( DistanceTree& distance_tree,
 
   } // All Genomes
 
+  ExecEnv::log().info("VarGeneFamilyTree; Gene family: {}, found genes: {}", protein_family, gene_count);
   // Calculate.
   distance_tree.calculateTree(node_vector_ptr);
   // Report Results.

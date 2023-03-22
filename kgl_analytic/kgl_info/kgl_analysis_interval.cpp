@@ -179,9 +179,7 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
-  // This directory and sub-directories are recreated each time the analysis is executed.
-  // ALL PREVIOUS ANALYSIS FILES ARE DELETED.
-  ident_work_directory_ = work_directory + std::string("/") + ident();
+   ident_work_directory_ = work_directory + std::string("/") + ident();
   if (not Utility::createDirectory(ident_work_directory_)) {
 
     ExecEnv::log().critical("IntervalAnalysis::initializeAnalysis, unable to create analysis results directory: {}",

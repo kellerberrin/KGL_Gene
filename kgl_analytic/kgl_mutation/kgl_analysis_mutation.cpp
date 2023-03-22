@@ -39,7 +39,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
   // Get the analysis resources.
   ref_genome_ptr_ = resource_ptr->getSingleResource<const GenomeReference>(RuntimeResourceType::GENOME_DATABASE);
-  ontology_db_ptr_ = resource_ptr->getSingleResource<const kol::OntologyDatabase>(RuntimeResourceType::ONTOLOGY_DATABASE);
+  ontology_db_ptr_ = resource_ptr->getSingleResource<const kol::OntologyDatabase>(RuntimeResourceType::HSAPIEN_ONTOLOGY);
   genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(RuntimeResourceType::GENOME_AUX_INFO);
   uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_UNIPROTID);
   ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceBase::NOMENCLATURE_ENSEMBL);

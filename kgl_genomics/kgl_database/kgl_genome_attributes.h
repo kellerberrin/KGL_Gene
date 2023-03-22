@@ -31,6 +31,7 @@ public:
 
   // General access routines.
   bool getAttributes(const std::string &key, std::vector<std::string> &value_vec) const; // false if no key.
+  [[nodiscard]] std::vector<std::string> getAttributes(const std::string &key) const; // false if no key.
   void insertAttribute(const std::string& key, const std::string& value); // Always succeeds; keys are uppercase.
   void insertAttribute(std::string&& key, std::string&& value);
 
@@ -49,6 +50,7 @@ public:
   void getSuperFeatureIds(std::vector<std::string> &value_vec) const;
   void getAssignedFeatureIds(std::vector<std::string> &value_vec) const { getAttributes(ASSIGNED_FEATURE_KEY, value_vec); }
   bool getDescription(std::vector<std::string> &value_vec) const { return getAttributes(DESCRIPTION_KEY, value_vec); }
+  [[nodiscard]] std::vector<std::string> getDescription() const { return getAttributes(DESCRIPTION_KEY); }
   bool getGeneBioType(std::vector<std::string> &value_vec) const { return getAttributes(GENE_BIOTYPE_KEY, value_vec); }
   bool getName(std::vector<std::string> &value_vec) const { return getAttributes(NAME_KEY, value_vec); }
   [[nodiscard]] const AttributeMap& getMap() const { return attributes_; }

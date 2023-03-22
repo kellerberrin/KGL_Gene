@@ -32,6 +32,22 @@ bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::str
 }
 
 
+// Returns false if key not found.
+std::vector<std::string> kgl::Attributes::getAttributes(const std::string &key) const {
+
+  std::vector<std::string> values;
+  auto const [first, last] = attributes_.equal_range(key);
+  for (auto iter = first; iter != last; ++iter) {
+
+    values.push_back(iter->second);
+
+  }
+
+  return values;
+
+}
+
+
 // Always succeeds; keys are uppercase.
 void kgl::Attributes::insertAttribute(const std::string& key, const std::string& value) {
 

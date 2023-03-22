@@ -44,6 +44,7 @@ private:
   void ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr);
 
   constexpr static const char GT_FIELD_SEPARATOR_CHAR_{'/'};
+  constexpr static const char GT_ALT_FIELD_SEPARATOR_CHAR_{'|'};
   constexpr static const char AD_FIELD_SEPARATOR_CHAR_{','};
   constexpr static const char* DIGITS_{"0123456789"};
   constexpr static const char* FLOAT_DIGITS_{"eE.+-0123456789"};

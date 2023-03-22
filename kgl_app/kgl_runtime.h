@@ -198,7 +198,7 @@ public:
   RuntimeOntologyResource(const RuntimeOntologyResource&) = default;
   ~RuntimeOntologyResource() override = default;
 
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ONTOLOGY_DATABASE; }
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::HSAPIEN_ONTOLOGY; }
 
   [[nodiscard]] const std::string& ontologyIdentifier() const { return ontology_identifier_; }
   [[nodiscard]] const std::string& annotationFileName() const { return annotation_file_name_; }

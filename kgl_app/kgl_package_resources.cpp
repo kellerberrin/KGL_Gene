@@ -27,7 +27,7 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadGenomeResource(resource_ident, resource_ptr);
         break;
 
-      case RuntimeResourceType::ONTOLOGY_DATABASE:
+      case RuntimeResourceType::HSAPIEN_ONTOLOGY:
         loadOntologyResource(resource_ident, resource_ptr);
         break;
 

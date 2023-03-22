@@ -64,6 +64,8 @@ private:
   constexpr static const char* HELP_ = "help";
   constexpr static const char* ACTIVE_ = "active";
   constexpr static const char* VALUE_ = "value";
+  constexpr static const char* COMMENT_ = "<xmlcomment>";
+
   // Active Package Runtime categories.
   constexpr static const char* EXECUTE_LIST_ = "executeList";
   // Package Runtime categories.

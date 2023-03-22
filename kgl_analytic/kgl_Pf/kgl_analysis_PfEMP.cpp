@@ -21,6 +21,16 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
+  // Setup and clear the directories to hold analysis output.
+  // The top level directory for this analysis type.
+  ident_work_directory_ = work_directory + std::string("/") + ident();
+  if (not Utility::createDirectory(ident_work_directory_)) {
+
+    ExecEnv::log().critical("PfEMPAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+                            ident_work_directory_);
+
+  }
+
   for (auto const& genome_resource_ptr : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
 
     auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_ptr);
@@ -29,7 +39,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  if (not getParameters(named_parameters, work_directory)) {
+  if (not getParameters(named_parameters)) {
 
     ExecEnv::log().info("PfEMPAnalysis::initializeAnalysis; Analysis Id: {} problem parsing parameters", ident());
     return false;
@@ -85,13 +95,13 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
                                         intron_file_name_,
                                         levenshtein_distance_ptr,
                                         reference_genomes_,
-                                        "PFEMP1");
+                                        PFEMP1_FAMILY_);
 
 }
 
 
 
-bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory) {
+bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_parameters) {
 
 
   for (auto const& named_block : named_parameters.getMap()) {
@@ -115,7 +125,7 @@ bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_paramete
       if (newick_opt) {
 
         newick_file_name_ = newick_opt.value().front();
-        newick_file_name_ = Utility::filePath(newick_file_name_, work_directory);
+        newick_file_name_ = Utility::filePath(newick_file_name_, ident_work_directory_);
 
       } else {
 
@@ -128,7 +138,7 @@ bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_paramete
       if (intron_opt) {
 
         intron_file_name_ = intron_opt.value().front();
-        intron_file_name_ = Utility::filePath(intron_file_name_, work_directory);
+        intron_file_name_ = Utility::filePath(intron_file_name_, ident_work_directory_);
 
       } else {
 

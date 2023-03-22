@@ -23,7 +23,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resources
-                                 ONTOLOGY_DATABASE,     // GO ontology data files.
+                                 HSAPIEN_ONTOLOGY,     // Human GO ontology data files.
                                  GENE_NOMENCLATURE,     // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
                                  GENOME_GENEALOGY,      // Genome aux info including genealogy (1000Genomes only).
                                  GENOME_AUX_INFO,       // Genome aux info, sex, population and super-population data (all individual genomes).
@@ -108,14 +108,14 @@ private:
 
   inline static std::vector<std::pair<RuntimeResourceType, std::string>> resource_description = {
 
-      { RuntimeResourceType::GENOME_DATABASE, "RuntimeResourceType::GENOME_DATABASE"} ,      // Fasta and GFF resources
-      { RuntimeResourceType::ONTOLOGY_DATABASE,"RuntimeResourceType::ONTOLOGY_DATABASE"},     // GO ontology data files.
+      { RuntimeResourceType::GENOME_DATABASE,   "RuntimeResourceType::GENOME_DATABASE"} ,      // Fasta and GFF resources
+      { RuntimeResourceType::HSAPIEN_ONTOLOGY,  "RuntimeResourceType::HSAPIEN_ONTOLOGY"},     // Homo Sapien GO ontology data files.
       { RuntimeResourceType::GENE_NOMENCLATURE, "RuntimeResourceType::GENE_NOMENCLATURE"},    // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
-      { RuntimeResourceType::GENOME_GENEALOGY, "RuntimeResourceType::GENOME_GENEALOGY"},      // Genome aux info including genealogy (1000Genomes only).
-      { RuntimeResourceType::GENOME_AUX_INFO, "RuntimeResourceType::GENOME_AUX_INFO"},     // Genome aux info, sex, population and super-population data (all individual genomes).
-      { RuntimeResourceType::ALLELE_CITATION, "RuntimeResourceType::ALLELE_CITATION"},     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
-      { RuntimeResourceType::ENTREZ_GENE, "RuntimeResourceType::ENTREZ_GENE"},     // Entrez gene info for H. Sapien
-      { RuntimeResourceType::PUBMED_API, "RuntimeResourceType::PUBMED"}     // Pubmed restful API for literature.
+      { RuntimeResourceType::GENOME_GENEALOGY,  "RuntimeResourceType::GENOME_GENEALOGY"},      // Genome aux info including genealogy (1000Genomes only).
+      { RuntimeResourceType::GENOME_AUX_INFO,   "RuntimeResourceType::GENOME_AUX_INFO"},     // Genome aux info, sex, population and super-population data (all individual genomes).
+      { RuntimeResourceType::ALLELE_CITATION,   "RuntimeResourceType::ALLELE_CITATION"},     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
+      { RuntimeResourceType::ENTREZ_GENE,       "RuntimeResourceType::ENTREZ_GENE"},     // Entrez gene info for H. Sapien
+      { RuntimeResourceType::PUBMED_API,        "RuntimeResourceType::PUBMED"}     // Pubmed restful API for literature.
 
   };
 

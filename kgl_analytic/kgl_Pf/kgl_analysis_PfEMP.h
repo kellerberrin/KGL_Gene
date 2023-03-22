@@ -44,13 +44,16 @@ public:
 private:
 
   std::shared_ptr<GenomeCollection> reference_genomes_;
+  std::string ident_work_directory_;
 
   void performPFEMP1UPGMA();
-  bool getParameters(const ActiveParameterList& named_parameters, const std::string& work_directory);
+  bool getParameters(const ActiveParameterList& named_parameters);
 
   // Available Parameters
   constexpr static const char* NEWICK_FILE_ = "NewickFile";
   constexpr static const char* INTRON_FILE_ = "IntronFile";
+  // Var family ident.
+  constexpr static const char* PFEMP1_FAMILY_ = "PFEMP1";
 
   std::string newick_file_name_;
   std::string intron_file_name_;
