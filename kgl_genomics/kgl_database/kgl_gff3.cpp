@@ -227,6 +227,14 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
     // Create a mRNA feature
     feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_opt.value(), sequence);
   }
+  else if (gff_record.type() == UTR5Feature::UTR5_TYPE) {
+    // Create a FIVE_PRIME_UTR feature
+    feature_ptr = std::make_shared<kgl::UTR5Feature>(feature_id, contig_opt.value(), sequence);
+  }
+  else if (gff_record.type() == UTR3Feature::UTR3_TYPE) {
+    // Create a THREE_PRIME_UTR feature
+    feature_ptr = std::make_shared<kgl::UTR3Feature>(feature_id, contig_opt.value(), sequence);
+  }
   else if (gff_record.type() == EXONFeature::EXON_TYPE) {
     // Create a mRNA feature
     feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_opt.value(), sequence);
@@ -253,7 +261,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   // Annotate the contig.
   std::shared_ptr<kgl::ContigReference> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigReference>(contig_opt.value());
 
-  bool result = mutable_contig_ptr->addGeneExonFeature(feature_ptr);
+  bool result = mutable_contig_ptr->addContigFeature(feature_ptr);
 
   if (not result) {
 

@@ -40,7 +40,7 @@ public:
   ContigReference& operator=(const ContigReference&) = default;
 
   // Add parsed features to the different feature structures.
-  [[nodiscard]] bool addGeneExonFeature(std::shared_ptr<Feature>& feature_ptr);
+  [[nodiscard]] bool addContigFeature(std::shared_ptr<Feature>& feature_ptr);
 
   // false if not found.
   [[nodiscard]] bool findFeatureId( const FeatureIdent_t& feature_id,

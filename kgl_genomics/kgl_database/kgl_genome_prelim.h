@@ -45,7 +45,7 @@ public:
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }
 
-  // Primarily used for tesing.
+  // Primarily used for testing.
   [[nodiscard]] bool equivalent(const FeatureSequence& lhs) const { return begin() == lhs.begin() and end() == lhs.end() and strand() == lhs.strand(); }
 
 private:
@@ -58,7 +58,7 @@ private:
   // They always correspond to zero based offsets on the relevant contig.
   ContigOffset_t begin_offset_;    // begin is the first nucleotide of the feature.
   ContigOffset_t end_offset_;      // end points past the last nucleotide of the feature; end = last_offset+1
-  StrandSense strand_sense_;      // can be 'UNKNOWN'
+  StrandSense strand_sense_;      // default is '+'
 
 };
 

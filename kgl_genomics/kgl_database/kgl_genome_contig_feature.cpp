@@ -412,30 +412,23 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
 
   // Check that sub-features fit within feature.
-  for (auto feature_pair : idFeatureMap()) {
+  for (auto const& [feature_id, feature_ptr] : idFeatureMap()) {
 
-    Feature &feature = *feature_pair.second;
+    for (auto const& [sub_feature_id, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-    // TSS blocks can overlap superfeatures (Genes).
-    if (feature.isTSS()) continue;
+      if (not checkSubFeatures(feature_ptr, sub_feature_ptr)) {
 
-    for (auto sub_feature_pair : feature.subFeatures()) {
-
-      const Feature &sub_feature = *sub_feature_pair.second;
-
-      // TSS blocks can overlap superfeatures (Genes).
-      if (sub_feature.isTSS()) continue;
-
-      if (sub_feature.sequence().begin() < feature.sequence().begin()
-          or sub_feature.sequence().end() > feature.sequence().end()) {
-
-        ExecEnv::log().error("SubFeature: {}; [{}:{}] overlaps Feature {}; [{}:{}]",
-                                  sub_feature.id(),
-                                  sub_feature.sequence().begin(),
-                                  sub_feature.sequence().end(),
-                                  feature.id(),
-                                  feature.sequence().begin(),
-                                  feature.sequence().end());
+        ExecEnv::log().warn("SubFeature: {}, type: {}; {}[{}:{}) overlaps Feature {} type: {}; {}[{}:{})",
+                                  sub_feature_ptr->id(),
+                                  sub_feature_ptr->featureType(),
+                                  sub_feature_ptr->sequence().strandText(),
+                                  sub_feature_ptr->sequence().begin(),
+                                  sub_feature_ptr->sequence().end(),
+                                  feature_ptr->id(),
+                                  feature_ptr->featureType(),
+                                  feature_ptr->sequence().strandText(),
+                                  feature_ptr->sequence().begin(),
+                                  feature_ptr->sequence().end());
 
 
       } // if sub-feature overlaps feature
@@ -443,20 +436,23 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
     } // for all sub-features.
 
     // Check that features fit within the super-feature.
-    if (feature.hasSuperfeature()) {
+    if (feature_ptr->hasSuperfeature()) {
 
-      const Feature &super_feature = *feature.getSuperFeature();
+      auto super_feature_ptr = feature_ptr->getSuperFeature();
 
-      if (feature.sequence().begin() < super_feature.sequence().begin()
-          or feature.sequence().end() > super_feature.sequence().end()) {
+      if (not checkSuperFeature(feature_ptr, super_feature_ptr)) {
 
-        ExecEnv::log().error("Feature: {}; [{}:{}] overlaps SuperFeature {}; [{}:{}]",
-                                  feature.id(),
-                                  feature.sequence().begin(),
-                                  feature.sequence().end(),
-                                  super_feature.id(),
-                                  super_feature.sequence().begin(),
-                                  super_feature.sequence().end());
+        ExecEnv::log().warn("Feature: {}, type: {}; {}[{}:{}) overlaps SuperFeature {}, type: {}; {}[{}:{})",
+                                  feature_ptr->id(),
+                                  feature_ptr->featureType(),
+                                  feature_ptr->sequence().strandText(),
+                                  feature_ptr->sequence().begin(),
+                                  feature_ptr->sequence().end(),
+                                  super_feature_ptr->id(),
+                                  super_feature_ptr->featureType(),
+                                  super_feature_ptr->sequence().strandText(),
+                                  super_feature_ptr->sequence().begin(),
+                                  super_feature_ptr->sequence().end());
 
       } // If feature overlaps super-feature.
 
@@ -466,3 +462,68 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
 }
 
+
+bool kgl::GeneExonFeatures::checkSubFeatures( const std::shared_ptr<const Feature>& feature_ptr
+                                             , const std::shared_ptr<const Feature>& sub_feature_ptr) {
+
+  // TSS blocks can overlap superfeatures.
+  if (sub_feature_ptr->isTSS()) {
+
+    return true;
+
+  }
+
+  // 5' UTR should be at the beginning of the mRNA feature but can overlap.
+  if (sub_feature_ptr->isUTR5() and feature_ptr->ismRNA()) {
+
+    return true;
+
+  }
+
+  // 3' UTR should be at the end of the mRNA feature but can overlap.
+  if (sub_feature_ptr->isUTR3() and feature_ptr->ismRNA()) {
+
+    return true;
+
+  }
+
+  // Else just check the sub_feature is within the feature.
+  bool valid_subfeature = sub_feature_ptr->sequence().begin() >= feature_ptr->sequence().begin()
+  and sub_feature_ptr->sequence().end() <= feature_ptr->sequence().end();
+
+  return valid_subfeature;
+
+}
+
+
+bool kgl::GeneExonFeatures::checkSuperFeature( const std::shared_ptr<const Feature>& feature_ptr
+    , const std::shared_ptr<const Feature>& super_feature_ptr) {
+
+  // TSS blocks can overlap superfeatures.
+  if (feature_ptr->isTSS()) {
+
+    return true;
+
+  }
+
+  // 5' UTR should be at the beginning of the mRNA feature but can overlap.
+  if (feature_ptr->isUTR5() and super_feature_ptr->ismRNA()) {
+
+    return true;
+
+  }
+
+  // 3' UTR should be at the end of the mRNA feature but can overlap.
+  if (feature_ptr->isUTR3() and super_feature_ptr->ismRNA()) {
+
+    return true;
+
+  }
+
+  // Else just check the feature is within the superfeature.
+  bool valid_feature = feature_ptr->sequence().begin() >= super_feature_ptr->sequence().begin()
+      and feature_ptr->sequence().end() <= super_feature_ptr->sequence().end();
+
+  return valid_feature;
+
+}

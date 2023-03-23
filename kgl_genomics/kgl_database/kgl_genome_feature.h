@@ -53,6 +53,8 @@ public:
   [[nodiscard]] virtual bool isPSEUDOGENE() const { return false; }
   [[nodiscard]] virtual bool isTSS() const { return false; }
   [[nodiscard]] virtual bool isEXON() const { return false; }
+  [[nodiscard]] virtual bool isUTR5() const { return false; }
+  [[nodiscard]] virtual bool isUTR3() const { return false; }
 
 
   // Always check for a NULL pointer with super feature.
@@ -171,6 +173,63 @@ private:
 
 
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A UTR5Feature - untranslated 5' region at the beginning of the Gene
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UTR5Feature : public Feature {
+
+public:
+
+  UTR5Feature(const FeatureIdent_t &id,
+              const std::shared_ptr<const ContigReference> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, UTR5_TYPE, contig_ptr, sequence) {}
+
+  UTR5Feature(const UTR5Feature &) = default;
+  ~UTR5Feature() override = default;
+
+  UTR5Feature &operator=(const UTR5Feature &) = default;
+
+  [[nodiscard]] bool isUTR5() const final { return true; }
+
+  // Type.
+  constexpr static const char* UTR5_TYPE = "FIVE_PRIME_UTR";
+
+private:
+
+
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A UTR3Feature - untranslated 3' region at the end of the Gene
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UTR3Feature : public Feature {
+
+public:
+
+  UTR3Feature(const FeatureIdent_t &id,
+              const std::shared_ptr<const ContigReference> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, UTR3_TYPE, contig_ptr, sequence) {}
+
+  UTR3Feature(const UTR3Feature &) = default;
+  ~UTR3Feature() override = default;
+
+  UTR3Feature &operator=(const UTR3Feature &) = default;
+
+  [[nodiscard]] bool isUTR3() const final { return true; }
+
+  // Type.
+  constexpr static const char* UTR3_TYPE = "THREE_PRIME_UTR";
+
+private:
+
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A Pseudogene feature may or may not have CDS or EXON subfeatures.

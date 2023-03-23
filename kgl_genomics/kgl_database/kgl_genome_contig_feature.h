@@ -110,8 +110,12 @@ private:
   void createGeneMap();
   void setupFeatureHierarchy();
   void verifyGeneExonHierarchy();
+  static bool checkSubFeatures( const std::shared_ptr<const Feature>& feature_ptr
+                              , const std::shared_ptr<const Feature>& sub_feature_ptr);
+  static bool checkSuperFeature( const std::shared_ptr<const Feature>& feature_ptr
+                               , const std::shared_ptr<const Feature>& super_feature_ptr);
 
-};
+  };
 
 
 
