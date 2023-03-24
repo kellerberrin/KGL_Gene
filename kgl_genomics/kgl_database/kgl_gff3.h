@@ -124,8 +124,6 @@ private:
   static constexpr const size_t GFF3_PHASE_FIELD_IDX_{7};
   static constexpr const size_t GFF3_TAG_FIELD_IDX_{8}; // The "xxxx=yyyy;aaaa=bbbb;..." tag field offset.
 
-
-
 };
 
 

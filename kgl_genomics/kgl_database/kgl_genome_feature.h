@@ -50,7 +50,9 @@ public:
   [[nodiscard]] virtual bool isCDS() const { return false; }
   [[nodiscard]] virtual bool isGene() const { return false; }
   [[nodiscard]] virtual bool ismRNA() const { return false; }
+  [[nodiscard]] virtual bool isrRNA() const { return false; }
   [[nodiscard]] virtual bool isPSEUDOGENE() const { return false; }
+  [[nodiscard]] virtual bool isPSEUDOGENIC_TRANSCRIPT() const { return true; }
   [[nodiscard]] virtual bool isTSS() const { return false; }
   [[nodiscard]] virtual bool isEXON() const { return false; }
   [[nodiscard]] virtual bool isUTR5() const { return false; }
@@ -109,7 +111,7 @@ public:
   [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
 
   [[nodiscard]] virtual bool isCDS() const final { return true; }
-  // CDS Type.
+
   constexpr static const char* CDS_TYPE = "CDS";
 
 private:
@@ -137,7 +139,6 @@ public:
 
   [[nodiscard]] bool isEXON() const final { return true; }
 
-  // EXON Type.
   constexpr static const char* EXON_TYPE = "EXON";
 
 private:
@@ -166,13 +167,37 @@ public:
 
   [[nodiscard]] bool ismRNA() const final { return true; }
 
-  // MRNA Type.
   constexpr static const char* MRNA_TYPE = "MRNA";
 
 private:
 
 
 };
+
+
+
+class rRNAFeature : public Feature {
+
+public:
+
+  rRNAFeature(const FeatureIdent_t &id,
+              const std::shared_ptr<const ContigReference> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, RRNA_TYPE, contig_ptr, sequence) {}
+
+  rRNAFeature(const rRNAFeature &) = default;
+  ~rRNAFeature() override = default;
+
+  rRNAFeature &operator=(const rRNAFeature &) = default;
+
+  [[nodiscard]] bool isrRNA() const final { return true; }
+
+  constexpr static const char* RRNA_TYPE = "RRNA";
+
+private:
+
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A UTR5Feature - untranslated 5' region at the beginning of the Gene
@@ -193,7 +218,6 @@ public:
 
   [[nodiscard]] bool isUTR5() const final { return true; }
 
-  // Type.
   constexpr static const char* UTR5_TYPE = "FIVE_PRIME_UTR";
 
 private:
@@ -222,7 +246,6 @@ public:
 
   [[nodiscard]] bool isUTR3() const final { return true; }
 
-  // Type.
   constexpr static const char* UTR3_TYPE = "THREE_PRIME_UTR";
 
 private:
@@ -250,13 +273,37 @@ public:
 
   [[nodiscard]] bool isPSEUDOGENE() const final { return true; }
 
-  // EXON Type.
   constexpr static const char* PSEUDOGENE_TYPE = "PSEUDOGENE";
 
 private:
 
 
 };
+
+
+
+class PSEUDOGENIC_TRANSCRIPTFeature : public Feature {
+
+public:
+
+  PSEUDOGENIC_TRANSCRIPTFeature(const FeatureIdent_t &id,
+                    const std::shared_ptr<const ContigReference> &contig_ptr,
+                    const FeatureSequence &sequence) : Feature(id, PSEUDOGENIC_TRANSCRIPT_TYPE, contig_ptr, sequence) {}
+
+  PSEUDOGENIC_TRANSCRIPTFeature(const PSEUDOGENIC_TRANSCRIPTFeature &) = default;
+  ~PSEUDOGENIC_TRANSCRIPTFeature() override = default;
+
+  PSEUDOGENIC_TRANSCRIPTFeature &operator=(const PSEUDOGENIC_TRANSCRIPTFeature &) = default;
+
+  [[nodiscard]] bool isPSEUDOGENIC_TRANSCRIPT() const final { return true; }
+
+  constexpr static const char* PSEUDOGENIC_TRANSCRIPT_TYPE = "PSEUDOGENIC_TRANSCRIPT";
+
+private:
+
+
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A Gene - can have multiple coding CDSFeatures/mRNAFeature sequences
@@ -280,8 +327,10 @@ public:
 
   [[nodiscard]] bool isGene() const final { return true; }
 
-  // GENE Type.
+  // GENE Types.
   constexpr static const char* GENE_TYPE = "GENE";
+  constexpr static const char* PROTEIN_CODING_GENE_TYPE = "PROTEIN_CODING_GENE";
+  constexpr static const char* NCRNA_GENE_TYPE = "NCRNA_GENE";
 
 private:
 

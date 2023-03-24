@@ -31,7 +31,7 @@ public:
 
   // General access routines.
   bool getAttributes(const std::string &key, std::vector<std::string> &value_vec) const; // false if no key.
-  [[nodiscard]] std::vector<std::string> getAttributes(const std::string &key) const; // false if no key.
+  [[nodiscard]] std::vector<std::string> getAttributes(const std::string &key) const; // empty if no key.
   void insertAttribute(const std::string& key, const std::string& value); // Always succeeds; keys are uppercase.
   void insertAttribute(std::string&& key, std::string&& value);
 

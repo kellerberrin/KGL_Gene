@@ -466,7 +466,7 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 bool kgl::GeneExonFeatures::checkSubFeatures( const std::shared_ptr<const Feature>& feature_ptr
                                              , const std::shared_ptr<const Feature>& sub_feature_ptr) {
 
-  // TSS blocks can overlap superfeatures.
+  // TSS blocks can overlap features.
   if (sub_feature_ptr->isTSS()) {
 
     return true;

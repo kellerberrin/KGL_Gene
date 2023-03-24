@@ -544,4 +544,3 @@ std::pair<double, double> kel::Utility::stddev(const std::vector<double> &vec)
   return {mean, std::sqrt(variance) };
 }
 
-

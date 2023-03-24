@@ -27,10 +27,14 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeReference& genome_db) {
 
+  std::set<std::string> types;
+
   auto [result, record_ptr_vector] = readGffFile(gff_file_name);
   if (result) {
 
     for (auto& record_ptr : record_ptr_vector) {
+
+      types.insert(record_ptr->type());
 
       if (not parseGffRecord(genome_db, *record_ptr)) {
 
@@ -41,6 +45,13 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
     }
 
   }
+
+  for (auto type : types) {
+
+    ExecEnv::log().info("****ParseGffFasta::readGffFile; type: {}", type);
+
+  }
+
 
 }
 
@@ -57,6 +68,8 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
     ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_name);
 
   }
+
+  ExecEnv::log().info("ParseGffFasta::readGffFile; Opened GFF3 file: {} for processing", file_name);
 
   while (true) {
 
@@ -130,7 +143,7 @@ std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record
   parse_result = parse_result and gff_record_ptr->source(source_field);
 
   const std::string_view& type_field = row_fields[GFF3_TYPE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->type(type_field);
+   parse_result = parse_result and gff_record_ptr->type(type_field);
 
   const std::string_view& start_field = row_fields[GFF3_START_FIELD_IDX_];
   parse_result = parse_result and gff_record_ptr->convertStartOffset(start_field);
@@ -219,6 +232,50 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
 
   FeatureSequence sequence (gff_record.begin(), gff_record.end(), gff_record.strand());
   std::shared_ptr<kgl::Feature> feature_ptr;
+
+  // Create feature objects according to type.
+  // Switch on hashed type strings for convenience.
+  switch(Utility::hash(gff_record.type())) {
+
+    case Utility::hash(GeneFeature::GENE_TYPE):
+    case Utility::hash(GeneFeature::PROTEIN_CODING_GENE_TYPE):
+    case Utility::hash(GeneFeature::NCRNA_GENE_TYPE):
+      break;
+
+    case Utility::hash(CDSFeature::CDS_TYPE):
+      break;
+
+    case Utility::hash(mRNAFeature::MRNA_TYPE):
+      break;
+
+    case Utility::hash(rRNAFeature::RRNA_TYPE):
+      break;
+
+    case Utility::hash(UTR5Feature::UTR5_TYPE):
+      break;
+
+    case Utility::hash(UTR3Feature::UTR3_TYPE):
+      break;
+
+    case Utility::hash(EXONFeature::EXON_TYPE):
+      break;
+
+    case Utility::hash(PSEUDOGENEFeature::PSEUDOGENE_TYPE):
+      break;
+
+    case Utility::hash(TSSFeature::TSS_TYPE):
+      break;
+
+    case Utility::hash(PSEUDOGENIC_TRANSCRIPTFeature::PSEUDOGENIC_TRANSCRIPT_TYPE):
+      break;
+
+    default:
+      ExecEnv::log().info("<<<<ParseGff3::parseGffRecord; Unknown type: {} Id: {}", gff_record.type(), feature_id);
+      break;
+
+  }
+
+
   if (gff_record.type() == CDSFeature::CDS_TYPE) {
     // Create a CDS Feature.
     feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, gff_record.phase(), contig_opt.value(), sequence);
