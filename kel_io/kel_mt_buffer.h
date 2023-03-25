@@ -73,7 +73,7 @@ private:
   WorkflowThreads line_io_thread_;
   // The StreamIO object.
   std::unique_ptr<BaseStreamIO> stream_ptr_;
-  // Set if the stream is in an EOF condition.
+  // Set if an EOF has been received and queued.
   std::atomic<bool> EOF_received_{false};
   // Mutex for readLine()
   std::mutex mutex_;

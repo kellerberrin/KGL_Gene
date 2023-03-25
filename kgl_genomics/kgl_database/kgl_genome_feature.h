@@ -50,17 +50,17 @@ public:
 
   constexpr static const char GENE_TYPE_[] = "GENE";
   constexpr static const char MRNA_TYPE_[] = "MRNA";
-  constexpr static const char CDS_TYPE[] = "CDS";
-  constexpr static const char UTR5_TYPE[] = "FIVE_PRIME_UTR";
-  constexpr static const char UTR3_TYPE[] = "THREE_PRIME_UTR";
-  constexpr static const char TSS_TYPE[] = "TSS_BLOCK";
+  constexpr static const char CDS_TYPE_[] = "CDS";
+  constexpr static const char UTR5_TYPE_[] = "FIVE_PRIME_UTR";
+  constexpr static const char UTR3_TYPE_[] = "THREE_PRIME_UTR";
+  constexpr static const char TSS_TYPE_[] = "TSS_BLOCK";
 
   [[nodiscard]] bool isGene() const { return type_ == GENE_TYPE_; }
   [[nodiscard]] bool ismRNA() const { return type_ == MRNA_TYPE_; }
-  [[nodiscard]] bool isCDS() const { return type_ == CDS_TYPE; }
-  [[nodiscard]] bool isUTR5() const { return type_ == UTR5_TYPE; }
-  [[nodiscard]] bool isUTR3() const { return type_ == UTR3_TYPE; }
-  [[nodiscard]] bool isTSS() const { return type_ == TSS_TYPE; }
+  [[nodiscard]] bool isCDS() const { return type_ == CDS_TYPE_; }
+  [[nodiscard]] bool isUTR5() const { return type_ == UTR5_TYPE_; }
+  [[nodiscard]] bool isUTR3() const { return type_ == UTR3_TYPE_; }
+  [[nodiscard]] bool isTSS() const { return type_ == TSS_TYPE_; }
 
   // Always check for a NULL pointer with super feature.
   [[nodiscard]] bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
@@ -139,14 +139,12 @@ public:
   CDSFeature(const FeatureIdent_t &id,
              const CDSPhaseType_t phase,
              const std::shared_ptr<const ContigReference> &contig_ptr,
-             const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
+             const FeatureSequence &sequence) : Feature(id, CDS_TYPE_, contig_ptr, sequence), phase_(phase) {}
 
   CDSFeature(const CDSFeature &) = default;
   ~CDSFeature() override = default;
 
   [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
-
-  constexpr static const char* CDS_TYPE = "CDS";
 
 private:
 

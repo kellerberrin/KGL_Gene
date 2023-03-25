@@ -40,13 +40,6 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  if (not getParameters(named_parameters)) {
-
-    ExecEnv::log().info("PfEMPAnalysis::initializeAnalysis; Analysis Id: {} problem parsing parameters", ident());
-    return false;
-
-  }
-
   performPFEMP1UPGMA();
 
   return true;
@@ -84,269 +77,253 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
 void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
 
-  
-  VarGeneFamilyTree( newick_file_name_,
-                     intron_file_name_,
-                     reference_genomes_,
-                     PFEMP1_FAMILY_);
+  for (auto const& [genome_id, genome_ptr] : reference_genomes_->getMap()) {
+
+    std::string intron_file_name = INTRON_ + genome_id + INTRON_EXT_;
+    intron_file_name = Utility::filePath(intron_file_name, ident_work_directory_);
+
+    std::string newick_file_name = NEWICK_ + genome_id + NEWICK_EXT_;
+    newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
+
+    auto gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+
+    varIntron(gene_vector, intron_file_name);
+
+    geneFamilyUPGMA(genome_ptr, gene_vector, newick_file_name, PFEMP1_FAMILY_);
+
+  }
+
 
 }
 
 
+kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
+                                                  , const std::string& desc_uc_text) const {
 
-bool kgl::PfEMPAnalysis::getParameters(const ActiveParameterList& named_parameters) {
+  GeneVector gene_vector;
+
+  for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
+
+    for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
+
+      auto description_vector = gene_ptr->getAttributes().getDescription();
+      for (auto const& description : description_vector) {
+
+        if (Utility::toupper(description).find(desc_uc_text) != std::string::npos) {
+
+          gene_vector.push_back(gene_ptr);
+
+        }
+
+      } // Gene
+
+    } // Contig
+
+  } // genome
+
+  return gene_vector;
+
+}
 
 
-  for (auto const& named_block : named_parameters.getMap()) {
+void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
+                                    const std::string& intron_file_name) const {
 
-    auto [block_name, block_vector] = named_block.second;
+  std::shared_ptr<const LevenshteinLocal> sequence_distance(std::make_shared<const LevenshteinLocal>());
 
-    if (block_vector.size() != 1) {
+  // Open a file to receive csv delimited intron information.
+  std::ofstream intron(intron_file_name);
+  if (not intron.good()) {
 
-      ExecEnv::log().error("PfEMPAnalysis::getParameters; parameter block: {} vector size: {}, expected size = 1",
-                           block_name, block_vector.size());
-      return false;
-
-    }
-
-    ExecEnv::log().info("Analysis: {} parsing parameter block: {}", ident(), block_name);
-
-    for (auto const& xml_vector : block_vector) {
-
-
-      auto newick_opt = xml_vector.getString(NEWICK_FILE_);
-      if (newick_opt) {
-
-        newick_file_name_ = newick_opt.value().front();
-        newick_file_name_ = Utility::filePath(newick_file_name_, ident_work_directory_);
-
-      } else {
-
-        ExecEnv::log().error("PfEMPAnalysis::getParameters; bad value for parameter: {}", NEWICK_FILE_);
-        return false;
-
-      }
-
-      auto intron_opt = xml_vector.getString(INTRON_FILE_);
-      if (intron_opt) {
-
-        intron_file_name_ = intron_opt.value().front();
-        intron_file_name_ = Utility::filePath(intron_file_name_, ident_work_directory_);
-
-      } else {
-
-        ExecEnv::log().error("PfEMPAnalysis::getParameters; bad value for parameter: {}", INTRON_FILE_);
-        return false;
-
-      }
-
-    }
+    ExecEnv::log().critical("PfEMPAnalysis::varIntron; Unable to open Intron data file: {}", intron_file_name);
 
   }
 
-  return true;
+  // Header.
+  StringDNA5 i_prom(I_PROMOTER_);
+  DNA5SequenceLinear i_promoter(std::move(i_prom));
+  DNA5SequenceLinear i_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter.codingSequence(StrandSense::REVERSE));
+  //  i_promoter_ptr = i_promoter_ptr_rev;
+
+//  StringDNA5
+  DNA5SequenceLinear i_complement_promoter(std::move(StringDNA5(I_COMPLEMENT_PROMOTER_)));
+  DNA5SequenceLinear i_complement_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter.codingSequence(StrandSense::REVERSE));
+  //  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
+
+  DNA5SequenceLinear i_5_promoter(std::move(StringDNA5(I_5_PROMOTER_)));
+  DNA5SequenceLinear i_5_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter.codingSequence(StrandSense::REVERSE));
+  //  i_5_promoter_ptr = i_5_promoter_ptr_rev;
+
+  intron << "Gene" << INTRON_DELIMITER_
+         << "description" << INTRON_DELIMITER_
+         << "IStart" << INTRON_DELIMITER_
+         << "IEnd" << INTRON_DELIMITER_
+         << "IStrand" << INTRON_DELIMITER_
+         << i_promoter.getSequenceAsString() << INTRON_DELIMITER_
+         << i_complement_promoter.getSequenceAsString() << INTRON_DELIMITER_
+         << i_5_promoter.getSequenceAsString() << INTRON_DELIMITER_
+         << "Size" << INTRON_DELIMITER_
+         << "ISequence" << '\n';
+
+  for (auto const& gene_ptr : gene_vector) {
+
+    const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr);
+
+    if (coding_seq_ptr->empty()) {
+
+      ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
+
+    }
+
+    std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+    DNA5SequenceCoding coding_dna_sequence;
+
+    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
+
+      // Do we have a valid intron (VAR only)?
+      std::vector<DNA5SequenceCoding> intron_sequence_array = gene_ptr->contig()->sequence().intronArraySequence(coding_sequence);
+      StrandSense strand;
+      IntronOffsetMap intron_offset_map;
+      if (not SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map)) {
+
+        ExecEnv::log().error("VarGeneFamilyTree(), Contig: {}, Gene: {},  cannot generate INTRON map",
+                             coding_sequence->contig()->contigId(), coding_sequence->getGene()->id());
+        intron_offset_map.clear();
+      }
+
+      if (intron_offset_map.size() != intron_sequence_array.size()) {
+
+        ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
+                             intron_offset_map.size(), intron_sequence_array.size());
+        continue;
+
+      }
+
+      // Only add genes with valid coding sequences (no pseudo genes).
+      if (gene_ptr->contig()->verifyDNACodingSequence(coding_dna_sequence)) {
+
+        // Only 1 intron (var genes)
+        if (intron_sequence_array.size() == 1) {
+
+          auto& first_intron = intron_sequence_array.front();
+
+          auto& intron_seq = *intron_offset_map.begin();
+
+          DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(first_intron);
+          DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
+          DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(first_intron);
+
+          std::stringstream pss;
+          std::vector<ContigOffset_t> offset_vec = intron_seq_ptr.findAll(i_promoter);
+          for (auto offset : offset_vec) {
+
+            pss << offset << ":";
+
+          }
+
+          std::stringstream css;
+          offset_vec = intron_seq_ptr.findAll(i_complement_promoter);
+          for (auto offset : offset_vec) {
+
+            css << offset << ":";
+
+          }
+
+          std::stringstream fss;
+          offset_vec = intron_seq_ptr.findAll(i_5_promoter);
+          for (auto offset : offset_vec) {
+
+            fss << offset << ":";
+
+          }
+
+          auto description_vector = gene_ptr->getAttributes().getDescription();
+          std::string cat_description;
+          for (auto const& desc : description_vector) {
+
+            cat_description += desc;
+
+          }
+
+          intron << gene_ptr->id() << INTRON_DELIMITER_
+                 << cat_description << INTRON_DELIMITER_
+                 << intron_seq.first << INTRON_DELIMITER_
+                 << intron_seq.second << INTRON_DELIMITER_
+                 << static_cast<char>(strand) << INTRON_DELIMITER_
+                 << pss.str()
+                 << INTRON_DELIMITER_
+                 << css.str()
+                 << INTRON_DELIMITER_
+                 << fss.str()
+                 << INTRON_DELIMITER_
+                 << intron_seq_ptr.length()
+                 << INTRON_DELIMITER_
+                 << intron_seq_ptr.getSequenceAsString() << '\n';
+
+        } // 1 intron
+
+      } // Valid Gene.
+
+    } // Get coding sequence
+
+  } // Is family member.
+
+  ExecEnv::log().info("PfEMPAnalysis::varIntron, processed genes: {}", gene_vector.size());
 
 }
 
 
 
 // Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
-void kgl::PfEMPAnalysis::VarGeneFamilyTree( const std::string& newick_file,
-                        const std::string& intron_file,
-                        std::shared_ptr<const GenomeCollection> genome_collection_ptr,
-                        const std::string& protein_family) {
+void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                          const GeneVector& gene_vector,
+                                          const std::string& newick_file_name,
+                                          const std::string& family_text) const {
 
   std::shared_ptr<const LevenshteinLocal> sequence_distance(std::make_shared<const LevenshteinLocal>());
   UPGMAMatrix upgma_distance;
 
-  // Open a file to receive csv delimited intron information.
-  const char delimiter = ',';
-  std::ofstream intron(intron_file);
-
-  if (not intron.good()) {
-
-    ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Unable to open Intron data file: {}", intron_file);
-
-  }
-
-#define I_PROMOTER "TGTATGTG"
-#define I_COMPLEMENT_PROMOTER "ACATACAC"
-#define I_5_PROMOTER "TCATA"
-  // Header.
-  DNA5SequenceLinear i_promoter(StringDNA5(I_PROMOTER));
-  DNA5SequenceLinear i_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_promoter_ptr = i_promoter_ptr_rev;
-
-  DNA5SequenceLinear i_complement_promoter(StringDNA5(I_COMPLEMENT_PROMOTER));
-  DNA5SequenceLinear i_complement_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
-
-  DNA5SequenceLinear i_5_promoter(StringDNA5(I_5_PROMOTER));
-  DNA5SequenceLinear i_5_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_5_promoter_ptr = i_5_promoter_ptr_rev;
-
-  intron << "Gene" << delimiter
-         << "description" << delimiter
-         << "IStart" << delimiter
-         << "IEnd" << delimiter
-         << "IStrand" << delimiter
-         << i_promoter.getSequenceAsString() << delimiter
-         << i_complement_promoter.getSequenceAsString() << delimiter
-         << i_5_promoter.getSequenceAsString() << delimiter
-         << "Size" << delimiter
-         << "ISequence" << '\n';
-
   std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
-  size_t gene_count{0};
-  for (auto const& [genome_ident, genome_ptr] : genome_collection_ptr->getMap()) {
 
-    for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
+  for (auto const& gene_ptr : gene_vector) {
 
-      ExecEnv::log().info("VarGeneFamilyTree; Contig: {} contains genes: {}", contig_ident, contig_ptr->getGeneMap().size());
+    const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr);
 
-      for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
+    if (coding_seq_ptr->empty()) {
 
-        auto description_vector = gene_ptr->getAttributes().getDescription();
-        if (description_vector.empty()) {
+      ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
 
-          continue;
+    }
 
-        }
-        std::string description = description_vector.front();
+    std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+    DNA5SequenceCoding coding_dna_sequence;
 
-        // Is this gene a member of the requested family.
-        if (Utility::toupper(description).find(protein_family) != std::string::npos) {
+    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
 
-          ++gene_count;
+      std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance,
+                                                                                          genome_ptr,
+                                                                                          gene_ptr,
+                                                                                          family_text));
 
-          const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr);
+      if (coding_dna_sequence.length() >= MIN_SEQUENCE_LENGTH_) {
 
-          if (coding_seq_ptr->empty()) {
+        std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
+        node_vector_ptr->push_back(phylo_node_ptr);
 
-            ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
+      } // min length
 
-          }
+    } // 1 intron
 
-          std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
-          DNA5SequenceCoding coding_dna_sequence;
+  } // Valid Gene.
 
-          if (contig_ptr->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
-
-            // Do we have a valid intron (VAR only)?
-            std::vector<DNA5SequenceCoding> intron_sequence_array = contig_ptr->sequence().intronArraySequence(coding_sequence);
-            std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance,
-                                                                                                genome_ptr,
-                                                                                                gene_ptr,
-                                                                                                protein_family));
-
-            StrandSense strand;
-            IntronOffsetMap intron_offset_map;
-            if (not SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map)) {
-
-              ExecEnv::log().error("VarGeneFamilyTree(), Contig: {}, Gene: {},  cannot generate INTRON map",
-                                   coding_sequence->contig()->contigId(), coding_sequence->getGene()->id());
-              intron_offset_map.clear();
-
-            }
-
-            if (intron_offset_map.size() != intron_sequence_array.size()) {
-
-              ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
-                                   intron_offset_map.size(), intron_sequence_array.size());
-              continue;
-
-            }
-
-
-            // Only add genes with valid coding sequences (no pseudo genes).
-            if (contig_ptr->verifyDNACodingSequence(coding_dna_sequence)) {
-
-              // Only 1 intron (var genes)
-              if (intron_sequence_array.size() == 1) {
-
-
-                auto intron_sequence_iter = intron_sequence_array.begin();
-
-
-                for (auto intron_seq : intron_offset_map) {
-
-                  DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(*intron_sequence_iter);
-                  DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
-                  DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(*intron_sequence_iter);
-                  //                  intron_seq_ptr = intron_ptr;
-
-
-                  std::stringstream pss;
-                  std::vector<ContigOffset_t> offset_vec = intron_seq_ptr.findAll(i_promoter);
-                  for (auto offset : offset_vec) {
-
-                    pss << offset << ":";
-
-                  }
-
-                  std::stringstream css;
-                  offset_vec = intron_seq_ptr.findAll(i_complement_promoter);
-                  for (auto offset : offset_vec) {
-
-                    css << offset << ":";
-
-                  }
-
-                  std::stringstream fss;
-                  offset_vec = intron_seq_ptr.findAll(i_5_promoter);
-                  for (auto offset : offset_vec) {
-
-                    fss << offset << ":";
-
-                  }
-
-                  intron << gene_ptr->id() << delimiter
-                         << description << delimiter
-                         << intron_seq.first << delimiter
-                         << intron_seq.second << delimiter
-                         << static_cast<char>(strand) << delimiter
-                         << pss.str()
-                         << delimiter
-                         << css.str()
-                         << delimiter
-                         << fss.str()
-                         << delimiter
-                         << intron_seq_ptr.length()
-                         << delimiter
-                         << intron_seq_ptr.getSequenceAsString() << '\n';
-
-                  ++intron_sequence_iter;
-
-                }
-
-
-#define MIN_INTRON_LENGTH 10
-                if (intron_sequence_array.front().length() >= MIN_INTRON_LENGTH) {
-
-                  std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
-                  node_vector_ptr->push_back(phylo_node_ptr);
-
-                } // min length
-
-              } // 1 intron
-
-            } // Valid Gene.
-
-          } // Get coding sequence
-
-        } // Is family member.
-
-      } // All genes.
-
-    } // All contigs.
-
-  } // All Genomes
-
-  ExecEnv::log().info("VarGeneFamilyTree; Gene family: {}, found genes: {}", protein_family, gene_count);
   // Calculate.
   upgma_distance.calculateTree(node_vector_ptr);
   // Report Results.
-  upgma_distance.writeNewick(newick_file);
+  if (not upgma_distance.writeNewick(newick_file_name)) {
+
+    ExecEnv::log().error("VarGeneFamilyTree; Unable to write UPGMA Newick file: {}", newick_file_name);
+
+  }
 
 }
 

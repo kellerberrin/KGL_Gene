@@ -174,29 +174,20 @@ public:
 
   ReferenceGeneDistance(std::shared_ptr<const GenomeReference> genome_db_ptr,
                         std::shared_ptr<const GeneFeature> gene_ptr,
-                        const std::string& protein_family) : genome_db_ptr_(genome_db_ptr),
-                                                             gene_ptr_(gene_ptr),
-                                                             protein_family_(protein_family) {
+                        std::string protein_family) : genome_db_ptr_(std::move(genome_db_ptr)),
+                                                      gene_ptr_(std::move(gene_ptr)),
+                                                      protein_family_(std::move(protein_family)) {}
 
-
-  }
-
-  explicit ReferenceGeneDistance(const ReferenceGeneDistance&) = default;
+  ReferenceGeneDistance(const ReferenceGeneDistance&) = default;
   ~ReferenceGeneDistance() override = default;
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
 
-
-  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
-  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
-  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
-
   static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
                          std::shared_ptr<const GenomeReference> genome_db_ptr,
                          const std::string& protein_family);
-
 
 protected:
 

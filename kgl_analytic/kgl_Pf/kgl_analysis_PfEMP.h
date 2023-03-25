@@ -47,22 +47,39 @@ private:
   std::string ident_work_directory_;
 
   void performPFEMP1UPGMA();
-  bool getParameters(const ActiveParameterList& named_parameters);
 
   // Available Parameters
   constexpr static const char* NEWICK_FILE_ = "NewickFile";
   constexpr static const char* INTRON_FILE_ = "IntronFile";
+  constexpr static const char INTRON_DELIMITER_ = ',';
+
+  // Intron promoter sequences.
+  constexpr static const char* I_PROMOTER_ = "TGTATGTG";
+  constexpr static const char* I_COMPLEMENT_PROMOTER_ = "ACATACAC";
+  constexpr static const char* I_5_PROMOTER_ = "TCATA";
+
+  // Min seq size for UPGMA analysis.
+  constexpr static const size_t MIN_SEQUENCE_LENGTH_ = 10;
   // Var family ident.
   constexpr static const char* PFEMP1_FAMILY_ = "PFEMP1";
 
-  std::string newick_file_name_;
-  std::string intron_file_name_;
+  // File name constants.
+  constexpr static const char* NEWICK_{"newick_"};
+  constexpr static const char* NEWICK_EXT_{".txt"};
+  constexpr static const char* INTRON_{"intron_"};
+  constexpr static const char* INTRON_EXT_{".csv"};
 
-  void VarGeneFamilyTree( const std::string& newick_file,
-                          const std::string& intron_file,
-                          std::shared_ptr<const GenomeCollection> genome_collection_ptr,
-                          const std::string& protein_family) ;
+  // Return a vector of genes that have a particular text fragment in the description.
+  [[nodiscard]] GeneVector getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
+                                        , const std::string& description_text) const;
 
+  // Analyze the introns of Var family genes.
+  void varIntron( const GeneVector& gene_vector, const std::string& intron_file) const;
+
+  void geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                        const GeneVector& gene_vector,
+                        const std::string& upgma_file_name,
+                        const std::string& family_text) const;
 
 };
 

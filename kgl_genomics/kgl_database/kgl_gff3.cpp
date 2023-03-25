@@ -54,6 +54,7 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 
   }
 
+  // Generate some feature statistics.
   for (auto const& [type, count] : type_count) {
 
     ExecEnv::log().info("ParseGffFasta::readGffFile; Feature Type: {}, Count: {}", type, count);
@@ -65,10 +66,10 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 
 std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::readGffFile(const std::string& file_name) {
 
-  StreamMTBuffer file_io;
   std::vector<std::unique_ptr<GffRecord>> gff_records;
   size_t record_counter{0};
   bool result{true};
+  StreamMTBuffer file_io;
 
   if (not file_io.open(file_name)) {
 
@@ -230,7 +231,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   }
 
   // Check that the type field "CDS" also has a valid phase.
-  if (gff_record.type() == CDSFeature::CDS_TYPE and gff_record.phase() == GffRecord::INVALID_PHASE) {
+  if (gff_record.type() == Feature::CDS_TYPE_ and gff_record.phase() == GffRecord::INVALID_PHASE) {
 
     ExecEnv::log().error("ParseGff3::parseGffRecord; Mis-match between valid phase and CDS record type");
     return false;
@@ -250,7 +251,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
       feature_ptr = std::make_shared<GeneFeature>(feature_id, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(CDSFeature::CDS_TYPE):
+    case Utility::hash(Feature::CDS_TYPE_):
       feature_ptr = std::make_shared<CDSFeature>(feature_id, gff_record.phase(), contig_opt.value(), sequence);
       break;
 
@@ -258,16 +259,16 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
       feature_ptr = std::make_shared<Feature>(feature_id, Feature::MRNA_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::UTR5_TYPE):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR5_TYPE, contig_opt.value(), sequence);
+    case Utility::hash(Feature::UTR5_TYPE_):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR5_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::UTR3_TYPE):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR3_TYPE, contig_opt.value(), sequence);
+    case Utility::hash(Feature::UTR3_TYPE_):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR3_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::TSS_TYPE):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::TSS_TYPE, contig_opt.value(), sequence);
+    case Utility::hash(Feature::TSS_TYPE_):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::TSS_TYPE_, contig_opt.value(), sequence);
       break;
 
     default:

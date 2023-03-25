@@ -50,7 +50,6 @@ std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStream
 
   auto stream_ptr = std::make_unique<StreamMTBuffer>();
   stream_ptr->stream_ptr_ = std::move(open_stream_ptr);
-  stream_ptr->EOF_received_ = false;
   stream_ptr->line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
   stream_ptr->line_io_thread_.enqueueVoid(&StreamMTBuffer::enqueueIOLineRecord, stream_ptr.get());
 
@@ -61,7 +60,12 @@ std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStream
 
 void kel::StreamMTBuffer::close() {
 
-  EOF_received_ = true;
+  {
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    EOF_received_ = true;
+
+  }
   line_io_thread_.joinThreads();
   stream_ptr_ = nullptr;
   line_io_queue_.clear();
@@ -76,7 +80,6 @@ void kel::StreamMTBuffer::enqueueIOLineRecord() {
 
     if (line_record.EOFRecord()) {
 
-      EOF_received_ = true;
       line_io_queue_.push(std::move(line_record));
       break;
 
@@ -93,7 +96,13 @@ kel::IOLineRecord kel::StreamMTBuffer::readLine() {
   // Dont block on EOF
   std::lock_guard<std::mutex> lock(mutex_);
   if (EOF_received_) return IOLineRecord::createEOFMarker();
-  return line_io_queue_.waitAndPop();
+  auto line_record = line_io_queue_.waitAndPop();
+  if (line_record.EOFRecord()) {
+
+    EOF_received_ = true;
+
+  }
+  return line_record;
 
 }
 
