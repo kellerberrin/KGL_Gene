@@ -113,6 +113,7 @@ private:
   static constexpr const char GFF3_TAG_ITEM_DELIMITER_{'='};
   static constexpr const size_t GFF3_ITEM_TAG_NAME_{2};
 
+  // Gff field offsets
   static constexpr const size_t GFF3_FIELD_COUNT_{9};
   static constexpr const size_t GFF3_CONTIG_FIELD_IDX_{0};
   static constexpr const size_t GFF3_SOURCE_FIELD_IDX_{1};
@@ -123,6 +124,11 @@ private:
   static constexpr const size_t GFF3_STRAND_FIELD_IDX_{6};
   static constexpr const size_t GFF3_PHASE_FIELD_IDX_{7};
   static constexpr const size_t GFF3_TAG_FIELD_IDX_{8}; // The "xxxx=yyyy;aaaa=bbbb;..." tag field offset.
+
+  // Gff type alias.
+  // Alias GFF types for a Gene.
+  static constexpr const char PROTEIN_CODING_GENE_[] = "PROTEIN_CODING_GENE";
+  static constexpr const char NCRNA_GENE_[] = "NCRNA_GENE";
 
 };
 

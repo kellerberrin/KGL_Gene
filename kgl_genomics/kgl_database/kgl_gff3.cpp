@@ -27,14 +27,22 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeReference& genome_db) {
 
-  std::set<std::string> types;
+  std::map<std::string, size_t> type_count;
 
   auto [result, record_ptr_vector] = readGffFile(gff_file_name);
   if (result) {
 
     for (auto& record_ptr : record_ptr_vector) {
 
-      types.insert(record_ptr->type());
+      if (type_count.contains(record_ptr->type())) {
+
+        ++type_count[record_ptr->type()];
+
+      } else {
+
+        type_count[record_ptr->type()] = 1;
+
+      }
 
       if (not parseGffRecord(genome_db, *record_ptr)) {
 
@@ -46,12 +54,11 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 
   }
 
-  for (auto type : types) {
+  for (auto const& [type, count] : type_count) {
 
-    ExecEnv::log().info("****ParseGffFasta::readGffFile; type: {}", type);
+    ExecEnv::log().info("ParseGffFasta::readGffFile; Feature Type: {}, Count: {}", type, count);
 
   }
-
 
 }
 
@@ -237,87 +244,42 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   // Switch on hashed type strings for convenience.
   switch(Utility::hash(gff_record.type())) {
 
-    case Utility::hash(GeneFeature::GENE_TYPE):
-    case Utility::hash(GeneFeature::PROTEIN_CODING_GENE_TYPE):
-    case Utility::hash(GeneFeature::NCRNA_GENE_TYPE):
+    case Utility::hash(Feature::GENE_TYPE_):
+    case Utility::hash(PROTEIN_CODING_GENE_): // Alias GFF types for a Gene.
+    case Utility::hash(NCRNA_GENE_):
+      feature_ptr = std::make_shared<GeneFeature>(feature_id, contig_opt.value(), sequence);
       break;
 
     case Utility::hash(CDSFeature::CDS_TYPE):
+      feature_ptr = std::make_shared<CDSFeature>(feature_id, gff_record.phase(), contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(mRNAFeature::MRNA_TYPE):
+    case Utility::hash(Feature::MRNA_TYPE_):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::MRNA_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(rRNAFeature::RRNA_TYPE):
+    case Utility::hash(Feature::UTR5_TYPE):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR5_TYPE, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(UTR5Feature::UTR5_TYPE):
+    case Utility::hash(Feature::UTR3_TYPE):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR3_TYPE, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(UTR3Feature::UTR3_TYPE):
-      break;
-
-    case Utility::hash(EXONFeature::EXON_TYPE):
-      break;
-
-    case Utility::hash(PSEUDOGENEFeature::PSEUDOGENE_TYPE):
-      break;
-
-    case Utility::hash(TSSFeature::TSS_TYPE):
-      break;
-
-    case Utility::hash(PSEUDOGENIC_TRANSCRIPTFeature::PSEUDOGENIC_TRANSCRIPT_TYPE):
+    case Utility::hash(Feature::TSS_TYPE):
+      feature_ptr = std::make_shared<Feature>(feature_id, Feature::TSS_TYPE, contig_opt.value(), sequence);
       break;
 
     default:
-      ExecEnv::log().info("<<<<ParseGff3::parseGffRecord; Unknown type: {} Id: {}", gff_record.type(), feature_id);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type() , contig_opt.value(), sequence);
       break;
 
   }
 
-
-  if (gff_record.type() == CDSFeature::CDS_TYPE) {
-    // Create a CDS Feature.
-    feature_ptr = std::make_shared<kgl::CDSFeature>(feature_id, gff_record.phase(), contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == mRNAFeature::MRNA_TYPE) {
-    // Create a mRNA feature
-    feature_ptr = std::make_shared<kgl::mRNAFeature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == UTR5Feature::UTR5_TYPE) {
-    // Create a FIVE_PRIME_UTR feature
-    feature_ptr = std::make_shared<kgl::UTR5Feature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == UTR3Feature::UTR3_TYPE) {
-    // Create a THREE_PRIME_UTR feature
-    feature_ptr = std::make_shared<kgl::UTR3Feature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == EXONFeature::EXON_TYPE) {
-    // Create a mRNA feature
-    feature_ptr = std::make_shared<kgl::EXONFeature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type()  == GeneFeature::GENE_TYPE) {
-    // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::GeneFeature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == PSEUDOGENEFeature::PSEUDOGENE_TYPE) {
-    // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::PSEUDOGENEFeature>(feature_id, contig_opt.value(), sequence);
-  }
-  else if (gff_record.type() == TSSFeature::TSS_TYPE) {
-    // Create a GENE feature
-    feature_ptr = std::make_shared<kgl::TSSFeature>(feature_id, contig_opt.value(), sequence);
-
-  } else {
-    // Create a general feature
-    feature_ptr = std::make_shared<kgl::Feature>(feature_id, gff_record.type() , contig_opt.value(), sequence);
-
-  }
   // Add in the attributes.
   feature_ptr->setAttributes(gff_record.attributes());
   // Annotate the contig.
   std::shared_ptr<kgl::ContigReference> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigReference>(contig_opt.value());
-
   bool result = mutable_contig_ptr->addContigFeature(feature_ptr);
 
   if (not result) {

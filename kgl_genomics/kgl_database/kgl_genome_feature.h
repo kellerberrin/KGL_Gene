@@ -31,7 +31,7 @@ public:
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 
-  Feature& operator=(const Feature&) = default;
+//  Feature& operator=(const Feature&) = default;
 
   [[nodiscard]] const FeatureIdent_t& id() const { return id_; }
   [[nodiscard]] const FeatureSequence& sequence() const { return sequence_; }
@@ -47,22 +47,25 @@ public:
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
-  [[nodiscard]] virtual bool isCDS() const { return false; }
-  [[nodiscard]] virtual bool isGene() const { return false; }
-  [[nodiscard]] virtual bool ismRNA() const { return false; }
-  [[nodiscard]] virtual bool isrRNA() const { return false; }
-  [[nodiscard]] virtual bool isPSEUDOGENE() const { return false; }
-  [[nodiscard]] virtual bool isPSEUDOGENIC_TRANSCRIPT() const { return true; }
-  [[nodiscard]] virtual bool isTSS() const { return false; }
-  [[nodiscard]] virtual bool isEXON() const { return false; }
-  [[nodiscard]] virtual bool isUTR5() const { return false; }
-  [[nodiscard]] virtual bool isUTR3() const { return false; }
 
+  constexpr static const char GENE_TYPE_[] = "GENE";
+  constexpr static const char MRNA_TYPE_[] = "MRNA";
+  constexpr static const char CDS_TYPE[] = "CDS";
+  constexpr static const char UTR5_TYPE[] = "FIVE_PRIME_UTR";
+  constexpr static const char UTR3_TYPE[] = "THREE_PRIME_UTR";
+  constexpr static const char TSS_TYPE[] = "TSS_BLOCK";
+
+  [[nodiscard]] bool isGene() const { return type_ == GENE_TYPE_; }
+  [[nodiscard]] bool ismRNA() const { return type_ == MRNA_TYPE_; }
+  [[nodiscard]] bool isCDS() const { return type_ == CDS_TYPE; }
+  [[nodiscard]] bool isUTR5() const { return type_ == UTR5_TYPE; }
+  [[nodiscard]] bool isUTR3() const { return type_ == UTR3_TYPE; }
+  [[nodiscard]] bool isTSS() const { return type_ == TSS_TYPE; }
 
   // Always check for a NULL pointer with super feature.
   [[nodiscard]] bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
   [[nodiscard]] std::shared_ptr<const Feature> getSuperFeature() const { return super_feature_ptr_.lock(); }
-  void setSuperFeature(std::shared_ptr<const Feature> shared_super_feature) { super_feature_ptr_ = shared_super_feature; }
+  void setSuperFeature(const std::shared_ptr<const Feature>& shared_super_feature) { super_feature_ptr_ = shared_super_feature; }
 
   [[nodiscard]] const SubFeatureMap& subFeatures() const { return sub_features_; }
   [[nodiscard]] SubFeatureMap& subFeatures() { return sub_features_; }
@@ -74,8 +77,8 @@ public:
 
 private:
 
-  FeatureIdent_t id_;
-  FeatureType_t type_;
+  const FeatureIdent_t id_;
+  const FeatureType_t type_;
   std::shared_ptr<const ContigReference> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
@@ -91,221 +94,6 @@ using IdFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<Feature>>; //
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A Coding CDS Feature
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CDSFeature : public Feature {
-
-public:
-
-  CDSFeature(const FeatureIdent_t &id,
-            const CDSPhaseType_t phase,
-            const std::shared_ptr<const ContigReference> &contig_ptr,
-            const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
-
-  CDSFeature(const CDSFeature &) = default;
-  ~CDSFeature() override = default;
-
-  CDSFeature &operator=(const CDSFeature &) = default;
-
-  [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
-
-  [[nodiscard]] virtual bool isCDS() const final { return true; }
-
-  constexpr static const char* CDS_TYPE = "CDS";
-
-private:
-
-  CDSPhaseType_t phase_;
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A EXONFeature - co-occurs with the CDS features.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class EXONFeature : public Feature {
-
-public:
-
-  EXONFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, EXON_TYPE, contig_ptr, sequence) {}
-
-  EXONFeature(const EXONFeature &) = default;
-  ~EXONFeature() override = default;
-
-  EXONFeature &operator=(const EXONFeature &) = default;
-
-  [[nodiscard]] bool isEXON() const final { return true; }
-
-  constexpr static const char* EXON_TYPE = "EXON";
-
-private:
-
-
-};
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A mRNAFeature - generally the parent of the coding CDS Features
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class mRNAFeature : public Feature {
-
-public:
-
-  mRNAFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, MRNA_TYPE, contig_ptr, sequence) {}
-
-  mRNAFeature(const mRNAFeature &) = default;
-  ~mRNAFeature() override = default;
-
-  mRNAFeature &operator=(const mRNAFeature &) = default;
-
-  [[nodiscard]] bool ismRNA() const final { return true; }
-
-  constexpr static const char* MRNA_TYPE = "MRNA";
-
-private:
-
-
-};
-
-
-
-class rRNAFeature : public Feature {
-
-public:
-
-  rRNAFeature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, RRNA_TYPE, contig_ptr, sequence) {}
-
-  rRNAFeature(const rRNAFeature &) = default;
-  ~rRNAFeature() override = default;
-
-  rRNAFeature &operator=(const rRNAFeature &) = default;
-
-  [[nodiscard]] bool isrRNA() const final { return true; }
-
-  constexpr static const char* RRNA_TYPE = "RRNA";
-
-private:
-
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A UTR5Feature - untranslated 5' region at the beginning of the Gene
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class UTR5Feature : public Feature {
-
-public:
-
-  UTR5Feature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, UTR5_TYPE, contig_ptr, sequence) {}
-
-  UTR5Feature(const UTR5Feature &) = default;
-  ~UTR5Feature() override = default;
-
-  UTR5Feature &operator=(const UTR5Feature &) = default;
-
-  [[nodiscard]] bool isUTR5() const final { return true; }
-
-  constexpr static const char* UTR5_TYPE = "FIVE_PRIME_UTR";
-
-private:
-
-
-};
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A UTR3Feature - untranslated 3' region at the end of the Gene
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class UTR3Feature : public Feature {
-
-public:
-
-  UTR3Feature(const FeatureIdent_t &id,
-              const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, UTR3_TYPE, contig_ptr, sequence) {}
-
-  UTR3Feature(const UTR3Feature &) = default;
-  ~UTR3Feature() override = default;
-
-  UTR3Feature &operator=(const UTR3Feature &) = default;
-
-  [[nodiscard]] bool isUTR3() const final { return true; }
-
-  constexpr static const char* UTR3_TYPE = "THREE_PRIME_UTR";
-
-private:
-
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A Pseudogene feature may or may not have CDS or EXON subfeatures.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class PSEUDOGENEFeature : public Feature {
-
-public:
-
-  PSEUDOGENEFeature(const FeatureIdent_t &id,
-                    const std::shared_ptr<const ContigReference> &contig_ptr,
-                    const FeatureSequence &sequence) : Feature(id, PSEUDOGENE_TYPE, contig_ptr, sequence) {}
-
-  PSEUDOGENEFeature(const PSEUDOGENEFeature &) = default;
-  ~PSEUDOGENEFeature() override = default;
-
-  PSEUDOGENEFeature &operator=(const PSEUDOGENEFeature &) = default;
-
-  [[nodiscard]] bool isPSEUDOGENE() const final { return true; }
-
-  constexpr static const char* PSEUDOGENE_TYPE = "PSEUDOGENE";
-
-private:
-
-
-};
-
-
-
-class PSEUDOGENIC_TRANSCRIPTFeature : public Feature {
-
-public:
-
-  PSEUDOGENIC_TRANSCRIPTFeature(const FeatureIdent_t &id,
-                    const std::shared_ptr<const ContigReference> &contig_ptr,
-                    const FeatureSequence &sequence) : Feature(id, PSEUDOGENIC_TRANSCRIPT_TYPE, contig_ptr, sequence) {}
-
-  PSEUDOGENIC_TRANSCRIPTFeature(const PSEUDOGENIC_TRANSCRIPTFeature &) = default;
-  ~PSEUDOGENIC_TRANSCRIPTFeature() override = default;
-
-  PSEUDOGENIC_TRANSCRIPTFeature &operator=(const PSEUDOGENIC_TRANSCRIPTFeature &) = default;
-
-  [[nodiscard]] bool isPSEUDOGENIC_TRANSCRIPT() const final { return true; }
-
-  constexpr static const char* PSEUDOGENIC_TRANSCRIPT_TYPE = "PSEUDOGENIC_TRANSCRIPT";
-
-private:
-
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A Gene - can have multiple coding CDSFeatures/mRNAFeature sequences
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -314,28 +102,19 @@ class GeneFeature : public Feature {
 public:
 
   GeneFeature(const FeatureIdent_t &id,
-             const std::shared_ptr<const ContigReference> &contig_ptr,
-             const FeatureSequence &sequence) : Feature(id, GENE_TYPE, contig_ptr, sequence) {}
+              const std::shared_ptr<const ContigReference> &contig_ptr,
+              const FeatureSequence &sequence) : Feature(id, GENE_TYPE_, contig_ptr, sequence) {}
 
   GeneFeature(const GeneFeature &) = default;
   ~GeneFeature() override = default;
 
-  GeneFeature &operator=(const GeneFeature &) = default;
-
   // Public function returns a sequence map.
   [[nodiscard]] static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
-
-  [[nodiscard]] bool isGene() const final { return true; }
-
-  // GENE Types.
-  constexpr static const char* GENE_TYPE = "GENE";
-  constexpr static const char* PROTEIN_CODING_GENE_TYPE = "PROTEIN_CODING_GENE";
-  constexpr static const char* NCRNA_GENE_TYPE = "NCRNA_GENE";
 
 private:
 
   // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
-  // Specifying an optional identifier is used 
+  // Specifying an optional identifier is used
   [[nodiscard]] static bool getCodingSequences( std::shared_ptr<const GeneFeature> gene,
                                                 std::shared_ptr<const Feature> cds_parent,
                                                 std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
@@ -348,38 +127,32 @@ using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple
 using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<const GeneFeature>>;  // Inserted using the END offset as key.
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A Transcription Start Sequence, can be multiple TSS per gene.
+// A Coding CDS Feature
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class TSSFeature;
-using TSSVector = std::vector<std::shared_ptr<const TSSFeature>>;
-
-class TSSFeature : public Feature {
+class CDSFeature : public Feature {
 
 public:
 
-  TSSFeature(const FeatureIdent_t &id,
+  CDSFeature(const FeatureIdent_t &id,
+             const CDSPhaseType_t phase,
              const std::shared_ptr<const ContigReference> &contig_ptr,
-             const FeatureSequence &sequence) : Feature(id, TSS_TYPE, contig_ptr, sequence) {}
+             const FeatureSequence &sequence) : Feature(id, CDS_TYPE, contig_ptr, sequence), phase_(phase) {}
 
-  TSSFeature(const TSSFeature &) = default;
-  ~TSSFeature() override = default;
+  CDSFeature(const CDSFeature &) = default;
+  ~CDSFeature() override = default;
 
-  TSSFeature &operator=(const TSSFeature &) = default;
+  [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
 
-  [[nodiscard]] bool isTSS() const final { return true; }
-
-  // TSS Type.
-  constexpr static const char* TSS_TYPE = "TSS_BLOCK";
-  // Unassigned to a feature.
-  constexpr static const char* TSS_UNASSIGNED = "NewTranscript";
+  constexpr static const char* CDS_TYPE = "CDS";
 
 private:
 
+  CDSPhaseType_t phase_;
 
 };
-
 
 
 

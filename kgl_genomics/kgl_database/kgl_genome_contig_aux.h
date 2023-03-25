@@ -34,7 +34,7 @@ public:
   [[nodiscard]] bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 
   // ReturnType all TSS features in this contig.
-  [[nodiscard]] TSSVector getTSSVector() const;
+  [[nodiscard]] std::vector<std::shared_ptr<const Feature>> getTSSVector() const;
 
   static constexpr const char* ADJALLEY_TSS_FEATURE_{"AdjalleyTSSFeatures"};
 

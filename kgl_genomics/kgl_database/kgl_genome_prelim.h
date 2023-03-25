@@ -71,7 +71,7 @@ class TSSFeature; // Forward decl
 class CDSFeature; // Forward decl
 class EXONFeature; // Forward decl
 class GeneFeature; // Forward decl.
-class mRNAFeature; // Forward decl.
+//class mRNAFeature; // Forward decl.
 class ContigReference; // Forward decl.
 
 using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<const CDSFeature>>;

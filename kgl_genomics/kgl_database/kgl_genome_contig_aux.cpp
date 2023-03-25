@@ -41,21 +41,19 @@ void kgl::AdjalleyTSSFeatures::setupVerifyHierarchy(const StructuredFeatures& ge
 }
 
 
-kgl::TSSVector kgl::AdjalleyTSSFeatures::getTSSVector() const {
+std::vector<std::shared_ptr<const kgl::Feature>> kgl::AdjalleyTSSFeatures::getTSSVector() const {
 
-  TSSVector tss_vector;
+  std::vector<std::shared_ptr<const kgl::Feature>> tss_vector;
 
-  for (auto feature : offsetFeatureMap()) {
+  for (auto [offset, feature_ptr] : offsetFeatureMap()) {
 
-    std::shared_ptr<const TSSFeature> tss_feature = std::dynamic_pointer_cast<TSSFeature>(feature.second);
+    if (feature_ptr->isTSS()) {
 
-    if (not tss_feature) {
-
-      ExecEnv::log().error("Unexpected feature type for TSS feature: {}", feature.second->id());
+      tss_vector.push_back(feature_ptr);
 
     } else {
 
-      tss_vector.push_back(tss_feature);
+      ExecEnv::log().error("Unexpected feature type: {} for TSS feature: {}", feature_ptr->featureType(), feature_ptr->id());
 
     }
 
@@ -85,13 +83,6 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
 
       std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
       if (not gene_super_features.findFeatureId(super_feature_id, super_feature_ptr_vec)) {
-
-        // If the super feature is unassigned then continue.
-        if (super_feature_id == TSSFeature::TSS_UNASSIGNED) {
-
-          continue;
-
-        }
 
         // Otherwise flag an Error; could not find super feature.
         ExecEnv::log().warn("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);

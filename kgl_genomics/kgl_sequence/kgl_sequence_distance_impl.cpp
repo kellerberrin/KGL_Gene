@@ -226,12 +226,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   edlibFreeAlignResult(result);
 
-  kgl::CompareDistance_t compare = LevenshteinGlobalSeqan3(sequenceA, sequenceB);
-
-  ExecEnv::log().info("Local Levenshtein distance using edlib: {}, Global seqan3: {}", distance, compare);
-
   return distance;
-
 
 }
 
