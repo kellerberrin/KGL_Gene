@@ -8,7 +8,7 @@ namespace kgl = kellerberrin::genome;
 
 
 // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscribedFeatureMap.
 kgl::DNA5SequenceCoding kgl::SequenceOffset::refCodingSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                                                    const DNA5SequenceLinear& sequence_ptr,
                                                                    ContigOffset_t sub_sequence_offset,
@@ -69,7 +69,7 @@ kgl::DNA5SequenceCoding kgl::SequenceOffset::refCodingSubSequence( const std::sh
 
 
 // Returns a defined subsequence of all the introns of the coding sequence
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the TranscribedFeatureMap.
 kgl::DNA5SequenceCoding kgl::SequenceOffset::refIntronSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                                                    const DNA5SequenceLinear& sequence_ptr,
                                                                    ContigOffset_t sub_sequence_offset,
@@ -166,16 +166,16 @@ bool kgl::SequenceOffset::exonOffsetAdapter( const std::shared_ptr<const CodingS
 
 
   // All CDS offsets are relative to the underlying contig and are half intervals [begin, end).
-  for (auto CDS : coding_seq_ptr->getSortedCDS()) {
+  for (auto const& [cds_offset, cds_feature_ptr] : coding_seq_ptr->getFeatureMap()) {
 
-    std::pair<ContigOffset_t, ContigOffset_t> exon_offsets(CDS.second->sequence().begin(), CDS.second->sequence().end());
+    std::pair<ContigOffset_t, ContigOffset_t> exon_offsets(cds_feature_ptr->sequence().begin(), cds_feature_ptr->sequence().end());
 
-    auto result = exon_offset_map.insert(exon_offsets);
+    auto [iter, result] = exon_offset_map.insert(exon_offsets);
 
-    if (not result.second) {
+    if (not result) {
 
       ExecEnv::log().error("exonOffsetAdapter(), Duplicate exon offset: {} for coding sequence id:",
-                           exon_offsets.first, coding_seq_ptr->getCDSParent()->id());
+                           exon_offsets.first, coding_seq_ptr->getParent()->id());
       return_result = false;
 
     }
@@ -202,29 +202,29 @@ bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const Codin
 
   strand = coding_seq_ptr->strand();
 
-  ExecEnv::log().info("intronOffsetAdapter(), Sequence: {}, Exons: {}",
-                      coding_seq_ptr->getCDSParent()->id(),
-                      coding_seq_ptr->getSortedCDS().size());
+ // ExecEnv::log().info("intronOffsetAdapter(), Sequence: {}, Exons: {}",
+ //                     coding_seq_ptr->getParent()->id(),
+ //                     coding_seq_ptr->getFeatureMap().size());
 
   intron_offset_map.clear();
 
   // If exon size <= 1 then no introns.
-  if (coding_seq_ptr->getSortedCDS().size() <= 1) {
+  if (coding_seq_ptr->getFeatureMap().size() <= 1) {
 
     return return_result;
 
   }
 
-  auto CDS_iter = coding_seq_ptr->getSortedCDS().begin();
+  auto CDS_iter = coding_seq_ptr->getFeatureMap().begin();
 
   // All CDS offsets are relative to the underlying contig and are half intervals [begin, end).
-  while (CDS_iter != coding_seq_ptr->getSortedCDS().end()) {
+  while (CDS_iter != coding_seq_ptr->getFeatureMap().end()) {
 
     ContigOffset_t begin_intron = CDS_iter->second->sequence().end();
 
     ++CDS_iter;
 
-    if (CDS_iter == coding_seq_ptr->getSortedCDS().end()) {
+    if (CDS_iter == coding_seq_ptr->getFeatureMap().end()) {
 
       continue;
 
@@ -239,13 +239,13 @@ bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const Codin
     if (not result.second) {
 
       ExecEnv::log().error("intronOffsetAdapter(), Duplicate intron offset: {} for coding sequence id:",
-                           intron_offsets.first, coding_seq_ptr->getCDSParent()->id());
+                           intron_offsets.first, coding_seq_ptr->getParent()->id());
       return_result = false;
 
     }
 
     ExecEnv::log().info("intronOffsetAdapter(), Intron: {} [{}, {}) ({})",
-                        coding_seq_ptr->getCDSParent()->id(), intron_offsets.first, intron_offsets.second,
+                        coding_seq_ptr->getParent()->id(), intron_offsets.first, intron_offsets.second,
                         intron_offsets.second - intron_offsets.first);
 
   }
@@ -279,7 +279,7 @@ bool kgl::SequenceOffset::exonMutantOffset(const std::shared_ptr<const CodingSeq
     if (not result.second) {
 
       ExecEnv::log().error("exonMutantOffset(), Duplicate exon offset: {} for coding sequence id:",
-                           begin_offset, coding_seq_ptr->getCDSParent()->id());
+                           begin_offset, coding_seq_ptr->getParent()->id());
       return_result = false;
 
     }

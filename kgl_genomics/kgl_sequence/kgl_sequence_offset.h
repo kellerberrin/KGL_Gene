@@ -53,7 +53,7 @@ public:
 
 
 // Returns a defined subsequence of all the introns of the coding sequence concatonated.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the SortedCDS.
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the TranscribedFeatureMap.
   [[nodiscard]] static DNA5SequenceCoding refIntronSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
                                                                 const DNA5SequenceLinear& sequence_ptr,
                                                                 ContigOffset_t sub_sequence_offset,
@@ -111,7 +111,7 @@ public:
 private:
 
   // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
-  // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the SortedCDS.
+  // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscribedFeatureMap.
   [[nodiscard]] static DNA5SequenceCoding codingSubSequence( const DNA5SequenceLinear& base_sequence,
                                                              const ExonOffsetMap& exon_offset_map,
                                                              StrandSense strand,

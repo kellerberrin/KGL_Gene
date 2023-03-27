@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<const kgl::Feature>> kgl::AdjalleyTSSFeatures::getTS
 
     } else {
 
-      ExecEnv::log().error("Unexpected feature type: {} for TSS feature: {}", feature_ptr->featureType(), feature_ptr->id());
+      ExecEnv::log().error("Unexpected feature type: {} for TSS feature: {}", feature_ptr->type(), feature_ptr->id());
 
     }
 

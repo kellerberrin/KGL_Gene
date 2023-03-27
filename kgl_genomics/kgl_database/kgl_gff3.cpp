@@ -245,34 +245,34 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   // Switch on hashed type strings for convenience.
   switch(Utility::hash(gff_record.type())) {
 
-    case Utility::hash(Feature::GENE_TYPE_):
-    case Utility::hash(PROTEIN_CODING_GENE_): // Alias GFF types for a Gene.
-    case Utility::hash(NCRNA_GENE_):
-      feature_ptr = std::make_shared<GeneFeature>(feature_id, contig_opt.value(), sequence);
+    case Utility::hash(GeneFeature::CODING_GENE_):
+    case Utility::hash(GeneFeature::PROTEIN_CODING_GENE_): // Alias GFF types for a Gene.
+    case Utility::hash(GeneFeature::NCRNA_GENE_):
+      feature_ptr = std::make_shared<GeneFeature>(feature_id, gff_record.type(), contig_opt.value(), sequence);
       break;
 
     case Utility::hash(Feature::CDS_TYPE_):
-      feature_ptr = std::make_shared<CDSFeature>(feature_id, gff_record.phase(), contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::CDS_TYPE_, contig_opt.value(), sequence);
       break;
 
     case Utility::hash(Feature::MRNA_TYPE_):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::MRNA_TYPE_, contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::MRNA_TYPE_, contig_opt.value(), sequence);
       break;
 
     case Utility::hash(Feature::UTR5_TYPE_):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR5_TYPE_, contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::UTR5_TYPE_, contig_opt.value(), sequence);
       break;
 
     case Utility::hash(Feature::UTR3_TYPE_):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::UTR3_TYPE_, contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::UTR3_TYPE_, contig_opt.value(), sequence);
       break;
 
     case Utility::hash(Feature::TSS_TYPE_):
-      feature_ptr = std::make_shared<Feature>(feature_id, Feature::TSS_TYPE_, contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::TSS_TYPE_, contig_opt.value(), sequence);
       break;
 
     default:
-      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type() , contig_opt.value(), sequence);
+      feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), gff_record.type() , contig_opt.value(), sequence);
       break;
 
   }

@@ -7,6 +7,47 @@
 
 namespace kgl = kellerberrin::genome;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Sequence - Members
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Returns the strand adjusted feature begin (-ve is end-1) to the
+// target strand adjusted feature begin (-ve is end-1)
+// and returns the relative begin transcription distance as a +ve offset.
+kgl::ContigOffset_t kgl::FeatureSequence::distance(const FeatureSequence& compare_feature) const {
+
+  ContigOffset_t target_begin_offset;
+  if (compare_feature.strand() == StrandSense::FORWARD) {
+
+    target_begin_offset = compare_feature.begin();
+
+  } else {
+
+    target_begin_offset = compare_feature.end() - 1;
+
+  }
+
+  ContigOffset_t begin_offset;
+  if (strand() == StrandSense::FORWARD) {
+
+    begin_offset = begin();
+
+  } else {
+
+    begin_offset = end() - 1;
+
+  }
+
+  if (begin_offset <= target_begin_offset) {
+
+    return target_begin_offset - begin_offset;
+
+  }
+
+  return begin_offset - target_begin_offset;
+
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,13 +68,13 @@ kgl::StrandSense kgl::CodingSequence::strand() const {
 kgl::ContigOffset_t kgl::CodingSequence::start() const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().begin();
   }
 
-  return sorted_cds_.begin()->second->sequence().begin();
+  return coding_feature_map_.begin()->second->sequence().begin();
 
 }
 
@@ -41,13 +82,13 @@ kgl::ContigOffset_t kgl::CodingSequence::start() const {
 kgl::ContigOffset_t kgl::CodingSequence::end() const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().end();
   }
 
-  return sorted_cds_.rbegin()->second->sequence().end();
+  return coding_feature_map_.rbegin()->second->sequence().end();
 
 }
 
@@ -56,7 +97,7 @@ kgl::ContigOffset_t kgl::CodingSequence::end() const {
 kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().end() : getGene()->sequence().begin() - 1;
@@ -66,14 +107,14 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      return sorted_cds_.begin()->second->sequence().begin() - 1;
+      return coding_feature_map_.begin()->second->sequence().begin() - 1;
 
     case StrandSense::REVERSE:
-      return sorted_cds_.rbegin()->second->sequence().end();
+      return coding_feature_map_.rbegin()->second->sequence().end();
 
   }
 
-  return sorted_cds_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
+  return coding_feature_map_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
 
 }
 
@@ -82,7 +123,7 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_5() const {
 void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
     begin_offset = 0;
@@ -94,12 +135,12 @@ void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffs
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
+      begin_offset = coding_feature_map_.begin()->second->sequence().begin() - requested_size;
       size = requested_size;
       break;
 
     case StrandSense::REVERSE:
-      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
+      begin_offset = coding_feature_map_.rbegin()->second->sequence().end();
       size = requested_size;
       break;
 
@@ -114,7 +155,7 @@ void kgl::CodingSequence::prime_5_region(ContigSize_t requested_size, ContigOffs
 kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("CodingSequence::prime_3; coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().begin() - 1 : getGene()->sequence().end();
@@ -124,14 +165,14 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      return sorted_cds_.rbegin()->second->sequence().end();
+      return coding_feature_map_.rbegin()->second->sequence().end();
 
     case StrandSense::REVERSE:
-      return sorted_cds_.begin()->second->sequence().begin() - 1;
+      return coding_feature_map_.begin()->second->sequence().begin() - 1;
 
   }
 
-  return sorted_cds_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
+  return coding_feature_map_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
 
 }
 
@@ -139,7 +180,7 @@ kgl::ContigOffset_t kgl::CodingSequence::prime_3() const {
 void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
 
   // Safety first.
-  if (sorted_cds_.empty()) {
+  if (coding_feature_map_.empty()) {
 
     ExecEnv::log().error("CodingSequence::prime_3_region; coding sequence for gene id: {} is empty", getGene()->id());
     begin_offset = 0;
@@ -152,12 +193,12 @@ void kgl::CodingSequence::prime_3_region(ContigSize_t requested_size, ContigOffs
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      begin_offset = sorted_cds_.rbegin()->second->sequence().end();
+      begin_offset = coding_feature_map_.rbegin()->second->sequence().end();
       size = requested_size;
       break;
 
     case StrandSense::REVERSE:
-      begin_offset = sorted_cds_.begin()->second->sequence().begin() - requested_size;
+      begin_offset = coding_feature_map_.begin()->second->sequence().begin() - requested_size;
       size = requested_size;
       break;
 
@@ -179,7 +220,7 @@ kgl::ContigSize_t kgl::CodingSequence::codingNucleotides() const {
 
   ContigSize_t coding_size = 0;
   // Loop through and test membership of each cds. Reminder; testing for [begin, end)
-  for (const auto& cds : sorted_cds_) {
+  for (const auto& cds : coding_feature_map_) {
 
     coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
 
@@ -203,20 +244,20 @@ void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingS
                         static_cast<char>(sequence.second->getGene()->sequence().strand()));
 
     ExecEnv::log().info("Parent Feature: {}, begin: {}, end: {} strand: {}",
-                        sequence.second->getCDSParent()->id(),
-                        sequence.second->getCDSParent()->sequence().begin(),
-                        sequence.second->getCDSParent()->sequence().end(),
-                        static_cast<char>(sequence.second->getCDSParent()->sequence().strand()));
+                        sequence.second->getParent()->id(),
+                        sequence.second->getParent()->sequence().begin(),
+                        sequence.second->getParent()->sequence().end(),
+                        static_cast<char>(sequence.second->getParent()->sequence().strand()));
 
     ++vector_count;
 
     ExecEnv::log().info("++++++++++++++ CDS Vector : {} ********************", vector_count);
 
-    for (const auto& cds : sequence.second->getSortedCDS()) {
+    for (const auto& cds : sequence.second->getFeatureMap()) {
 
       ExecEnv::log().info("CDS: {}, Type: {}, begin: {}, end: {} strand: {}",
                           cds.second->id(),
-                          cds.second->featureType(),
+                          cds.second->type(),
                           cds.second->sequence().begin(),
                           cds.second->sequence().end(),
                           static_cast<char>(cds.second->sequence().strand()));
@@ -246,7 +287,7 @@ bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const Coding
 
 #else // Using a multimap. Same parent features permitted 
 
-  coding_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getCDSParent()->id(), coding_sequence_ptr));
+  coding_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getParent()->id(), coding_sequence_ptr));
 
   return true;
 

@@ -125,10 +125,6 @@ private:
   static constexpr const size_t GFF3_PHASE_FIELD_IDX_{7};
   static constexpr const size_t GFF3_TAG_FIELD_IDX_{8}; // The "xxxx=yyyy;aaaa=bbbb;..." tag field offset.
 
-  // Gff type alias.
-  // Alias GFF types for a Gene.
-  static constexpr const char PROTEIN_CODING_GENE_[] = "PROTEIN_CODING_GENE";
-  static constexpr const char NCRNA_GENE_[] = "NCRNA_GENE";
 
 };
 

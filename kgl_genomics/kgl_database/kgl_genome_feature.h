@@ -25,9 +25,11 @@ class Feature {
 public:
 
   Feature(FeatureIdent_t id,
-          FeatureType_t type,
+          FeatureType_t type, // The actual Gff classification such as 'NCRNA_GENE'
+          FeatureType_t super_type, // High level feature classification such as 'GENE'
           std::shared_ptr<const ContigReference> contig_ptr,
-          FeatureSequence sequence): id_(std::move(id)), type_(std::move(type)), contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
+          FeatureSequence sequence): id_(std::move(id)), type_(std::move(type)), super_type_(std::move(super_type)),
+                                     contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 
@@ -38,12 +40,13 @@ public:
   void sequence(const FeatureSequence& new_sequence) { sequence_ = new_sequence; }
   void setAttributes(const Attributes& attributes) { attributes_ = attributes; }
   [[nodiscard]] const Attributes& getAttributes() const { return attributes_; }
-  [[nodiscard]] const FeatureType_t& featureType() const { return type_; }
-  [[nodiscard]] bool verifyStrand(const SortedCDS& sorted_cds) const;   // Check feature strand consistency
+  [[nodiscard]] const FeatureType_t& type() const { return type_; }
+  [[nodiscard]] const FeatureType_t& superType() const { return super_type_; }
+  [[nodiscard]] bool verifyStrand(const TranscribedFeatureMap& sorted_cds) const;   // Check feature strand consistency
   [[nodiscard]] bool verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const; // Check the CDS phase for -ve and +ve strand genes
-  [[nodiscard]] std::shared_ptr<const Feature> getGene() const; // returns null pointer if not found
-  void recusivelyPrintsubfeatures(long feature_level = 1) const; // useful debug function.
-  [[nodiscard]] std::string featureText() const; // also useful for debug
+  void recusivelyPrintsubfeatures(size_t feature_level = 1) const; // useful debug function.
+  [[nodiscard]] std::string featureText(char delimiter = ' ') const; // also useful for debug
+  [[nodiscard]] std::string descriptionText(char delimiter = ' ') const; // Displays feature description.
   // Hierarchy routines.
   void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
@@ -55,12 +58,12 @@ public:
   constexpr static const char UTR3_TYPE_[] = "THREE_PRIME_UTR";
   constexpr static const char TSS_TYPE_[] = "TSS_BLOCK";
 
-  [[nodiscard]] bool isGene() const { return type_ == GENE_TYPE_; }
-  [[nodiscard]] bool ismRNA() const { return type_ == MRNA_TYPE_; }
-  [[nodiscard]] bool isCDS() const { return type_ == CDS_TYPE_; }
-  [[nodiscard]] bool isUTR5() const { return type_ == UTR5_TYPE_; }
-  [[nodiscard]] bool isUTR3() const { return type_ == UTR3_TYPE_; }
-  [[nodiscard]] bool isTSS() const { return type_ == TSS_TYPE_; }
+  [[nodiscard]] bool isGene() const { return superType() == GENE_TYPE_; }
+  [[nodiscard]] bool ismRNA() const { return superType() == MRNA_TYPE_; }
+  [[nodiscard]] bool isCDS() const { return superType() == CDS_TYPE_; }
+  [[nodiscard]] bool isUTR5() const { return superType() == UTR5_TYPE_; }
+  [[nodiscard]] bool isUTR3() const { return superType() == UTR3_TYPE_; }
+  [[nodiscard]] bool isTSS() const { return superType() == TSS_TYPE_; }
 
   // Always check for a NULL pointer with super feature.
   [[nodiscard]] bool hasSuperfeature() const { return getSuperFeature() != nullptr; }
@@ -78,14 +81,15 @@ public:
 private:
 
   const FeatureIdent_t id_;
-  const FeatureType_t type_;
+  const FeatureType_t type_;  // The actual Gff classification such as 'NCRNA_GENE'
+  const FeatureType_t super_type_; // High level feature classification such as 'GENE'
   std::shared_ptr<const ContigReference> contig_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
-  [[nodiscard]] static bool verifyMod3(const SortedCDS& sorted_cds);
+  [[nodiscard]] static bool verifyMod3(const TranscribedFeatureMap& sorted_cds);
 };
 
 
@@ -102,24 +106,31 @@ class GeneFeature : public Feature {
 public:
 
   GeneFeature(const FeatureIdent_t &id,
+              std::string type,
               const std::shared_ptr<const ContigReference> &contig_ptr,
-              const FeatureSequence &sequence) : Feature(id, GENE_TYPE_, contig_ptr, sequence) {}
+              const FeatureSequence &sequence) : Feature(id, std::move(type), GENE_TYPE_, contig_ptr, sequence) {}
 
   GeneFeature(const GeneFeature &) = default;
   ~GeneFeature() override = default;
 
   // Public function returns a sequence map.
-  [[nodiscard]] static std::shared_ptr<const CodingSequenceArray> getCodingSequences(std::shared_ptr<const GeneFeature> gene);
+  [[nodiscard]] static std::shared_ptr<const CodingSequenceArray> getCodingSequences(const std::shared_ptr<const GeneFeature>& gene);
+
+  constexpr static const char CODING_GENE_[] = "GENE";
+  constexpr static const char PROTEIN_CODING_GENE_[] = "PROTEIN_CODING_GENE";
+  constexpr static const char NCRNA_GENE_[] = "NCRNA_GENE";
+
+  [[nodiscard]] bool proteinCoding() const { return type() == CODING_GENE_ or type() == PROTEIN_CODING_GENE_; }
+  [[nodiscard]] bool ncRNACoding() const { return type() == NCRNA_GENE_; }
 
 private:
 
   // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
   // Specifying an optional identifier is used
-  [[nodiscard]] static bool getCodingSequences( std::shared_ptr<const GeneFeature> gene,
-                                                std::shared_ptr<const Feature> cds_parent,
-                                                std::shared_ptr<CodingSequenceArray>& sequence_array_ptr,
-                                                const FeatureIdent_t& optional_identifier = FeatureIdent_t(""));
-
+  [[nodiscard]] static bool getCodingSequences(const std::string& codingFeatureType,
+                                               const std::shared_ptr<const GeneFeature>& gene,
+                                               const std::shared_ptr<const Feature>& coding_feature_parent_ptr,
+                                               std::shared_ptr<CodingSequenceArray>& sequence_array_ptr);
 
 };
 
@@ -127,30 +138,6 @@ using GeneVector = std::vector<std::shared_ptr<const GeneFeature>>;  // Multiple
 using GeneMap = std::multimap<ContigOffset_t, std::shared_ptr<const GeneFeature>>;  // Inserted using the END offset as key.
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A Coding CDS Feature
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CDSFeature : public Feature {
-
-public:
-
-  CDSFeature(const FeatureIdent_t &id,
-             const CDSPhaseType_t phase,
-             const std::shared_ptr<const ContigReference> &contig_ptr,
-             const FeatureSequence &sequence) : Feature(id, CDS_TYPE_, contig_ptr, sequence), phase_(phase) {}
-
-  CDSFeature(const CDSFeature &) = default;
-  ~CDSFeature() override = default;
-
-  [[nodiscard]] CDSPhaseType_t CDSphase() const { return phase_; }
-
-private:
-
-  CDSPhaseType_t phase_;
-
-};
 
 
 

@@ -89,13 +89,6 @@ public:
 
   [[nodiscard]] const GeneMap& geneMap() const { return gene_map_; }
 
-  [[nodiscard]] bool findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const;
-
-  // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
-  [[nodiscard]] bool getCodingSequence( const FeatureIdent_t& gene_id,
-                                        const FeatureIdent_t& sequence_id,
-                                        std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
-
   // Checks the feature type before adding.
   [[nodiscard]] bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) override;
 

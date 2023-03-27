@@ -64,7 +64,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
 
       ExecEnv::log().info("Sequence Id", coding_sequence.first);
 
-      for (const auto& cds : coding_sequence.second->getSortedCDS()) {
+      for (const auto& cds : coding_sequence.second->getFeatureMap()) {
 
       ExecEnv::log().info("CDS Id", cds.first);
 

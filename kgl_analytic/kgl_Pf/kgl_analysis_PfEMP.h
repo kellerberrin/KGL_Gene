@@ -60,8 +60,13 @@ private:
 
   // Min seq size for UPGMA analysis.
   constexpr static const size_t MIN_SEQUENCE_LENGTH_ = 10;
-  // Var family ident.
+  // Gene family ident.
   constexpr static const char* PFEMP1_FAMILY_ = "PFEMP1";
+  constexpr static const char* RUF6_FAMILY_ = "RUF6";
+  constexpr static const char* RIFIN_FAMILY_ = "RIFIN";
+  constexpr static const char* STEVOR_FAMILY_ = "STEVOR";
+  constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
+
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};
@@ -72,6 +77,12 @@ private:
   // Return a vector of genes that have a particular text fragment in the description.
   [[nodiscard]] GeneVector getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
                                         , const std::string& description_text) const;
+
+  [[nodiscard]] GeneVector getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr) const;
+
+  [[nodiscard]] GeneVector proximityGenes(size_t radius,
+                                          const std::shared_ptr<const GeneFeature>& target_ptr,
+                                          const GeneVector& gene_vector) const;
 
   // Analyze the introns of Var family genes.
   void varIntron( const GeneVector& gene_vector, const std::string& intron_file) const;

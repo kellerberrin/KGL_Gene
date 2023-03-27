@@ -281,102 +281,6 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
 }
 
 
-
-bool kgl::GeneExonFeatures::findGenes(ContigOffset_t offset, GeneVector &gene_ptr_vec) const {
-
-  gene_ptr_vec.clear();
-  auto lb_result = gene_map_.lower_bound(offset);
-
-  if (lb_result == gene_map_.end()) {
-
-    return false;
-
-  }
-
-  auto result = gene_map_.equal_range(lb_result->first);
-
-  for (auto it = result.first; it != result.second; ++it) {
-
-    if (offset >= it->second->sequence().begin()) {
-
-      gene_ptr_vec.emplace_back(it->second);
-
-    }
-
-  }
-
-  return not gene_ptr_vec.empty();
-
-}
-
-
-
-// Given a gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::GeneExonFeatures::getCodingSequence(const FeatureIdent_t& gene_id,
-                                            const FeatureIdent_t& sequence_id,
-                                            std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
-
-  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
-
-  std::shared_ptr<const GeneFeature> gene_ptr;
-
-  if (findFeatureId(gene_id, feature_ptr_vec)) {
-
-    for (const auto& feature_ptr : feature_ptr_vec) {
-
-      if (feature_ptr->id() == gene_id) {
-
-        if (feature_ptr->isGene()) {
-
-          gene_ptr = std::dynamic_pointer_cast<const GeneFeature>(feature_ptr);
-          break;
-
-        } else {
-
-          ExecEnv::log().warn("Feature: {} is not a gene.", gene_id);
-          return false;
-
-        }
-
-      }
-
-    }
-
-  }
-
-  if (not gene_ptr) {
-
-    ExecEnv::log().warn("Gene not found for feature id: {}.", gene_id);
-    return false;
-
-  }
-
-  std::shared_ptr<const CodingSequenceArray> sequence_array_ptr = GeneFeature::getCodingSequences(gene_ptr);
-
-  if (sequence_array_ptr->empty()) {
-
-    ExecEnv::log().warn("No valid coding sequences found for Gene: {}.", gene_id);
-    return false;
-
-  }
-
-  for (const auto& sequence: sequence_array_ptr->getMap()) {
-
-    if (sequence.second->getCDSParent()->id() == sequence_id) {
-
-      coding_sequence_ptr = sequence.second;
-      return true;
-
-    }
-
-  }
-
-  ExecEnv::log().warn("No valid coding sequences found for sequence id: {}.", sequence_id);
-  return false;
-
-}
-
-
 void kgl::GeneExonFeatures::verifyGeneExonHierarchy() {
 
   verifyFeatureHierarchy();
@@ -420,12 +324,12 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
         ExecEnv::log().warn("SubFeature: {}, type: {}; {}[{}:{}) overlaps Feature {} type: {}; {}[{}:{})",
                                   sub_feature_ptr->id(),
-                                  sub_feature_ptr->featureType(),
+                            sub_feature_ptr->type(),
                                   sub_feature_ptr->sequence().strandText(),
                                   sub_feature_ptr->sequence().begin(),
                                   sub_feature_ptr->sequence().end(),
                                   feature_ptr->id(),
-                                  feature_ptr->featureType(),
+                            feature_ptr->type(),
                                   feature_ptr->sequence().strandText(),
                                   feature_ptr->sequence().begin(),
                                   feature_ptr->sequence().end());
@@ -444,12 +348,12 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
         ExecEnv::log().warn("Feature: {}, type: {}; {}[{}:{}) overlaps SuperFeature {}, type: {}; {}[{}:{})",
                                   feature_ptr->id(),
-                                  feature_ptr->featureType(),
+                            feature_ptr->type(),
                                   feature_ptr->sequence().strandText(),
                                   feature_ptr->sequence().begin(),
                                   feature_ptr->sequence().end(),
                                   super_feature_ptr->id(),
-                                  super_feature_ptr->featureType(),
+                            super_feature_ptr->type(),
                                   super_feature_ptr->sequence().strandText(),
                                   super_feature_ptr->sequence().begin(),
                                   super_feature_ptr->sequence().end());

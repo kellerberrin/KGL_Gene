@@ -27,7 +27,7 @@ void kgl::GenomeMutation::analysisType() {
       break;
 
     case VariantGeneMembership::BY_EXON:
-      member_text = "gene variant membership by defined exons";
+      member_text = "gene variant membership by defined codingFeatures";
       break;
 
     default:
@@ -318,7 +318,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std:
 
 }
 
-// Get variants only occurring within exons for all mRNA sequences.
+// Get variants only occurring within codingFeatures for all mRNA sequences.
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
@@ -327,7 +327,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 
   for (auto const& [sequence_id, sequence_ptr] : coding_sequence_array->getMap()) {
 
-    for (const auto& [cds_id, cds_ptr] : sequence_ptr->getSortedCDS()) {
+    for (const auto& [cds_id, cds_ptr] : sequence_ptr->getFeatureMap()) {
 
       gene_contig->merge(contig_ptr->subset(cds_ptr->sequence().begin(), cds_ptr->sequence().end()));
 

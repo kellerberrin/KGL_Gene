@@ -90,7 +90,7 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
 
   for (const auto& sequence: sequence_array_ptr->getMap()) {
 
-    if (sequence.second->getCDSParent()->id() == sequence_id) {
+    if (sequence.second->getParent()->id() == sequence_id) {
 
       coding_sequence_ptr = sequence.second;
       return true;

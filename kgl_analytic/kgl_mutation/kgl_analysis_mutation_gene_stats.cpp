@@ -48,7 +48,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
     auto& [sequence_name, seq_ptr] = *(sequence_array_ptr->getMap().begin());
     seq_name_ = sequence_name;
     nucleotides_ = seq_ptr->codingNucleotides();
-    exons_ = seq_ptr->exons();
+    exons_ = seq_ptr->codingFeatures();
 
   }
   auto const& attribute_map = gene_ptr->getAttributes().getMap();

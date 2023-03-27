@@ -116,7 +116,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   coding_sequence_ptr->prime_5_region(region_size, offset_5_prime, size_5_prime);
 
   ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at offset {}, size {}, 5 prime {}",
-                      coding_sequence_ptr->getCDSParent()->id(), offset_5_prime, size_5_prime, coding_sequence_ptr->prime_5());
+                      coding_sequence_ptr->getParent()->id(), offset_5_prime, size_5_prime, coding_sequence_ptr->prime_5());
 
   DNA5SequenceLinear linear_mutant_sequence;
   DNA5SequenceLinear linear_reference_sequence;
@@ -189,7 +189,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   coding_sequence_ptr->prime_3_region(region_size, offset_3_prime, size_3_prime);
 
   ExecEnv::log().info("Analyzing the 3 Prime Region for Sequence {} offset at {}, size {}, 3 prime offset {}",
-                      coding_sequence_ptr->getCDSParent()->id(), offset_3_prime, size_3_prime, coding_sequence_ptr->prime_3());
+                      coding_sequence_ptr->getParent()->id(), offset_3_prime, size_3_prime, coding_sequence_ptr->prime_3());
 
 
   DNA5SequenceLinear linear_mutant_sequence;
@@ -281,9 +281,9 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
             } else {
 
               ExecEnv::log().info("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
-                                  previous_seq_ptr->getCDSParent()->id(),
+                                  previous_seq_ptr->getParent()->id(),
                                   previous_seq_ptr->end(),
-                                  sequence.second->getCDSParent()->id(),
+                                  sequence.second->getParent()->id(),
                                   sequence.second->start());
 
               front_porch_size = 0;
@@ -1043,7 +1043,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
   std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();
   std::string contig = contig_ptr->contigId();
   std::string gene_id = coding_sequence->getGene()->id();
-  std::string sequence_id = coding_sequence->getCDSParent()->id();
+  std::string sequence_id = coding_sequence->getParent()->id();
   ContigOffset_t sequence_offset = coding_sequence->start();
   char strand = static_cast<char>(coding_sequence->strand());
 

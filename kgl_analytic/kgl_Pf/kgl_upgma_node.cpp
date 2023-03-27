@@ -85,7 +85,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 
     std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig();
     std::string gene_id = sequence.second->getGene()->id();
-    std::string sequence_id = sequence.second->getCDSParent()->id();
+    std::string sequence_id = sequence.second->getParent()->id();
     AminoSequence mutant_sequence;
     AminoSequence reference_sequence;
     OffsetVariantMap variant_map;
@@ -146,7 +146,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
   std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
-  std::string sequence_id = sequence->getCDSParent()->id();
+  std::string sequence_id = sequence->getParent()->id();
 
   if (coding_seq_ptr->size() > 1) {
 
@@ -240,7 +240,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
   std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
-  std::string sequence_id = sequence->getCDSParent()->id();
+  std::string sequence_id = sequence->getParent()->id();
 
   if (coding_seq_ptr->size() > 1) {
 
@@ -308,7 +308,7 @@ std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodin
   if (coding_seq_ptr->size() > 1) {
 
     std::string gene_id = coding_sequence->getGene()->id();
-    std::string sequence_id = coding_sequence->getCDSParent()->id();
+    std::string sequence_id = coding_sequence->getParent()->id();
 
     ExecEnv::log().warn("ReferenceGeneDistance::getSequence;  Gene: {} contains: {} CDS sequences. Using sequence: {}",
                         gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);

@@ -19,8 +19,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 // FeatureSequence - Feature location and strand (if applicable)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-enum class StrandSense { FORWARD = '+', REVERSE = '-'};
+enum class StrandSense: char { FORWARD = '+', REVERSE = '-'};
 class FeatureSequence {
 
 public:
@@ -44,6 +43,10 @@ public:
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
   void end(ContigOffset_t end) { end_offset_ = end; }
   void strand(StrandSense strand) { strand_sense_ = strand; }
+  // Returns the strand adjusted feature begin (-ve is end-1) to the
+  // target strand adjusted feature begin (-ve is end-1)
+  // and returns the relative begin transcription distance as a +ve offset.
+  [[nodiscard]] ContigOffset_t distance(const FeatureSequence& compare_feature) const;
 
   // Primarily used for testing.
   [[nodiscard]] bool equivalent(const FeatureSequence& lhs) const { return begin() == lhs.begin() and end() == lhs.end() and strand() == lhs.strand(); }
@@ -67,27 +70,26 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Feature; // Forward decl.
-class CDSFeature; // Forward decl
 class GeneFeature; // Forward decl.
 class ContigReference; // Forward decl.
 
-using SortedCDS = std::map<ContigOffset_t, std::shared_ptr<const CDSFeature>>;
+using TranscribedFeatureMap = std::map<ContigOffset_t, std::shared_ptr<const Feature>>;
 class CodingSequence {
 
 public:
 
   CodingSequence(std::shared_ptr<const GeneFeature> gene_ptr,
-                 std::shared_ptr<const Feature> cds_parent_ptr,
-                 SortedCDS sorted_cds): gene_ptr_(std::move(gene_ptr)),
-                                        cds_parent_ptr_(std::move(cds_parent_ptr)),
-                                        sorted_cds_(std::move(sorted_cds)) {}
+                 std::shared_ptr<const Feature> parent_ptr,
+                 TranscribedFeatureMap feature_map): gene_ptr_(std::move(gene_ptr)),
+                                                     parent_ptr_(std::move(parent_ptr)),
+                                                     coding_feature_map_(std::move(feature_map)) {}
   ~CodingSequence() = default;
 
-  [[nodiscard]] const SortedCDS& getSortedCDS() const { return sorted_cds_; }
-  [[nodiscard]] size_t exons() const { return getSortedCDS().size(); }
+  [[nodiscard]] const TranscribedFeatureMap& getFeatureMap() const { return coding_feature_map_; }
+  [[nodiscard]] size_t codingFeatures() const { return getFeatureMap().size(); }
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
-  [[nodiscard]] std::shared_ptr<const Feature> getCDSParent() const { return cds_parent_ptr_; }
+  [[nodiscard]] std::shared_ptr<const Feature> getParent() const { return parent_ptr_; }
   [[nodiscard]] StrandSense strand() const;
   [[nodiscard]] ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
   void prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
@@ -95,13 +97,13 @@ public:
   void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   [[nodiscard]] ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
   [[nodiscard]] ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
-  [[nodiscard]] ContigSize_t codingNucleotides() const;
+  [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
 
 private:
 
   std::shared_ptr<const GeneFeature> gene_ptr_;
-  std::shared_ptr<const Feature> cds_parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS superFeature().
-  SortedCDS sorted_cds_;
+  std::shared_ptr<const Feature> parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS superFeature().
+  TranscribedFeatureMap coding_feature_map_;
 
 };
 
@@ -113,15 +115,17 @@ using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const C
 using CodingSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;  // Same parent features permitted.
 #endif
 
+enum class CodingSequenceType { PROTEIN, NCRNA};
 class CodingSequenceArray {
 
 public:
 
-  CodingSequenceArray() = default;
+  CodingSequenceArray(CodingSequenceType coding_type) : coding_type_(coding_type) {}
   ~CodingSequenceArray() = default;
 
   [[nodiscard]] const CodingSequenceMap& getMap() const { return coding_sequence_map_; }
   [[nodiscard]] CodingSequenceMap& getMap() { return coding_sequence_map_; }
+  [[nodiscard]] CodingSequenceType codingType() const { return coding_type_; }
 
   [[nodiscard]] bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
 
@@ -134,6 +138,7 @@ public:
 
 private:
 
+  CodingSequenceType coding_type_;
   CodingSequenceMap coding_sequence_map_;
 
 };

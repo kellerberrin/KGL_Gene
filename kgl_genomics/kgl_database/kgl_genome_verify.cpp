@@ -128,7 +128,7 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
 
   for (const auto& sequence : coding_seq_ptr->getMap()) {
 
-    if (sequence.second->getSortedCDS().empty()) {
+    if (sequence.second->getFeatureMap().empty()) {
 
       ExecEnv::log().error("gene: {}; verifyCodingSequences(), no corresponding CDS features found", gene_ptr->id());
       continue;
@@ -143,7 +143,7 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
 
         ExecEnv::log().info("No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
                             sequence.second->getGene()->id(),
-                            sequence.second->getCDSParent()->id(),
+                            sequence.second->getParent()->id(),
                             coding_table_.firstCodon(coding_sequence).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
@@ -159,7 +159,7 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
         ExecEnv::log().info("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
                             (Codon::codonLength(coding_sequence)-1),
                             sequence.second->getGene()->id(),
-                            sequence.second->getCDSParent()->id(),
+                            sequence.second->getParent()->id(),
                             coding_table_.lastCodon(coding_sequence).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
@@ -176,7 +176,7 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
         ExecEnv::log().info("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
                             nonsense_index,
                             sequence.second->getGene()->id(),
-                            sequence.second->getCDSParent()->id(),
+                            sequence.second->getParent()->id(),
                             Codon(coding_sequence, nonsense_index).getSequenceAsString());
 
         gene_ptr->recusivelyPrintsubfeatures();
@@ -200,8 +200,8 @@ bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> cod
   // Check for mod3
   for(const auto& sorted_cds : coding_seq_ptr->getMap()) {
 
-    result = result and verifyMod3(sorted_cds.second->getSortedCDS());
-    result = result and verifyStrand(sorted_cds.second->getSortedCDS());
+    result = result and verifyMod3(sorted_cds.second->getFeatureMap());
+    result = result and verifyStrand(sorted_cds.second->getFeatureMap());
 
   }
 
@@ -210,7 +210,7 @@ bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> cod
 }
 
 
-bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
+bool kgl::Feature::verifyMod3(const TranscribedFeatureMap& sorted_cds) {
 
   bool result = true;
 // Check the combined sequence length is mod 3 = 0
@@ -232,7 +232,7 @@ bool kgl::Feature::verifyMod3(const SortedCDS& sorted_cds) {
 
 }
 
-bool kgl::Feature::verifyStrand(const SortedCDS& sorted_cds) const {
+bool kgl::Feature::verifyStrand(const TranscribedFeatureMap& sorted_cds) const {
 
   bool result = true;
 

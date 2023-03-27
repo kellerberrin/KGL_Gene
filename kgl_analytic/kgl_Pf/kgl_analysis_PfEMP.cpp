@@ -82,14 +82,43 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
     std::string intron_file_name = INTRON_ + genome_id + INTRON_EXT_;
     intron_file_name = Utility::filePath(intron_file_name, ident_work_directory_);
 
+    auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+
+    varIntron(var_gene_vector, intron_file_name);
+
     std::string newick_file_name = NEWICK_ + genome_id + NEWICK_EXT_;
     newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
 
-    auto gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+    geneFamilyUPGMA(genome_ptr, var_gene_vector, newick_file_name, PFEMP1_FAMILY_);
 
-    varIntron(gene_vector, intron_file_name);
+    auto ruf6_gene_vector = getGeneVector(genome_ptr, RUF6_FAMILY_);
+    auto rifin_gene_vector = getGeneVector(genome_ptr, RIFIN_FAMILY_);
+    auto stevor_gene_vector = getGeneVector(genome_ptr, STEVOR_FAMILY_);
+    auto surfin_gene_vector = getGeneVector(genome_ptr, SURFIN_FAMILY_);
+    auto ncRNA_gene_vector = getncRNAGeneVector(genome_ptr);
 
-    geneFamilyUPGMA(genome_ptr, gene_vector, newick_file_name, PFEMP1_FAMILY_);
+    ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, Var Genes: {}, Rifin Genes: {}, Stevor: {}, Surfin: {}, RUF6: {}, ncRNA: {}",
+                        var_gene_vector.size(), rifin_gene_vector.size(), stevor_gene_vector.size(),
+                        rifin_gene_vector.size(), ruf6_gene_vector.size(), ncRNA_gene_vector.size());
+
+    newick_file_name = NEWICK_ + std::string(RUF6_FAMILY_) + genome_id + NEWICK_EXT_;
+    newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
+
+    for (auto const& gene_ptr : ncRNA_gene_vector) {
+
+      size_t radius{25000};
+      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, genome: {}, ncRNA gene: {}, genetype: {}, radius: {}, var: {}, rifin: {} surfin: {} surfin: {}"
+                          , genome_id, gene_ptr->id(), gene_ptr->type(), radius
+                          , proximityGenes(radius, gene_ptr, var_gene_vector).size()
+                          , proximityGenes(radius, gene_ptr, rifin_gene_vector).size()
+                          , proximityGenes(radius, gene_ptr, surfin_gene_vector).size()
+                          , proximityGenes(radius, gene_ptr, stevor_gene_vector).size());
+
+      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, ncRNA feature: {}", gene_ptr->featureText());
+
+    }
+
+//    geneFamilyUPGMA(genome_ptr, ruf6_gene_vector, newick_file_name, RUF6_FAMILY_);
 
   }
 
@@ -124,6 +153,70 @@ kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
   return gene_vector;
 
 }
+
+
+kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr) const {
+
+  GeneVector gene_vector;
+  size_t contig_count{0};
+
+  for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
+
+    ++contig_count;
+
+    for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
+
+      if (gene_ptr->ncRNACoding() and (gene_ptr->sequence().length() >= 100 and gene_ptr->sequence().length() <= 200)) {
+//      if (gene_ptr->ncRNACoding() and contig_count == 4) {
+
+        gene_vector.push_back(gene_ptr);
+
+      }
+
+    } // Gene
+
+  } // Contig
+
+  return gene_vector;
+
+}
+
+[[nodiscard]] kgl::GeneVector kgl::PfEMPAnalysis::proximityGenes(size_t radius,
+                                                                 const std::shared_ptr<const GeneFeature>& target_ptr,
+                                                                 const GeneVector& gene_vector) const {
+
+  GeneVector same_contig;
+  for (auto const& gene_ptr : gene_vector) {
+
+    if (gene_ptr->contig()->contigId() == target_ptr->contig()->contigId()) {
+
+      same_contig.push_back(gene_ptr);
+
+    }
+  }
+
+  if (radius == 0) {
+
+    return same_contig;
+
+  }
+
+  GeneVector nearby_genes;
+  for (auto const& gene_ptr : same_contig) {
+
+
+    if (target_ptr->sequence().distance(gene_ptr->sequence()) <= radius) {
+
+      nearby_genes.push_back(gene_ptr);
+
+    }
+
+  }
+
+  return nearby_genes;
+
+}
+
 
 
 void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
