@@ -122,10 +122,10 @@ bool kgl::Feature::equivalent(const Feature& lhs) const {
 // Gene Feature members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<const kgl::CodingSequenceArray>
+std::unique_ptr<const kgl::TranscriptionSequenceArray>
 kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene) {
 
-  std::unique_ptr<CodingSequenceArray> sequence_array_ptr(std::make_unique<CodingSequenceArray>());
+  std::unique_ptr<TranscriptionSequenceArray> sequence_array_ptr(std::make_unique<TranscriptionSequenceArray>());
   if (not getCodingSequences(gene, gene, *sequence_array_ptr)) {
 
     ExecEnv::log().error("GeneFeature::getTranscriptionSequences; Unable to retrieve coding sequences for Gene: {}, type: {}", gene->id(), gene->type());
@@ -133,6 +133,101 @@ kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeat
   }
 
   return sequence_array_ptr;
+
+}
+
+
+
+// This routine is recursive. Assumes all the CDS and EXON are leaf nodes in the feature hierarchy.
+bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                          const std::shared_ptr<const Feature>& parent_ptr,
+                                          TranscriptionSequenceArray& sequence_array) {
+
+  bool result = true;
+
+  // Check if bottom level exists.
+  if (gene_ptr->subFeatures().empty()) {
+
+    return true;  // Allow empty genes.
+
+  }
+
+  std::list<std::shared_ptr<const Feature>> leaf_features;
+  bool CDS_found{false};
+  // Loop through all sub_features.
+  for (const auto& [feature_id, sub_feature_ptr] : parent_ptr->subFeatures()) {
+
+    // If subfeature is bottom level.
+    if (sub_feature_ptr->subFeatures().empty()) {
+
+      if (sub_feature_ptr->superType() == CDS_TYPE_) {
+
+        CDS_found = true;
+
+      }
+      leaf_features.push_back(sub_feature_ptr);
+
+    } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
+
+      result = result and getCodingSequences(gene_ptr, sub_feature_ptr, sequence_array);
+
+    }
+
+  } // for loop
+
+  if (CDS_found) {
+  // Remove all non-cds (EXONS) from the list
+    leaf_features.remove_if([](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; });
+
+  } else {
+  // Check that all the leaf features are EXONS and the gene is ncRNA.
+    auto leaf_type = [](const std::shared_ptr<const Feature>& feature)->bool {
+      return feature->superType() == EXON_TYPE_ or feature->superType() == ENHANCER_TYPE_;
+    };
+
+    if (not std::ranges::all_of(leaf_features, leaf_type)) {
+
+      ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Unexpected leaf feature detected", gene_ptr->id());
+      gene_ptr->recusivelyPrintsubfeatures();
+
+    }
+
+  }
+
+  TranscriptionFeatureMap parent_feature_map;
+  if (not leaf_features.empty()) {
+
+    for (auto const& leaf : leaf_features) {
+
+      auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
+
+      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+      // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
+      if (not insert_result) {
+
+        ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Duplicate coding feature: {}",
+                            gene_ptr->id(),
+                            leaf->featureText());
+        gene_ptr->recusivelyPrintsubfeatures();
+        return true;
+
+      }
+
+    }
+
+  }
+
+  if (not parent_feature_map.empty()) {
+
+    std::shared_ptr<const TranscriptionSequence> coding_sequence(std::make_shared<const TranscriptionSequence>(gene_ptr,
+                                                                                                               parent_ptr,
+                                                                                                               parent_feature_map));
+
+    result = result and sequence_array.insertSequence(coding_sequence);
+
+  }
+
+  return result;
 
 }
 
@@ -161,95 +256,3 @@ bool kgl::GeneFeature::findSuperType(const FeatureType_t& super_type, const std:
   return false;
 
 }
-
-
-// This routine is recursive. Assumes all the CDS and EXON are leaf nodes in the feature hieracrchy.
-bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                          const std::shared_ptr<const Feature>& coding_feature_parent_ptr,
-                                          CodingSequenceArray& sequence_array) {
-
-  bool result = true;
-
-  // Check if bottom level exists.
-  if (gene_ptr->subFeatures().empty()) {
-
-    return true;  // Allow empty genes.
-
-  }
-
-  std::list<std::shared_ptr<const Feature>> leaf_features;
-  bool CDS_found{false};
-  // Loop through all sub_features.
-  for (const auto& [feature_id, sub_feature_ptr] : coding_feature_parent_ptr->subFeatures()) {
-
-    // If subfeature is bottom level.
-    if (sub_feature_ptr->subFeatures().empty()) {
-
-      if (sub_feature_ptr->superType() == CDS_TYPE_) {
-
-        CDS_found = true;
-
-      }
-      leaf_features.push_back(sub_feature_ptr);
-
-    } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
-
-      result = result and getCodingSequences(gene_ptr, sub_feature_ptr, sequence_array);
-
-    }
-
-  } // for loop
-
-  if (CDS_found) {
-  // Remove all non-cds (EXONS) from the list
-    leaf_features.remove_if([](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; });
-
-  } else {
-  // Check that all the leaf features are EXONS and the gene is ncRNA.
-
-    if (std::ranges::any_of(leaf_features, [](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != EXON_TYPE_; })) {
-
-      ExecEnv::log().warn("Gene: {}, Unexpected leaf feature detected", gene_ptr->id());
-      gene_ptr->recusivelyPrintsubfeatures();
-
-    }
-
-  }
-
-  TranscribedFeatureMap parent_feature_map;
-  if (not leaf_features.empty()) {
-
-    for (auto const& leaf : leaf_features) {
-
-      auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
-
-      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
-      // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
-      if (not insert_result) {
-
-        ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {}",
-                            gene_ptr->id(),
-                            leaf->featureText());
-        gene_ptr->recusivelyPrintsubfeatures();
-        return true;
-
-      }
-
-    }
-
-  }
-
-  if (not parent_feature_map.empty()) {
-
-    std::shared_ptr<const CodingSequence> coding_sequence(std::make_shared<const CodingSequence>(gene_ptr,
-                                                                                                 coding_feature_parent_ptr,
-                                                                                                 parent_feature_map));
-
-    result = result and sequence_array.insertCodingSequence(coding_sequence);
-
-  }
-
-  return result;
-
-}
-

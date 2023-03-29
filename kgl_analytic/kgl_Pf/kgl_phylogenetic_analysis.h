@@ -160,7 +160,7 @@ private:
   [[nodiscard]] static std::string outputSequence( char delimiter,
                                                    std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                    std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                   std::shared_ptr<const CodingSequence> coding_sequence,
+                                                   std::shared_ptr<const TranscriptionSequence> coding_sequence,
                                                    std::shared_ptr<const GenomeReference> genome_db,
                                                    std::shared_ptr<const GenomeDB> genome_variant);
 

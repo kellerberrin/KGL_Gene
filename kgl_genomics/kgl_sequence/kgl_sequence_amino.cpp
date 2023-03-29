@@ -83,7 +83,7 @@ kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const DNA5SequenceCod
 }
 
 
-kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                            const DNA5SequenceContig& contig_sequence) const {
 
   return getAminoSequence(contig_sequence.codingSequence(coding_seq_ptr));

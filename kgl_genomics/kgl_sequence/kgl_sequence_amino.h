@@ -96,7 +96,7 @@ public:
 
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& coding_sequence) const;
 
-  [[nodiscard]] AminoSequence getAminoSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+  [[nodiscard]] AminoSequence getAminoSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                 const DNA5SequenceContig& contig_sequence) const;
 
   [[nodiscard]] Codon lastCodon(const DNA5SequenceCoding& coding_sequence) const {

@@ -18,11 +18,16 @@ namespace kgl = kellerberrin::genome;
 void kgl::ContigReference::verifyCDSPhasePeptide() {
 
   // Iterate through all the features looking for Genes.
-  size_t gene_count{0};
-  size_t well_formed_genes{0};
+  size_t protein_gene_count{0};
   size_t ill_formed_genes{0};
-  size_t ncRNA_genes{0};
+  size_t ncRNA_gene_count{0};
   size_t empty_genes{0};
+  size_t valid_sequence{0};
+  size_t not_mod3{0};
+  size_t empty_sequence{0};
+  size_t no_start_codon{0};
+  size_t no_stop_codon{0};
+  size_t nonsense_mutation{0};
   bool verbose{false};
 
   if (verbose) {
@@ -35,46 +40,67 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
     if (feature_ptr->isGene()) {
 
-      ++gene_count;
-
       auto gene_ptr = std::static_pointer_cast<const GeneFeature>(feature_ptr);
-      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
+      auto sequence_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
 
-      if (coding_seq_ptr->empty()) { // No coding sequence available.
+      if (sequence_array_ptr->empty()) {
 
-        ++empty_genes; // Generally regions or loci of interest marked as genes.
+        ++empty_genes;
+        continue;
 
-        if (verbose) {
+      }
 
-          ExecEnv::log().info("Gene : {} Offset: {} Empty Gene - gene sub-features print out",
-                              gene_ptr->id(),
-                              gene_ptr->sequence().begin());
+      bool valid_gene{false};
+      bool ncRNA_gene{false};
+      for (auto const& [parent_id, sequence_ptr]: sequence_array_ptr->getMap()) {
 
-          gene_ptr->recusivelyPrintsubfeatures();
+        if (sequence_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
+
+          ++ncRNA_gene_count;
+          ncRNA_gene = true;
+          continue;
 
         }
 
-      } else if (coding_seq_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
+        switch(TranscriptionSequence::checkValidProtein(sequence_ptr, verbose)) {
 
-        ++ncRNA_genes;
+          case ProteinSequenceValidity::VALID:
+            valid_gene = true; // Only require 1 valid sequence for a valid protein gege.
+            ++valid_sequence;
+            break;
 
-      } else {
+          case ProteinSequenceValidity::NOT_MOD3:
+            ++not_mod3;
+            break;
 
-        if (gene_ptr->verifyCDSPhase(*coding_seq_ptr) and verifyCodingSequences(gene_ptr, *coding_seq_ptr)) {
+          case ProteinSequenceValidity::EMPTY:
+            ++empty_sequence;
+            break;
 
-          ++well_formed_genes;
+          case ProteinSequenceValidity::NO_START_CODON:
+            ++no_start_codon;
+            break;
+
+          case ProteinSequenceValidity::NO_STOP_CODON:
+            ++no_stop_codon;
+            break;
+
+          case ProteinSequenceValidity::NONSENSE_MUTATION:
+            ++nonsense_mutation;
+            break;
+
+        }
+
+
+      } //for sequences
+
+      if (not ncRNA_gene) {
+
+        if (valid_gene) {
+
+          ++protein_gene_count;
 
         } else {
-
-          if (verbose) {
-
-            ExecEnv::log().info("Gene : {} Offset: {} Problem verifying CDS structure - gene sub-features print out",
-                                gene_ptr->id(),
-                                gene_ptr->sequence().begin());
-
-            gene_ptr->recusivelyPrintsubfeatures();
-
-          }
 
           ++ill_formed_genes;
 
@@ -82,16 +108,19 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
       }
 
-    }
+    } // If gene.
 
   }
 
-  ExecEnv::log().info("Verified {}; Protein Genes {}, Mal-formed (pseudo) {}; ncRNA Genes {}, Empty Genes: {}",
+  ExecEnv::log().info("Verified {}; Valid Protein Genes {}, Mal-formed (pseudo) {}; ncRNA Genes {}, Empty Genes: {}, Valid Sequences: {}, Not Mod3: {}, Bad Structure: {}",
                       contigId(),
-                      well_formed_genes,
+                      protein_gene_count,
                       ill_formed_genes,
-                      ncRNA_genes,
-                      empty_genes);
+                      ncRNA_gene_count,
+                      empty_genes,
+                      valid_sequence,
+                      not_mod3,
+                      (no_start_codon + no_stop_codon + nonsense_mutation));
 
 }
 
@@ -99,38 +128,29 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
   auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
-  if (coding_seq_ptr->empty()) { // No CDS coding sequence available.
+  if (coding_seq_ptr->empty()) {
 
-    return false;
-
-  }
-
-  if (not gene_ptr->verifyCDSPhase(*coding_seq_ptr)) {
-
-    return false;
+    return true;   // OK, loci and regions are marked as genes but have no coding sequences.
 
   }
 
-  if (not gene_ptr->contig()->verifyCodingSequences(gene_ptr, *coding_seq_ptr)) {
+  auto valid_sequence_array_ptr = coding_seq_ptr->validTranscriptionArray();
 
-    return false;
-
-  }
-
-  return true;
+  // Valid gene should have at least 1 valid transcription.
+  return not valid_sequence_array_ptr->empty();
 
 }
 
 
 bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                 const CodingSequenceArray& coding_seq_array) const {
+                                                 const TranscriptionSequenceArray& coding_seq_array) const {
 
   bool result{true};
   bool verbose{false};
 
   if (coding_seq_array.empty()) {
 
-    ExecEnv::log().error("gene: {}; verifyCodingSequences(), empty CodingSequenceArray", gene_ptr->id());
+    ExecEnv::log().error("gene: {}; verifyCodingSequences(), empty TranscriptionSequenceArray", gene_ptr->id());
 
   }
 
@@ -202,7 +222,7 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
 }
 
 
-bool kgl::Feature::verifyCDSPhase(const CodingSequenceArray& coding_seq_array) const {
+bool kgl::Feature::verifyCDSPhase(const TranscriptionSequenceArray& coding_seq_array) const {
 
   bool result{false};
   // Check for mod3
@@ -229,38 +249,29 @@ bool kgl::Feature::verifyCDSPhase(const CodingSequenceArray& coding_seq_array) c
 }
 
 
-bool kgl::Feature::verifyMod3(const TranscribedFeatureMap& feature_map) const {
+bool kgl::Feature::verifyMod3(const TranscriptionFeatureMap& feature_map) const {
 
   bool result = true;
 // Check the combined sequence length is mod 3 = 0
 
   ContigSize_t coding_sequence_length = 0;
-  uint32_t phase_total{0};
   for (auto const& [offset, feature_ptr] : feature_map) {
 
     coding_sequence_length += feature_ptr->sequence().length();
-    phase_total += feature_ptr->sequence().phase();
 
   }
 
   if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
 
-    ExecEnv::log().error("Protein gene id: {} coding sequences: {}, total coding length: {}, phase total: {} not mod3",
-                         id(),
-                         feature_map.size(),
-                         coding_sequence_length,
-                         phase_total);
-    if (id() == "gene-TMEM247") {
-      recusivelyPrintsubfeatures();
-    }
     result = false;
+
   }
 
   return result;
 
 }
 
-bool kgl::Feature::verifyStrand(const TranscribedFeatureMap& Feature_map) const {
+bool kgl::Feature::verifyStrand(const TranscriptionFeatureMap& Feature_map) const {
 
   bool result = true;
 

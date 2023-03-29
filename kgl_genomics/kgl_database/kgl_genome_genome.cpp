@@ -126,7 +126,7 @@ bool kgl::GenomeReference::contigOffset(const ContigId_t& contig_id,
   }
 
   // Get the coding sequence.
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
   if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("contigOffset(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);

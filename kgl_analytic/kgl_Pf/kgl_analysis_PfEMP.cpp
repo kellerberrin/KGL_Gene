@@ -166,7 +166,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
 
     for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
 
-      if (GeneFeature::ncRNACoding(gene_ptr) and (gene_ptr->sequence().length() >= 100 and gene_ptr->sequence().length() <= 200)) {
+      if (GeneFeature::ncRNACoding(gene_ptr) and  gene_ptr->sequence().length() <= 300) {
 
         gene_vector.push_back(gene_ptr);
 
@@ -267,7 +267,7 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
 
     }
 
-    std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+    std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
     DNA5SequenceCoding coding_dna_sequence;
 
     if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
@@ -387,7 +387,7 @@ void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeRefe
 
     }
 
-    std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+    std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
     DNA5SequenceCoding coding_dna_sequence;
 
     if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {

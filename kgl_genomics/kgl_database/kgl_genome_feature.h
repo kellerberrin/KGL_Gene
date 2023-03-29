@@ -42,8 +42,8 @@ public:
   [[nodiscard]] const Attributes& getAttributes() const { return attributes_; }
   [[nodiscard]] const FeatureType_t& type() const { return type_; } // The actual Gff classification such as 'NCRNA_GENE'
   [[nodiscard]] const FeatureType_t& superType() const { return super_type_; } // High level feature classification such as 'GENE'
-  [[nodiscard]] bool verifyStrand(const TranscribedFeatureMap& Feature_map) const;   // Check feature strand consistency
-  [[nodiscard]] bool verifyCDSPhase(const CodingSequenceArray& coding_seq_array) const; // Check the CDS phase for -ve and +ve strand genes
+  [[nodiscard]] bool verifyStrand(const TranscriptionFeatureMap& Feature_map) const;   // Check feature strand consistency
+  [[nodiscard]] bool verifyCDSPhase(const TranscriptionSequenceArray& coding_seq_array) const; // Check the CDS phase for -ve and +ve strand genes
   void recusivelyPrintsubfeatures(size_t feature_level = 1) const; // useful debug function.
   [[nodiscard]] std::string featureText(char delimiter = ' ') const; // also useful for debug
   [[nodiscard]] std::string descriptionText(char delimiter = ' ') const; // Displays feature description.
@@ -58,6 +58,7 @@ public:
   constexpr static const char UTR5_TYPE_[] = "FIVE_PRIME_UTR";
   constexpr static const char UTR3_TYPE_[] = "THREE_PRIME_UTR";
   constexpr static const char TSS_TYPE_[] = "TSS_BLOCK";
+  constexpr static const char ENHANCER_TYPE_[] = "ENHANCER";
 
   [[nodiscard]] bool isGene() const { return superType() == GENE_TYPE_; }
   [[nodiscard]] bool ismRNA() const { return superType() == MRNA_TYPE_; }
@@ -89,7 +90,7 @@ private:
   SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
-  [[nodiscard]] bool verifyMod3(const TranscribedFeatureMap& feature_map) const;
+  [[nodiscard]] bool verifyMod3(const TranscriptionFeatureMap& feature_map) const;
 };
 
 
@@ -114,7 +115,7 @@ public:
   ~GeneFeature() override = default;
 
   // Public function returns a sequence map.
-  [[nodiscard]] static std::unique_ptr<const CodingSequenceArray> getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene);
+  [[nodiscard]] static std::unique_ptr<const TranscriptionSequenceArray> getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene);
 
   constexpr static const char CODING_GENE_[] = "GENE";
   constexpr static const char PROTEIN_CODING_GENE_[] = "PROTEIN_CODING_GENE";
@@ -128,8 +129,8 @@ private:
   // Initializes the map_ptr with a list of coding sequences found for the gene. Recursive.
   // Specifying an optional identifier is used
   [[nodiscard]] static bool getCodingSequences(const std::shared_ptr<const GeneFeature>& gene,
-                                               const std::shared_ptr<const Feature>& coding_feature_parent_ptr,
-                                               CodingSequenceArray& sequence_array_ptr);
+                                               const std::shared_ptr<const Feature>& parent_ptr,
+                                               TranscriptionSequenceArray& sequence_array_ptr);
 
   // Recursively find a feature super type in a feature hierarchy.
   // If CDS is found then a protein gene, else ncRNA gene.

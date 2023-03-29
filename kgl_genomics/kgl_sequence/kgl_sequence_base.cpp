@@ -44,8 +44,8 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 
 
 // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the CodingSequence.
-kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingOffsetSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscriptionSequence.
+kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                           ContigOffset_t sub_sequence_offset,
                                                                           ContigSize_t sub_sequence_length,
                                                                           ContigOffset_t contig_offset) const {
@@ -56,8 +56,8 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingOffsetSubSequence( const 
 
 
 // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the CodingSequence.
-std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::exonArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscriptionSequence.
+std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::exonArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                                  ContigOffset_t contig_offset) const {
 
   return SequenceOffset::refExonArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
@@ -66,8 +66,8 @@ std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::exonArraySequence(
 
 
 // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the CodingSequence.
-kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the TranscriptionSequence.
+kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                           ContigOffset_t sub_sequence_offset,
                                                                           ContigSize_t sub_sequence_length,
                                                                           ContigOffset_t contig_offset) const {
@@ -79,7 +79,7 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const 
 // Convenience routine that returns an array of introns (strand adjusted).
 // Returned sequences are in transcription (strand) order with array[0] being the first intron.
 // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
-std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::intronArraySequence( const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                                    ContigOffset_t contig_offset) const {
 
   return SequenceOffset::refIntronArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
@@ -212,7 +212,7 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 
 
 // Returns the codon offset of offset within a coding, returns false if not within the coding sequence.
-bool kgl::DNA5SequenceContig::codonOffset(const std::shared_ptr<const CodingSequence>& coding_seq_ptr,
+bool kgl::DNA5SequenceContig::codonOffset(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                           ContigOffset_t contig_offset,
                                           ContigOffset_t& codon_offset,
                                           ContigSize_t& base_in_codon) const {

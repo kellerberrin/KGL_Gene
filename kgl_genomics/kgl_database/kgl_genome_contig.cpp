@@ -44,7 +44,7 @@ kgl::AminoSequence kgl::ContigReference::getAminoSequence(const DNA5SequenceCodi
 // Given a gene id and an mRNA id (sequence id) return the coding base sequence.
 bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
                                              const FeatureIdent_t& sequence_id,
-                                             std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const {
+                                             std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr) const {
 
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
   std::shared_ptr<const GeneFeature> gene_ptr;
@@ -105,7 +105,7 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
 
 
 // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
+bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
                                                  DNA5SequenceCoding& coding_sequence) const {
 
   if (coding_sequence_ptr) {

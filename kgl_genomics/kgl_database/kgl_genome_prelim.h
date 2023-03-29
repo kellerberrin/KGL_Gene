@@ -70,7 +70,7 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CodingSequence - The Gene and mRNA feature (if present) and the CDS features necessary for a protein sequence.
+// TranscriptionSequence - The Gene and mRNA feature (if present) and the CDS features necessary for a protein sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Feature; // Forward decl.
@@ -78,19 +78,21 @@ class GeneFeature; // Forward decl.
 class ContigReference; // Forward decl.
 
 enum class TranscriptionSequenceType { PROTEIN, NCRNA, EMPTY};
-using TranscribedFeatureMap = std::map<ContigOffset_t, std::shared_ptr<const Feature>>;
-class CodingSequence {
+// Check a Protein transcription sequence for validity. Note that all ncRNA sequences are trivially valid.
+enum class ProteinSequenceValidity { VALID, EMPTY,  NOT_MOD3, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
+using TranscriptionFeatureMap = std::map<ContigOffset_t, std::shared_ptr<const Feature>>;
+class TranscriptionSequence {
 
 public:
 
-  CodingSequence(std::shared_ptr<const GeneFeature> gene_ptr,
-                 std::shared_ptr<const Feature> parent_ptr,
-                 TranscribedFeatureMap feature_map): gene_ptr_(std::move(gene_ptr)),
-                                                     parent_ptr_(std::move(parent_ptr)),
-                                                     coding_feature_map_(std::move(feature_map)) {}
-  ~CodingSequence() = default;
+  TranscriptionSequence(std::shared_ptr<const GeneFeature> gene_ptr,
+                        std::shared_ptr<const Feature> parent_ptr,
+                        TranscriptionFeatureMap feature_map): gene_ptr_(std::move(gene_ptr)),
+                                                              parent_ptr_(std::move(parent_ptr)),
+                                                              transcription_feature_map_(std::move(feature_map)) {}
+  ~TranscriptionSequence() = default;
 
-  [[nodiscard]] const TranscribedFeatureMap& getFeatureMap() const { return coding_feature_map_; }
+  [[nodiscard]] const TranscriptionFeatureMap& getFeatureMap() const { return transcription_feature_map_; }
   [[nodiscard]] size_t codingFeatures() const { return getFeatureMap().size(); }
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
@@ -104,46 +106,51 @@ public:
   [[nodiscard]] ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
   [[nodiscard]] TranscriptionSequenceType codingType() const;
+  [[nodiscard]] static ProteinSequenceValidity checkValidProtein( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
+                                                                  bool verbose = false); // ncRNA are trivially valid.
 
 private:
 
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::shared_ptr<const Feature> parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS superFeature().
-  TranscribedFeatureMap coding_feature_map_;
+  TranscriptionFeatureMap transcription_feature_map_;
 
 };
 
 // A sorted array of coding sequences. Sorted by CDS parent (generally mRNA) feature ident.
 // #define CODING_SEQUENCE_ISMAP 1  // Uncomment this if the requirement is for distinct CDS parent features.
 #ifdef CODING_SEQUENCE_ISMAP
-using TranscriptionSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>; // For distinct parent features.
+using TranscriptionSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const TranscriptionSequence>>; // For distinct parent features.
 #else
-using TranscriptionSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;  // Same parent features permitted.
+using TranscriptionSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const TranscriptionSequence>>;  // Same parent features permitted.
 #endif
 
-class CodingSequenceArray {
+class TranscriptionSequenceArray {
 
 public:
 
-  CodingSequenceArray() = default;
-  ~CodingSequenceArray() = default;
+  TranscriptionSequenceArray() = default;
+  ~TranscriptionSequenceArray() = default;
 
-  [[nodiscard]] const TranscriptionSequenceMap& getMap() const { return coding_sequence_map_; }
-  [[nodiscard]] TranscriptionSequenceMap& getMap() { return coding_sequence_map_; }
+  [[nodiscard]] const TranscriptionSequenceMap& getMap() const { return transcription_sequence_map_; }
+  [[nodiscard]] TranscriptionSequenceMap& getMap() { return transcription_sequence_map_; }
   [[nodiscard]] TranscriptionSequenceType codingType() const; // Assumes that all coding sequences are the same type.
 
-  [[nodiscard]] bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
+  [[nodiscard]] bool insertSequence(std::shared_ptr<const TranscriptionSequence> sequence_ptr);
 
-  [[nodiscard]] size_t size() const { return coding_sequence_map_.size(); }
-  [[nodiscard]] bool empty() const { return size() == 0; }
+  [[nodiscard]] size_t size() const { return transcription_sequence_map_.size(); }
+  [[nodiscard]] bool empty() const { return transcription_sequence_map_.empty(); }
 
-  [[nodiscard]] std::shared_ptr<const CodingSequence> getFirst() const;
+  [[nodiscard]] std::shared_ptr<const TranscriptionSequence> getFirst() const;
 
-  static void printSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
+  static void printSequence(std::shared_ptr<const TranscriptionSequenceArray> sequence_ptr);
+
+  // Only ncRNA and valid Protein transcriptions.
+  std::unique_ptr<const TranscriptionSequenceArray> validTranscriptionArray() const;
 
 private:
 
-  TranscriptionSequenceMap coding_sequence_map_;
+  TranscriptionSequenceMap transcription_sequence_map_;
 
 };
 

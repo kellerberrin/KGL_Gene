@@ -143,7 +143,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
   }
 
-  std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
+  std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
   std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getParent()->id();
@@ -236,7 +236,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
   }
 
-  std::shared_ptr<const CodingSequence> sequence = coding_seq_ptr->getFirst();
+  std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
   std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getParent()->id();
@@ -292,7 +292,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodingSequence() {
+std::shared_ptr<const kgl::TranscriptionSequence>  kgl::ReferenceGeneDistance::getCodingSequence() {
 
   auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr_);
 
@@ -302,7 +302,7 @@ std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodin
 
   }
 
-  std::shared_ptr<const CodingSequence> coding_sequence = coding_seq_ptr->getFirst();
+  std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
 
   if (coding_seq_ptr->size() > 1) {
 

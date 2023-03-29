@@ -103,7 +103,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   }
 
   // Get the coding sequence.
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
   if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
@@ -176,7 +176,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   }
 
   // Get the coding sequence.
-  std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+  std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
   if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("compare5Prime(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
@@ -257,7 +257,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
     for (auto const& contig : genome_db->getMap()) {
 
-      std::shared_ptr<const CodingSequence> previous_seq_ptr = nullptr;
+      std::shared_ptr<const TranscriptionSequence> previous_seq_ptr = nullptr;
 
       for (auto const& gene : contig.second->getGeneMap()) {
 
@@ -732,7 +732,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     }
 
     // Get the coding sequence.
-    std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+    std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
     if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
       ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV,  Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
@@ -846,7 +846,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     OffsetVariantMap variant_map;
 
     // Get the coding sequence.
-    std::shared_ptr<const CodingSequence> coding_sequence_ptr;
+    std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
     if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
       ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV,  Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
@@ -1035,7 +1035,7 @@ std::string kgl::GenomicMutation::outputRegionHeader(char delimiter) {
 std::string kgl::GenomicMutation::outputSequence(char delimiter,
                                                  std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
                                                  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                 std::shared_ptr<const CodingSequence> coding_sequence,
+                                                 std::shared_ptr<const TranscriptionSequence> coding_sequence,
                                                  std::shared_ptr<const GenomeReference> genome_db,
                                                  std::shared_ptr<const GenomeDB> genome_variant) {
 

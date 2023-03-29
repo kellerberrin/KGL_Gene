@@ -195,7 +195,7 @@ protected:
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::string protein_family_;
 
-  std::shared_ptr<const CodingSequence>  getCodingSequence();
+  std::shared_ptr<const TranscriptionSequence>  getCodingSequence();
 
 };
 

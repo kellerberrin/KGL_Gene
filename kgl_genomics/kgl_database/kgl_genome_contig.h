@@ -59,6 +59,7 @@ public:
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] const std::string& description() const { return description_; }
   [[nodiscard]] const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
+  [[nodiscard]] const TranslateToAmino& codingTable() const { return coding_table_; }
   [[nodiscard]] std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
@@ -74,10 +75,10 @@ public:
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   [[nodiscard]] bool getCodingSequence( const FeatureIdent_t& gene_id,
                                         const FeatureIdent_t& sequence_id,
-                                        std::shared_ptr<const CodingSequence>& coding_sequence_ptr) const;
+                                        std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr) const;
 
   // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-  [[nodiscard]] bool getDNA5SequenceCoding( const std::shared_ptr<const CodingSequence>& coding_sequence_ptr,
+  [[nodiscard]] bool getDNA5SequenceCoding( const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
                                             DNA5SequenceCoding& dna_coding) const;
 
   // Generate Amino acid sequences using the table specified for this contig.
@@ -101,7 +102,7 @@ private:
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
   [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                            const CodingSequenceArray& coding_seq_array) const;
+                                            const TranscriptionSequenceArray& coding_seq_array) const;
 
 };
 
