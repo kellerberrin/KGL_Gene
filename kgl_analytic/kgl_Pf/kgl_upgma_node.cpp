@@ -80,7 +80,7 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 
 void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_ptr) {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
+  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
   for (auto const& sequence : coding_seq_ptr->getMap()) {
 
     std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig();
@@ -134,7 +134,7 @@ bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
 
 void kgl::UPGMAGeneDistance::mutateProtein() {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
+  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
 
   if (coding_seq_ptr->empty()) {
 
@@ -228,8 +228,7 @@ void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
 
 void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr_);
-
+  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
   if (coding_seq_ptr->size() == 0) {
 
     ExecEnv::log().critical("write_node(), Gene contains no coding sequence : genome: {} gene: {}",
@@ -295,7 +294,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
 std::shared_ptr<const kgl::CodingSequence>  kgl::ReferenceGeneDistance::getCodingSequence() {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = GeneFeature::getCodingSequences(gene_ptr_);
+  auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr_);
 
   if (coding_seq_ptr->empty()) {
 

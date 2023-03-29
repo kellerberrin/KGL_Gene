@@ -26,10 +26,12 @@ public:
 
   FeatureSequence(const ContigOffset_t& begin_offset,
                   const ContigOffset_t& end_offset,
-                  const StrandSense& strand_sense)
+                  const StrandSense& strand_sense,
+                  uint32_t phase = 0)
   : begin_offset_(begin_offset),
     end_offset_(end_offset),
-    strand_sense_(strand_sense) {}
+    strand_sense_(strand_sense),
+    phase_(phase) {}
   ~FeatureSequence() = default;
   FeatureSequence(const FeatureSequence&) = default;
 
@@ -38,6 +40,7 @@ public:
   [[nodiscard]] ContigOffset_t begin() const { return begin_offset_; }
   [[nodiscard]] ContigOffset_t end() const { return end_offset_; }
   [[nodiscard]] StrandSense strand() const { return strand_sense_; }
+  [[nodiscard]] uint32_t phase() const { return phase_; }
   [[nodiscard]] ContigSize_t length() const { return end_offset_ - begin_offset_; }
   [[nodiscard]] char strandText() const { return static_cast<char>(strand()); }
   void begin(ContigOffset_t begin) { begin_offset_ = begin; }
@@ -62,6 +65,7 @@ private:
   ContigOffset_t begin_offset_;    // begin is the first nucleotide of the feature.
   ContigOffset_t end_offset_;      // end points past the last nucleotide of the feature; end = last_offset+1
   StrandSense strand_sense_;      // default is '+'
+  uint32_t phase_;
 
 };
 
@@ -73,6 +77,7 @@ class Feature; // Forward decl.
 class GeneFeature; // Forward decl.
 class ContigReference; // Forward decl.
 
+enum class TranscriptionSequenceType { PROTEIN, NCRNA, EMPTY};
 using TranscribedFeatureMap = std::map<ContigOffset_t, std::shared_ptr<const Feature>>;
 class CodingSequence {
 
@@ -98,6 +103,7 @@ public:
   [[nodiscard]] ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
   [[nodiscard]] ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
+  [[nodiscard]] TranscriptionSequenceType codingType() const;
 
 private:
 
@@ -110,22 +116,21 @@ private:
 // A sorted array of coding sequences. Sorted by CDS parent (generally mRNA) feature ident.
 // #define CODING_SEQUENCE_ISMAP 1  // Uncomment this if the requirement is for distinct CDS parent features.
 #ifdef CODING_SEQUENCE_ISMAP
-using CodingSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>; // For distinct parent features.
+using TranscriptionSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>; // For distinct parent features.
 #else
-using CodingSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;  // Same parent features permitted.
+using TranscriptionSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const CodingSequence>>;  // Same parent features permitted.
 #endif
 
-enum class CodingSequenceType { PROTEIN, NCRNA};
 class CodingSequenceArray {
 
 public:
 
-  CodingSequenceArray(CodingSequenceType coding_type) : coding_type_(coding_type) {}
+  CodingSequenceArray() = default;
   ~CodingSequenceArray() = default;
 
-  [[nodiscard]] const CodingSequenceMap& getMap() const { return coding_sequence_map_; }
-  [[nodiscard]] CodingSequenceMap& getMap() { return coding_sequence_map_; }
-  [[nodiscard]] CodingSequenceType codingType() const { return coding_type_; }
+  [[nodiscard]] const TranscriptionSequenceMap& getMap() const { return coding_sequence_map_; }
+  [[nodiscard]] TranscriptionSequenceMap& getMap() { return coding_sequence_map_; }
+  [[nodiscard]] TranscriptionSequenceType codingType() const; // Assumes that all coding sequences are the same type.
 
   [[nodiscard]] bool insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence);
 
@@ -134,12 +139,11 @@ public:
 
   [[nodiscard]] std::shared_ptr<const CodingSequence> getFirst() const;
 
-  static void printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
+  static void printSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr);
 
 private:
 
-  CodingSequenceType coding_type_;
-  CodingSequenceMap coding_sequence_map_;
+  TranscriptionSequenceMap coding_sequence_map_;
 
 };
 

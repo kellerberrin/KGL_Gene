@@ -232,7 +232,7 @@ kgl::ContigSize_t kgl::CodingSequence::codingNucleotides() const {
 
 
 
-void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) {
+void kgl::CodingSequenceArray::printSequence(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) {
 
   long vector_count = 0;
   for (const auto& sequence : coding_seq_ptr->getMap()) {
@@ -268,6 +268,28 @@ void kgl::CodingSequenceArray::printCodingSequence(std::shared_ptr<const CodingS
 
 }
 
+// Assumes that all coding sequences are the same type.
+kgl::TranscriptionSequenceType kgl::CodingSequence::codingType() const {
+
+  if (coding_feature_map_.empty()) {
+
+    return TranscriptionSequenceType::EMPTY;
+
+  }
+
+  auto const& [offset, feature_ptr]  = *coding_feature_map_.begin();
+
+  if (feature_ptr->superType() == Feature::CDS_TYPE_) {
+
+    return TranscriptionSequenceType::PROTEIN;
+
+  } else {
+
+    return TranscriptionSequenceType::NCRNA;
+
+  }
+
+}
 
 bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const CodingSequence> coding_sequence_ptr) {
 
@@ -292,6 +314,21 @@ bool kgl::CodingSequenceArray::insertCodingSequence(std::shared_ptr<const Coding
   return true;
 
 #endif
+
+}
+
+// Assumes that all coding sequences are the same type.
+kgl::TranscriptionSequenceType kgl::CodingSequenceArray::codingType() const {
+
+  if (coding_sequence_map_.empty()) {
+
+    return TranscriptionSequenceType::EMPTY;
+
+  }
+
+  auto const& first_sequence = getFirst();
+
+  return first_sequence->codingType();
 
 }
 

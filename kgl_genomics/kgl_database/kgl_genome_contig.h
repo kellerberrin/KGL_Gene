@@ -101,7 +101,7 @@ private:
 
   // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
   [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                            const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const;
+                                            const CodingSequenceArray& coding_seq_array) const;
 
 };
 

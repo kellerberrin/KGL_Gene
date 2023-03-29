@@ -79,8 +79,7 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
 
   }
 
-  std::shared_ptr<const CodingSequenceArray> sequence_array_ptr = GeneFeature::getCodingSequences(gene_ptr);
-
+  auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
   if (sequence_array_ptr->empty()) {
 
     ExecEnv::log().warn("No valid coding sequences found for Gene: {}.", gene_id);

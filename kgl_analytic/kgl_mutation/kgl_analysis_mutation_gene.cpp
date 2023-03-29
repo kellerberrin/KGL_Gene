@@ -323,7 +323,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
                                                                       const GeneCharacteristic& gene_char) {
 
   std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(contig_ptr->contigId()));
-  std::shared_ptr<const CodingSequenceArray> coding_sequence_array = GeneFeature::getCodingSequences(gene_char.genePtr());
+  auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_char.genePtr());
 
   for (auto const& [sequence_id, sequence_ptr] : coding_sequence_array->getMap()) {
 

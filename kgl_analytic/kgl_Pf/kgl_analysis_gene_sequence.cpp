@@ -56,8 +56,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;  
   for (const auto& gene : contig_ptr->getGeneMap()) {
     
-    std::shared_ptr<const kgl::CodingSequenceArray> coding_sequence_array_ptr;
-    coding_sequence_array_ptr = GeneFeature::getCodingSequences(gene.second); 
+    auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene.second);
 
     size_t coding_count = 0;
     for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
@@ -153,8 +152,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
     
     if (feature_ptr->isGene()) {
 
-      std::shared_ptr<const kgl::CodingSequenceArray> coding_sequence_array_ptr;
-      coding_sequence_array_ptr = GeneFeature::getCodingSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr)); 
+      auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr));
 
       size_t coding_count = 0;
       for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {

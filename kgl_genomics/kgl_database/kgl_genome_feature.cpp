@@ -8,6 +8,7 @@
 #include "kgl_genome_contig.h"
 
 #include <sstream>
+#include <list>
 
 namespace kgl = kellerberrin::genome;
 
@@ -47,6 +48,10 @@ std::string kgl::Feature::featureText(char delimiter) const {
      << id() << delimiter
      << "Type:" << delimiter
      << type() << delimiter
+     << "SuperFeature:" << delimiter
+     << (hasSuperfeature() ? getSuperFeature()->id() : "<TopLevel>") << delimiter
+     << "SubFeatures:" << delimiter
+     << subFeatures().size() << delimiter
      << "Length:" << delimiter
      << sequence().length() << delimiter
      << "Offset:[" << delimiter
@@ -54,7 +59,9 @@ std::string kgl::Feature::featureText(char delimiter) const {
      << "," << delimiter
      << sequence().end() << delimiter
      << ") Strand:" << delimiter
-     << sequence().strandText() << delimiter
+      << sequence().strandText() << delimiter
+     << "Phase:" << delimiter
+     << sequence().phase() << delimiter
      << "Description:" << delimiter
      << descriptionText(delimiter);
 
@@ -115,86 +122,130 @@ bool kgl::Feature::equivalent(const Feature& lhs) const {
 // Gene Feature members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<const kgl::CodingSequenceArray>
-kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeature>& gene) {
+std::unique_ptr<const kgl::CodingSequenceArray>
+kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene) {
 
-  if (gene->proteinCoding()) {
+  std::unique_ptr<CodingSequenceArray> sequence_array_ptr(std::make_unique<CodingSequenceArray>());
+  if (not getCodingSequences(gene, gene, *sequence_array_ptr)) {
 
-    std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>(CodingSequenceType::PROTEIN));
-    if (not getCodingSequences(Feature::CDS_TYPE_, gene, gene, sequence_array_ptr)) {
-
-      ExecEnv::log().error("GeneFeature::getCodingSequences; Unable to retrieve CDS coding sequences for Gene: {}, type: {}", gene->id(), gene->type());
-
-    }
-    return sequence_array_ptr;
-
-  } else if (gene->ncRNACoding()) {
-
-    std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>(CodingSequenceType::NCRNA));
-    if (not getCodingSequences(Feature::MRNA_TYPE_, gene, gene, sequence_array_ptr)) {
-
-      ExecEnv::log().error("GeneFeature::getCodingSequences; Unable to retrieve CDS coding sequences for Gene: {}, type: {}", gene->id(), gene->type());
-
-    }
-    return sequence_array_ptr;
-
-  } else {
-
-    std::shared_ptr<CodingSequenceArray> sequence_array_ptr(std::make_shared<CodingSequenceArray>(CodingSequenceType::PROTEIN));
-    ExecEnv::log().error("GeneFeature::getCodingSequences; Gene: {}, Unknown gene type: {}", gene->id(), gene->type());
-    return sequence_array_ptr;
+    ExecEnv::log().error("GeneFeature::getTranscriptionSequences; Unable to retrieve coding sequences for Gene: {}, type: {}", gene->id(), gene->type());
 
   }
 
+  return sequence_array_ptr;
+
 }
 
-// This routine is recursive. Assumes all the CDS/EXONS are on the same sub-feature level.
-bool kgl::GeneFeature::getCodingSequences(const std::string& coding_feature_type,
-                                          const std::shared_ptr<const GeneFeature>& gene_ptr,
+// Recursively find a feature super type in a feature hierarchy.
+// If CDS is found then a protein gene, else ncRNA gene.
+bool kgl::GeneFeature::findSuperType(const FeatureType_t& super_type, const std::shared_ptr<const Feature>& feature_ptr) {
+
+  if (feature_ptr->superType() == super_type) {
+
+    return true;
+
+  }
+
+  for (auto const& [feature_id, sub_feature_ptr] : feature_ptr->subFeatures()) {
+
+
+    if (findSuperType(super_type, sub_feature_ptr)) {
+
+      return true;
+
+    }
+
+
+  }
+
+  return false;
+
+}
+
+
+// This routine is recursive. Assumes all the CDS and EXON are leaf nodes in the feature hieracrchy.
+bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
                                           const std::shared_ptr<const Feature>& coding_feature_parent_ptr,
-                                          std::shared_ptr<CodingSequenceArray>& sequence_array_ptr) {
+                                          CodingSequenceArray& sequence_array) {
 
   bool result = true;
-  TranscribedFeatureMap parent_cds;
 
-  // loop through all sub_features
-  for (const auto& [feature_id, feature_ptr] : coding_feature_parent_ptr->subFeatures()) {
+  // Check if bottom level exists.
+  if (gene_ptr->subFeatures().empty()) {
 
-    if (feature_ptr->type() == coding_feature_type) {
+    return true;  // Allow empty genes.
 
-      auto [iter, insert_result] = parent_cds.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
+  }
 
-      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
-      // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
-      if (not insert_result) {
+  std::list<std::shared_ptr<const Feature>> leaf_features;
+  bool CDS_found{false};
+  // Loop through all sub_features.
+  for (const auto& [feature_id, sub_feature_ptr] : coding_feature_parent_ptr->subFeatures()) {
 
-        ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {} at contig offset: {}",
-                            gene_ptr->id(),
-                            feature_id,
-                            feature_ptr->sequence().begin());
-//          gene_ptr->recusivelyPrintsubfeatures();
+    // If subfeature is bottom level.
+    if (sub_feature_ptr->subFeatures().empty()) {
 
+      if (sub_feature_ptr->superType() == CDS_TYPE_) {
 
-        // Call the coding sequence function recursively with the feature_ident argument set.
-        result = result and getCodingSequences(coding_feature_type, gene_ptr, coding_feature_parent_ptr, sequence_array_ptr);
+        CDS_found = true;
 
       }
+      leaf_features.push_back(sub_feature_ptr);
 
     } else { // Assume feature is a higher feature such as mRNA and recursively call this function for sub-features.
 
-      result = result and getCodingSequences(coding_feature_type, gene_ptr, feature_ptr, sequence_array_ptr);
+      result = result and getCodingSequences(gene_ptr, sub_feature_ptr, sequence_array);
 
     }
 
   } // for loop
 
-  if (not parent_cds.empty()) {
+  if (CDS_found) {
+  // Remove all non-cds (EXONS) from the list
+    leaf_features.remove_if([](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; });
+
+  } else {
+  // Check that all the leaf features are EXONS and the gene is ncRNA.
+
+    if (std::ranges::any_of(leaf_features, [](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != EXON_TYPE_; })) {
+
+      ExecEnv::log().warn("Gene: {}, Unexpected leaf feature detected", gene_ptr->id());
+      gene_ptr->recusivelyPrintsubfeatures();
+
+    }
+
+  }
+
+  TranscribedFeatureMap parent_feature_map;
+  if (not leaf_features.empty()) {
+
+    for (auto const& leaf : leaf_features) {
+
+      auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
+
+      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+      // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
+      if (not insert_result) {
+
+        ExecEnv::log().warn("Gene: {}, Duplicate coding feature: {}",
+                            gene_ptr->id(),
+                            leaf->featureText());
+        gene_ptr->recusivelyPrintsubfeatures();
+        return true;
+
+      }
+
+    }
+
+  }
+
+  if (not parent_feature_map.empty()) {
 
     std::shared_ptr<const CodingSequence> coding_sequence(std::make_shared<const CodingSequence>(gene_ptr,
                                                                                                  coding_feature_parent_ptr,
-                                                                                                 parent_cds));
+                                                                                                 parent_feature_map));
 
-    result = result and sequence_array_ptr->insertCodingSequence(coding_sequence);
+    result = result and sequence_array.insertCodingSequence(coding_sequence);
 
   }
 

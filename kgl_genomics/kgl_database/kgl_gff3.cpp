@@ -238,7 +238,7 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
 
   }
 
-  FeatureSequence sequence (gff_record.begin(), gff_record.end(), gff_record.strand());
+  FeatureSequence sequence (gff_record.begin(), gff_record.end(), gff_record.strand(), gff_record.phase());
   std::shared_ptr<kgl::Feature> feature_ptr;
 
   // Create feature objects according to type.
@@ -412,7 +412,7 @@ bool kgl::GffRecord::phase(const std::string_view& offset_txt) {
 
   if (offset_txt.empty() or offset_txt == MISSING_VALUE) {
 
-    phase_ = INVALID_PHASE;
+    phase_ = NO_PHASE;
     return true;
 
   }

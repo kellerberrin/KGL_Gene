@@ -261,7 +261,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
       for (auto const& gene : contig.second->getGeneMap()) {
 
-        const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
+        auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene.second);
         for (auto const& sequence : coding_seq_ptr->getMap()) {
 
           ContigSize_t front_porch_size;
@@ -351,7 +351,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
     for (const auto& [gene, gene_ptr] : contig_ptr->getGeneMap()) {
 
-      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
+      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
       for (const auto& [sequence, sequence_ptr] : coding_seq_ptr->getMap()) {
 
 
@@ -527,7 +527,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
     for (auto gene : contig.second->getGeneMap()) {
 
-      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene.second);
+      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene.second);
       for (auto sequence : coding_seq_ptr->getMap()) {
 
 

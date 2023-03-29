@@ -40,7 +40,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   gene_span_ = gene_ptr->sequence().length();
   strand_ = gene_ptr->sequence().strandText();
 
-  std::shared_ptr<const CodingSequenceArray> sequence_array_ptr = GeneFeature::getCodingSequences(gene_ptr);
+  auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
   sequences_ = sequence_array_ptr->size();
   if (not sequence_array_ptr->getMap().empty()) {

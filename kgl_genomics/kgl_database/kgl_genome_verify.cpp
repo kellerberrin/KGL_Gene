@@ -18,10 +18,11 @@ namespace kgl = kellerberrin::genome;
 void kgl::ContigReference::verifyCDSPhasePeptide() {
 
   // Iterate through all the features looking for Genes.
-  size_t gene_count = 0;
-  size_t well_formed_sequences = 0;
-  size_t ill_formed_sequences = 0;
-  size_t empty_genes = 0;
+  size_t gene_count{0};
+  size_t well_formed_genes{0};
+  size_t ill_formed_genes{0};
+  size_t ncRNA_genes{0};
+  size_t empty_genes{0};
   bool verbose{false};
 
   if (verbose) {
@@ -30,23 +31,40 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
   }
 
-  for(const auto& feature : gene_exon_features_.offsetFeatureMap()) {
+  for(const auto& [feature_id, feature_ptr  ] : gene_exon_features_.offsetFeatureMap()) {
 
-    if(feature.second->isGene()) {
+    if (feature_ptr->isGene()) {
 
       ++gene_count;
-      const std::shared_ptr<const GeneFeature> gene_ptr = std::static_pointer_cast<const GeneFeature>(feature.second);
-      const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
-      if (coding_seq_ptr->size() == 0) { // No CDS coding sequence available.
 
-        ++empty_genes;
+      auto gene_ptr = std::static_pointer_cast<const GeneFeature>(feature_ptr);
+      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
 
-      }
+      if (coding_seq_ptr->empty()) { // No coding sequence available.
 
-      if (coding_seq_ptr->size() > 0) {
+        ++empty_genes; // Generally regions or loci of interest marked as genes.
 
-        if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
+        if (verbose) {
 
+          ExecEnv::log().info("Gene : {} Offset: {} Empty Gene - gene sub-features print out",
+                              gene_ptr->id(),
+                              gene_ptr->sequence().begin());
+
+          gene_ptr->recusivelyPrintsubfeatures();
+
+        }
+
+      } else if (coding_seq_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
+
+        ++ncRNA_genes;
+
+      } else {
+
+        if (gene_ptr->verifyCDSPhase(*coding_seq_ptr) and verifyCodingSequences(gene_ptr, *coding_seq_ptr)) {
+
+          ++well_formed_genes;
+
+        } else {
 
           if (verbose) {
 
@@ -54,22 +72,11 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
                                 gene_ptr->id(),
                                 gene_ptr->sequence().begin());
 
-            feature.second->recusivelyPrintsubfeatures();
+            gene_ptr->recusivelyPrintsubfeatures();
 
           }
 
-
-          ill_formed_sequences += coding_seq_ptr->size();
-
-        }
-
-        if (verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
-
-          well_formed_sequences += coding_seq_ptr->size();
-
-        } else {
-
-          ill_formed_sequences += coding_seq_ptr->size();
+          ++ill_formed_genes;
 
         }
 
@@ -79,31 +86,32 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
   }
 
-  ExecEnv::log().info("Verified {} found: {} Genes with {} well-formed and {} mal-formed (pseudo) coding sequences",
+  ExecEnv::log().info("Verified {}; Protein Genes {}, Mal-formed (pseudo) {}; ncRNA Genes {}, Empty Genes: {}",
                       contigId(),
-                      gene_count,
-                      well_formed_sequences,
-                      ill_formed_sequences);
+                      well_formed_genes,
+                      ill_formed_genes,
+                      ncRNA_genes,
+                      empty_genes);
 
 }
 
 
 bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
-  const std::shared_ptr<const CodingSequenceArray> coding_seq_ptr = kgl::GeneFeature::getCodingSequences(gene_ptr);
+  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
   if (coding_seq_ptr->empty()) { // No CDS coding sequence available.
 
     return false;
 
   }
 
-  if (not gene_ptr->verifyCDSPhase(coding_seq_ptr)) {
+  if (not gene_ptr->verifyCDSPhase(*coding_seq_ptr)) {
 
     return false;
 
   }
 
-  if (not gene_ptr->contig()->verifyCodingSequences(gene_ptr, coding_seq_ptr)) {
+  if (not gene_ptr->contig()->verifyCodingSequences(gene_ptr, *coding_seq_ptr)) {
 
     return false;
 
@@ -115,18 +123,18 @@ bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& 
 
 
 bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                 const std::shared_ptr<const CodingSequenceArray>& coding_seq_ptr) const {
+                                                 const CodingSequenceArray& coding_seq_array) const {
 
   bool result{true};
   bool verbose{false};
 
-  if (coding_seq_ptr->empty()) {
+  if (coding_seq_array.empty()) {
 
     ExecEnv::log().error("gene: {}; verifyCodingSequences(), empty CodingSequenceArray", gene_ptr->id());
 
   }
 
-  for (const auto& sequence : coding_seq_ptr->getMap()) {
+  for (const auto& sequence : coding_seq_array.getMap()) {
 
     if (sequence.second->getFeatureMap().empty()) {
 
@@ -194,14 +202,25 @@ bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const Gen
 }
 
 
-bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> coding_seq_ptr) const {
+bool kgl::Feature::verifyCDSPhase(const CodingSequenceArray& coding_seq_array) const {
 
-  bool result = true;
+  bool result{false};
   // Check for mod3
-  for(const auto& sorted_cds : coding_seq_ptr->getMap()) {
+  for(const auto& [super_feature_id, coding_sequence_ptr] : coding_seq_array.getMap()) {
 
-    result = result and verifyMod3(sorted_cds.second->getFeatureMap());
-    result = result and verifyStrand(sorted_cds.second->getFeatureMap());
+    // We just need 1 valid coding sequence.
+    if (verifyMod3(coding_sequence_ptr->getFeatureMap())) {
+
+      result =true;
+      break;
+
+    }
+
+  }
+
+  for(const auto& [super_feature_id, coding_sequence_ptr] : coding_seq_array.getMap()) {
+
+    result = result and verifyStrand(coding_sequence_ptr->getFeatureMap());
 
   }
 
@@ -210,42 +229,51 @@ bool kgl::Feature::verifyCDSPhase(std::shared_ptr<const CodingSequenceArray> cod
 }
 
 
-bool kgl::Feature::verifyMod3(const TranscribedFeatureMap& sorted_cds) {
+bool kgl::Feature::verifyMod3(const TranscribedFeatureMap& feature_map) const {
 
   bool result = true;
 // Check the combined sequence length is mod 3 = 0
 
   ContigSize_t coding_sequence_length = 0;
-  for (auto cds : sorted_cds) {
+  uint32_t phase_total{0};
+  for (auto const& [offset, feature_ptr] : feature_map) {
 
-    coding_sequence_length += (cds.second->sequence().end() - cds.second->sequence().begin());
+    coding_sequence_length += feature_ptr->sequence().length();
+    phase_total += feature_ptr->sequence().phase();
 
   }
 
   if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
 
+    ExecEnv::log().error("Protein gene id: {} coding sequences: {}, total coding length: {}, phase total: {} not mod3",
+                         id(),
+                         feature_map.size(),
+                         coding_sequence_length,
+                         phase_total);
+    if (id() == "gene-TMEM247") {
+      recusivelyPrintsubfeatures();
+    }
     result = false;
-
   }
 
   return result;
 
 }
 
-bool kgl::Feature::verifyStrand(const TranscribedFeatureMap& sorted_cds) const {
+bool kgl::Feature::verifyStrand(const TranscribedFeatureMap& Feature_map) const {
 
   bool result = true;
 
 // Check the strand is consistent and not unknown.
-  for (auto cds : sorted_cds) {
+  for (auto const& [offset, feature_ptr] : Feature_map) {
 
-    if (cds.second->sequence().strand() != sequence().strand()) {
+    if (feature_ptr->sequence().strand() != sequence().strand()) {
 
-      ExecEnv::log().error("CDS: {} offset: {} strand: {}, parent sequence strand: {} mis-match",
-                           cds.second->id(),
-                           cds.second->sequence().begin(),
-                           static_cast<char>(cds.second->sequence().strand()),
-                           static_cast<char>(sequence().strand()));
+      ExecEnv::log().error("Feature: {} strand: {}, Parent id: {} strand: {} mis-match",
+                           feature_ptr->id(),
+                           feature_ptr->sequence().strandText(),
+                           id(),
+                           sequence().strandText());
       result = false;
 
     }
