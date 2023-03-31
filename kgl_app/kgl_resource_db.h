@@ -29,7 +29,8 @@ enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resourc
                                  GENOME_AUX_INFO,       // Genome aux info, sex, population and super-population data (all individual genomes).
                                  ALLELE_CITATION,      // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
                                  ENTREZ_GENE,         // Entrez gene info for H. Sapien
-                                 PUBMED_API };       // Pubmed Literature restful API
+                                 PUBMED_API,         // Pubmed Literature restful API
+                                 PF7_SAMPLE_DATA};   // Sample info for Pf7 Falciparum samples.
 
 class ResourceBase {
 
@@ -115,7 +116,8 @@ private:
       { RuntimeResourceType::GENOME_AUX_INFO,   "RuntimeResourceType::GENOME_AUX_INFO"},     // Genome aux info, sex, population and super-population data (all individual genomes).
       { RuntimeResourceType::ALLELE_CITATION,   "RuntimeResourceType::ALLELE_CITATION"},     // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
       { RuntimeResourceType::ENTREZ_GENE,       "RuntimeResourceType::ENTREZ_GENE"},     // Entrez gene info for H. Sapien
-      { RuntimeResourceType::PUBMED_API,        "RuntimeResourceType::PUBMED"}     // Pubmed restful API for literature.
+      { RuntimeResourceType::PUBMED_API,        "RuntimeResourceType::PUBMED"},     // Pubmed restful API for literature.
+      { RuntimeResourceType::PF7_SAMPLE_DATA,   "RuntimeResourceType::PF7_SAMPLE_DATA"}     // Sample info for Pf7 Falciparum samples.
 
   };
 

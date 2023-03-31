@@ -8,6 +8,7 @@
 
 #include "kgl_analysis_virtual.h"
 #include "kgl_genome_collection.h"
+#include "kgl_pf7_sample_parser.h"
 
 
 
@@ -45,6 +46,7 @@ private:
 
   std::shared_ptr<GenomeCollection> reference_genomes_;
   std::string ident_work_directory_;
+  std::shared_ptr<const Pf7SampleResource> Pf7_sample_ptr_;
 
   void performPFEMP1UPGMA();
 

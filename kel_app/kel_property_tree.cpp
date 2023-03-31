@@ -206,7 +206,7 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
   }
   catch (const std::runtime_error& e) {
 
-    ExecEnv::log().error("Exception: PropertyTree GetProperty; Property: {} not found, error: {}", property_name, e.what());
+    ExecEnv::log().error("Exception: PropertyTree::PropertyImpl::getProperty; Property: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("*********** Property Tree Contents *************");
     treeTraversal();
     ExecEnv::log().error("**********************************************");

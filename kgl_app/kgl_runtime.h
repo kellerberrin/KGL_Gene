@@ -135,6 +135,47 @@ private:
 };
 
 
+using ResourceParameterMap = std::map<std::string, std::string>;
+class ResourceParameters {
+
+public:
+
+  ResourceParameters(std::string resource_type, std::string resource_id) : resource_type_(resource_type), resource_id_(std::move(resource_id)) {}
+  ~ResourceParameters() = default;
+
+  std::optional<const std::string> getParameter(const std::string& parameter_key) {
+
+    if (parameter_map_.contains(parameter_key)) {
+
+      return parameter_map_[parameter_key];
+
+    }
+
+    return std::nullopt;
+
+  }
+
+  void setParameter(const std::string& parameter_key, const std::string& parameter_value) {
+
+    if (parameter_map_.contains(parameter_key)) {
+
+      ExecEnv::log().warn("ResourceParameters::setParameter; parameter key: {} already exists", parameter_key);
+
+    }
+
+    parameter_map_[parameter_key] = parameter_value;
+
+  }
+
+private:
+
+  std::string resource_type_;
+  std::string resource_id_;
+  ResourceParameterMap parameter_map_;
+
+};
+using ResourceDefinitions = std::map<std::string, ResourceParameters>;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold Genome Database file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -330,6 +371,35 @@ private:
 
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Object to hold Pf7 sample information.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RuntimePf7Resource : public RuntimeResource {
+
+public:
+
+  RuntimePf7Resource(std::string Pf7_identifier,
+                        std::string Pf7_file_name)
+      : Pf7_identifier_(std::move(Pf7_identifier)),
+        Pf7_file_name_(std::move(Pf7_file_name)) {}
+  RuntimePf7Resource() = delete;
+  RuntimePf7Resource(const RuntimePf7Resource&) = default;
+  ~RuntimePf7Resource() override = default;
+
+  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::PF7_SAMPLE_DATA; }
+
+  [[nodiscard]] const std::string& Pf7Identifier() const { return Pf7_identifier_; }
+  [[nodiscard]] const std::string& Pf7FileName() const { return Pf7_file_name_; }
+
+private:
+
+  std::string Pf7_identifier_;   // A unique short string to identify this resource
+  std::string Pf7_file_name_;
+
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

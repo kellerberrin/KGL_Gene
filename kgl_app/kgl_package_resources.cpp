@@ -9,7 +9,7 @@
 #include "kgl_citation_parser.h"
 #include "kgl_entrez_parser.h"
 #include "kgl_bio_pmid_parser.h"
-
+#include "kgl_pf7_sample_parser.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -53,6 +53,10 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
       case RuntimeResourceType::PUBMED_API:
         loadPubmedAPIResource(resource_ident, resource_ptr);
+        break;
+
+      case RuntimeResourceType::PF7_SAMPLE_DATA:
+        loadPf7SampleResource(resource_ident, resource_ptr);
         break;
 
       default:
@@ -322,3 +326,36 @@ void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, co
   resource_ptr->addResource(pubmed_api_ptr);
 
 }
+
+
+void kgl::ExecutePackage::loadPf7SampleResource(const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto result = runtime_config_.resourceMap().find(Pf7_sample_ident);
+  if (result == runtime_config_.resourceMap().end()) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Pf7 Sample Data: {}, not defined", Pf7_sample_ident);
+
+  }
+
+  auto const& [resource_ident, resource_base_ptr] = *result;
+  auto Pf7_resource_ptr = std::dynamic_pointer_cast<const RuntimePf7Resource>(resource_base_ptr);
+
+  if (not Pf7_resource_ptr) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Resource: {} is not a  f7 Sample Data Resource", resource_ident);
+
+  }
+
+  ParsePf7Sample Pf7_sample_parser;
+  if (not Pf7_sample_parser.parsePf7SampleFile(Pf7_resource_ptr->Pf7FileName())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource; failed to create Entrez resource from file: {}", Pf7_resource_ptr->Pf7FileName());
+
+  }
+
+  std::shared_ptr<Pf7SampleResource> Pf7Sample_ptr(std::make_shared<Pf7SampleResource>(Pf7_resource_ptr->Pf7Identifier(), Pf7_sample_parser.getPf7SampleVector()));
+
+  resource_ptr->addResource(Pf7Sample_ptr);
+
+}
+

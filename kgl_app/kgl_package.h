@@ -51,6 +51,7 @@ private:
   void loadCitationResource(const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadEntrezGeneResource(const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPubmedAPIResource(const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
+  void loadPf7SampleResource(const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,

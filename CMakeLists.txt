@@ -300,7 +300,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_gff3.cpp
         kgl_genomics/kgl_database/kgl_gff3.h
         kgl_genomics/kgl_database/kgl_fasta.cpp
-        kgl_genomics/kgl_database/kgl_fasta.h kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h)
+        kgl_genomics/kgl_database/kgl_fasta.h kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h kgl_genomics/kgl_parser/kgl_pf7_sample_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_sample_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -553,7 +553,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime_config.h
         kgl_app/kgl_package_resources.cpp
         kgl_app/kgl_resource_db.h
-        kgl_app/kgl_resource_db.cpp)
+        kgl_app/kgl_resource_db.cpp kgl_app/kgl_properties_resource.cpp kgl_app/kgl_properties_resource_new.cpp)
 
 
 

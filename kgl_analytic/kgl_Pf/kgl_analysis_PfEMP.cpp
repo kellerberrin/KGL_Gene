@@ -3,7 +3,6 @@
 //
 
 #include "kgl_upgma.h"
-
 #include "kgl_analysis_PfEMP.h"
 
 
@@ -21,6 +20,8 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
     ExecEnv::log().info("Default Initialize Analysis Id: {}, initialized with parameter: {}", ident(), parameter_ident);
 
   }
+
+  Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(RuntimeResourceType::PF7_SAMPLE_DATA);
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
@@ -148,7 +149,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
 
     } // Contig
 
-  } // genome
+  } // Genome
 
   return gene_vector;
 
