@@ -129,7 +129,6 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
       ExecEnv::log().warn("RuntimeProperties::getPackageMap, No resources specified for Package: {}", package_ident);
 
     }
-    std::vector<std::pair<RuntimeResourceType,std::string>> resources;
     std::vector<std::pair<std::string,std::string>> resources_def;
     for (auto const& [resource_type, resource_sub_tree] : resource_vector) {
 
@@ -140,47 +139,13 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
       } else {
 
-        if (resource_type == ONTOLOGY_DATABASE_) {
+        if (resource_type != RuntimeProperties::HELP_ and resource_type != RuntimeProperties::COMMENT_) {
 
-          resources.emplace_back(RuntimeResourceType::HSAPIEN_ONTOLOGY, resource_identifier);
-
-        } else if (resource_type == GENOME_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::GENOME_DATABASE, resource_identifier);
-
-        } else if (resource_type == GENE_ID_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::GENE_NOMENCLATURE, resource_identifier);
-
-        } else if (resource_type == GENEALOGY_ID_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::GENOME_GENEALOGY, resource_identifier);
-
-        } else if (resource_type == AUX_ID_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::GENOME_AUX_INFO, resource_identifier);
-
-        } else if (resource_type == CITATION_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::ALLELE_CITATION, resource_identifier);
-
-        } else if (resource_type == ENTREZ_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::ENTREZ_GENE, resource_identifier);
-
-        } else if (resource_type == PF7_SAMPLE_DATABASE_) {
-
-          resources.emplace_back(RuntimeResourceType::PF7_SAMPLE_DATA, resource_identifier);
-
-        } else if (resource_type == PUBMED_LIT_API_) {
-
-          resources.emplace_back(RuntimeResourceType::PUBMED_API, resource_identifier);
+          resources_def.emplace_back(resource_type, resource_identifier);
 
         }
 
       }
-
-      resources_def.emplace_back(resource_type, resource_identifier);
 
     } // for resources
 
@@ -217,7 +182,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     }
 
-    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, resources, resources_def, vector_iteration_files));
+    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, resources_def, vector_iteration_files));
 
     auto [iter, result] = package_map.insert(new_package);
     if (not result) {

@@ -60,12 +60,10 @@ public:
 
   RuntimePackage( std::string package_identifier,
                   std::vector<std::string> analysis_list,
-                  std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list,
                   std::vector<std::pair<std::string, std::string>> resource_database_def,
                   std::vector<std::vector<std::string>> iterative_file_list)
                   : package_identifier_(std::move(package_identifier)),
                     analysis_list_(std::move(analysis_list)),
-                    resource_database_list_(std::move(resource_database_list)),
                     resource_database_def_(std::move(resource_database_def)),
                     iterative_file_list_(std::move(iterative_file_list)) {}
   RuntimePackage(const RuntimePackage&) = default;
@@ -74,7 +72,6 @@ public:
 
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
-  [[nodiscard]] const std::vector<std::pair<RuntimeResourceType, std::string>>& resourceDatabaseList() const { return resource_database_list_; }
   [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& resourceDatabaseDef() const { return resource_database_def_; }
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
@@ -82,7 +79,6 @@ private:
 
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
-  std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list_;
   std::vector<std::pair<std::string, std::string>> resource_database_def_;
   std::vector<std::vector<std::string>> iterative_file_list_;
 
@@ -196,6 +192,7 @@ public:
 
 
   void insert(const std::pair<std::string, ResourceParameters>& resource_def) { resource_definition_map_.insert(resource_def); }
+
   [[nodiscard]] std::optional<ResourceParameters> retrieve(const std::string& resource_type, const std::string& resource_ident) const {
 
     auto const [lower_iter, upper_iter] = resource_definition_map_.equal_range(resource_type);
@@ -214,6 +211,7 @@ public:
 
   }
 
+  [[nodiscard]] const ResourceDefinitionsMap& getMap() const { return resource_definition_map_; }
 
 private:
 
@@ -221,297 +219,6 @@ private:
 
 };
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Genome Database file information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-class RuntimeGenomeResource : public RuntimeResource {
-
-public:
-
-  RuntimeGenomeResource(std::string genome_identifier,
-                        std::string fasta_file_name,
-                        std::string gff_file_name,
-                        std::string translation_table)
-  : genome_identifier_(std::move(genome_identifier)),
-    fasta_file_name_(std::move(fasta_file_name)),
-    gff_file_name_(std::move(gff_file_name)),
-    translation_table_(std::move(translation_table)) {}
-  RuntimeGenomeResource() = delete;
-  RuntimeGenomeResource(const RuntimeGenomeResource&) = default;
-  ~RuntimeGenomeResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
-
-  [[nodiscard]] const std::string& genomeIdentifier() const { return genome_identifier_; }
-  [[nodiscard]] const std::string& fastaFileName() const { return fasta_file_name_; }
-  [[nodiscard]] const std::string& gffFileName() const { return gff_file_name_; }
-  [[nodiscard]] const std::string& translationTable() const { return translation_table_; }
-  // Gaf file and ID file are optional.
-  [[nodiscard]] const std::string& gafFileName () const { return gaf_file_name_; }
-
-  void setGafFileName(const std::string& gaf_file_name) { gaf_file_name_ = gaf_file_name; }
-
-private:
-
-  std::string genome_identifier_;   // A unique short string to identify this genome database
-  std::string fasta_file_name_;
-  std::string gff_file_name_;
-  std::string translation_table_;
-  std::string gaf_file_name_;
-
-
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Genome Database file information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeOntologyResource : public RuntimeResource {
-
-public:
-
-  RuntimeOntologyResource(std::string ontology_identifier,
-                          std::string annotation_file_name,
-                          std::string go_graph_file_name)
-      : ontology_identifier_(std::move(ontology_identifier)),
-        annotation_file_name_(std::move(annotation_file_name)),
-        go_graph_file_name_(std::move(go_graph_file_name)) {}
-  RuntimeOntologyResource() = delete;
-  RuntimeOntologyResource(const RuntimeOntologyResource&) = default;
-  ~RuntimeOntologyResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::HSAPIEN_ONTOLOGY; }
-
-  [[nodiscard]] const std::string& ontologyIdentifier() const { return ontology_identifier_; }
-  [[nodiscard]] const std::string& annotationFileName() const { return annotation_file_name_; }
-  [[nodiscard]] const std::string& goGraphFileName() const { return go_graph_file_name_; }
-
-private:
-
-  std::string ontology_identifier_;   // A unique short string to identify this annotation database
-  std::string annotation_file_name_;
-  std::string go_graph_file_name_;
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Gene Nomenclature file information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeNomenclatureResource : public RuntimeResource {
-
-public:
-
-  RuntimeNomenclatureResource(std::string nomenclature_identifier,
-                              std::string nomenclature_file_name)
-      : nomenclature_identifier_(std::move(nomenclature_identifier)),
-        nomenclature_file_name_(std::move(nomenclature_file_name)) {}
-  RuntimeNomenclatureResource() = delete;
-  RuntimeNomenclatureResource(const RuntimeNomenclatureResource&) = default;
-  ~RuntimeNomenclatureResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
-
-  [[nodiscard]] const std::string& nomenclatureIdentifier() const { return nomenclature_identifier_; }
-  [[nodiscard]] const std::string& nomenclatureFileName() const { return nomenclature_file_name_; }
-
-private:
-
-  std::string nomenclature_identifier_;   // A unique short string to identify this nomenclature database
-  std::string nomenclature_file_name_;
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Genome genealogy information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeGenealogyResource : public RuntimeResource {
-
-public:
-
-  RuntimeGenealogyResource( std::string genealogy_identifier,
-                            std::string genealogy_file_name)
-      : genealogy_identifier_(std::move(genealogy_identifier)),
-        genealogy_file_name_(std::move(genealogy_file_name)) {}
-  RuntimeGenealogyResource() = delete;
-  RuntimeGenealogyResource(const RuntimeGenealogyResource&) = default;
-  ~RuntimeGenealogyResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_GENEALOGY; }
-
-  [[nodiscard]] const std::string& genealogyIdentifier() const { return genealogy_identifier_; }
-  [[nodiscard]] const std::string& genealogyFileName() const { return genealogy_file_name_; }
-
-private:
-
-  std::string genealogy_identifier_;   // A unique short string to identify this genealogy database
-  std::string genealogy_file_name_;
-
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Allele Citation information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeCitationResource : public RuntimeResource {
-
-public:
-
-  RuntimeCitationResource(std::string citation_identifier,
-                          std::string citation_file_name)
-      : citation_identifier_(std::move(citation_identifier)),
-        citation_file_name_(std::move(citation_file_name)) {}
-  RuntimeCitationResource() = delete;
-  RuntimeCitationResource(const RuntimeCitationResource&) = default;
-  ~RuntimeCitationResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ALLELE_CITATION; }
-
-  [[nodiscard]] const std::string& citationIdentifier() const { return citation_identifier_; }
-  [[nodiscard]] const std::string& citationFileName() const { return citation_file_name_; }
-
-private:
-
-  std::string citation_identifier_;   // A unique short string to identify this resource
-  std::string citation_file_name_;
-
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Allele Citation information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeEntrezResource : public RuntimeResource {
-
-public:
-
-  RuntimeEntrezResource(std::string entrez_identifier,
-                        std::string entrez_file_name)
-                          : entrez_identifier_(std::move(entrez_identifier)),
-                            entrez_file_name_(std::move(entrez_file_name)) {}
-  RuntimeEntrezResource() = delete;
-  RuntimeEntrezResource(const RuntimeEntrezResource&) = default;
-  ~RuntimeEntrezResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::ENTREZ_GENE; }
-
-  [[nodiscard]] const std::string& entrezIdentifier() const { return entrez_identifier_; }
-  [[nodiscard]] const std::string& entrezFileName() const { return entrez_file_name_; }
-
-private:
-
-  std::string entrez_identifier_;   // A unique short string to identify this resource
-  std::string entrez_file_name_;
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Pf7 sample information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimePf7Resource : public RuntimeResource {
-
-public:
-
-  RuntimePf7Resource(std::string Pf7_identifier,
-                        std::string Pf7_file_name)
-      : Pf7_identifier_(std::move(Pf7_identifier)),
-        Pf7_file_name_(std::move(Pf7_file_name)) {}
-  RuntimePf7Resource() = delete;
-  RuntimePf7Resource(const RuntimePf7Resource&) = default;
-  ~RuntimePf7Resource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::PF7_SAMPLE_DATA; }
-
-  [[nodiscard]] const std::string& Pf7Identifier() const { return Pf7_identifier_; }
-  [[nodiscard]] const std::string& Pf7FileName() const { return Pf7_file_name_; }
-
-private:
-
-  std::string Pf7_identifier_;   // A unique short string to identify this resource
-  std::string Pf7_file_name_;
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pubmed literature restful API (limited to 10 requests a second).
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimePubmedAPIResource : public RuntimeResource {
-
-public:
-
-  RuntimePubmedAPIResource( std::string api_identifier,
-                            std::string publication_cache_file,
-                           std::string citation_cache_file)
-    : api_identifier_(std::move(api_identifier)),
-      publication_cache_file_(std::move(publication_cache_file)),
-      citation_cache_file_(std::move(citation_cache_file)) {}
-  RuntimePubmedAPIResource() = delete;
-  RuntimePubmedAPIResource(const RuntimePubmedAPIResource&) = default;
-  ~RuntimePubmedAPIResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::PUBMED_API; }
-
-  [[nodiscard]] const std::string& apiIdentifier() const { return api_identifier_; }
-
-  [[nodiscard]] const std::string& publicationCacheFile() const { return publication_cache_file_; }
-
-  [[nodiscard]] const std::string& citationCacheFile() const { return citation_cache_file_; }
-
-private:
-
-  std::string api_identifier_;   // A unique short string to identify this resource
-  std::string publication_cache_file_;   // Pubmed XML literature request responses are cached here.
-  std::string citation_cache_file_;   // Pubmed XML literature request responses are cached here.
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Object to hold Genome aux population information.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class RuntimeGenomeAuxResource : public RuntimeResource {
-
-public:
-
-  RuntimeGenomeAuxResource( std::string genome_aux_identifier,
-                            std::string genome_aux_file_name)
-      : genome_aux_identifier_(std::move(genome_aux_identifier)),
-        genome_aux_file_name_(std::move(genome_aux_file_name)) {}
-  RuntimeGenomeAuxResource() = delete;
-  RuntimeGenomeAuxResource(const RuntimeGenomeAuxResource&) = default;
-  ~RuntimeGenomeAuxResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType resourceType() const override { return RuntimeResourceType::GENOME_AUX_INFO; }
-
-  [[nodiscard]] const std::string& genomeAuxIdentifier() const { return genome_aux_identifier_; }
-  [[nodiscard]] const std::string& genomeAuxFileName() const { return genome_aux_file_name_; }
-
-private:
-
-  std::string genome_aux_identifier_;   // A unique short string to identify this genealogy database
-  std::string genome_aux_file_name_;
-
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Base Object to hold data file information.
@@ -552,8 +259,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold vcf file information.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 class RuntimeVCFFileInfo : public BaseFileInfo {
@@ -723,7 +428,6 @@ private:
   ParameterListMap active_parameter_vectors_;
 
 };
-
 
 
 

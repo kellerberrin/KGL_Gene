@@ -27,7 +27,6 @@ public:
       : active_packages_(runtime_options.getActivePackages()),
         contig_alias_(runtime_options.getContigAlias()),
         data_file_map_(runtime_options.getDataFiles()),
-        resource_map_(runtime_options.getRuntimeResources()),
         resource_def_map_(runtime_options.getRuntimeResourceDef()),
         analysis_map_(runtime_options.getAnalysisMap()),
         package_map_(runtime_options.getPackageMap()),
@@ -42,8 +41,6 @@ public:
   [[nodiscard]] const ContigAliasMap &contigAlias() const { return contig_alias_; }
 
   [[nodiscard]] const RuntimeDataFileMap &dataFileMap() const { return data_file_map_; }
-
-  [[nodiscard]] const RuntimeResourceMap &resourceMap() const { return resource_map_; }
 
   [[nodiscard]] const ResourceDefinitions &resourceDefMap() const { return resource_def_map_; }
 
@@ -63,7 +60,6 @@ private:
   const ActivePackageVector active_packages_;
   const ContigAliasMap contig_alias_;
   const RuntimeDataFileMap data_file_map_;
-  const RuntimeResourceMap resource_map_;
   const ResourceDefinitions resource_def_map_;
   const RuntimeAnalysisMap analysis_map_;
   const RuntimePackageMap package_map_;

@@ -17,7 +17,6 @@
 namespace kgl = kellerberrin::genome;
 
 
-
 std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResourcesDef(const RuntimePackage& package) const {
 
   std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
@@ -78,65 +77,6 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
   return resource_ptr;
 
 }
-
-
-std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResources(const RuntimePackage& package) const {
-
-  std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
-
-  for (auto const& [resource_type, resource_ident]  :  package.resourceDatabaseList()) {
-
-    switch (resource_type) {
-
-      case RuntimeResourceType::GENOME_DATABASE:
-//        loadGenomeResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::HSAPIEN_ONTOLOGY:
-//        loadOntologyResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::GENE_NOMENCLATURE:
-//        loadHsGeneNomenclatureResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::GENOME_GENEALOGY:
-//        loadHsGenomeGenealogyResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::GENOME_AUX_INFO:
-//        loadHsGenomeAuxResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::ALLELE_CITATION:
-//        loadCitationResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::ENTREZ_GENE:
-//        loadEntrezGeneResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::PUBMED_API:
-//        loadPubmedAPIResource(resource_ident, resource_ptr);
-        break;
-
-      case RuntimeResourceType::PF7_SAMPLE_DATA:
-//        loadPf7SampleResource(resource_ident, resource_ptr);
-        break;
-
-      default:
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type, resource ident: {}.",
-                                package.packageIdentifier(), resource_ident);
-        break;
-
-    }
-
-  }
-
-  return resource_ptr;
-
-}
-
 
 void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_type,
                                              const std::string& genome_ident,
@@ -240,7 +180,6 @@ void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& reso
 
   }
 
-
   if (nomenclature_ident == RuntimeProperties::NOMENCLATURE_UNIPROTID) {
 
     ParseUniprotId parse_uniprot;
@@ -304,152 +243,159 @@ void kgl::ExecutePackage::loadHsGenomeGenealogyResource(const std::string& resou
 
 }
 
+void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& resource_type,
+                                                  const std::string& genome_aux_ident,
+                                                  const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& resource_type, const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(genome_aux_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, genome_aux_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Genome Genealogy Database: {}, not defined", genome_aux_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto genome_aux_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenomeAuxResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::AUX_ID_FILE_);
+  if (not file_name_opt) {
 
-  if (not genome_aux_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Resource: {} is not a HsGenomeAuxResource", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Ident: {} Aux file not defined", genome_aux_ident);
 
   }
 
-  std::shared_ptr<HsGenomeAuxData> genome_aux_data(std::make_shared<HsGenomeAuxData>(genome_aux_resource_ptr->genomeAuxIdentifier()));
+  std::shared_ptr<HsGenomeAuxData> genome_aux_data(std::make_shared<HsGenomeAuxData>(genome_aux_ident));
   ParseHsGenomeAuxFile genome_aux_parser(genome_aux_data);
-  genome_aux_parser.readParseImpl(genome_aux_resource_ptr->genomeAuxFileName());
+  genome_aux_parser.readParseImpl(file_name_opt.value());
 
   resource_ptr->addResource(genome_aux_data);
 
 }
 
+void kgl::ExecutePackage::loadCitationResource(const std::string& resource_type,
+                                               const std::string& citation_ident,
+                                               const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-void kgl::ExecutePackage::loadCitationResource(const std::string& resource_type, const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(citation_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, citation_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadCitationResource, Allele Citation Database: {}, not defined", citation_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto citation_resource_ptr = std::dynamic_pointer_cast<const RuntimeCitationResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::CITATION_FILE_);
+  if (not file_name_opt) {
 
-  if (not citation_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadCitationResource, Resource: {} is not an Allele Citation Resource", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadCitationResource, Ident: {} Citation file not defined", citation_ident);
 
   }
 
   ParseCitations citation_parser;
-  if (not citation_parser.parseCitationFile(citation_resource_ptr->citationFileName())) {
+  if (not citation_parser.parseCitationFile(file_name_opt.value())) {
 
-    ExecEnv::log().critical("ExecutePackage::loadCitationResource; failed to create citation resource from file: {}", citation_resource_ptr->citationFileName());
+    ExecEnv::log().critical("ExecutePackage::loadCitationResource; failed to create citation resource from file: {}", file_name_opt.value());
 
   }
 
-  std::shared_ptr<CitationResource> citation_ptr(std::make_shared<CitationResource>(citation_resource_ptr->citationIdentifier(), citation_parser.getCitationMap()));
+  std::shared_ptr<CitationResource> citation_ptr(std::make_shared<CitationResource>(citation_ident, citation_parser.getCitationMap()));
 
   resource_ptr->addResource(citation_ptr);
 
 }
 
+void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& resource_type,
+                                                 const std::string& entrez_ident,
+                                                 const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& resource_type, const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(entrez_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, entrez_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource, Entrez Gene Database: {}, not defined", entrez_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto entrez_resource_ptr = std::dynamic_pointer_cast<const RuntimeEntrezResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::ENTREZ_FILE_);
+  if (not file_name_opt) {
 
-  if (not entrez_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource, Resource: {} is not an Entrez Gene Resource", resource_ident);
+    ExecEnv::log().critical("EExecutePackage::loadEntrezGeneResource, Ident: {} Entrez file not defined", entrez_ident);
 
   }
 
   ParseEntrez entrez_parser;
-  if (not entrez_parser.parseEntrezFile(entrez_resource_ptr->entrezFileName())) {
+  if (not entrez_parser.parseEntrezFile(file_name_opt.value())) {
 
-    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource; failed to create Entrez resource from file: {}", entrez_resource_ptr->entrezFileName());
+    ExecEnv::log().critical("ExecutePackage::loadEntrezGeneResource; failed to create Entrez resource from file: {}", file_name_opt.value());
 
   }
 
-  std::shared_ptr<EntrezResource> entrez_ptr(std::make_shared<EntrezResource>(entrez_resource_ptr->entrezIdentifier(), entrez_parser.getEntrezVector()));
+  std::shared_ptr<EntrezResource> entrez_ptr(std::make_shared<EntrezResource>(entrez_ident, entrez_parser.getEntrezVector()));
 
   resource_ptr->addResource(entrez_ptr);
 
 }
 
+void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& resource_type,
+                                                const std::string& api_ident,
+                                                const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-
-void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& resource_type, const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(api_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, api_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Pubmed API Database: {}, not defined", api_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto api_resource_ptr = std::dynamic_pointer_cast<const RuntimePubmedAPIResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
 
-  if (not api_resource_ptr) {
+  auto publication_file_opt = params.getParameter(RuntimeProperties::PUBMED_PUBLICATION_CACHE_);
+  if (not publication_file_opt) {
 
-    ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Resource: {} is not a Pubmed API Resource", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Ident: {} Publication file not defined", api_ident);
 
   }
 
-  std::shared_ptr<PubmedRequester> pubmed_api_ptr(std::make_shared<PubmedRequester>( api_resource_ptr->apiIdentifier(),
-                                                                                     api_resource_ptr->publicationCacheFile(),
-                                                                                     api_resource_ptr->citationCacheFile()));
+  auto citation_file_opt = params.getParameter(RuntimeProperties::PUBMED_CITATION_CACHE_);
+  if (not citation_file_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPubmedAPIResource, Ident: {} Citation file not defined", api_ident);
+
+  }
+
+  std::shared_ptr<PubmedRequester> pubmed_api_ptr(std::make_shared<PubmedRequester>( api_ident,
+                                                                                     publication_file_opt.value(),
+                                                                                     citation_file_opt.value()));
 
   resource_ptr->addResource(pubmed_api_ptr);
 
 }
 
+void kgl::ExecutePackage::loadPf7SampleResource(const std::string& resource_type,
+                                                const std::string& Pf7_sample_ident,
+                                                const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-void kgl::ExecutePackage::loadPf7SampleResource(const std::string& resource_type, const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
-
-  auto result = runtime_config_.resourceMap().find(Pf7_sample_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, Pf7_sample_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Pf7 Sample Data: {}, not defined", Pf7_sample_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto Pf7_resource_ptr = std::dynamic_pointer_cast<const RuntimePf7Resource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::PF7_SAMPLE_FILE_);
+  if (not file_name_opt) {
 
-  if (not Pf7_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Resource: {} is not a  f7 Sample Data Resource", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Ident: {} Pf7 Sample Data file not defined", Pf7_sample_ident);
 
   }
 
   ParsePf7Sample Pf7_sample_parser;
-  if (not Pf7_sample_parser.parsePf7SampleFile(Pf7_resource_ptr->Pf7FileName())) {
+  if (not Pf7_sample_parser.parsePf7SampleFile(file_name_opt.value())) {
 
-    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource; failed to create Entrez resource from file: {}", Pf7_resource_ptr->Pf7FileName());
+    ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource; failed to create Pf7 Sample Data resource from file: {}", file_name_opt.value());
 
   }
 
-  std::shared_ptr<Pf7SampleResource> Pf7Sample_ptr(std::make_shared<Pf7SampleResource>(Pf7_resource_ptr->Pf7Identifier(), Pf7_sample_parser.getPf7SampleVector()));
+  std::shared_ptr<Pf7SampleResource> Pf7Sample_ptr(std::make_shared<Pf7SampleResource>(Pf7_sample_ident, Pf7_sample_parser.getPf7SampleVector()));
 
   resource_ptr->addResource(Pf7Sample_ptr);
 

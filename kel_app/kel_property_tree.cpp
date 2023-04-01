@@ -601,9 +601,9 @@ bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, 
 
   }
 
-  for (auto impl_tree : tree_vector) {
+  for (auto const& [sub_tree_tag, sub_tree] : tree_vector) {
 
-    property_tree_vector.emplace_back(SubPropertyTree(impl_tree.first, PropertyTree(impl_tree.second)));
+    property_tree_vector.emplace_back(SubPropertyTree(sub_tree_tag, PropertyTree(sub_tree)));
 
   }
 

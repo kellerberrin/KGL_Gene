@@ -53,18 +53,20 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
 
     }
 
-    //confirm that all reference genomes exist
-    for (auto const& [resource_type, resource_ident] : package.resourceDatabaseList()) {
+    //Confirm that all resources exist.
+    for (auto const& [resource_type, resource_ident] : package.resourceDatabaseDef()) {
 
-      if (not resource_map_.contains(resource_ident)) {
+      if (not resource_def_map_.retrieve(resource_type, resource_ident)) {
 
-        for (auto const& [id, type] : resource_map_) {
+        for (auto const& [ident, resource_parameters] : resource_def_map_.getMap()) {
 
-          ExecEnv::log().info("ExecutePackage::verifyPackage, Package: {}, Resource map content: {}", package_ident, id);
+          ExecEnv::log().info("ExecutePackage::verifyPackage, Package: {}, Resource Type: {}, Ident: {}",
+                              package_ident, resource_parameters.resourceType(), resource_parameters.resourceIdent());
 
         }
 
-        ExecEnv::log().critical("ExecutePackage::verifyPackage, Package: {}, Runtime Resource: {}, not defined", package_ident, resource_ident);
+        ExecEnv::log().critical("ExecutePackage::verifyPackage; Package: {}, Runtime Resource Type: '{}', Ident: '{}' not defined",
+                                package_ident, resource_type, resource_ident);
 
       }
 

@@ -42,7 +42,6 @@ private:
   const PackageAnalysis package_analysis_;
 
   // Load the package resources.
-  [[nodiscard]] std::shared_ptr<const AnalysisResources> loadRuntimeResources(const RuntimePackage& package) const;
   [[nodiscard]] std::shared_ptr<const AnalysisResources> loadRuntimeResourcesDef(const RuntimePackage& package) const;
   void loadGenomeResource(const std::string& resource_type,  const std::string& genome_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadOntologyResource(const std::string& resource_type, const std::string& ontology_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
