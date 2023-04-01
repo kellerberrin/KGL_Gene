@@ -41,21 +41,3 @@ std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::ge
 
 }
 
-
-std::string  kgl::AnalysisResources::resourceDescription(RuntimeResourceType resource) {
-
-  for (auto const& [resource_key, description] : resource_description) {
-
-    if (resource_key == resource) {
-
-      return description;
-
-    }
-
-  }
-
-  return "Resource Description Not Found";
-
-}
-
-

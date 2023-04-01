@@ -2,6 +2,8 @@
 // Created by kellerberrin on 14/4/21.
 //
 
+#include "kel_utility.h"
+
 #include "kgl_package.h"
 #include "kgl_variant_factory_parsers.h"
 #include "kgl_ontology_database.h"
@@ -15,6 +17,69 @@
 namespace kgl = kellerberrin::genome;
 
 
+
+std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResourcesDef(const RuntimePackage& package) const {
+
+  std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
+
+  for (auto const& [resource_type, resource_ident]  :  package.resourceDatabaseDef()) {
+
+    switch (Utility::hash(resource_type)) {
+
+      case Utility::hash(RuntimeProperties::GENOME_DATABASE_):
+        loadGenomeResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::ONTOLOGY_DATABASE_):
+        loadOntologyResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::GENE_ID_DATABASE_):
+        loadHsGeneNomenclatureResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::GENEALOGY_ID_DATABASE_):
+        loadHsGenomeGenealogyResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::AUX_ID_DATABASE_):
+        loadHsGenomeAuxResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::CITATION_DATABASE_):
+        loadCitationResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::ENTREZ_DATABASE_):
+        loadEntrezGeneResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::PUBMED_LIT_API_):
+        loadPubmedAPIResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::PF7_SAMPLE_DATABASE_):
+        loadPf7SampleResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(RuntimeProperties::COMMENT_):
+      case Utility::hash(RuntimeProperties::HELP_):
+        break;
+
+      default:
+        ExecEnv::log().critical("ExecutePackage::loadRuntimeResourcesDef, Package: {} Attempt to load unknown resource type: '{}', resource ident: '{}'.",
+                                package.packageIdentifier(), resource_type, resource_ident);
+        break;
+
+    }
+
+  }
+
+  return resource_ptr;
+
+}
+
+
 std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResources(const RuntimePackage& package) const {
 
   std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
@@ -24,39 +89,39 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
     switch (resource_type) {
 
       case RuntimeResourceType::GENOME_DATABASE:
-        loadGenomeResource(resource_ident, resource_ptr);
+//        loadGenomeResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::HSAPIEN_ONTOLOGY:
-        loadOntologyResource(resource_ident, resource_ptr);
+//        loadOntologyResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::GENE_NOMENCLATURE:
-        loadHsGeneNomenclatureResource(resource_ident, resource_ptr);
+//        loadHsGeneNomenclatureResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::GENOME_GENEALOGY:
-        loadHsGenomeGenealogyResource(resource_ident, resource_ptr);
+//        loadHsGenomeGenealogyResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::GENOME_AUX_INFO:
-        loadHsGenomeAuxResource(resource_ident, resource_ptr);
+//        loadHsGenomeAuxResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::ALLELE_CITATION:
-        loadCitationResource(resource_ident, resource_ptr);
+//        loadCitationResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::ENTREZ_GENE:
-        loadEntrezGeneResource(resource_ident, resource_ptr);
+//        loadEntrezGeneResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::PUBMED_API:
-        loadPubmedAPIResource(resource_ident, resource_ptr);
+//        loadPubmedAPIResource(resource_ident, resource_ptr);
         break;
 
       case RuntimeResourceType::PF7_SAMPLE_DATA:
-        loadPf7SampleResource(resource_ident, resource_ptr);
+//        loadPf7SampleResource(resource_ident, resource_ptr);
         break;
 
       default:
@@ -73,143 +138,174 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 }
 
 
-void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadGenomeResource(const std::string& genome_type,
+                                             const std::string& genome_ident,
+                                             const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-
-  auto result = runtime_config_.resourceMap().find(genome_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(genome_type, genome_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Reference Genome: {}, not defined", genome_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto genome_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenomeResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto fasta_opt = params.getParameter(RuntimeProperties::FASTA_FILE_);
+  if (not fasta_opt) {
 
-  if (not genome_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Resource: {} is not a Genome Database", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Reference Genome: {}, Fasta file not defined", genome_ident);
 
   }
+  auto gff_opt = params.getParameter(RuntimeProperties::GFF_FILE_);
+  if (not gff_opt) {
 
+    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Reference Genome: {}, Gff file not defined", genome_ident);
+
+  }
+  auto translation_opt = params.getParameter(RuntimeProperties::TRANSLATION_TABLE_);
+  if (not translation_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadGenomeResource, Reference Genome: {}, Translation table not defined", genome_ident);
+
+  }
+  // The Gaf file parameter is optional
+  auto gaf_opt = params.getParameter(RuntimeProperties::GAF_ANNOTATION_FILE_);
+  std::string gaf_file;
+  if (gaf_opt) {
+
+    gaf_file = gaf_opt.value();
+
+  }
   // Create the genome database.
-  std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase(genome_resource_ptr->genomeIdentifier(),
-                                                                                           genome_resource_ptr->fastaFileName(),
-                                                                                           genome_resource_ptr->gffFileName(),
-                                                                                           genome_resource_ptr->gafFileName(),
-                                                                                           genome_resource_ptr->translationTable());
+  std::shared_ptr<GenomeReference> genome_ptr = kgl::GenomeReference::createGenomeDatabase(genome_ident,
+                                                                                           fasta_opt.value(),
+                                                                                           gff_opt.value(),
+                                                                                           gaf_file,
+                                                                                           translation_opt.value());
 
   resource_ptr->addResource(genome_ptr);
 
 }
 
-void kgl::ExecutePackage::loadOntologyResource(const std::string& ontology_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadOntologyResource(const std::string& resource_type,
+                                               const std::string& ontology_ident,
+                                               const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-  auto result = runtime_config_.resourceMap().find(ontology_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, ontology_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Ontology Database: {}, not defined", ontology_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto ontology_resource_ptr = std::dynamic_pointer_cast<const RuntimeOntologyResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto go_graph_opt = params.getParameter(RuntimeProperties::GO_ONTOLOGY_FILE_);
+  if (not go_graph_opt) {
 
-  if (not ontology_resource_ptr) {
+    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Ontology Ident: {} Go graph file not defined", ontology_ident);
 
-    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Resource: {} is not an Ontology Database", resource_ident);
+  }
+
+  auto gaf_opt = params.getParameter(RuntimeProperties::GAF_ANNOTATION_FILE_);
+  if (not gaf_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadOntologyResource, Ontology Ident: {} Gaf file not defined", ontology_ident);
 
   }
 
   std::shared_ptr<const kol::OntologyDatabase> ontology_ptr(std::make_shared<const kol::OntologyDatabase>( ontology_ident,
-                                                                                                           ontology_resource_ptr->goGraphFileName(),
-                                                                                                           ontology_resource_ptr->annotationFileName()));
+                                                                                                           go_graph_opt.value(),
+                                                                                                           gaf_opt.value()));
 
   resource_ptr->addResource(ontology_ptr);
 
 }
 
-void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& resource_type,
+                                                         const std::string& nomenclature_ident,
+                                                         const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-  auto result = runtime_config_.resourceMap().find(nomenclature_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, nomenclature_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Nomenclature Database: {}, not defined", nomenclature_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto nomenclature_resource_ptr = std::dynamic_pointer_cast<const RuntimeNomenclatureResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::GENE_ID_FILE_);
+  if (not file_name_opt) {
 
-  if (not nomenclature_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadNomenclatureResource, Resource: {} is not a Nomenclature Database", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Ident: {} Gene ident file not defined", nomenclature_ident);
 
   }
 
-  if (resource_ident == ResourceBase::NOMENCLATURE_UNIPROTID) {
+
+  if (nomenclature_ident == RuntimeProperties::NOMENCLATURE_UNIPROTID) {
 
     ParseUniprotId parse_uniprot;
-    if (not parse_uniprot.parseUniprotFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+    if (not parse_uniprot.parseUniprotFile(file_name_opt.value())) {
 
-      ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Uniprot Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+      ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Unable to parse Uniprot Nomenclature file: {}", file_name_opt.value());
 
     }
 
-    std::shared_ptr<const UniprotResource> gene_id_resource(std::make_shared<const UniprotResource>(resource_ident, parse_uniprot.getUniproResource()));
+    std::shared_ptr<const UniprotResource> gene_id_resource(std::make_shared<const UniprotResource>(nomenclature_ident, parse_uniprot.getUniproResource()));
 
     resource_ptr->addResource(gene_id_resource);
 
-  } else if (resource_ident == ResourceBase::NOMENCLATURE_ENSEMBL) {
+  } else if (nomenclature_ident == RuntimeProperties::NOMENCLATURE_ENSEMBL) {
 
     ParseGeneIdents parse_gene_idents;
-    if (not parse_gene_idents.parseIdentFile(nomenclature_resource_ptr->nomenclatureFileName())) {
+    if (not parse_gene_idents.parseIdentFile(file_name_opt.value())) {
 
-      ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Unable to parse Ensembl Nomenclature file: {}", nomenclature_resource_ptr->nomenclatureFileName());
+      ExecEnv::log().critical("ExecutePackage::loadGeneNomenclatureResource, Unable to parse Ensembl Nomenclature file: {}", file_name_opt.value());
 
     }
 
-    std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(resource_ident, parse_gene_idents.getSynonymVector()));
+    std::shared_ptr<const EnsemblHGNCResource> gene_id_resource(std::make_shared<const EnsemblHGNCResource>(nomenclature_ident, parse_gene_idents.getSynonymVector()));
 
     resource_ptr->addResource(gene_id_resource);
 
   } else {
 
-    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Nomenclature resource ident: {} unknown", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Nomenclature resource ident: {} unknown", nomenclature_ident);
 
   }
 
 }
 
 
-void kgl::ExecutePackage::loadHsGenomeGenealogyResource(const std::string& genealogy_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGenomeGenealogyResource(const std::string& resource_type,
+                                                        const std::string& genealogy_ident,
+                                                        const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
-  auto result = runtime_config_.resourceMap().find(genealogy_ident);
-  if (result == runtime_config_.resourceMap().end()) {
+
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, genealogy_ident);
+  if (not params_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGenomeGenealogyResource, Genome Genealogy Database: {}, not defined", genealogy_ident);
 
   }
 
-  auto const& [resource_ident, resource_base_ptr] = *result;
-  auto genealogy_resource_ptr = std::dynamic_pointer_cast<const RuntimeGenealogyResource>(resource_base_ptr);
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(RuntimeProperties::GENEALOGY_ID_FILE_);
+  if (not file_name_opt) {
 
-  if (not genealogy_resource_ptr) {
-
-    ExecEnv::log().critical("ExecutePackage::loadHsGenomeGenealogyResource, Resource: {} is not a Genome Genealogy", resource_ident);
+    ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Ident: {} Gene ident file not defined", genealogy_ident);
 
   }
 
-  std::shared_ptr<HsGenomeGenealogyData> genealogy_data(std::make_shared<HsGenomeGenealogyData>(genealogy_resource_ptr->genealogyIdentifier()));
+  std::shared_ptr<HsGenomeGenealogyData> genealogy_data(std::make_shared<HsGenomeGenealogyData>(genealogy_ident));
   ParseHsGenomeGenealogyFile genealogy_parser(genealogy_data);
-  genealogy_parser.readParseImpl(genealogy_resource_ptr->genealogyFileName());
+  genealogy_parser.readParseImpl(file_name_opt.value());
 
   resource_ptr->addResource(genealogy_data);
 
 }
 
 
-void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& resource_type, const std::string& genome_aux_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(genome_aux_ident);
   if (result == runtime_config_.resourceMap().end()) {
@@ -236,7 +332,7 @@ void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& genome_aux_
 }
 
 
-void kgl::ExecutePackage::loadCitationResource(const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadCitationResource(const std::string& resource_type, const std::string& citation_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(citation_ident);
   if (result == runtime_config_.resourceMap().end()) {
@@ -268,7 +364,7 @@ void kgl::ExecutePackage::loadCitationResource(const std::string& citation_ident
 }
 
 
-void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& resource_type, const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(entrez_ident);
   if (result == runtime_config_.resourceMap().end()) {
@@ -301,7 +397,7 @@ void kgl::ExecutePackage::loadEntrezGeneResource(const std::string& entrez_ident
 
 
 
-void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& resource_type, const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(api_ident);
   if (result == runtime_config_.resourceMap().end()) {
@@ -328,7 +424,7 @@ void kgl::ExecutePackage::loadPubmedAPIResource(const std::string& api_ident, co
 }
 
 
-void kgl::ExecutePackage::loadPf7SampleResource(const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+void kgl::ExecutePackage::loadPf7SampleResource(const std::string& resource_type, const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const {
 
   auto result = runtime_config_.resourceMap().find(Pf7_sample_ident);
   if (result == runtime_config_.resourceMap().end()) {

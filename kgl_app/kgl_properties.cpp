@@ -95,8 +95,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
     // Get a Vector of Analysis functions to perform. These must be defined in code.
     // This means we can perform more than one analysis for each time-expensive data file read.
     std::vector<SubPropertyTree> analysis_sub_trees;
-    std::string key = PACKAGE_ANALYSIS_LIST_;
-    if (not sub_tree.second.getPropertyTreeVector(key , analysis_sub_trees))  {
+    if (not sub_tree.second.getPropertyTreeVector(PACKAGE_ANALYSIS_LIST_ , analysis_sub_trees))  {
 
       ExecEnv::log().warn("RuntimeProperties::getPackageMap, No Analysis specified for Package: {} (use 'NULL' analysis)", package_ident);
 
@@ -131,10 +130,10 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     }
     std::vector<std::pair<RuntimeResourceType,std::string>> resources;
-    for (auto const& resource_sub_tree : resource_vector) {
+    std::vector<std::pair<std::string,std::string>> resources_def;
+    for (auto const& [resource_type, resource_sub_tree] : resource_vector) {
 
-      std::string resource_type = resource_sub_tree.first;
-      std::string resource_identifier = resource_sub_tree.second.getValue();
+      std::string resource_identifier = resource_sub_tree.getValue();
       if (resource_identifier.empty()) {
 
         ExecEnv::log().critical("RuntimeProperties::getPackageMap, Package: {}, Resource: {} No resource identifier specified", package_ident, resource_type);
@@ -181,6 +180,8 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
       }
 
+      resources_def.emplace_back(resource_type, resource_identifier);
+
     } // for resources
 
     // Get a Vector of iteration items (VCF files) to load iteratively.
@@ -216,11 +217,10 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
     }
 
-    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, resources, vector_iteration_files));
+    std::pair<std::string, RuntimePackage> new_package(package_ident, RuntimePackage(package_ident, analysis_vector, resources, resources_def, vector_iteration_files));
 
-    auto result = package_map.insert(new_package);
-
-    if (not result.second) {
+    auto [iter, result] = package_map.insert(new_package);
+    if (not result) {
 
       ExecEnv::log().error("RuntimeProperties::getPackageMap, Could not add Package Ident: {} to map (duplicate)", package_ident);
 

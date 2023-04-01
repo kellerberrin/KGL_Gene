@@ -61,10 +61,12 @@ public:
   RuntimePackage( std::string package_identifier,
                   std::vector<std::string> analysis_list,
                   std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list,
+                  std::vector<std::pair<std::string, std::string>> resource_database_def,
                   std::vector<std::vector<std::string>> iterative_file_list)
                   : package_identifier_(std::move(package_identifier)),
                     analysis_list_(std::move(analysis_list)),
                     resource_database_list_(std::move(resource_database_list)),
+                    resource_database_def_(std::move(resource_database_def)),
                     iterative_file_list_(std::move(iterative_file_list)) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
@@ -73,6 +75,7 @@ public:
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
   [[nodiscard]] const std::vector<std::pair<RuntimeResourceType, std::string>>& resourceDatabaseList() const { return resource_database_list_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& resourceDatabaseDef() const { return resource_database_def_; }
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
@@ -80,6 +83,7 @@ private:
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
   std::vector<std::pair<RuntimeResourceType, std::string>> resource_database_list_;
+  std::vector<std::pair<std::string, std::string>> resource_database_def_;
   std::vector<std::vector<std::string>> iterative_file_list_;
 
 };
@@ -143,11 +147,12 @@ public:
   ResourceParameters(std::string resource_type, std::string resource_id) : resource_type_(resource_type), resource_id_(std::move(resource_id)) {}
   ~ResourceParameters() = default;
 
-  std::optional<const std::string> getParameter(const std::string& parameter_key) {
+  [[nodiscard]] std::optional<const std::string> getParameter(const std::string& parameter_key) const {
 
     if (parameter_map_.contains(parameter_key)) {
 
-      return parameter_map_[parameter_key];
+      auto const& [param_key, param_value] = *parameter_map_.find(parameter_key);
+      return param_value;
 
     }
 
@@ -159,13 +164,18 @@ public:
 
     if (parameter_map_.contains(parameter_key)) {
 
-      ExecEnv::log().warn("ResourceParameters::setParameter; parameter key: {} already exists", parameter_key);
+      auto old_value = parameter_map_[parameter_key];
+      ExecEnv::log().warn("ResourceParameters::setParameter; parameter key: '{}' already exists; current value: '{}', new value: '{}'",
+                          parameter_key, old_value, parameter_value);
 
     }
 
     parameter_map_[parameter_key] = parameter_value;
 
   }
+
+  [[nodiscard]] const std::string& resourceType() const { return resource_type_; }
+  [[nodiscard]] const std::string& resourceIdent() const { return resource_id_; }
 
 private:
 
@@ -174,7 +184,43 @@ private:
   ResourceParameterMap parameter_map_;
 
 };
-using ResourceDefinitions = std::map<std::string, ResourceParameters>;
+
+using ResourceDefinitionsMap = std::multimap<std::string, ResourceParameters>;
+class ResourceDefinitions {
+
+public:
+
+  ResourceDefinitions() = default;
+  ResourceDefinitions(const ResourceDefinitions&) = default;
+  ~ResourceDefinitions() = default;
+
+
+  void insert(const std::pair<std::string, ResourceParameters>& resource_def) { resource_definition_map_.insert(resource_def); }
+  [[nodiscard]] std::optional<ResourceParameters> retrieve(const std::string& resource_type, const std::string& resource_ident) const {
+
+    auto const [lower_iter, upper_iter] = resource_definition_map_.equal_range(resource_type);
+    for (auto iter = lower_iter; iter != upper_iter; ++iter) {
+
+      auto const& [type, resource_parameters] = *iter;
+      if (resource_parameters.resourceIdent() == resource_ident) {
+
+        return resource_parameters;
+
+      }
+
+    }
+
+    return std::nullopt;
+
+  }
+
+
+private:
+
+  ResourceDefinitionsMap resource_definition_map_;
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Object to hold Genome Database file information.
