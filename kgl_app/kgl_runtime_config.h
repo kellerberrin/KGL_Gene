@@ -27,7 +27,7 @@ public:
       : active_packages_(runtime_options.getActivePackages()),
         contig_alias_(runtime_options.getContigAlias()),
         data_file_map_(runtime_options.getDataFiles()),
-        resource_def_map_(runtime_options.getRuntimeResourceDef()),
+        resource_def_map_(runtime_options.getRuntimeResources()),
         analysis_map_(runtime_options.getAnalysisMap()),
         package_map_(runtime_options.getPackageMap()),
         evidence_map_(runtime_options.getEvidenceMap()),

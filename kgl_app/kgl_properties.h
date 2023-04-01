@@ -45,7 +45,7 @@ public:
 
   [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
 
-  [[nodiscard]]  ResourceDefinitions getRuntimeResourceDef() const;
+  [[nodiscard]]  ResourceDefinitions getRuntimeResources() const;
 
   [[nodiscard]] RuntimeDataFileMap getDataFiles() const;
 
