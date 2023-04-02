@@ -8,7 +8,7 @@
 
 #include "kgl_literature.h"
 #include "kel_rest_api.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 #include <string>
 #include <memory>

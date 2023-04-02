@@ -6,7 +6,7 @@
 #define KGL_PUBMED_RESOURCE_H
 
 #include "kgl_pubmed_api.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 #include "kel_utility.h"
 

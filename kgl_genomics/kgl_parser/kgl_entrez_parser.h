@@ -6,7 +6,7 @@
 #define KGL_ENTREZ_PARSER_H
 
 
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_square_parser.h"
 
 

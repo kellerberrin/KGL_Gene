@@ -18,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
 
   std::string properties_path = Utility::filePath(properties_file, work_directory_);
-  return property_tree_.readProperties(properties_path);
+  return property_tree_ptr_->readProperties(properties_path);
 
 }
 
@@ -39,7 +39,7 @@ kgl::ActivePackageVector kgl::RuntimeProperties::getActivePackages() const {
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(EXECUTE_LIST_) + std::string(DOT_) + std::string(ACTIVE_);
 
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getActivePackages, No Active Packages Specified");
     return active_packages;
@@ -69,7 +69,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + PACKAGE_LIST_;
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().error("RuntimeProperties::getPackageMap, no Analysis Packages Specified (must be a least one)");
     return package_map; // return empty map.
@@ -139,11 +139,7 @@ kgl::RuntimePackageMap kgl::RuntimeProperties::getPackageMap() const {
 
       } else {
 
-        if (resource_type != RuntimeProperties::HELP_ and resource_type != RuntimeProperties::COMMENT_) {
-
-          resources_def.emplace_back(resource_type, resource_identifier);
-
-        }
+        resources_def.emplace_back(resource_type, resource_identifier);
 
       }
 
@@ -205,7 +201,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
 
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + ANALYSIS_LIST_;
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Analysis specified (NULL analysis available)");
     return analysis_map; // return empty map.
@@ -281,7 +277,7 @@ kgl::RuntimeDataFileMap kgl::RuntimeProperties::getDataFiles() const {
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + DATA_FILE_LIST_;
 
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getDataFiles, no Data files specified");
     return data_file_map; // return empty map.
@@ -410,7 +406,7 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(ALIAS_LIST_);
 
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getContigAlias, No Contig Alias Specified");
     return contig_alias_map;
@@ -466,7 +462,7 @@ kgl::VariantEvidenceMap kgl::RuntimeProperties::getEvidenceMap() const {
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(EVIDENCE_LIST_);
 
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getEvidenceMap, No Variant Evidence items specified.");
     return variant_evidence_map;
@@ -528,7 +524,7 @@ kgl::ActiveParameterList kgl::RuntimeProperties::getParameterMap() const {
   std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(PARAMETER_LIST_);
 
   std::vector<SubPropertyTree> property_tree_vector;
-  if (not property_tree_.getPropertyTreeVector(key, property_tree_vector)) {
+  if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().warn("RuntimeProperties::getParameterMap; No Parameter Blocks specified");
 

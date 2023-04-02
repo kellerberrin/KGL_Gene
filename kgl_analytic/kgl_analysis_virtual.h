@@ -8,7 +8,7 @@
 
 
 #include "kgl_runtime.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
 
 

@@ -6,7 +6,7 @@
 #define KGL_KGL_RUNTIME_H
 
 #include "kgl_genome_types.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 #include <memory>
 #include <string>
@@ -113,112 +113,6 @@ private:
   RuntimeParameterMap parameter_map_;
 
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Base Object for resources.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class RuntimeResource;
-using RuntimeResourceMap = std::map<std::string, std::shared_ptr<const RuntimeResource>>;
-
-class RuntimeResource {
-
-public:
-
-  RuntimeResource() = default;
-  virtual ~RuntimeResource() = default;
-
-  [[nodiscard]] virtual RuntimeResourceType resourceType() const = 0;
-
-private:
-
-};
-
-
-using ResourceParameterMap = std::map<std::string, std::string>;
-class ResourceParameters {
-
-public:
-
-  ResourceParameters(std::string resource_type, std::string resource_id) : resource_type_(resource_type), resource_id_(std::move(resource_id)) {}
-  ~ResourceParameters() = default;
-
-  [[nodiscard]] std::optional<const std::string> getParameter(const std::string& parameter_key) const {
-
-    if (parameter_map_.contains(parameter_key)) {
-
-      auto const& [param_key, param_value] = *parameter_map_.find(parameter_key);
-      return param_value;
-
-    }
-
-    return std::nullopt;
-
-  }
-
-  void setParameter(const std::string& parameter_key, const std::string& parameter_value) {
-
-    if (parameter_map_.contains(parameter_key)) {
-
-      auto old_value = parameter_map_[parameter_key];
-      ExecEnv::log().warn("ResourceParameters::setParameter; parameter key: '{}' already exists; current value: '{}', new value: '{}'",
-                          parameter_key, old_value, parameter_value);
-
-    }
-
-    parameter_map_[parameter_key] = parameter_value;
-
-  }
-
-  [[nodiscard]] const std::string& resourceType() const { return resource_type_; }
-  [[nodiscard]] const std::string& resourceIdent() const { return resource_id_; }
-
-private:
-
-  std::string resource_type_;
-  std::string resource_id_;
-  ResourceParameterMap parameter_map_;
-
-};
-
-using ResourceDefinitionsMap = std::multimap<std::string, ResourceParameters>;
-class ResourceDefinitions {
-
-public:
-
-  ResourceDefinitions() = default;
-  ResourceDefinitions(const ResourceDefinitions&) = default;
-  ~ResourceDefinitions() = default;
-
-
-  void insert(const std::pair<std::string, ResourceParameters>& resource_def) { resource_definition_map_.insert(resource_def); }
-
-  [[nodiscard]] std::optional<ResourceParameters> retrieve(const std::string& resource_type, const std::string& resource_ident) const {
-
-    auto const [lower_iter, upper_iter] = resource_definition_map_.equal_range(resource_type);
-    for (auto iter = lower_iter; iter != upper_iter; ++iter) {
-
-      auto const& [type, resource_parameters] = *iter;
-      if (resource_parameters.resourceIdent() == resource_ident) {
-
-        return resource_parameters;
-
-      }
-
-    }
-
-    return std::nullopt;
-
-  }
-
-  [[nodiscard]] const ResourceDefinitionsMap& getMap() const { return resource_definition_map_; }
-
-private:
-
-  ResourceDefinitionsMap resource_definition_map_;
-
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Base Object to hold data file information.

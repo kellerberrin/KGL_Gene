@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_INTERVAL_H
 
 #include "kgl_runtime.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_analysis_virtual.h"
 #include "kgl_analysis_age.h"

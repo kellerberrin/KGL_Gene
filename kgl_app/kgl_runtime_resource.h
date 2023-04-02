@@ -7,6 +7,7 @@
 
 #include "kel_exec_env.h"
 
+#include <optional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -101,6 +102,59 @@ public:
 private:
 
   ResourceMap resource_map_;
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// These objects encode XML resource definitions and pass then to the resource constructor.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using ResourceParameterMap = std::map<std::string, std::string>;
+class ResourceParameters {
+
+public:
+
+  ResourceParameters(std::string resource_type, std::string resource_id) : resource_type_(std::move(resource_type)),
+                                                                           resource_id_(std::move(resource_id)) {}
+  ~ResourceParameters() = default;
+
+  [[nodiscard]] std::optional<const std::string> getParameter(const std::string& parameter_key) const;
+  void setParameter(const std::string& parameter_key, const std::string& parameter_value);
+
+  [[nodiscard]] const std::string& resourceType() const { return resource_type_; }
+  [[nodiscard]] const std::string& resourceIdent() const { return resource_id_; }
+
+private:
+
+  std::string resource_type_;
+  std::string resource_id_;
+  ResourceParameterMap parameter_map_;
+
+};
+
+
+
+using ResourceDefinitionsMap = std::multimap<std::string, ResourceParameters>;
+class ResourceDefinitions {
+
+public:
+
+  ResourceDefinitions() = default;
+  ResourceDefinitions(const ResourceDefinitions&) = default;
+  ~ResourceDefinitions() = default;
+
+  void insert(const std::pair<std::string, ResourceParameters>& resource_def) { resource_definition_map_.insert(resource_def); }
+  [[nodiscard]] std::optional<ResourceParameters> retrieve(const std::string& resource_type, const std::string& resource_ident) const;
+
+  [[nodiscard]] const ResourceDefinitionsMap& getMap() const { return resource_definition_map_; }
+
+private:
+
+  ResourceDefinitionsMap resource_definition_map_;
 
 };
 

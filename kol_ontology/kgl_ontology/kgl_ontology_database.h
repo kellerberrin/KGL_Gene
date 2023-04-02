@@ -9,7 +9,7 @@
 #include <string>
 #include <memory>
 
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kol_GoGraph.h"
 #include "kol_TermAnnotation.h"
 

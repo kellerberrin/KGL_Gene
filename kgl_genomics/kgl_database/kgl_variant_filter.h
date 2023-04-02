@@ -6,7 +6,7 @@
 #define KGL_FILTER_H
 
 #include "kgl_variant.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 #include "kel_utility.h"
 

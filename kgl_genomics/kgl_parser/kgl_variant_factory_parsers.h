@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FACTORY_PARSERS_H
 
 #include "kgl_runtime.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 
 

@@ -39,7 +39,7 @@ public:
 
   bool readPropertiesFile(const std::string& properties_file);
 
-//  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_, property_name, property); }
+//  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_ptr_, property_name, property); }
 
   bool getProperty(const std::string& property_name, std::string& property) const;
 
@@ -603,7 +603,12 @@ bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, 
 
   for (auto const& [sub_tree_tag, sub_tree] : tree_vector) {
 
-    property_tree_vector.emplace_back(SubPropertyTree(sub_tree_tag, PropertyTree(sub_tree)));
+    // Ignore comment  and help tags.
+    if (sub_tree_tag != COMMENT_ and sub_tree_tag != HELP_) {
+
+      property_tree_vector.emplace_back(SubPropertyTree(sub_tree_tag, PropertyTree(sub_tree)));
+
+    }
 
   }
 

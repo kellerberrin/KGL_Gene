@@ -7,7 +7,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_runtime_config.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_package_analysis.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace

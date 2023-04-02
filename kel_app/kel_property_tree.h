@@ -15,13 +15,14 @@
 
 namespace kellerberrin {  //  organization level namespace
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This object is a facade over the boost:: property tree object
 // Properties may stored as XML or JSON. The actual format is determined at runtime
 // by a file extension of "xml" or "json". Any other file extension is assumed to be
 // formatted as XML. The choice of which of the two formats to use is at the
 // discretion of the program user and is transparent to this object.
 // The boost:: functionality is hidden using the PIMPL idiom.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class PropertyTree; // fwd
 using SubPropertyTree = std::pair<std::string, PropertyTree>;
@@ -30,13 +31,13 @@ class PropertyTree {
 
 public:
 
-  class PropertyImpl;       // Forward declaration of the boost:: properties implementation class
+  class PropertyImpl;       // Forward declaration of the boost:: properties implementation class.
 
-  PropertyTree(); // defined in implementation file
-  PropertyTree(const PropertyTree&);
-  PropertyTree(const PropertyImpl&);
+  PropertyTree(); // Defined in implementation file.
+  explicit PropertyTree(const PropertyTree&);
+  explicit PropertyTree(const PropertyImpl&);
 
-  ~PropertyTree(); // defined in implementation file
+  ~PropertyTree(); // Defined in implementation file.
 
   [[nodiscard]] bool readProperties(const std::string& properties_file);
 
@@ -71,6 +72,9 @@ private:
 
   std::unique_ptr<PropertyImpl> properties_impl_ptr_;    // boost:: properties PIMPL
 
+  // Ignore these.
+  constexpr static const char HELP_[] = "help";
+  constexpr static const char COMMENT_[] = "<xmlcomment>";
 
 };
 

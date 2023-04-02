@@ -555,10 +555,10 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp
         kgl_app/kgl_runtime_config.h
-        kgl_app/kgl_package_resources.cpp
-        kgl_app/kgl_resource_db.h
-        kgl_app/kgl_resource_db.cpp
-        kgl_app/kgl_properties_resource.cpp)
+        kgl_app/kgl_package_resource.cpp
+        kgl_app/kgl_runtime_resource.h
+        kgl_app/kgl_runtime_resource.cpp
+        kgl_app/kgl_properties_resource.cpp kgl_app/kgl_properties_resource.h kgl_app/kgl_properties_resource_items.cpp)
 
 
 

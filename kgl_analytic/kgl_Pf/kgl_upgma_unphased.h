@@ -6,7 +6,7 @@
 #define KGL_UPGMA_UNPHASED_H
 
 
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_statistics_upgma.h"
 #include "kgl_sequence_distance.h"

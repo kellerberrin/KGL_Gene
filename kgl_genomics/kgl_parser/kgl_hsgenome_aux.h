@@ -9,7 +9,7 @@
 #include "kgl_data_file_type.h"
 #include "kgl_genome_types.h"
 #include "kgl_square_parser.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_contig.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 
 #include <memory>
 #include <string>

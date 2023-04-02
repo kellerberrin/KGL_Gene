@@ -6,7 +6,7 @@
 #define KGL_CITATION_PARSER_H
 
 
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_square_parser.h"
 #include "kgl_json_parser.h"
 

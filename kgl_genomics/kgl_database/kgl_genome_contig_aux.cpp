@@ -3,7 +3,7 @@
 //
 
 #include "kgl_genome_contig_aux.h"
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kel_patterns.h"
 
 

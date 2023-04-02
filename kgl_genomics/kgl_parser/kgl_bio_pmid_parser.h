@@ -6,7 +6,7 @@
 #define KGL_BIO_PMID_PARSER_H
 
 
-#include "kgl_resource_db.h"
+#include "kgl_runtime_resource.h"
 #include "kgl_data_file_type.h"
 
 #include <set>
