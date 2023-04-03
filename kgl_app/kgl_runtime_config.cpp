@@ -54,11 +54,11 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
     }
 
     //Confirm that all resources exist.
-    for (auto const& [resource_type, resource_ident] : package.resourceDatabaseDef()) {
+    for (auto const& [resource_type, resource_ident] : package.resourceList()) {
 
-      if (not resource_def_map_.retrieve(resource_type, resource_ident)) {
+      if (not resource_map_.retrieve(resource_type, resource_ident)) {
 
-        for (auto const& [ident, resource_parameters] : resource_def_map_.getMap()) {
+        for (auto const& [ident, resource_parameters] : resource_map_.getMap()) {
 
           ExecEnv::log().info("ExecutePackage::verifyPackage, Package: {}, Resource Type: {}, Ident: {}",
                               package_ident, resource_parameters.resourceType(), resource_parameters.resourceIdent());

@@ -22,6 +22,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   }
 
   Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
+  Pf7_fws_ptr_ = resource_ptr->getSingleResource<const Pf7FwsResource>(ResourceProperties::PF7FWS_RESOURCE_ID_);
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
@@ -86,6 +87,14 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
                       filtered_population_ptr_->getMap().size(),
                       filtered_population_ptr_->variantCount(),
                       Pf7_sample_ptr_->getMap().size());
+
+  monoclonal_population_ptr_ = Pf7_fws_ptr_->filterFWS(FwsFilterType::GREATER_EQUAL, MONOCLONAL_FWS_THRESHOLD, filtered_population_ptr_);
+
+  ExecEnv::log().info("MonoClonal Filtered Population: {}, Genome count: {}, Variant Count: {}, FWS Data Count: {}",
+                      monoclonal_population_ptr_->populationId(),
+                      monoclonal_population_ptr_->getMap().size(),
+                      monoclonal_population_ptr_->variantCount(),
+                      Pf7_fws_ptr_->getMap().size());
 
   return true;
 

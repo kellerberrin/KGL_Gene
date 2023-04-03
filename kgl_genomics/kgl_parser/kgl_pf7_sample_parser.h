@@ -53,7 +53,7 @@ public:
     : ResourceBase(ResourceProperties::PF7SAMPLE_RESOURCE_ID_, std::move(identifier)),
       Pf7Sample_vector_(std::move(Pf7sample_vector)) {
 
-    IndexPf7SampleData();
+    indexPf7SampleData();
 
   }
   ~Pf7SampleResource() override = default;
@@ -68,7 +68,7 @@ private:
   const Pf7SampleVector Pf7Sample_vector_;
   Pf7SampleMap Pf7Sample_map_;
 
-  void IndexPf7SampleData();
+  void indexPf7SampleData();
 
 };
 

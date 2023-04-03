@@ -12,16 +12,17 @@
 #include "kgl_entrez_parser.h"
 #include "kgl_bio_pmid_parser.h"
 #include "kgl_pf7_sample_parser.h"
+#include "kgl_pf7_fws_parser.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
-std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResourcesDef(const RuntimePackage& package) const {
+std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeResources(const RuntimePackage& package) const {
 
   std::shared_ptr<AnalysisResources> resource_ptr(std::make_shared<AnalysisResources>());
 
-  for (auto const& [resource_type, resource_ident]  :  package.resourceDatabaseDef()) {
+  for (auto const& [resource_type, resource_ident]  : package.resourceList()) {
 
     switch (Utility::hash(resource_type)) {
 
@@ -61,8 +62,12 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadPf7SampleResource(resource_type, resource_ident, resource_ptr);
         break;
 
+      case Utility::hash(ResourceProperties::PF7FWS_RESOURCE_ID_):
+        loadPf7FwsResource(resource_type, resource_ident, resource_ptr);
+        break;
+
       default:
-        ExecEnv::log().critical("ExecutePackage::loadRuntimeResourcesDef, Package: {} Attempt to load unknown resource type: '{}', resource ident: '{}'.",
+        ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type: '{}', resource ident: '{}'.",
                                 package.packageIdentifier(), resource_type, resource_ident);
         break;
 
@@ -394,6 +399,38 @@ void kgl::ExecutePackage::loadPf7SampleResource(const std::string& resource_type
   std::shared_ptr<Pf7SampleResource> Pf7Sample_ptr(std::make_shared<Pf7SampleResource>(Pf7_sample_ident, Pf7_sample_parser.getPf7SampleVector()));
 
   resource_ptr->addResource(Pf7Sample_ptr);
+
+}
+
+void kgl::ExecutePackage::loadPf7FwsResource(const std::string& resource_type,
+                                                const std::string& Pf7_Fws_ident,
+                                                const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, Pf7_Fws_ident);
+  if (not params_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7FwsResource, Pf7 FWS Data: {}, not defined", Pf7_Fws_ident);
+
+  }
+
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(ResourceProperties::PF7FWS_FILE_);
+  if (not file_name_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7FwsResource, Ident: {} Pf7 FWS Data file not defined", Pf7_Fws_ident);
+
+  }
+
+  ParsePf7Fws Pf7_Fws_parser;
+  if (not Pf7_Fws_parser.parsePf7FwsFile(file_name_opt.value())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7FwsResource; failed to create Pf7 FWS Data resource from file: {}", file_name_opt.value());
+
+  }
+
+  std::shared_ptr<Pf7FwsResource> Pf7Fws_ptr(std::make_shared<Pf7FwsResource>(Pf7_Fws_ident, Pf7_Fws_parser.getPf7FwsVector()));
+
+  resource_ptr->addResource(Pf7Fws_ptr);
 
 }
 

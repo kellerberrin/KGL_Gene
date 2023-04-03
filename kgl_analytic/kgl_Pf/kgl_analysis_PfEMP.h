@@ -9,7 +9,7 @@
 #include "kgl_analysis_virtual.h"
 #include "kgl_genome_collection.h"
 #include "kgl_pf7_sample_parser.h"
-
+#include "kgl_pf7_fws_parser.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -49,12 +49,15 @@ private:
   std::string ident_work_directory_;
   // Resources
   std::shared_ptr<const Pf7SampleResource> Pf7_sample_ptr_;
+  std::shared_ptr<const Pf7FwsResource> Pf7_fws_ptr_;
   constexpr static const char PF3D7_IDENT_[]{"Pf3D7_62"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;     // The Pf7 variant data was aligned on this genome.
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   // Per chromosome VCF files.
   std::shared_ptr<const PopulationDB> all_population_ptr_;
   std::shared_ptr<const PopulationDB> filtered_population_ptr_;  // Only genomes that have passed quality test.
+  constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
+  std::shared_ptr<const PopulationDB> monoclonal_population_ptr_;  // Only genomes that have passed quality test.
 
   void performPFEMP1UPGMA();
 

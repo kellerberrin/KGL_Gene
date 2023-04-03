@@ -11,9 +11,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::Pf7SampleResource::IndexPf7SampleData() {
-
-  static bool error{false};
+void kgl::Pf7SampleResource::indexPf7SampleData() {
 
   // First load up the canonical records.
   for (auto const& Pf7Sample_record : Pf7Sample_vector_) {
@@ -24,10 +22,9 @@ void kgl::Pf7SampleResource::IndexPf7SampleData() {
 
     }
     auto [iter, result] = Pf7Sample_map_.try_emplace(Pf7Sample_record.Pf7Sample_id, Pf7Sample_record);
-    if (not result and not error) {
+    if (not result) {
 
       ExecEnv::log().warn("Pf7SampleResource::IndexPf7SampleData; duplicate Pf7Sample record ({})",  Pf7Sample_record.Pf7Sample_id);
-      error = true;
 
     }
 

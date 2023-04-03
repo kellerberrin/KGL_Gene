@@ -42,7 +42,7 @@ private:
   const PackageAnalysis package_analysis_;
 
   // Load the package resources.
-  [[nodiscard]] std::shared_ptr<const AnalysisResources> loadRuntimeResourcesDef(const RuntimePackage& package) const;
+  [[nodiscard]] std::shared_ptr<const AnalysisResources> loadRuntimeResources(const RuntimePackage& package) const;
   void loadGenomeResource(const std::string& resource_type,  const std::string& genome_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadOntologyResource(const std::string& resource_type, const std::string& ontology_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadHsGeneNomenclatureResource(const std::string& resource_type, const std::string& nomenclature_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
@@ -52,6 +52,7 @@ private:
   void loadEntrezGeneResource(const std::string& resource_type, const std::string& entrez_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPubmedAPIResource(const std::string& resource_type, const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPf7SampleResource(const std::string& resource_type, const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
+  void loadPf7FwsResource(const std::string& resource_type, const std::string& Pf7_Fws_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,

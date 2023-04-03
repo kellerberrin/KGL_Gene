@@ -10,7 +10,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genomeResource(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genomeResourceXML(const PropertyTree& sub_tree) const {
 
   std::string genome_ident;
   if (not sub_tree.getProperty(GENOME_IDENT_, genome_ident)) {
@@ -60,7 +60,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genomeResource(c
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::ontologyDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::ontologyResourceXML(const PropertyTree& sub_tree) const {
 
   std::string ontology_ident;
   if (not sub_tree.getProperty(ONTOLOGY_IDENT_, ontology_ident)) {
@@ -93,7 +93,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::ontologyDatabase
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::geneIDDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::geneIDResourceXML(const PropertyTree& sub_tree) const {
 
 
   std::string nomenclature_ident;
@@ -118,7 +118,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::geneIDDatabase(c
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genealogyIDDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genealogyIDResourceXML(const PropertyTree& sub_tree) const {
 
   std::string genealogy_ident;
   if (not sub_tree.getProperty(GENEALOGY_IDENT_, genealogy_ident)) {
@@ -142,7 +142,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genealogyIDDatab
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::citationDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::citationResourceXML(const PropertyTree& sub_tree) const {
 
   std::string citation_ident;
   if (not sub_tree.getProperty(CITATION_IDENT_, citation_ident)) {
@@ -166,7 +166,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::citationDatabase
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::entrezDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::entrezResourceXML(const PropertyTree& sub_tree) const {
 
   std::string entrez_ident;
   if (not sub_tree.getProperty(ENTREZ_IDENT_, entrez_ident)) {
@@ -190,7 +190,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::entrezDatabase(c
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7SampleDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7SampleResourceXML(const PropertyTree& sub_tree) const {
 
   std::string Pf7Sample_ident;
   if (not sub_tree.getProperty(PF7SAMPLE_IDENT_, Pf7Sample_ident)) {
@@ -214,7 +214,31 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7SampleDatabas
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPI(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7FwsResourceXML(const PropertyTree& sub_tree) const {
+
+  std::string Pf7Fws_ident;
+  if (not sub_tree.getProperty(PF7FWS_IDENT_, Pf7Fws_ident)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 FWS Identifier.");
+    return std::nullopt;
+
+  }
+  ResourceParameters resource_parameters(PF7FWS_RESOURCE_ID_, Pf7Fws_ident);
+
+  std::string Pf7Fws_file_name;
+  if (not sub_tree.getFileProperty(PF7FWS_FILE_, workDirectory(), Pf7Fws_file_name)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 FWS file name information, ident: {}", Pf7Fws_ident);
+    return std::nullopt;
+
+  }
+  resource_parameters.setParameter(PF7FWS_FILE_, Pf7Fws_file_name);
+
+  return resource_parameters;
+
+}
+
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPIResourceXML(const PropertyTree& sub_tree) const {
 
   std::string pubmed_api_ident;
   if (not sub_tree.getProperty(PUBMED_IDENT_, pubmed_api_ident)) {
@@ -247,7 +271,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPI(con
 
 }
 
-std::optional<kgl::ResourceParameters> kgl::ResourceProperties::auxIDDatabase(const PropertyTree& sub_tree) const {
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::auxIDResourceXML(const PropertyTree& sub_tree) const {
 
   std::string genome_aux_ident;
   if (not sub_tree.getProperty(GENOMEAUX_IDENT_, genome_aux_ident)) {

@@ -24,7 +24,17 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // High level object extracts resource specific properties from the XML tree.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//
+// Steps for adding a resource.
+//
+// 1. Define the resource in a resource XML file.
+// 2. Define all the tags used in the XML definition below as text constants.
+// 3. Go to the kgl_properties_resource.cpp and kgl_properties_resource_item.cpp and define a simple XML parser.
+// 4. Go to kgl_package_resource.cpp function ExecutePackage::loadRuntimeResource() and add code to create the resource on demand.
+// 5. Add the resource type and identifier in the package XML.
+// 6. Retrieve the resource at runtime in the analysis object.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ResourceProperties {
 
@@ -76,6 +86,10 @@ public:
   constexpr static const char PF7SAMPLE_RESOURCE_ID_[] = "Pf7Sample";
   constexpr static const char PF7SAMPLE_IDENT_[] = "Pf7SampleIdent";
   constexpr static const char PF7SAMPLE_FILE_[] = "Pf7SampleFile";
+  // Pf7 within-host infection fixation index (FWS); this is a resource database.
+  constexpr static const char PF7FWS_RESOURCE_ID_[] = "Pf7Fws";
+  constexpr static const char PF7FWS_IDENT_[] = "Pf7FwsIdent";
+  constexpr static const char PF7FWS_FILE_[] = "Pf7FwsFile";
   // Literature PMID linked to BioConcepts (Gene, Disease, etc); this is a resource database.
   constexpr static const char PMIDBIO_RESOURCE_ID_[] = "bioPMID";
   constexpr static const char PMIDBIO_IDENT_[] = "bioPMIDIdent";
@@ -96,15 +110,16 @@ private:
   constexpr static const char DOT_[] = ".";
   constexpr static const char RUNTIME_ROOT_[] = "runTime";
 
-  [[nodiscard]] std::optional<ResourceParameters> genomeResource(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> ontologyDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> geneIDDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> genealogyIDDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> citationDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> entrezDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> Pf7SampleDatabase(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> PubmedLitAPI(const PropertyTree& sub_tree) const;
-  [[nodiscard]] std::optional<ResourceParameters> auxIDDatabase(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> genomeResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> ontologyResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> geneIDResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> genealogyIDResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> citationResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> entrezResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> Pf7SampleResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> Pf7FwsResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> PubmedLitAPIResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> auxIDResourceXML(const PropertyTree& sub_tree) const;
 
 };
 

@@ -53,7 +53,6 @@ private:
 class RuntimePackage;
 using RuntimePackageMap = std::map<std::string, RuntimePackage>;
 
-
 class RuntimePackage {
 
 public:
@@ -64,22 +63,21 @@ public:
                   std::vector<std::vector<std::string>> iterative_file_list)
                   : package_identifier_(std::move(package_identifier)),
                     analysis_list_(std::move(analysis_list)),
-                    resource_database_def_(std::move(resource_database_def)),
+                    resource_list_(std::move(resource_database_def)),
                     iterative_file_list_(std::move(iterative_file_list)) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
 
-
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
-  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& resourceDatabaseDef() const { return resource_database_def_; }
+  [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& resourceList() const { return resource_list_; }
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
 
   std::string package_identifier_;
   std::vector<std::string> analysis_list_;
-  std::vector<std::pair<std::string, std::string>> resource_database_def_;
+  std::vector<std::pair<std::string, std::string>> resource_list_;
   std::vector<std::vector<std::string>> iterative_file_list_;
 
 };
@@ -121,7 +119,6 @@ private:
 
 class BaseFileInfo;
 using RuntimeDataFileMap = std::map<std::string, std::shared_ptr<BaseFileInfo>>;
-
 
 class BaseFileInfo {
 
