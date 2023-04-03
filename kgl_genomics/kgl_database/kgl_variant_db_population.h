@@ -140,7 +140,6 @@ bool PopulationDB::processAll(Obj& object, Func objFunc)  const {
 template<class Obj, typename Func>
 bool PopulationDB::processAll_MT(Obj object, Func objFunc)  const {
 
-
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
   WorkflowThreads thread_pool(thread_count);
@@ -160,7 +159,6 @@ bool PopulationDB::processAll_MT(Obj object, Func objFunc)  const {
 
   } ;
 
-
   // Queue a thread for each genome.
   for (const auto& [genome_id, genome_ptr] : getMap()) {
 
@@ -168,7 +166,6 @@ bool PopulationDB::processAll_MT(Obj object, Func objFunc)  const {
     future_vector.push_back(std::move(future));
 
   }
-
 
   // Wait for the threads to finish.
   bool process_result{true};

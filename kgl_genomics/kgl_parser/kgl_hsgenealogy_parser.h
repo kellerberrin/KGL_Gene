@@ -130,7 +130,6 @@ public:
   [[nodiscard]] const HsAuxPopulationMap& superPopulationList() const override { return super_population_list_; }
   [[nodiscard]] std::vector<GenomeId_t> getGenomeList() const override;
   [[nodiscard]] std::optional<HsGenomeAuxRecord> getGenome(const std::string& genome) const override;
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_GENEALOGY; }
 
 private:
 

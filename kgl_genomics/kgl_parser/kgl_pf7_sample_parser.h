@@ -6,8 +6,9 @@
 #define KGL_PF7_SAMPLE_PARSER_H
 
 
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -34,6 +35,7 @@ struct Pf7SampleRecord {
   std::string population_;
   std::string callable_;
   std::string qc_pass_;
+  constexpr static const char QC_PASS_UC_[]{"TRUE"}; // Uppercase sample qc pass text (actually "True").
   std::string qc_fail_reason_;
   std::string sample_type_;
   std::string sample_in_pf6_;
@@ -47,17 +49,19 @@ class Pf7SampleResource : public ResourceBase {
 
 public:
 
-  Pf7SampleResource(std::string identifier,
-                    Pf7SampleVector Pf7sample_vector) : ResourceBase(std::move(identifier)),
-                                                        Pf7Sample_vector_(std::move(Pf7sample_vector)) {
+  Pf7SampleResource(std::string identifier, Pf7SampleVector Pf7sample_vector)
+    : ResourceBase(ResourceProperties::PF7SAMPLE_RESOURCE_ID_, std::move(identifier)),
+      Pf7Sample_vector_(std::move(Pf7sample_vector)) {
 
     IndexPf7SampleData();
 
   }
   ~Pf7SampleResource() override = default;
 
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PF7_SAMPLE_DATA; }
   [[nodiscard]] const Pf7SampleMap& getMap() const { return Pf7Sample_map_; }
+
+  // Population must be PF7
+  std::shared_ptr<const PopulationDB> filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
 
 private:
 

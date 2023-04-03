@@ -21,7 +21,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(RuntimeResourceType::PF7_SAMPLE_DATA);
+  Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
@@ -33,13 +33,23 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  for (auto const& genome_resource_ptr : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
+  auto reference_genomes_ptr = std::make_shared<GenomeCollection>();
+  for (auto const& genome_resource_ptr : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
     auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_ptr);
     ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome_ptr->genomeId());
-    reference_genomes_->addGenome(genome_ptr);
+    reference_genomes_ptr->addGenome(genome_ptr);
 
   }
+  all_reference_genomes_ptr_ = reference_genomes_ptr;  // Assign to a pointer to const.
+
+  auto pf3d7_opt = all_reference_genomes_ptr_->getOptionalGenome(PF3D7_IDENT_);
+  if (not pf3d7_opt) {
+
+    ExecEnv::log().critical("PfEMPAnalysis::initializeAnalysis; Reference Genome: {} required for analysis - not supplied", PF3D7_IDENT_);
+
+  }
+  genome_3D7_ptr_ = pf3d7_opt.value();
 
   performPFEMP1UPGMA();
 
@@ -48,9 +58,34 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_file_ptr) {
+bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
 
-  ExecEnv::log().info("File Read for Analysis Id: {} called for file: {}", ident(), base_file_ptr->fileId());
+  ExecEnv::log().info("File Read for Analysis Id: {} called for file: {}", ident(), base_data_ptr->fileId());
+
+  // Superclass the population_ptr
+  std::shared_ptr<const PopulationDB> population_ptr = std::dynamic_pointer_cast<const PopulationDB>(base_data_ptr);
+
+  if (not population_ptr) {
+
+    ExecEnv::log().error("Analysis: {}, expected a Population in file: {}", ident(), base_data_ptr->fileId());
+    return false;
+
+  }
+
+  all_population_ptr_ = population_ptr;
+
+  ExecEnv::log().info("Unfiltered Population: {}, Genome count: {}, Variant Count: {}",
+                      all_population_ptr_->populationId(),
+                      all_population_ptr_->getMap().size(),
+                      all_population_ptr_->variantCount());
+
+  filtered_population_ptr_ = Pf7_sample_ptr_->filterPassQCGenomes(all_population_ptr_);
+
+  ExecEnv::log().info("QC Pass Filtered Population: {}, Genome count: {}, Variant Count: {}, Sample Data Count: {}",
+                      filtered_population_ptr_->populationId(),
+                      filtered_population_ptr_->getMap().size(),
+                      filtered_population_ptr_->variantCount(),
+                      Pf7_sample_ptr_->getMap().size());
 
   return true;
 
@@ -78,7 +113,7 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
 void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
 
-  for (auto const& [genome_id, genome_ptr] : reference_genomes_->getMap()) {
+  for (auto const& [genome_id, genome_ptr] : all_reference_genomes_ptr_->getMap()) {
 
     std::string intron_file_name = INTRON_ + genome_id + INTRON_EXT_;
     intron_file_name = Utility::filePath(intron_file_name, ident_work_directory_);

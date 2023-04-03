@@ -6,6 +6,7 @@
 #include "kgl_analysis_inbreed.h"
 #include "kgl_variant_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
+#include "kgl_properties_resource.h"
 #include "kel_optimize.h"
 
 #include <fstream>
@@ -25,23 +26,9 @@ bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  auto genome_aux_resource_vector = resource_ptr->getResources(RuntimeResourceType::GENOME_GENEALOGY);
-  if (genome_aux_resource_vector.size() != 1) {
-
-    ExecEnv::log().critical("Analysis Id: {}, expected single (1) Genome Aux database, actual count: {}", genome_aux_resource_vector.size());
-
-  }
-
-  genealogy_data_ = std::dynamic_pointer_cast<const HsGenomeGenealogyData>(genome_aux_resource_vector.front());
-
-  // Just in case.
-  if (not genealogy_data_) {
-
-    ExecEnv::log().critical("Analysis Id: {}, A required resource is not defined, program ends.", ident());
-
-  }
-
+  genealogy_data_ = resource_ptr->getSingleResource<HsGenomeGenealogyData>(ResourceProperties::GENEALOGY_RESOURCE_ID_);
   work_directory_ = work_directory;
+
   for (auto const& parameter : InbreedArguments::extractParameters(named_parameters)) {
 
     parameter_output_vector_.emplace_back(InbreedParamOutput(parameter));

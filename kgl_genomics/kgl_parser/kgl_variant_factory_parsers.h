@@ -61,7 +61,7 @@ private:
 
     // Get the specified reference genome to validate the parsed VCF population.
     std::shared_ptr<const GenomeReference> ref_genome;
-    for (auto const& genome_resource : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
+    for (auto const& genome_resource : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
       auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource);
       if (not genome_ptr) {

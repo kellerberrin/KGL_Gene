@@ -5,7 +5,7 @@
 #ifndef KGL_ENSEMBL_ID_PARSER_H
 #define KGL_ENSEMBL_ID_PARSER_H
 
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
 
 
@@ -31,15 +31,13 @@ class EnsemblHGNCResource : public ResourceBase {
 
 public:
 
-  explicit EnsemblHGNCResource(std::string identifier, GeneSynonymVector synonym_vector) : ResourceBase(std::move(identifier)),
-                                                                                           synonym_vector_(std::move(synonym_vector)) {
+  explicit EnsemblHGNCResource(std::string identifier, GeneSynonymVector synonym_vector)
+    : ResourceBase(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_, std::move(identifier)), synonym_vector_(std::move(synonym_vector)) {
 
     IndexHGNC();
 
   }
   ~EnsemblHGNCResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
 
   [[nodiscard]] std::string HGNCToEnsembl(const std::string& hgnc_id) const;
 

@@ -36,8 +36,6 @@ public:
 
   ~OntologyDatabase() override = default;
 
-  // Resource type identifier.
-  [[nodiscard]] kgl::RuntimeResourceType getResourceType() const override { return kgl::RuntimeResourceType::HSAPIEN_ONTOLOGY; }
 
   // Ontology Resources.
   [[nodiscard]] const std::shared_ptr<const GoGraph>& goGraph() const { return go_graph_ptr_; }

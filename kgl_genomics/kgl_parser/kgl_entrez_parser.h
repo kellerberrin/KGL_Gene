@@ -5,8 +5,7 @@
 #ifndef KGL_ENTREZ_PARSER_H
 #define KGL_ENTREZ_PARSER_H
 
-
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
 
 
@@ -32,7 +31,8 @@ class EntrezResource : public ResourceBase {
 
 public:
 
-  explicit EntrezResource(std::string identifier, EntrezVector entrez_vector) : ResourceBase(std::move(identifier)),
+  explicit EntrezResource(std::string identifier, EntrezVector entrez_vector)
+    : ResourceBase(ResourceProperties::ENTREZ_RESOURCE_ID_, std::move(identifier)),
   entrez_vector_(std::move(entrez_vector)) {
 
     IndexSymbol();
@@ -41,7 +41,6 @@ public:
   }
   ~EntrezResource() override = default;
 
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::ENTREZ_GENE; }
   [[nodiscard]] std::string symbolToEntrez(const std::string& symbol_id) const;
   [[nodiscard]] std::string entrezToSymbol(const std::string& entrez_id) const;
 

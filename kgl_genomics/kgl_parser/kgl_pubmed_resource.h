@@ -6,7 +6,7 @@
 #define KGL_PUBMED_RESOURCE_H
 
 #include "kgl_pubmed_api.h"
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 
 #include "kel_utility.h"
 
@@ -34,10 +34,8 @@ class PubmedRequester : public ResourceBase {
 public:
 
   PubmedRequester(const std::string& identifier, const std::string& publication_cache_file, const std::string& citation_cache_file)
-  : ResourceBase(identifier), pubmed_rest_api_(publication_cache_file, citation_cache_file) {}
+    : ResourceBase(ResourceProperties::PUBMED_API_RESOURCE_ID_, identifier), pubmed_rest_api_(publication_cache_file, citation_cache_file) {}
   ~PubmedRequester() override = default;
-
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::PUBMED_API; }
 
   // Returns all cached publications. Note that this assumes that all required publications have already been downloaded and are cached.
   [[nodiscard]] const LitPublicationMap& getAllCachedPublications() const { return pubmed_rest_api_.getAllCachedPublications(); }

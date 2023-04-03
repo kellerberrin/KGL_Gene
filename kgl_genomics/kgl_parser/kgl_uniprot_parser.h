@@ -6,8 +6,7 @@
 #define KGL_UNIPROT_PARSER_H
 
 
-
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
 
 
@@ -35,14 +34,12 @@ class UniprotResource : public ResourceBase {
 public:
 
   explicit UniprotResource(std::string identifier, UniprotIDMap&& uniprot_map)
-  : ResourceBase(std::move(identifier)), uniprot_map_(uniprot_map) {
+    : ResourceBase(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_, std::move(identifier)), uniprot_map_(uniprot_map) {
 
     createIndexes();
 
   }
   ~UniprotResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENE_NOMENCLATURE; }
 
   [[nodiscard]] std::vector<std::string> ensemblToSymbol(const std::string& ensembl) const { return lookupInfo( ensembl, ensembl_index_, GENE_NAME); }
   [[nodiscard]] std::vector<std::string> symbolToEnsembl(const std::string& symbol) const { return lookupInfo( symbol, symbol_index_, ENSEMBL_FIELD); }

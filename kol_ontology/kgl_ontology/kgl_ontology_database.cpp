@@ -2,7 +2,7 @@
 // Created by kellerberrin on 24/4/21.
 //
 
-
+#include "kgl_properties_resource.h"
 #include "kgl_ontology_database.h"
 
 #include "kol_ParserGoFactory.h"
@@ -18,7 +18,8 @@ namespace kgl = kellerberrin::genome;
 
 kol::OntologyDatabase::OntologyDatabase( const std::string& ontology_ident,
                                          const std::string& go_graph_file,
-                                         const std::string& annotation_file) : kgl::ResourceBase(ontology_ident) {
+                                         const std::string& annotation_file)
+  : kgl::ResourceBase(kgl::ResourceProperties::ONTOLOGY_RESOURCE_ID_, ontology_ident) {
 
   go_graph_ptr_ = getGoGraph(go_graph_file);
   annotation_ptr_ = getAnnotation(annotation_file);

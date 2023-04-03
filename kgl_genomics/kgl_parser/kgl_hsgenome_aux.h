@@ -9,7 +9,7 @@
 #include "kgl_data_file_type.h"
 #include "kgl_genome_types.h"
 #include "kgl_square_parser.h"
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -82,7 +82,7 @@ class HsGenomeAux : public ResourceBase {
 
 public:
 
-  explicit HsGenomeAux(std::string identifier) : ResourceBase(std::move(identifier)) {}
+  explicit HsGenomeAux(std::string identifier) : ResourceBase(ResourceProperties::GENOMEAUX_RESOURCE_ID_, std::move(identifier)) {}
   ~HsGenomeAux() override = default;
 
   [[nodiscard]] virtual const HsAuxPopulationMap& populationList() const = 0;
@@ -123,7 +123,6 @@ public:
   [[nodiscard]] const HsAuxPopulationMap& superPopulationList() const override { return super_population_list_; }
   [[nodiscard]] std::vector<GenomeId_t> getGenomeList() const override;
   [[nodiscard]] std::optional<HsGenomeAuxRecord> getGenome(const std::string& genome) const override;
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_AUX_INFO; }
 
 private:
 

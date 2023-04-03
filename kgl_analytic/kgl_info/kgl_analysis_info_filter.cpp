@@ -26,7 +26,7 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 
   }
 
-  for (auto const& genome_resource_ptr : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
+  for (auto const& genome_resource_ptr : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
     auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_ptr);
     ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome_ptr->genomeId());

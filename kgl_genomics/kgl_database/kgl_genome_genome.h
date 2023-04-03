@@ -7,7 +7,7 @@
 
 
 #include "kgl_genome_contig.h"
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 
 #include <memory>
 #include <string>
@@ -29,14 +29,12 @@ class GenomeReference : public ResourceBase {
 
 public:
 
-  explicit GenomeReference(const GenomeId_t& genome_id) : ResourceBase(genome_id) {}
+  explicit GenomeReference(const GenomeId_t& genome_id) : ResourceBase(ResourceProperties::GENOME_RESOURCE_ID_, genome_id) {}
   GenomeReference(const GenomeReference&) = default;
   ~GenomeReference() override = default;
 
-  // Resource type identifier.
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::GENOME_DATABASE; }
   // Organism identifier and resource identifier
-  [[nodiscard]] const GenomeId_t& genomeId() const { return identifier(); }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return resourceIdent(); }
 
   // ReturnType false if contig already exists.
   [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);

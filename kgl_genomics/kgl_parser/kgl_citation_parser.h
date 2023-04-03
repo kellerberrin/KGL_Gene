@@ -5,8 +5,7 @@
 #ifndef KGL_CITATION_PARSER_H
 #define KGL_CITATION_PARSER_H
 
-
-#include "kgl_runtime_resource.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
 #include "kgl_json_parser.h"
 
@@ -28,10 +27,9 @@ class CitationResource : public ResourceBase {
 
 public:
 
-  CitationResource(std::string identifier, DBCitationMap citation_map) : ResourceBase(std::move(identifier)), citation_map_(std::move(citation_map))  {}
+  CitationResource(std::string identifier, DBCitationMap citation_map)
+    : ResourceBase(ResourceProperties::CITATION_RESOURCE_ID_, std::move(identifier)), citation_map_(std::move(citation_map))  {}
   ~CitationResource() override = default;
-
-  [[nodiscard]] RuntimeResourceType getResourceType() const override { return RuntimeResourceType::ALLELE_CITATION; }
 
   // Indexed by allele 'rsXXX' code, value is a vector of Pubmed publication pmids.
   [[nodiscard]] const DBCitationMap& alleleIndexedCitations() const { return citation_map_; }

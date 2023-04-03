@@ -25,39 +25,39 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
     switch (Utility::hash(resource_type)) {
 
-      case Utility::hash(ResourceProperties::GENOME_DATABASE_):
+      case Utility::hash(ResourceProperties::GENOME_RESOURCE_ID_):
         loadGenomeResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::ONTOLOGY_DATABASE_):
+      case Utility::hash(ResourceProperties::ONTOLOGY_RESOURCE_ID_):
         loadOntologyResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::GENE_ID_DATABASE_):
+      case Utility::hash(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_):
         loadHsGeneNomenclatureResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::GENEALOGY_ID_DATABASE_):
+      case Utility::hash(ResourceProperties::GENEALOGY_RESOURCE_ID_):
         loadHsGenomeGenealogyResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::AUX_ID_DATABASE_):
+      case Utility::hash(ResourceProperties::GENOMEAUX_RESOURCE_ID_):
         loadHsGenomeAuxResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::CITATION_DATABASE_):
+      case Utility::hash(ResourceProperties::CITATION_RESOURCE_ID_):
         loadCitationResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::ENTREZ_DATABASE_):
+      case Utility::hash(ResourceProperties::ENTREZ_RESOURCE_ID_):
         loadEntrezGeneResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PUBMED_LIT_API_):
+      case Utility::hash(ResourceProperties::PUBMED_API_RESOURCE_ID_):
         loadPubmedAPIResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PF7_SAMPLE_DATABASE_):
+      case Utility::hash(ResourceProperties::PF7SAMPLE_RESOURCE_ID_):
         loadPf7SampleResource(resource_type, resource_ident, resource_ptr);
         break;
 
@@ -169,7 +169,7 @@ void kgl::ExecutePackage::loadHsGeneNomenclatureResource(const std::string& reso
   }
 
   auto const& params = params_opt.value();
-  auto file_name_opt = params.getParameter(ResourceProperties::GENE_ID_FILE_);
+  auto file_name_opt = params.getParameter(ResourceProperties::GENE_NOMENCLATURE_FILE_);
   if (not file_name_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Ident: {} Gene ident file not defined", nomenclature_ident);
@@ -224,7 +224,7 @@ void kgl::ExecutePackage::loadHsGenomeGenealogyResource(const std::string& resou
   }
 
   auto const& params = params_opt.value();
-  auto file_name_opt = params.getParameter(ResourceProperties::GENEALOGY_ID_FILE_);
+  auto file_name_opt = params.getParameter(ResourceProperties::GENEALOGY_FILE_);
   if (not file_name_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGeneNomenclatureResource, Ident: {} Gene ident file not defined", genealogy_ident);
@@ -251,7 +251,7 @@ void kgl::ExecutePackage::loadHsGenomeAuxResource(const std::string& resource_ty
   }
 
   auto const& params = params_opt.value();
-  auto file_name_opt = params.getParameter(ResourceProperties::AUX_ID_FILE_);
+  auto file_name_opt = params.getParameter(ResourceProperties::GENOMEAUX_FILE_);
   if (not file_name_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadHsGenomeAuxResource, Ident: {} Aux file not defined", genome_aux_ident);
@@ -377,7 +377,7 @@ void kgl::ExecutePackage::loadPf7SampleResource(const std::string& resource_type
   }
 
   auto const& params = params_opt.value();
-  auto file_name_opt = params.getParameter(ResourceProperties::PF7_SAMPLE_FILE_);
+  auto file_name_opt = params.getParameter(ResourceProperties::PF7SAMPLE_FILE_);
   if (not file_name_opt) {
 
     ExecEnv::log().critical("ExecutePackage::loadPf7SampleResource, Ident: {} Pf7 Sample Data file not defined", Pf7_sample_ident);

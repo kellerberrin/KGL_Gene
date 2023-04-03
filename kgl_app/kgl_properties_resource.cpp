@@ -29,39 +29,39 @@ kgl::ResourceDefinitions kgl::ResourceProperties::getRuntimeResources() const {
     std::optional<ResourceParameters> resource_opt{std::nullopt};
     switch (Utility::hash(tree_type)) {
 
-      case Utility::hash(GENOME_DATABASE_):
+      case Utility::hash(GENOME_RESOURCE_ID_):
         resource_opt = genomeResource(sub_tree);
         break;
 
-      case Utility::hash(ONTOLOGY_DATABASE_):
+      case Utility::hash(ONTOLOGY_RESOURCE_ID_):
         resource_opt = ontologyDatabase(sub_tree);
         break;
 
-      case Utility::hash(GENE_ID_DATABASE_):
+      case Utility::hash(GENE_NOMENCLATURE_RESOURCE_ID_):
         resource_opt = geneIDDatabase(sub_tree);
         break;
 
-      case Utility::hash(GENEALOGY_ID_DATABASE_):
+      case Utility::hash(GENEALOGY_RESOURCE_ID_):
         resource_opt = genealogyIDDatabase(sub_tree);
         break;
 
-      case Utility::hash(CITATION_DATABASE_):
+      case Utility::hash(CITATION_RESOURCE_ID_):
         resource_opt = citationDatabase(sub_tree);
         break;
 
-      case Utility::hash(ENTREZ_DATABASE_):
+      case Utility::hash(ENTREZ_RESOURCE_ID_):
         resource_opt = entrezDatabase(sub_tree);
         break;
 
-      case Utility::hash(PF7_SAMPLE_DATABASE_):
+      case Utility::hash(PF7SAMPLE_RESOURCE_ID_):
         resource_opt = Pf7SampleDatabase(sub_tree);
         break;
 
-      case Utility::hash(PUBMED_LIT_API_):
+      case Utility::hash(PUBMED_API_RESOURCE_ID_):
         resource_opt = PubmedLitAPI(sub_tree);
         break;
 
-      case Utility::hash(AUX_ID_DATABASE_):
+      case Utility::hash(GENOMEAUX_RESOURCE_ID_):
         resource_opt = auxIDDatabase(sub_tree);
         break;
 

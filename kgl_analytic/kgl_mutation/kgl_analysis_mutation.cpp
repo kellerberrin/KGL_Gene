@@ -38,14 +38,16 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
   }
 
   // Get the analysis resources.
-  ref_genome_ptr_ = resource_ptr->getSingleResource<const GenomeReference>(RuntimeResourceType::GENOME_DATABASE);
-  ontology_db_ptr_ = resource_ptr->getSingleResource<const kol::OntologyDatabase>(RuntimeResourceType::HSAPIEN_ONTOLOGY);
-  genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(RuntimeResourceType::GENOME_AUX_INFO);
-  uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceProperties::NOMENCLATURE_UNIPROTID);
-  ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(RuntimeResourceType::GENE_NOMENCLATURE, ResourceProperties::NOMENCLATURE_ENSEMBL);
-  entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(RuntimeResourceType::ENTREZ_GENE);
-  allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(RuntimeResourceType::ALLELE_CITATION);
-  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
+  ref_genome_ptr_ = resource_ptr->getSingleResource<const GenomeReference>(ResourceProperties::GENOME_RESOURCE_ID_);
+  ontology_db_ptr_ = resource_ptr->getSingleResource<const kol::OntologyDatabase>(ResourceProperties::ONTOLOGY_RESOURCE_ID_);
+  genome_aux_ptr_ = resource_ptr->getSingleResource<const HsGenomeAux>(ResourceProperties::GENOMEAUX_RESOURCE_ID_);
+  uniprot_nomenclature_ptr_ = resource_ptr->getSingleResource<const UniprotResource>(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_,
+                                                                                     ResourceProperties::NOMENCLATURE_UNIPROTID);
+  ensembl_nomenclature_ptr_ = resource_ptr->getSingleResource<const EnsemblHGNCResource>(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_,
+                                                                                         ResourceProperties::NOMENCLATURE_ENSEMBL);
+  entrez_nomenclature_ptr_ = resource_ptr->getSingleResource<const EntrezResource>(ResourceProperties::ENTREZ_RESOURCE_ID_);
+  allele_citation_ptr_ = resource_ptr->getSingleResource<const CitationResource>(ResourceProperties::CITATION_RESOURCE_ID_);
+  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(ResourceProperties::PUBMED_API_RESOURCE_ID_);
 
  // Update the template populations.
   gene_mutation_.genomeAnalysis( MutationAnalysisData::OMIMGeneSymbol(),

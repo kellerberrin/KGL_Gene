@@ -22,30 +22,21 @@ namespace kellerberrin::genome {   //  organization level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-enum class RuntimeResourceType { GENOME_DATABASE,       // Fasta and GFF resources
-                                 HSAPIEN_ONTOLOGY,     // Human GO ontology data files.
-                                 GENE_NOMENCLATURE,     // Homo Sapien gene equivalent naming codes (symbol, ensembl etc).
-                                 GENOME_GENEALOGY,      // Genome aux info including genealogy (1000Genomes only).
-                                 GENOME_AUX_INFO,       // Genome aux info, sex, population and super-population data (all individual genomes).
-                                 ALLELE_CITATION,      // PMID citation identifiers, indexed by allele rsid ('rsXXXXXXXXX').
-                                 ENTREZ_GENE,         // Entrez gene info for H. Sapien
-                                 PUBMED_API,         // Pubmed Literature restful API
-                                 PF7_SAMPLE_DATA};   // Sample info for Pf7 Falciparum samples.
-
 class ResourceBase {
 
 public:
 
-  explicit ResourceBase(std::string identifier) : identifier_(std::move(identifier)) {}
+  ResourceBase(std::string resource_type, std::string resource_ident)
+      : resource_type_(std::move(resource_type)), resource_ident_(std::move(resource_ident)) {}
   virtual ~ResourceBase() = default;
 
-  [[nodiscard]] const std::string& identifier() const { return identifier_; }
-  [[nodiscard]] virtual RuntimeResourceType getResourceType() const = 0;
+  [[nodiscard]] const std::string& resourceType() const { return resource_type_; }
+  [[nodiscard]] const std::string& resourceIdent() const { return resource_ident_; }
 
 private:
 
-  const std::string identifier_;
+  const std::string resource_type_;
+  const std::string resource_ident_;
 
 };
 
@@ -54,9 +45,7 @@ private:
 // Simple container object to hold resources as they are passed to analysis packages.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using ResourceMap = std::multimap<RuntimeResourceType, std::shared_ptr<const ResourceBase>>;
-
-
+using ResourceMap = std::multimap<std::string, std::shared_ptr<const ResourceBase>>;
 class AnalysisResources {
 
 public:
@@ -66,24 +55,26 @@ public:
 
   void addResource(const std::shared_ptr<const ResourceBase>& resource_ptr) {
 
-    resource_map_.emplace(resource_ptr->getResourceType(), resource_ptr);
+    resource_map_.emplace(resource_ptr->resourceType(), resource_ptr);
 
   }
 
 
-  [[nodiscard]] std::vector<std::shared_ptr<const ResourceBase>> getResources( RuntimeResourceType resource,
+
+  [[nodiscard]] std::vector<std::shared_ptr<const ResourceBase>> getResources( const std::string& resource_type,
                                                                                const std::string& resource_ident = "") const;
 
   [[nodiscard]] const ResourceMap& getMap() const { return resource_map_; }
 
-  template <class ResourceClass>
-  [[nodiscard]] std::shared_ptr<const ResourceClass> getSingleResource(RuntimeResourceType resource, std::string resource_ident = "") const {
 
-    auto resource_vector = getResources(resource, resource_ident);
+  template <class ResourceClass>
+  [[nodiscard]] std::shared_ptr<const ResourceClass> getSingleResource(std::string resource_type, std::string resource_ident = "") const {
+
+    auto resource_vector = getResources(resource_type, resource_ident);
     if (resource_vector.size() != 1) {
 
-      ExecEnv::log().critical( "Request Resource Ident: {} expected 1 resource, found: {} resources - unrecoverable error",
-                               resource_ident, resource_vector.size());
+      ExecEnv::log().critical( "Request Resource Type: {} Ident: {} expected 1 resource, found: {} resources - unrecoverable error",
+                               resource_type, resource_ident, resource_vector.size());
 
     }
 
@@ -98,6 +89,7 @@ public:
     return resource_ptr;
 
   }
+
 
 private:
 

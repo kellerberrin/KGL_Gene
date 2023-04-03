@@ -19,7 +19,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genomeResource(c
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(GENOME_DATABASE_, genome_ident);
+  ResourceParameters resource_parameters(GENOME_RESOURCE_ID_, genome_ident);
 
   std::string fasta_file_name;
   if (not sub_tree.getFileProperty(FASTA_FILE_, workDirectory(), fasta_file_name)) {
@@ -69,7 +69,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::ontologyDatabase
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(ONTOLOGY_DATABASE_, ontology_ident);
+  ResourceParameters resource_parameters(ONTOLOGY_RESOURCE_ID_, ontology_ident);
 
   std::string annotation_file_name;
   if (not sub_tree.getFileProperty(GAF_ANNOTATION_FILE_, workDirectory(), annotation_file_name)) {
@@ -97,22 +97,22 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::geneIDDatabase(c
 
 
   std::string nomenclature_ident;
-  if (not sub_tree.getProperty(GENE_ID_IDENT_, nomenclature_ident)) {
+  if (not sub_tree.getProperty(GENE_NOMENCLATURE_IDENT_, nomenclature_ident)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No gene Nomenclature Identifier.");
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(GENE_ID_DATABASE_, nomenclature_ident);
+  ResourceParameters resource_parameters(GENE_NOMENCLATURE_RESOURCE_ID_, nomenclature_ident);
 
   std::string nomenclature_file_name;
-  if (not sub_tree.getFileProperty(GENE_ID_FILE_, workDirectory(), nomenclature_file_name)) {
+  if (not sub_tree.getFileProperty(GENE_NOMENCLATURE_FILE_, workDirectory(), nomenclature_file_name)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Gene Nomenclature file name information, ident: {}", nomenclature_ident);
     return std::nullopt;
 
   }
-  resource_parameters.setParameter(GENE_ID_FILE_, nomenclature_file_name);
+  resource_parameters.setParameter(GENE_NOMENCLATURE_FILE_, nomenclature_file_name);
 
   return resource_parameters;
 
@@ -121,22 +121,22 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::geneIDDatabase(c
 std::optional<kgl::ResourceParameters> kgl::ResourceProperties::genealogyIDDatabase(const PropertyTree& sub_tree) const {
 
   std::string genealogy_ident;
-  if (not sub_tree.getProperty(GENEALOGY_ID_IDENT_, genealogy_ident)) {
+  if (not sub_tree.getProperty(GENEALOGY_IDENT_, genealogy_ident)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Genealogy Identifier.");
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(GENEALOGY_ID_DATABASE_, genealogy_ident);
+  ResourceParameters resource_parameters(GENEALOGY_RESOURCE_ID_, genealogy_ident);
 
   std::string genealogy_file_name;
-  if (not sub_tree.getFileProperty(GENEALOGY_ID_FILE_, workDirectory(), genealogy_file_name)) {
+  if (not sub_tree.getFileProperty(GENEALOGY_FILE_, workDirectory(), genealogy_file_name)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Genealogy file name information, ident: {}", genealogy_ident);
     return std::nullopt;
 
   }
-  resource_parameters.setParameter(GENEALOGY_ID_FILE_, genealogy_file_name);
+  resource_parameters.setParameter(GENEALOGY_FILE_, genealogy_file_name);
 
   return resource_parameters;
 
@@ -151,7 +151,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::citationDatabase
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(CITATION_DATABASE_, citation_ident);
+  ResourceParameters resource_parameters(CITATION_RESOURCE_ID_, citation_ident);
 
   std::string citation_file_name;
   if (not sub_tree.getFileProperty(CITATION_FILE_, workDirectory(), citation_file_name)) {
@@ -175,7 +175,7 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::entrezDatabase(c
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(ENTREZ_DATABASE_, entrez_ident);
+  ResourceParameters resource_parameters(ENTREZ_RESOURCE_ID_, entrez_ident);
 
   std::string entrez_file_name;
   if (not sub_tree.getFileProperty(ENTREZ_FILE_, workDirectory(), entrez_file_name)) {
@@ -193,22 +193,22 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::entrezDatabase(c
 std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7SampleDatabase(const PropertyTree& sub_tree) const {
 
   std::string Pf7Sample_ident;
-  if (not sub_tree.getProperty(PF7_SAMPLE_IDENT_, Pf7Sample_ident)) {
+  if (not sub_tree.getProperty(PF7SAMPLE_IDENT_, Pf7Sample_ident)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 sample Identifier.");
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(PF7_SAMPLE_DATABASE_, Pf7Sample_ident);
+  ResourceParameters resource_parameters(PF7SAMPLE_RESOURCE_ID_, Pf7Sample_ident);
 
   std::string Pf7Sample_file_name;
-  if (not sub_tree.getFileProperty(PF7_SAMPLE_FILE_, workDirectory(), Pf7Sample_file_name)) {
+  if (not sub_tree.getFileProperty(PF7SAMPLE_FILE_, workDirectory(), Pf7Sample_file_name)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 sample data file name information, ident: {}", Pf7Sample_ident);
     return std::nullopt;
 
   }
-  resource_parameters.setParameter(PF7_SAMPLE_FILE_, Pf7Sample_file_name);
+  resource_parameters.setParameter(PF7SAMPLE_FILE_, Pf7Sample_file_name);
 
   return resource_parameters;
 
@@ -217,13 +217,13 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7SampleDatabas
 std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPI(const PropertyTree& sub_tree) const {
 
   std::string pubmed_api_ident;
-  if (not sub_tree.getProperty(PUBMED_LIT_IDENT_, pubmed_api_ident)) {
+  if (not sub_tree.getProperty(PUBMED_IDENT_, pubmed_api_ident)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pubmed API Identifier.");
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(PUBMED_LIT_API_, pubmed_api_ident);
+  ResourceParameters resource_parameters(PUBMED_API_RESOURCE_ID_, pubmed_api_ident);
 
   std::string publication_cache_file;  // Note that the cache file(s) may not exist.
   if (not sub_tree.getFileCreateProperty(PUBMED_PUBLICATION_CACHE_, workDirectory(), publication_cache_file)) {
@@ -250,22 +250,22 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPI(con
 std::optional<kgl::ResourceParameters> kgl::ResourceProperties::auxIDDatabase(const PropertyTree& sub_tree) const {
 
   std::string genome_aux_ident;
-  if (not sub_tree.getProperty(AUX_ID_IDENT_, genome_aux_ident)) {
+  if (not sub_tree.getProperty(GENOMEAUX_IDENT_, genome_aux_ident)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Aux Identifier.");
     return std::nullopt;
 
   }
-  ResourceParameters resource_parameters(AUX_ID_IDENT_, genome_aux_ident);
+  ResourceParameters resource_parameters(GENOMEAUX_IDENT_, genome_aux_ident);
 
   std::string genome_aux_file_name;
-  if (not sub_tree.getFileProperty(AUX_ID_FILE_, workDirectory(), genome_aux_file_name)) {
+  if (not sub_tree.getFileProperty(GENOMEAUX_FILE_, workDirectory(), genome_aux_file_name)) {
 
     ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Genome Aux file name information, ident: {}", genome_aux_ident);
     return std::nullopt;
 
   }
-  resource_parameters.setParameter(AUX_ID_FILE_, genome_aux_file_name);
+  resource_parameters.setParameter(GENOMEAUX_FILE_, genome_aux_file_name);
 
   return resource_parameters;
 

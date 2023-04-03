@@ -14,15 +14,16 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::getResources( RuntimeResourceType resource,
+
+std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::getResources( const std::string& resource_type,
                                                                                             const std::string& resource_ident) const {
 
   std::vector<std::shared_ptr<const ResourceBase>> resource_vector;
-  for (auto const& [resource_type, resource_ptr] :  resource_map_) {
+  for (auto const& [resource_id, resource_ptr] :  resource_map_) {
 
     if (not resource_ident.empty()) {
 
-      if (resource == resource_type and resource_ptr->identifier() == resource_ident) {
+      if (resource_ptr->resourceType() == resource_type and resource_ptr->resourceIdent() == resource_ident) {
 
         resource_vector.push_back(resource_ptr);
 
@@ -30,7 +31,7 @@ std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::ge
 
     } else {
 
-      if (resource == resource_type) {
+      if (resource_ptr->resourceType() == resource_type) {
 
         resource_vector.push_back(resource_ptr);
 

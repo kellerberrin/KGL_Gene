@@ -25,7 +25,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   }
 
-  for (auto const& genome_resource_ptr : resource_ptr->getResources(RuntimeResourceType::GENOME_DATABASE)) {
+  for (auto const& genome_resource_ptr : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
     auto genome_ptr = std::dynamic_pointer_cast<const GenomeReference>(genome_resource_ptr);
     ExecEnv::log().info("Initialize for Analysis Id: {} called with Reference Genome: {}", ident(), genome_ptr->genomeId());
@@ -33,7 +33,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
   }
 
   // Get the pubmed api
-  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(RuntimeResourceType::PUBMED_API);
+  pubmed_requestor_ptr_ = resource_ptr->getSingleResource<const PubmedRequester>(ResourceProperties::PUBMED_API_RESOURCE_ID_);
 
   std::vector<std::string> pmidids{ "16759385", "19281305", "20401335", "21029472", "21790707", "21867552", "21929748"};
 // std::vector<std::string> pmidids{ "22157630", "18717995", "7886766" };
