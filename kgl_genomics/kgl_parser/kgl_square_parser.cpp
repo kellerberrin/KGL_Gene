@@ -204,6 +204,49 @@ std::shared_ptr<kgl::SquareTextRows> kgl::SquareTextParser::parseFlatFile(const 
 }
 
 
+std::unique_ptr<std::vector<std::string>> kgl::SquareTextParser::parseLines(const std::string &file_name, size_t expected_line_count) {
+
+  StreamMTBuffer file_io;
+  auto line_vector_ptr = std::make_unique<std::vector<std::string>>();
+  if (expected_line_count != 0) {
+
+    line_vector_ptr->reserve(expected_line_count);
+
+  }
+  size_t counter = 0;
+
+  if (not file_io.open(file_name)) {
+
+    ExecEnv::log().critical("SquareTextParser::parseLine; I/O error; could not open file: {}", file_name);
+
+  }
+
+  while (true) {
+
+    auto line_record = file_io.readLine();
+    if (line_record.EOFRecord()) break;
+
+    auto [line_number, line_string] = line_record.getLineData();
+
+    line_vector_ptr->push_back(std::move(line_string));
+
+    ++counter;
+
+  }
+
+  if (expected_line_count != 0 and expected_line_count != line_vector_ptr->size()) {
+
+    ExecEnv::log().info("SquareTextParser::parseLine; expected lines: {} actual lines: {}", expected_line_count, line_vector_ptr->size());
+
+  }
+
+  ExecEnv::log().info("Parsed: {} lines from square text file: {}", counter, file_name);
+
+  return line_vector_ptr;
+
+}
+
+
 
 std::optional<double> kgl::SquareTextRows::getFloat(const std::string& float_str) {
 

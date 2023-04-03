@@ -53,6 +53,7 @@ private:
   void loadPubmedAPIResource(const std::string& resource_type, const std::string& api_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPf7SampleResource(const std::string& resource_type, const std::string& Pf7_sample_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
   void loadPf7FwsResource(const std::string& resource_type, const std::string& Pf7_Fws_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
+  void loadPf7DistanceResource(const std::string& resource_type, const std::string& Pf7_Fws_ident, const std::shared_ptr<AnalysisResources>& resource_ptr) const;
 
   // Load a specified data file and return a base pointer (DataDB) to the file.
   [[nodiscard]] std::shared_ptr<DataDB> readDataFile(const RuntimePackage& package,

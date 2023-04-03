@@ -13,6 +13,7 @@
 #include "kgl_bio_pmid_parser.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
+#include "kgl_pf7_distance_parser.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -64,6 +65,10 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
       case Utility::hash(ResourceProperties::PF7FWS_RESOURCE_ID_):
         loadPf7FwsResource(resource_type, resource_ident, resource_ptr);
+        break;
+
+      case Utility::hash(ResourceProperties::PF7DISTANCE_RESOURCE_ID_):
+        loadPf7DistanceResource(resource_type, resource_ident, resource_ptr);
         break;
 
       default:
@@ -431,6 +436,51 @@ void kgl::ExecutePackage::loadPf7FwsResource(const std::string& resource_type,
   std::shared_ptr<Pf7FwsResource> Pf7Fws_ptr(std::make_shared<Pf7FwsResource>(Pf7_Fws_ident, Pf7_Fws_parser.getPf7FwsVector()));
 
   resource_ptr->addResource(Pf7Fws_ptr);
+
+}
+
+
+
+void kgl::ExecutePackage::loadPf7DistanceResource(const std::string& resource_type,
+                                             const std::string& Pf7_Distance_ident,
+                                             const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, Pf7_Distance_ident);
+  if (not params_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7DistanceResource, Pf7 Distance Data: {}, not defined", Pf7_Distance_ident);
+
+  }
+
+  auto const& params = params_opt.value();
+  auto matrix_file_opt = params.getParameter(ResourceProperties::PF7DISTANCE_MATRIXFILE_);
+  if (not matrix_file_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7DistanceResource, Ident: {} Pf7 Distance matrix file not defined", Pf7_Distance_ident);
+
+  }
+
+  auto sampleid_file_opt = params.getParameter(ResourceProperties::PF7DISTANCE_IDFILE_);
+  if (not sampleid_file_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7DistanceResource, Ident: {} Pf7 Distance sample id file not defined", Pf7_Distance_ident);
+
+  }
+
+  ParsePf7Distance Pf7_Distance_parser;
+  if (not Pf7_Distance_parser.parsePf7Distance(matrix_file_opt.value(), sampleid_file_opt.value())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf7FwsResource; failed to create Pf7 Distance Matrix resource from matrix file: {}, sample id file: {}",
+                            matrix_file_opt.value(), sampleid_file_opt.value());
+
+  }
+
+  std::shared_ptr<Pf7DistanceResource> Pf7Distance_ptr(std::make_shared<Pf7DistanceResource>(Pf7_Distance_ident,
+                                                                                             Pf7_Distance_parser.getSampleMap(),
+                                                                                             Pf7_Distance_parser.getDistanceMatrix(),
+                                                                                             Pf7_Distance_parser.getDistanceMatrixSize()));
+
+  resource_ptr->addResource(Pf7Distance_ptr);
 
 }
 

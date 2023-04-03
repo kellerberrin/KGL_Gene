@@ -304,7 +304,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_pf7_sample_parser.cpp
-        kgl_genomics/kgl_parser/kgl_pf7_sample_parser.h kgl_genomics/kgl_parser/kgl_pf7_fws_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_fws_parser.h)
+        kgl_genomics/kgl_parser/kgl_pf7_sample_parser.h kgl_genomics/kgl_parser/kgl_pf7_fws_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_fws_parser.h kgl_genomics/kgl_parser/kgl_pf7_distance_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_distance_parser.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

@@ -23,6 +23,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
   Pf7_fws_ptr_ = resource_ptr->getSingleResource<const Pf7FwsResource>(ResourceProperties::PF7FWS_RESOURCE_ID_);
+  Pf7_distance_ptr_ = resource_ptr->getSingleResource<const Pf7DistanceResource>(ResourceProperties::PF7DISTANCE_RESOURCE_ID_);
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
@@ -95,6 +96,29 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
                       monoclonal_population_ptr_->getMap().size(),
                       monoclonal_population_ptr_->variantCount(),
                       Pf7_fws_ptr_->getMap().size());
+
+  size_t distance_sample_size = Pf7_distance_ptr_->distanceSamples()->size();
+  double sum_diagonal{0.0};
+  size_t diagonal_count{0};
+  size_t nan_count{0};
+  for (size_t x_index = 0; x_index < distance_sample_size; ++x_index) {
+
+    double distance = Pf7_distance_ptr_->distanceIndex(x_index, x_index);
+    if (std::isnan(distance)) {
+
+      ++nan_count;
+
+    } else {
+
+      sum_diagonal += distance;
+      ++diagonal_count;
+
+    }
+
+  }
+
+  double av_distance = sum_diagonal / static_cast<double>(diagonal_count);
+  ExecEnv::log().info("Diagonal average distance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
 
   return true;
 

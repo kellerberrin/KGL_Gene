@@ -118,7 +118,7 @@ std::shared_ptr<const kgl::PopulationDB> kgl::Pf7FwsResource::filterFWS(FwsFilte
     } catch(std::exception& e) {
 
       ExecEnv::log().info("ParsePf7Fws::parsePf7FwsFile; FWS text: {} not valid float text, reason: {}, line: {}, file: {}",
-                          e.what(), record_count, file_name);
+                          FWS_float_text, e.what(), record_count, file_name);
       continue;
 
     }

@@ -61,6 +61,10 @@ kgl::ResourceDefinitions kgl::ResourceProperties::getRuntimeResources() const {
         resource_opt = Pf7FwsResourceXML(sub_tree);
         break;
 
+      case Utility::hash(PF7DISTANCE_RESOURCE_ID_):
+        resource_opt = Pf7DistanceResourceXML(sub_tree);
+        break;
+
       case Utility::hash(PUBMED_API_RESOURCE_ID_):
         resource_opt = PubmedLitAPIResourceXML(sub_tree);
         break;

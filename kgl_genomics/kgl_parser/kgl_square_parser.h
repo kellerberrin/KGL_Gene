@@ -113,6 +113,7 @@ public:
   ~SquareTextParser() = default;
 
   [[nodiscard]] std::shared_ptr<SquareTextRows> parseFlatFile(const std::string& file_name, char delimiter);
+  [[nodiscard]] static std::unique_ptr<std::vector<std::string>> parseLines(const std::string& file_name, size_t expected_line_count = 0);
 
   constexpr static const char DELIMITER_CSV{','};
   constexpr static const char DELIMITER_TSV{'\t'};

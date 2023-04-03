@@ -238,6 +238,40 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7FwsResourceXM
 
 }
 
+
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7DistanceResourceXML(const PropertyTree& sub_tree) const {
+
+  std::string Pf7Distance_ident;
+  if (not sub_tree.getProperty(PF7DISTANCE_IDENT_, Pf7Distance_ident)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 FWS Identifier.");
+    return std::nullopt;
+
+  }
+  ResourceParameters resource_parameters(PF7DISTANCE_RESOURCE_ID_, Pf7Distance_ident);
+
+  std::string Pf7Matrix_file_name;
+  if (not sub_tree.getFileProperty(PF7DISTANCE_MATRIXFILE_, workDirectory(), Pf7Matrix_file_name)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 Distance Matrix file name information, ident: {}", Pf7Distance_ident);
+    return std::nullopt;
+
+  }
+  resource_parameters.setParameter(PF7DISTANCE_MATRIXFILE_, Pf7Matrix_file_name);
+
+  std::string Pf7ID_file_name;
+  if (not sub_tree.getFileProperty(PF7DISTANCE_IDFILE_, workDirectory(), Pf7ID_file_name)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf7 Distance sample ID file name information, ident: {}", Pf7Distance_ident);
+    return std::nullopt;
+
+  }
+  resource_parameters.setParameter(PF7DISTANCE_IDFILE_, Pf7ID_file_name);
+
+  return resource_parameters;
+
+}
+
 std::optional<kgl::ResourceParameters> kgl::ResourceProperties::PubmedLitAPIResourceXML(const PropertyTree& sub_tree) const {
 
   std::string pubmed_api_ident;
