@@ -501,8 +501,6 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation.h
-        kgl_analytic/kgl_Pf/kgl_phase_Pf.cpp
-        kgl_analytic/kgl_Pf/kgl_phase_Pf.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.h
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_output.cpp
@@ -529,7 +527,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h
         kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h)
+        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES
@@ -558,7 +556,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_resource.cpp
         kgl_app/kgl_runtime_resource.h
         kgl_app/kgl_runtime_resource.cpp
-        kgl_app/kgl_properties_resource.cpp kgl_app/kgl_properties_resource.h kgl_app/kgl_properties_resource_items.cpp)
+        kgl_app/kgl_properties_resource.cpp kgl_app/kgl_properties_resource.h kgl_app/kgl_properties_resource_items.cpp kgl_app/kgl_properties_resource_pf.cpp kgl_app/kgl_package_resource_pf.cpp)
 
 
 

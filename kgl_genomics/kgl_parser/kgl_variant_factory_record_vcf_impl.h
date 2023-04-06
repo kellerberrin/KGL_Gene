@@ -23,7 +23,9 @@ class ParseVCFRecord {
 
 public:
 
-  ParseVCFRecord(const VCFRecord& vcf_record, const std::shared_ptr<const GenomeReference>& genome_db_ptr);
+  ParseVCFRecord(const std::string& genome_contig,
+                 const VCFRecord& vcf_record,
+                 const std::shared_ptr<const GenomeReference>& genome_db_ptr);
   ~ParseVCFRecord() = default;
 
   [[nodiscard]] const std::vector<std::string>& formatFields() const { return format_fields_; }

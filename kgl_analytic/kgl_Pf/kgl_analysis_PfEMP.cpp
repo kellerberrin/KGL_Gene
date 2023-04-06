@@ -53,7 +53,9 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   }
   genome_3D7_ptr_ = pf3d7_opt.value();
 
-  performPFEMP1UPGMA();
+//  performPFEMP1UPGMA();
+
+  getGeneMap(genome_3D7_ptr_);
 
   return true;
 
@@ -97,28 +99,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
                       monoclonal_population_ptr_->variantCount(),
                       Pf7_fws_ptr_->getMap().size());
 
-  size_t distance_sample_size = Pf7_distance_ptr_->distanceSamples()->size();
-  double sum_diagonal{0.0};
-  size_t diagonal_count{0};
-  size_t nan_count{0};
-  for (size_t x_index = 0; x_index < distance_sample_size; ++x_index) {
+//  checkDistanceMatrix();
 
-    double distance = Pf7_distance_ptr_->distanceIndex(x_index, x_index);
-    if (std::isnan(distance)) {
-
-      ++nan_count;
-
-    } else {
-
-      sum_diagonal += distance;
-      ++diagonal_count;
-
-    }
-
-  }
-
-  double av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("Diagonal average distance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
+  getGeneVariants(filtered_population_ptr_);
 
   return true;
 
@@ -138,353 +121,149 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
+  writeGeneResults();
+
   return true;
 
 }
 
+void kgl::PfEMPAnalysis::writeGeneResults() {
 
+  std::string variant_file_name = std::string(VARIANT_COUNT_) + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  std::ofstream variant_file(variant_file_name);
 
-void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
+  if (not variant_file.good()) {
 
-  for (auto const& [genome_id, genome_ptr] : all_reference_genomes_ptr_->getMap()) {
+    ExecEnv::log().error("PfEMPAnalysis::writeGeneResults; Unable to open gene variant results file: {}", variant_file_name);
+    return;
 
-    std::string intron_file_name = INTRON_ + genome_id + INTRON_EXT_;
-    intron_file_name = Utility::filePath(intron_file_name, ident_work_directory_);
+  }
 
-    auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+  for (auto const& [gene_id, value_pair] : gene_map_) {
 
-    varIntron(var_gene_vector, intron_file_name);
+    auto const& [gene_ptr, contig_ptr] = value_pair;
 
-    std::string newick_file_name = NEWICK_ + genome_id + NEWICK_EXT_;
-    newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
+    auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
-    geneFamilyUPGMA(genome_ptr, var_gene_vector, newick_file_name, PFEMP1_FAMILY_);
+    size_t gene_length{0};
+    if (not sequence_array_ptr->empty()) {
 
-    auto ruf6_gene_vector = getGeneVector(genome_ptr, RUF6_FAMILY_);
-    auto rifin_gene_vector = getGeneVector(genome_ptr, RIFIN_FAMILY_);
-    auto stevor_gene_vector = getGeneVector(genome_ptr, STEVOR_FAMILY_);
-    auto surfin_gene_vector = getGeneVector(genome_ptr, SURFIN_FAMILY_);
-    auto ncRNA_gene_vector = getncRNAGeneVector(genome_ptr);
-
-    ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, Var Genes: {}, Rifin Genes: {}, Stevor: {}, Surfin: {}, RUF6: {}, ncRNA: {}",
-                        var_gene_vector.size(), rifin_gene_vector.size(), stevor_gene_vector.size(),
-                        rifin_gene_vector.size(), ruf6_gene_vector.size(), ncRNA_gene_vector.size());
-
-    newick_file_name = NEWICK_ + std::string(RUF6_FAMILY_) + genome_id + NEWICK_EXT_;
-    newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
-
-    for (auto const& gene_ptr : ncRNA_gene_vector) {
-
-      size_t radius{25000};
-      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, genome: {}, ncRNA gene: {}, genetype: {}, radius: {}, var: {}, rifin: {} surfin: {} surfin: {}"
-                          , genome_id, gene_ptr->id(), gene_ptr->type(), radius
-                          , proximityGenes(radius, gene_ptr, var_gene_vector).size()
-                          , proximityGenes(radius, gene_ptr, rifin_gene_vector).size()
-                          , proximityGenes(radius, gene_ptr, surfin_gene_vector).size()
-                          , proximityGenes(radius, gene_ptr, stevor_gene_vector).size());
-
-      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, ncRNA feature: {}", gene_ptr->featureText());
+      gene_length = sequence_array_ptr->getFirst()->codingNucleotides();
 
     }
 
-//    geneFamilyUPGMA(genome_ptr, ruf6_gene_vector, newick_file_name, RUF6_FAMILY_);
+    std::string description;
+    auto description_vector = gene_ptr->getAttributes().getDescription();
+    for (auto const& desc_line : description_vector) {
 
-  }
-
-
-}
-
-
-kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
-                                                  , const std::string& desc_uc_text) const {
-
-  GeneVector gene_vector;
-
-  for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
-
-    for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
-
-      auto description_vector = gene_ptr->getAttributes().getDescription();
-      for (auto const& description : description_vector) {
-
-        if (Utility::toupper(description).find(desc_uc_text) != std::string::npos) {
-
-          gene_vector.push_back(gene_ptr);
-
-        }
-
-      } // Gene
-
-    } // Contig
-
-  } // Genome
-
-  return gene_vector;
-
-}
-
-
-kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr) const {
-
-  GeneVector gene_vector;
-  size_t contig_count{0};
-
-  for (auto const& [contig_ident, contig_ptr] : genome_ptr->getMap()) {
-
-    ++contig_count;
-
-    for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
-
-      if (GeneFeature::ncRNACoding(gene_ptr) and  gene_ptr->sequence().length() <= 300) {
-
-        gene_vector.push_back(gene_ptr);
-
-      }
-
-    } // Gene
-
-  } // Contig
-
-  return gene_vector;
-
-}
-
-[[nodiscard]] kgl::GeneVector kgl::PfEMPAnalysis::proximityGenes(size_t radius,
-                                                                 const std::shared_ptr<const GeneFeature>& target_ptr,
-                                                                 const GeneVector& gene_vector) const {
-
-  GeneVector same_contig;
-  for (auto const& gene_ptr : gene_vector) {
-
-    if (gene_ptr->contig()->contigId() == target_ptr->contig()->contigId()) {
-
-      same_contig.push_back(gene_ptr);
+      description += desc_line;
 
     }
+
+    double variant_rate{0.0};
+    size_t variant_count = contig_ptr->variantCount();
+    if (gene_length > 0) {
+
+      variant_rate = static_cast<double>(variant_count) / static_cast<double>(gene_length);
+
+    }
+
+    ExecEnv::log().info("Contig: {}, Gene Id: {}, Gene Length: {}, Variants: {}, Rate: {}, Description: {}",
+                        gene_ptr->contig()->contigId(), gene_id, gene_length, variant_count, variant_rate, description);
+
+    variant_file << gene_ptr->contig()->contigId()
+                 << CSV_DELIMITER_
+                 << gene_id
+                 << CSV_DELIMITER_
+                 << gene_length
+                 << CSV_DELIMITER_
+                 << variant_count
+                 << CSV_DELIMITER_
+                 << variant_rate
+                 << CSV_DELIMITER_
+                 << description
+                 << '\n';
   }
 
-  if (radius == 0) {
+}
 
-    return same_contig;
+void kgl::PfEMPAnalysis::getGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
-  }
+  // Get the gene families of interest.
+  auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+  auto ruf6_gene_vector = getGeneVector(genome_ptr, RUF6_FAMILY_);
+  var_gene_vector.insert(var_gene_vector.end(), ruf6_gene_vector.begin(), ruf6_gene_vector.end() );
+  auto rifin_gene_vector = getGeneVector(genome_ptr, RIFIN_FAMILY_);
+  var_gene_vector.insert(var_gene_vector.end(), rifin_gene_vector.begin(), rifin_gene_vector.end() );
+  auto stevor_gene_vector = getGeneVector(genome_ptr, STEVOR_FAMILY_);
+  var_gene_vector.insert(var_gene_vector.end(), stevor_gene_vector.begin(), stevor_gene_vector.end() );
+  auto surfin_gene_vector = getGeneVector(genome_ptr, SURFIN_FAMILY_);
+  var_gene_vector.insert(var_gene_vector.end(), surfin_gene_vector.begin(), surfin_gene_vector.end() );
+  //  auto ncRNA_gene_vector = getncRNAGeneVector(genome_ptr);
+  //  var_gene_vector.insert( var_gene_vector.end(), ncRNA_gene_vector.begin(), ncRNA_gene_vector.end() );
 
-  GeneVector nearby_genes;
-  for (auto const& gene_ptr : same_contig) {
+  // Place each of these genes into the GeneMap structure.
+  for (auto const& gene_ptr : var_gene_vector) {
 
+    std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
 
-    if (target_ptr->sequence().distance(gene_ptr->sequence()) <= radius) {
+    std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
 
-      nearby_genes.push_back(gene_ptr);
+    auto [iter, result] = gene_map_.insert({gene_ptr->id(), map_value});
+
+    if(not result) {
+
+      ExecEnv::log().warn("PfEMPAnalysis::getGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
 
     }
 
   }
 
-  return nearby_genes;
-
 }
 
 
+// Get variants only occurring within codingFeatures for all mRNA sequences.
+void kgl::PfEMPAnalysis::getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
-void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
-                                    const std::string& intron_file_name) const {
+  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
-  std::shared_ptr<const LevenshteinLocal> sequence_distance(std::make_shared<const LevenshteinLocal>());
+    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
-  // Open a file to receive csv delimited intron information.
-  std::ofstream intron(intron_file_name);
-  if (not intron.good()) {
+      if (contig_ptr->getMap().empty()) {
 
-    ExecEnv::log().critical("PfEMPAnalysis::varIntron; Unable to open Intron data file: {}", intron_file_name);
-
-  }
-
-  // Header.
-  StringDNA5 i_prom(I_PROMOTER_);
-  DNA5SequenceLinear i_promoter(std::move(i_prom));
-  DNA5SequenceLinear i_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_promoter_ptr = i_promoter_ptr_rev;
-
-//  StringDNA5
-  DNA5SequenceLinear i_complement_promoter(std::move(StringDNA5(I_COMPLEMENT_PROMOTER_)));
-  DNA5SequenceLinear i_complement_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
-
-  DNA5SequenceLinear i_5_promoter(std::move(StringDNA5(I_5_PROMOTER_)));
-  DNA5SequenceLinear i_5_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter.codingSequence(StrandSense::REVERSE));
-  //  i_5_promoter_ptr = i_5_promoter_ptr_rev;
-
-  intron << "Gene" << INTRON_DELIMITER_
-         << "description" << INTRON_DELIMITER_
-         << "IStart" << INTRON_DELIMITER_
-         << "IEnd" << INTRON_DELIMITER_
-         << "IStrand" << INTRON_DELIMITER_
-         << i_promoter.getSequenceAsString() << INTRON_DELIMITER_
-         << i_complement_promoter.getSequenceAsString() << INTRON_DELIMITER_
-         << i_5_promoter.getSequenceAsString() << INTRON_DELIMITER_
-         << "Size" << INTRON_DELIMITER_
-         << "ISequence" << '\n';
-
-  for (auto const& gene_ptr : gene_vector) {
-
-    auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-
-    if (coding_seq_ptr->empty()) {
-
-      ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
-
-    }
-
-    std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
-    DNA5SequenceCoding coding_dna_sequence;
-
-    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
-
-      // Do we have a valid intron (VAR only)?
-      std::vector<DNA5SequenceCoding> intron_sequence_array = gene_ptr->contig()->sequence().intronArraySequence(coding_sequence);
-      StrandSense strand;
-      IntronOffsetMap intron_offset_map;
-      if (not SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map)) {
-
-        ExecEnv::log().error("VarGeneFamilyTree(), Contig: {}, Gene: {},  cannot generate INTRON map",
-                             coding_sequence->contig()->contigId(), coding_sequence->getGene()->id());
-        intron_offset_map.clear();
-      }
-
-      if (intron_offset_map.size() != intron_sequence_array.size()) {
-
-        ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
-                             intron_offset_map.size(), intron_sequence_array.size());
         continue;
 
       }
 
-      // Only add genes with valid coding sequences (no pseudo genes).
-      if (gene_ptr->contig()->verifyDNACodingSequence(coding_dna_sequence)) {
+      for (auto const &[gene_id, value_pair]: gene_map_) {
 
-        // Only 1 intron (var genes)
-        if (intron_sequence_array.size() == 1) {
+        auto const &[gene_ptr, gene_contig_ptr] = value_pair;
 
-          auto& first_intron = intron_sequence_array.front();
+        if (gene_ptr->contig()->contigId() == contig_id) {
 
-          auto& intron_seq = *intron_offset_map.begin();
+          auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_ptr);
 
-          DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(first_intron);
-          DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
-          DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(first_intron);
+          // Only analyze the first sequence.
+          if (not coding_sequence_array->empty()) {
 
-          std::stringstream pss;
-          std::vector<ContigOffset_t> offset_vec = intron_seq_ptr.findAll(i_promoter);
-          for (auto offset : offset_vec) {
+            auto sequence_ptr = coding_sequence_array->getFirst();
 
-            pss << offset << ":";
+            for (const auto &[feature_id, feature_ptr]: sequence_ptr->getFeatureMap()) {
 
-          }
+              gene_contig_ptr->merge(contig_ptr->subset(feature_ptr->sequence().begin(), feature_ptr->sequence().end()));
 
-          std::stringstream css;
-          offset_vec = intron_seq_ptr.findAll(i_complement_promoter);
-          for (auto offset : offset_vec) {
+            } // For all cds
 
-            css << offset << ":";
+          } // if not empty
 
-          }
+        } // if same contig.
 
-          std::stringstream fss;
-          offset_vec = intron_seq_ptr.findAll(i_5_promoter);
-          for (auto offset : offset_vec) {
+      } // genemap
 
-            fss << offset << ":";
+    } // contig
 
-          }
-
-          auto description_vector = gene_ptr->getAttributes().getDescription();
-          std::string cat_description;
-          for (auto const& desc : description_vector) {
-
-            cat_description += desc;
-
-          }
-
-          intron << gene_ptr->id() << INTRON_DELIMITER_
-                 << cat_description << INTRON_DELIMITER_
-                 << intron_seq.first << INTRON_DELIMITER_
-                 << intron_seq.second << INTRON_DELIMITER_
-                 << static_cast<char>(strand) << INTRON_DELIMITER_
-                 << pss.str()
-                 << INTRON_DELIMITER_
-                 << css.str()
-                 << INTRON_DELIMITER_
-                 << fss.str()
-                 << INTRON_DELIMITER_
-                 << intron_seq_ptr.length()
-                 << INTRON_DELIMITER_
-                 << intron_seq_ptr.getSequenceAsString() << '\n';
-
-        } // 1 intron
-
-      } // Valid Gene.
-
-    } // Get coding sequence
-
-  } // Is family member.
-
-  ExecEnv::log().info("PfEMPAnalysis::varIntron, processed genes: {}", gene_vector.size());
-
-}
-
-
-
-// Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
-void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                          const GeneVector& gene_vector,
-                                          const std::string& newick_file_name,
-                                          const std::string& family_text) const {
-
-  std::shared_ptr<const LevenshteinLocal> sequence_distance(std::make_shared<const LevenshteinLocal>());
-  UPGMAMatrix upgma_distance;
-
-  std::shared_ptr<PhyloNodeVector> node_vector_ptr(std::make_shared<PhyloNodeVector>());
-
-  for (auto const& gene_ptr : gene_vector) {
-
-    auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-
-    if (coding_seq_ptr->empty()) {
-
-      ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr->id());
-
-    }
-
-    std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
-    DNA5SequenceCoding coding_dna_sequence;
-
-    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
-
-      std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance,
-                                                                                          genome_ptr,
-                                                                                          gene_ptr,
-                                                                                          family_text));
-
-      if (coding_dna_sequence.length() >= MIN_SEQUENCE_LENGTH_) {
-
-        std::shared_ptr<PhyloNode> phylo_node_ptr(std::make_shared<PhyloNode>(distance_ptr));
-        node_vector_ptr->push_back(phylo_node_ptr);
-
-      } // min length
-
-    } // 1 intron
-
-  } // Valid Gene.
-
-  // Calculate.
-  upgma_distance.calculateTree(node_vector_ptr);
-  // Report Results.
-  if (not upgma_distance.writeNewick(newick_file_name)) {
-
-    ExecEnv::log().error("VarGeneFamilyTree; Unable to write UPGMA Newick file: {}", newick_file_name);
-
-  }
+  } // genome
 
 }
 

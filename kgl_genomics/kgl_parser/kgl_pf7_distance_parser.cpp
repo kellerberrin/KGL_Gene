@@ -4,36 +4,37 @@
 
 #include "kgl_pf7_distance_parser.h"
 #include "kgl_pf7_sample_parser.h"
+#include "kel_mt_buffer.h"
 
-
-
+#include <limits>
 
 namespace kgl = kellerberrin::genome;
 
 
-double kgl::Pf7DistanceResource::distanceIndex(size_t x_index, size_t y_index) const {
+double kgl::Pf7DistanceResource::getDistance(size_t x_index, size_t y_index) const {
 
-  size_t matrix_index = (y_index * sample_size_) + x_index;
 
-  if (matrix_index >= distance_matrix_size_) {
+  if (x_index >= sample_size_ or y_index >= sample_size_) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::distanceIndex; x_index: {}, y_index: {}, matrix_size: {}, linear index: {} exceeds matrix size",
-                        x_index, y_index, distance_matrix_size_, matrix_index);
+    ExecEnv::log().warn("Pf7DistanceResource::getDistance; x_index: {}, y_index: {} out of bounds, indices must be in the range [0, {})",
+                        x_index, y_index, sample_size_);
 
     return std::nan(NAN_TEXT_);
 
   }
 
+  size_t matrix_index = (y_index * sample_size_) + x_index;
+
   return distance_matrix_ptr_[matrix_index];
 
 }
 
-double kgl::Pf7DistanceResource::distanceIndex(const std::string& sample_x, const std::string& sample_y) const {
+double kgl::Pf7DistanceResource::getDistance(const std::string& sample_x, const std::string& sample_y) const {
 
   auto x_iter = sample_index_map_ptr_->find(sample_x);
   if (x_iter == sample_index_map_ptr_->end()) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::distanceIndex; x sample id: {} not found", sample_x);
+    ExecEnv::log().warn("Pf7DistanceResource::getDistance; x sample id: {} not found", sample_x);
     return std::nan(NAN_TEXT_);
 
   }
@@ -43,19 +44,16 @@ double kgl::Pf7DistanceResource::distanceIndex(const std::string& sample_x, cons
   auto y_iter = sample_index_map_ptr_->find(sample_y);
   if (y_iter == sample_index_map_ptr_->end()) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::distanceIndex; y sample id: {} not found", sample_y);
+    ExecEnv::log().warn("Pf7DistanceResource::getDistance; y sample id: {} not found", sample_y);
     return std::nan(NAN_TEXT_);
 
   }
 
   auto const& [y_id, y_index] = *y_iter;
 
-  return distanceIndex(x_index, y_index);
+  return getDistance(x_index, y_index);
 
 }
-
-
-
 
 
 bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name, const std::string& sampleid_file_name) {
@@ -90,66 +88,74 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
 
   ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; reading distance matrix file: {}", matrix_file_name);
 
-  auto distance_line_ptr = SquareTextParser::parseLines(matrix_file_name, distance_matrix_size_);
+  // Allocate the distance matrix
+  auto matrix_ptr = new (std::nothrow) double [distance_matrix_size_];
+  if (matrix_ptr == nullptr) {
 
-  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; completed reading distance matrix file, record count: {}", distance_line_ptr->size());
-
-  if (distance_line_ptr->size() != distance_matrix_size_) {
-
-    ExecEnv::log().critical("ParsePf7Distance::parsePf7Distance; mismatch - distance matrix lines: {}, distance matrix size: {}",
-                            distance_line_ptr->size(), distance_matrix_size_);
+    ExecEnv::log().critical("ParsePf7Distance::parsePf7Distance; failed to memory allocate matrix size: {}", distance_matrix_size_);
 
   }
+  distance_matrix_ptr_ = std::shared_ptr<double[]>(matrix_ptr);
+
+  // Open the distance matrix file.
+  auto file_io_opt = BaseStreamIO::getStreamIO(matrix_file_name);
+  if (not file_io_opt) {
+
+    ExecEnv::log().critical("ParsePf7Distance::parsePf7Distance; I/O error; could not open file: {}", matrix_file_name);
+
+  }
+  auto file_io_ptr = std::move(file_io_opt.value());
 
   ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; begin parsing distance matrix records");
 
-  distance_matrix_ptr_ = std::shared_ptr<double[]>(new double[distance_matrix_size_]);
+  // Read each record and place in the appropriate matrix element.
+  size_t vector_index{0};
+  while (true) {
 
-  for (size_t y_index = 0; y_index < sample_size; ++y_index) {
+    auto line_record = file_io_ptr->readLine();
+    if (line_record.EOFRecord()) break;
 
-    for (size_t x_index = 0; x_index < sample_size; ++x_index) {
+    auto [line_number, line_string] = line_record.getLineData();
 
-      size_t vector_index = (y_index * sample_size) + x_index;
+    if (vector_index >= distance_matrix_size_) {
 
-      if (vector_index >= distance_matrix_size_) {
+      ExecEnv::log().critical("ParsePf7Distance::parsePf7Distance; matrix_size: {}, linear index: {} exceeds matrix size",
+                              distance_matrix_size_, vector_index);
 
-        ExecEnv::log().critical("Pf7DistanceResource::distanceIndex; x_index: {}, y_index: {}, matrix_size: {}, linear index: {} exceeds matrix size",
-                                x_index, y_index, distance_matrix_size_, vector_index);
+    }
 
-      }
+    if (line_string == NAN_TEXT_) {
 
-      if ((*distance_line_ptr)[vector_index] == NAN_TEXT_) {
+      distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
 
-        distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
+    } else {
 
-      } else {
+      try {
 
-        try {
+        double distance_value = std::stod(line_string);
+        if (distance_value < 0) {
 
-          double distance_value = std::stod((*distance_line_ptr)[vector_index]);
-          if (distance_value < 0) {
-
-            ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; Distance text: {} not a positive value: {}",
-                                (*distance_line_ptr)[vector_index], distance_value);
-
-            distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
-
-          }
-
-          distance_matrix_ptr_[vector_index] = distance_value;
-
-        } catch(std::exception& e) {
-
-          ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; Distance text: {} not valid float text, reason: {}, line: {}",
-                              (*distance_line_ptr)[vector_index], e.what(), (vector_index + 1));
+          ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; Distance text: {} not a positive value: {}",
+                              line_string, distance_value);
 
           distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
 
         }
 
+        distance_matrix_ptr_[vector_index] = distance_value;
+
+      } catch(std::exception& e) {
+
+        ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; Distance text: {} not valid float text, reason: {}, line: {}",
+                            line_string, e.what(), (vector_index + 1));
+
+        distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
+
       }
 
     }
+
+    ++vector_index;
 
   }
 

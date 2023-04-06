@@ -13,7 +13,8 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::ParseVCFRecord::ParseVCFRecord( const VCFRecord& vcf_record,
+kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
+                                     const VCFRecord& vcf_record,
                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
   // Get the format fields for Genetype analysis.
@@ -29,7 +30,7 @@ kgl::ParseVCFRecord::ParseVCFRecord( const VCFRecord& vcf_record,
   allele_offset_ = vcf_record.offset;
 
   // Get the contig pointer.
-  auto contig_opt = genome_db_ptr->getContigSequence(vcf_record.contig_id);
+  auto contig_opt = genome_db_ptr->getContigSequence(genome_contig);
   if (not contig_opt) {
 
     ExecEnv::log().error("ParseVCFRecord::parseRecord; Contig: {} is not in the Genome Database", vcf_record.contig_id);

@@ -49,7 +49,7 @@ public:
   // Resource Database categories.
   constexpr static const char RESOURCE_LIST_[] = "resourceList";
   // Go Ontology Database.
-  constexpr static const char ONTOLOGY_RESOURCE_ID_[] = "ontologyResourceID";
+  constexpr static const char ONTOLOGY_RESOURCE_ID_[] = "ontologyDatabase";
   constexpr static const char ONTOLOGY_IDENT_[] = "ontologyIdent";
   constexpr static const char GAF_ANNOTATION_FILE_[] = "gafFile";
   constexpr static const char GO_ONTOLOGY_FILE_[] = "goFile";

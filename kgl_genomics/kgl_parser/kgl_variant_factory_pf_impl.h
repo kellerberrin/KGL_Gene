@@ -24,8 +24,9 @@ public:
 
   PfVCFImpl(const std::shared_ptr<PopulationDB>& vcf_population_ptr,
             const std::shared_ptr<const GenomeReference>& genome_db_ptr,
-            const ContigAliasMap&,    // Chromosome aliasing is not used on Gatk (P.Falciparum) VCF files.
+            const ContigAliasMap& contig_alias_map,
             const EvidenceInfoSet& evidence_map) : evidence_factory_(evidence_map),
+                                                   contig_alias_map_(contig_alias_map),
                                                    unphased_population_ptr_(vcf_population_ptr),
                                                    genome_db_ptr_(genome_db_ptr) {}
   ~PfVCFImpl() override = default;
@@ -39,6 +40,7 @@ public:
 private:
 
   EvidenceFactory evidence_factory_;
+  ContigAliasMap contig_alias_map_;
 
   // Processes the record in a try/catch block.
   void ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr);

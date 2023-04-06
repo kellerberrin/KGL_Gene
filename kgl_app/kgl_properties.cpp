@@ -413,10 +413,10 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
   }
 
-  for (const auto& sub_tree : property_tree_vector) {
+  for (const auto& [sub_tree_id, sub_tree] : property_tree_vector) {
 
     std::string contig_ident;
-    if (not sub_tree.second.getProperty(ALIAS_IDENT_, contig_ident)) {
+    if (not sub_tree.getProperty(ALIAS_IDENT_, contig_ident)) {
 
       ExecEnv::log().error("RuntimeProperties::getContigAlias, No Chromosome/Contig Identifier specified for Alias.");
       continue;
@@ -424,7 +424,7 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
     }
 
     std::string chromosome_type;
-    if (not sub_tree.second.getProperty(ALIAS_TYPE_, chromosome_type)) {
+    if (not sub_tree.getProperty(ALIAS_TYPE_, chromosome_type)) {
 
       ExecEnv::log().error("RuntimeProperties::getContigAlias, No Chromosome type ('autosome', 'allosomeX', 'allosomeY' or 'mitochrondria') specified");
       continue;
@@ -436,10 +436,13 @@ kgl::ContigAliasMap kgl::RuntimeProperties::getContigAlias() const {
 
     // Get a vector of alias
     std::vector<std::string> alias_vector;
-    if (not sub_tree.second.getNodeVector(ALIAS_ENTRY_, alias_vector))  {
+    if (sub_tree.checkProperty(ALIAS_ENTRY_)) {
 
-      ExecEnv::log().warn("RuntimeProperties::getContigAlias, No Alias Specified for Contig: {}", sub_tree.first);
+      if (not sub_tree.getNodeVector(ALIAS_ENTRY_, alias_vector))  {
 
+        ExecEnv::log().warn("RuntimeProperties::getContigAlias, No Alias Specified for Contig: {}", sub_tree_id);
+
+      }
     }
 
     for (auto const& alias : alias_vector) {

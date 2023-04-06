@@ -18,6 +18,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 class PfEMPAnalysis : public VirtualAnalysis {
 
+  using GeneMap = std::map<std::string, std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>>>;
+
 public:
 
   PfEMPAnalysis() = default;
@@ -66,7 +68,6 @@ private:
   // Available Parameters
   constexpr static const char* NEWICK_FILE_ = "NewickFile";
   constexpr static const char* INTRON_FILE_ = "IntronFile";
-  constexpr static const char INTRON_DELIMITER_ = ',';
 
   // Intron promoter sequences.
   constexpr static const char* I_PROMOTER_ = "TGTATGTG";
@@ -82,12 +83,17 @@ private:
   constexpr static const char* STEVOR_FAMILY_ = "STEVOR";
   constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
 
+  // The genes we are interested in.
+  GeneMap gene_map_;
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};
   constexpr static const char* NEWICK_EXT_{".txt"};
   constexpr static const char* INTRON_{"intron_"};
   constexpr static const char* INTRON_EXT_{".csv"};
+  constexpr static const char* VARIANT_COUNT_{"gene_variant_"};
+  constexpr static const char* VARIANT_COUNT_EXT_{".csv"};
+  constexpr static const char CSV_DELIMITER_ = ',';
 
   // Return a vector of genes that have a particular text fragment in the description.
   [[nodiscard]] GeneVector getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
@@ -106,6 +112,12 @@ private:
                         const GeneVector& gene_vector,
                         const std::string& upgma_file_name,
                         const std::string& family_text) const;
+
+  void checkDistanceMatrix() const;
+
+  void getGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  void getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr);
+  void writeGeneResults();
 
 };
 

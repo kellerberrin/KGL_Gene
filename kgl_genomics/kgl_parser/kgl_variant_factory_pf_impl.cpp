@@ -72,13 +72,17 @@ void kgl::PfVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_recor
 // This is multithreaded code called from the reader defined above.
 void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
-  ParseVCFRecord recordParser(*vcf_record_ptr, genome_db_ptr_); //Each vcf record.
+  // Convert VCF contig to genome contig.
+  std::string genome_contig = contig_alias_map_.lookupAlias(vcf_record_ptr->contig_id);
+
+  ParseVCFRecord recordParser(genome_contig, *vcf_record_ptr, genome_db_ptr_); //Each vcf record.
   if (not recordParser.parseResult()) {
 
     ExecEnv::log().warn("PfVCFImpl::ParseRecord; Problem parsing VCF record");
     return;
 
   }
+
 
   // Parse the info fields into a map.
   // For performance reasons the info field is std::moved - don't reference again.

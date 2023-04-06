@@ -29,25 +29,22 @@ public:
 
   Pf7DistanceResource(std::string identifier,
                       std::shared_ptr<const SampleIndexMap> index_map_ptr,
-                      std::shared_ptr<double[]> distance_matrix_ptr,
-                      size_t distance_matrix_size_)
+                      std::shared_ptr<double[]> distance_matrix_ptr)
       : ResourceBase(ResourceProperties::PF7DISTANCE_RESOURCE_ID_, std::move(identifier)),
         sample_index_map_ptr_(std::move(index_map_ptr)),
         distance_matrix_ptr_(std::move(distance_matrix_ptr)),
-        distance_matrix_size_(distance_matrix_size_),
         sample_size_(sample_index_map_ptr_->size()) {}
-
+  Pf7DistanceResource(const Pf7DistanceResource&) = default;
   ~Pf7DistanceResource() override = default;
 
   [[nodiscard]] std::shared_ptr<const SampleIndexMap> distanceSamples() const { return sample_index_map_ptr_; }
-  [[nodiscard]] double distanceIndex(size_t x_index, size_t y_index) const;
-  [[nodiscard]] double distanceIndex(const std::string& sample_x, const std::string& sample_y) const;
+  [[nodiscard]] double getDistance(size_t x_index, size_t y_index) const;
+  [[nodiscard]] double getDistance(const std::string& sample_x, const std::string& sample_y) const;
 
 private:
 
   std::shared_ptr<const SampleIndexMap>  sample_index_map_ptr_;
   std::shared_ptr<const double[]> distance_matrix_ptr_;
-  const size_t distance_matrix_size_;
   const size_t sample_size_;
 
   constexpr static const char* NAN_TEXT_{"nan"};
@@ -76,12 +73,10 @@ public:
 
   [[nodiscard]] bool parsePf7Distance(const std::string& matrix_file_name, const std::string& sampleid_file_name);
 
-  [[nodiscard]] std::shared_ptr<SampleIndexMap> getSampleMap() { return sample_index_map_ptr_; }
-  [[nodiscard]] std::shared_ptr<double[]> getDistanceMatrix() { return distance_matrix_ptr_; }
-  [[nodiscard]] size_t getDistanceMatrixSize() { return distance_matrix_size_; }
+  [[nodiscard]] std::shared_ptr<SampleIndexMap> getSampleMap() const { return sample_index_map_ptr_; }
+  [[nodiscard]] std::shared_ptr<double[]> getDistanceMatrix() const { return distance_matrix_ptr_; }
 
 private:
-
 
   std::shared_ptr<SampleIndexMap>  sample_index_map_ptr_;
   size_t distance_matrix_size_{0};
