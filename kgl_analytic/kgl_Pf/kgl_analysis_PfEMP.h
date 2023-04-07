@@ -18,7 +18,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 class PfEMPAnalysis : public VirtualAnalysis {
 
-  using GeneMap = std::map<std::string, std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>>>;
+  using VariantGeneMap = std::map<std::string, std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>>>;
 
 public:
 
@@ -84,7 +84,8 @@ private:
   constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
 
   // The genes we are interested in.
-  GeneMap gene_map_;
+  VariantGeneMap select_gene_map_;   // Var rifin stevor RUF6
+  VariantGeneMap all_gene_map_;     // All genes.
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};
@@ -115,9 +116,10 @@ private:
 
   void checkDistanceMatrix() const;
 
-  void getGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
-  void getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr);
-  void writeGeneResults();
+  [[nodiscard]] VariantGeneMap getSelectGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  [[nodiscard]] VariantGeneMap getAllGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  void getGeneVariants(VariantGeneMap& gene_map, const std::shared_ptr<const PopulationDB>& population_ptr);
+  void writeGeneResults(const VariantGeneMap& gene_map, const std::string& file_name);
 
 };
 

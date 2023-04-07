@@ -55,7 +55,8 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
 //  performPFEMP1UPGMA();
 
-  getGeneMap(genome_3D7_ptr_);
+  select_gene_map_ = getSelectGeneMap(genome_3D7_ptr_);
+  all_gene_map_ = getAllGeneMap(genome_3D7_ptr_);
 
   return true;
 
@@ -101,7 +102,8 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
 //  checkDistanceMatrix();
 
-  getGeneVariants(filtered_population_ptr_);
+  getGeneVariants(select_gene_map_, filtered_population_ptr_);
+  getGeneVariants(all_gene_map_, filtered_population_ptr_);
 
   return true;
 
@@ -121,16 +123,20 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  writeGeneResults();
+  std::string variant_file_name = std::string(VARIANT_COUNT_) + "Select" + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  writeGeneResults(select_gene_map_, variant_file_name);
+
+  std::string all_variant_file_name = std::string(VARIANT_COUNT_) + "All" + std::string(VARIANT_COUNT_EXT_);
+  all_variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  writeGeneResults(all_gene_map_, all_variant_file_name);
 
   return true;
 
 }
 
-void kgl::PfEMPAnalysis::writeGeneResults() {
+void kgl::PfEMPAnalysis::writeGeneResults(const VariantGeneMap& gene_map, const std::string& variant_file_name) {
 
-  std::string variant_file_name = std::string(VARIANT_COUNT_) + std::string(VARIANT_COUNT_EXT_);
-  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   std::ofstream variant_file(variant_file_name);
 
   if (not variant_file.good()) {
@@ -140,7 +146,7 @@ void kgl::PfEMPAnalysis::writeGeneResults() {
 
   }
 
-  for (auto const& [gene_id, value_pair] : gene_map_) {
+  for (auto const& [gene_id, value_pair] : gene_map) {
 
     auto const& [gene_ptr, contig_ptr] = value_pair;
 
@@ -153,14 +159,6 @@ void kgl::PfEMPAnalysis::writeGeneResults() {
 
     }
 
-    std::string description;
-    auto description_vector = gene_ptr->getAttributes().getDescription();
-    for (auto const& desc_line : description_vector) {
-
-      description += desc_line;
-
-    }
-
     double variant_rate{0.0};
     size_t variant_count = contig_ptr->variantCount();
     if (gene_length > 0) {
@@ -169,8 +167,6 @@ void kgl::PfEMPAnalysis::writeGeneResults() {
 
     }
 
-    ExecEnv::log().info("Contig: {}, Gene Id: {}, Gene Length: {}, Variants: {}, Rate: {}, Description: {}",
-                        gene_ptr->contig()->contigId(), gene_id, gene_length, variant_count, variant_rate, description);
 
     variant_file << gene_ptr->contig()->contigId()
                  << CSV_DELIMITER_
@@ -182,13 +178,13 @@ void kgl::PfEMPAnalysis::writeGeneResults() {
                  << CSV_DELIMITER_
                  << variant_rate
                  << CSV_DELIMITER_
-                 << description
+                 << gene_ptr->featureText(CSV_DELIMITER_)
                  << '\n';
   }
 
 }
 
-void kgl::PfEMPAnalysis::getGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::PfEMPAnalysis::VariantGeneMap kgl::PfEMPAnalysis::getSelectGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
   auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
@@ -204,27 +200,59 @@ void kgl::PfEMPAnalysis::getGeneMap(const std::shared_ptr<const GenomeReference>
   //  var_gene_vector.insert( var_gene_vector.end(), ncRNA_gene_vector.begin(), ncRNA_gene_vector.end() );
 
   // Place each of these genes into the GeneMap structure.
+  VariantGeneMap gene_map;
   for (auto const& gene_ptr : var_gene_vector) {
 
     std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
 
     std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
 
-    auto [iter, result] = gene_map_.insert({gene_ptr->id(), map_value});
+    auto [iter, result] = gene_map.insert({gene_ptr->id(), map_value});
 
     if(not result) {
 
-      ExecEnv::log().warn("PfEMPAnalysis::getGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
+      ExecEnv::log().warn("PfEMPAnalysis::getSelectGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
 
     }
 
   }
 
+  return gene_map;
+
+}
+
+
+
+kgl::PfEMPAnalysis::VariantGeneMap kgl::PfEMPAnalysis::getAllGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+
+  VariantGeneMap gene_map;
+  for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+
+    for (auto const& [gene_id, gene_ptr] : contig_ptr->getGeneMap()) {
+
+      std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
+
+      std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
+
+      auto [iter, result] = gene_map.insert({gene_ptr->id(), map_value});
+
+      if(not result) {
+
+        ExecEnv::log().warn("PfEMPAnalysis::getSelectGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
+
+      }
+
+    }
+
+  }
+
+  return gene_map;
+
 }
 
 
 // Get variants only occurring within codingFeatures for all mRNA sequences.
-void kgl::PfEMPAnalysis::getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr) {
+void kgl::PfEMPAnalysis::getGeneVariants(VariantGeneMap& gene_map, const std::shared_ptr<const PopulationDB>& population_ptr) {
 
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
@@ -236,7 +264,7 @@ void kgl::PfEMPAnalysis::getGeneVariants(const std::shared_ptr<const PopulationD
 
       }
 
-      for (auto const &[gene_id, value_pair]: gene_map_) {
+      for (auto const &[gene_id, value_pair]: gene_map) {
 
         auto const &[gene_ptr, gene_contig_ptr] = value_pair;
 
