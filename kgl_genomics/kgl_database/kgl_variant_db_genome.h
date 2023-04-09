@@ -33,13 +33,13 @@ public:
   explicit GenomeDB(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
   virtual ~GenomeDB() = default;
 
-  GenomeDB(const GenomeDB&) = delete;
+  GenomeDB(const GenomeDB&) = delete; // Use deep copy.
   [[nodiscard]] GenomeDB& operator=(const GenomeDB&) = delete; // Use deep copy.
 
   // Use this to copy the object.
   [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const { return filterVariants(TrueFilter()); }
 
-  // unconditionally merge (retains duplicates) genomes and variants into this genome.
+  // Unconditionally merge (retains duplicates) genomes and variants into this genome.
   [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome);
 
   [[nodiscard]] size_t variantCount() const;

@@ -11,6 +11,7 @@
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_distance_parser.h"
+#include "kgl_analysis_PfEMP_variant.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -18,7 +19,6 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 class PfEMPAnalysis : public VirtualAnalysis {
 
-  using VariantGeneMap = std::map<std::string, std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>>>;
 
 public:
 
@@ -58,10 +58,7 @@ private:
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;     // The Pf7 variant data was aligned on this genome.
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   // Per chromosome VCF files.
-  std::shared_ptr<const PopulationDB> all_population_ptr_;
-  std::shared_ptr<const PopulationDB> filtered_population_ptr_;  // Only genomes that have passed quality test.
   constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
-  std::shared_ptr<const PopulationDB> monoclonal_population_ptr_;  // Only genomes that have passed quality test.
 
   void performPFEMP1UPGMA();
 
@@ -84,8 +81,8 @@ private:
   constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
 
   // The genes we are interested in.
-  VariantGeneMap select_gene_map_;   // Var rifin stevor RUF6
-  VariantGeneMap all_gene_map_;     // All genes.
+  GenomeGeneVariantAnalysis select_gene_map_;   // Var rifin stevor RUF6
+  GenomeGeneVariantAnalysis all_gene_map_;     // All genes.
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};
@@ -114,12 +111,11 @@ private:
                         const std::string& upgma_file_name,
                         const std::string& family_text) const;
 
-  void checkDistanceMatrix() const;
+  void checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
+                            const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const;
 
-  [[nodiscard]] VariantGeneMap getSelectGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
-  [[nodiscard]] VariantGeneMap getAllGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
-  void getGeneVariants(VariantGeneMap& gene_map, const std::shared_ptr<const PopulationDB>& population_ptr);
-  void writeGeneResults(const VariantGeneMap& gene_map, const std::string& file_name);
+  [[nodiscard]] GeneVector getSelectGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  [[nodiscard]] GeneVector getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
 
 };
 

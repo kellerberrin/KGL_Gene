@@ -10,7 +10,8 @@ namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::PfEMPAnalysis::checkDistanceMatrix() const {
+void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
+                                              const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Diagonal distance
@@ -45,7 +46,7 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix() const {
   sum_diagonal = 0.0;
   diagonal_count = 0;
   nan_count = 0;
-  for (auto const& [genome_id, genome_ptr] : all_population_ptr_->getMap()) {
+  for (auto const& [genome_id, genome_ptr] : all_population_ptr->getMap()) {
 
     double distance = Pf7_distance_ptr_->getDistance(genome_id, genome_id);
     if (std::isnan(distance)) {
@@ -71,9 +72,9 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix() const {
   size_t self_smallest{0};
   size_t other_smallest{0};
 
-  for (auto const& [y_genome_id, y_genome_ptr] : filtered_population_ptr_->getMap()) {
+  for (auto const& [y_genome_id, y_genome_ptr] : filtered_population_ptr->getMap()) {
 
-    for (auto const& [x_genome_id, x_genome_ptr] : filtered_population_ptr_->getMap()) {
+    for (auto const& [x_genome_id, x_genome_ptr] : filtered_population_ptr->getMap()) {
 
       double distance = Pf7_distance_ptr_->getDistance(x_genome_id, y_genome_id);
       if (std::isnan(distance)) {
@@ -155,9 +156,9 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix() const {
   diagonal_count = 0;
   nan_count = 0;
 
-  for (auto const& [y_genome_id, y_genome_ptr] : filtered_population_ptr_->getMap()) {
+  for (auto const& [y_genome_id, y_genome_ptr] : filtered_population_ptr->getMap()) {
 
-    for (auto const& [x_genome_id, x_genome_ptr] : filtered_population_ptr_->getMap()) {
+    for (auto const& [x_genome_id, x_genome_ptr] : filtered_population_ptr->getMap()) {
 
       if (y_genome_id == x_genome_id) {
 

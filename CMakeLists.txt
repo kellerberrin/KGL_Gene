@@ -527,7 +527,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h
         kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp)
+        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES

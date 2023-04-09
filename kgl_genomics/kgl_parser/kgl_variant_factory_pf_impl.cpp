@@ -131,9 +131,18 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
       // Assume '|' is the GT field separator.
       gt_vector = Utility::charTokenizer(GT_format, GT_ALT_FIELD_SEPARATOR_CHAR_);
 
-      if (gt_vector.size() != DIPLOID_) {
+       if (gt_vector.size() != DIPLOID_) {
 
-        ExecEnv::log().error("PfVCFImpl::ParseRecord; GT format field: {} is not diploid.", GT_format);
+         if (GT_format == MISSING_VALUE_) {
+
+           ExecEnv::log().warn("PfVCFImpl::ParseRecord; GT format field: {} is missing for Genotype: {}.", GT_format, genotype);
+
+         } else {
+
+           ExecEnv::log().error("PfVCFImpl::ParseRecord; GT format field: {} is not diploid for Genotype.", GT_format, genotype);
+
+         }
+
         continue;
 
       }

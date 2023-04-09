@@ -32,7 +32,7 @@ public:
   explicit ContigDB(ContigId_t contig_id) : contig_id_(std::move(contig_id)) {}
   virtual ~ContigDB() = default;
 
-  ContigDB(const ContigDB &) = delete;
+  ContigDB(const ContigDB &) = delete; // Use deep copy.
   [[nodiscard]] ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
 
   // Use this to copy the object.
@@ -67,6 +67,7 @@ public:
   // Returns a contig containing all variants in this contig that match the template contig.
   [[nodiscard]] std::shared_ptr<ContigDB> findContig(const std::shared_ptr<const ContigDB>& template_contig) const;
 
+  // Returns a variant offset array (if it exists) at a specified offset within the contig.
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
   bool getSortedVariants( VariantPhase phase,

@@ -55,8 +55,9 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
 //  performPFEMP1UPGMA();
 
-  select_gene_map_ = getSelectGeneMap(genome_3D7_ptr_);
-  all_gene_map_ = getAllGeneMap(genome_3D7_ptr_);
+  // Select the genes we are interested in analyzing for genome variants.
+  select_gene_map_.createGeneMap(getSelectGenes(genome_3D7_ptr_));
+  all_gene_map_.createGeneMap(getAllGenes(genome_3D7_ptr_));
 
   return true;
 
@@ -77,33 +78,31 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
   }
 
-  all_population_ptr_ = population_ptr;
-
   ExecEnv::log().info("Unfiltered Population: {}, Genome count: {}, Variant Count: {}",
-                      all_population_ptr_->populationId(),
-                      all_population_ptr_->getMap().size(),
-                      all_population_ptr_->variantCount());
+                      population_ptr->populationId(),
+                      population_ptr->getMap().size(),
+                      population_ptr->variantCount());
 
-  filtered_population_ptr_ = Pf7_sample_ptr_->filterPassQCGenomes(all_population_ptr_);
+  auto filtered_population_ptr = Pf7_sample_ptr_->filterPassQCGenomes(population_ptr);
 
   ExecEnv::log().info("QC Pass Filtered Population: {}, Genome count: {}, Variant Count: {}, Sample Data Count: {}",
-                      filtered_population_ptr_->populationId(),
-                      filtered_population_ptr_->getMap().size(),
-                      filtered_population_ptr_->variantCount(),
+                      filtered_population_ptr->populationId(),
+                      filtered_population_ptr->getMap().size(),
+                      filtered_population_ptr->variantCount(),
                       Pf7_sample_ptr_->getMap().size());
 
-  monoclonal_population_ptr_ = Pf7_fws_ptr_->filterFWS(FwsFilterType::GREATER_EQUAL, MONOCLONAL_FWS_THRESHOLD, filtered_population_ptr_);
+  auto monoclonal_population_ptr = Pf7_fws_ptr_->filterFWS(FwsFilterType::GREATER_EQUAL, MONOCLONAL_FWS_THRESHOLD, filtered_population_ptr);
 
   ExecEnv::log().info("MonoClonal Filtered Population: {}, Genome count: {}, Variant Count: {}, FWS Data Count: {}",
-                      monoclonal_population_ptr_->populationId(),
-                      monoclonal_population_ptr_->getMap().size(),
-                      monoclonal_population_ptr_->variantCount(),
+                      monoclonal_population_ptr->populationId(),
+                      monoclonal_population_ptr->getMap().size(),
+                      monoclonal_population_ptr->variantCount(),
                       Pf7_fws_ptr_->getMap().size());
 
-//  checkDistanceMatrix();
+//  checkDistanceMatrix(population_ptr, filtered_population_ptr);
 
-  getGeneVariants(select_gene_map_, filtered_population_ptr_);
-  getGeneVariants(all_gene_map_, filtered_population_ptr_);
+  select_gene_map_.getGeneVariants(filtered_population_ptr);
+  all_gene_map_.getGeneVariants(filtered_population_ptr);
 
   return true;
 
@@ -125,66 +124,19 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   std::string variant_file_name = std::string(VARIANT_COUNT_) + "Select" + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-  writeGeneResults(select_gene_map_, variant_file_name);
+  select_gene_map_.writeGeneResults(variant_file_name);
 
   std::string all_variant_file_name = std::string(VARIANT_COUNT_) + "All" + std::string(VARIANT_COUNT_EXT_);
-  all_variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-  writeGeneResults(all_gene_map_, all_variant_file_name);
+  all_variant_file_name = Utility::filePath(all_variant_file_name, ident_work_directory_);
+  all_gene_map_.writeGeneResults(all_variant_file_name);
 
   return true;
 
 }
 
-void kgl::PfEMPAnalysis::writeGeneResults(const VariantGeneMap& gene_map, const std::string& variant_file_name) {
-
-  std::ofstream variant_file(variant_file_name);
-
-  if (not variant_file.good()) {
-
-    ExecEnv::log().error("PfEMPAnalysis::writeGeneResults; Unable to open gene variant results file: {}", variant_file_name);
-    return;
-
-  }
-
-  for (auto const& [gene_id, value_pair] : gene_map) {
-
-    auto const& [gene_ptr, contig_ptr] = value_pair;
-
-    auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-
-    size_t gene_length{0};
-    if (not sequence_array_ptr->empty()) {
-
-      gene_length = sequence_array_ptr->getFirst()->codingNucleotides();
-
-    }
-
-    double variant_rate{0.0};
-    size_t variant_count = contig_ptr->variantCount();
-    if (gene_length > 0) {
-
-      variant_rate = static_cast<double>(variant_count) / static_cast<double>(gene_length);
-
-    }
 
 
-    variant_file << gene_ptr->contig()->contigId()
-                 << CSV_DELIMITER_
-                 << gene_id
-                 << CSV_DELIMITER_
-                 << gene_length
-                 << CSV_DELIMITER_
-                 << variant_count
-                 << CSV_DELIMITER_
-                 << variant_rate
-                 << CSV_DELIMITER_
-                 << gene_ptr->featureText(CSV_DELIMITER_)
-                 << '\n';
-  }
-
-}
-
-kgl::PfEMPAnalysis::VariantGeneMap kgl::PfEMPAnalysis::getSelectGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::GeneVector kgl::PfEMPAnalysis::getSelectGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
   auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
@@ -199,99 +151,25 @@ kgl::PfEMPAnalysis::VariantGeneMap kgl::PfEMPAnalysis::getSelectGeneMap(const st
   //  auto ncRNA_gene_vector = getncRNAGeneVector(genome_ptr);
   //  var_gene_vector.insert( var_gene_vector.end(), ncRNA_gene_vector.begin(), ncRNA_gene_vector.end() );
 
-  // Place each of these genes into the GeneMap structure.
-  VariantGeneMap gene_map;
-  for (auto const& gene_ptr : var_gene_vector) {
-
-    std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
-
-    std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
-
-    auto [iter, result] = gene_map.insert({gene_ptr->id(), map_value});
-
-    if(not result) {
-
-      ExecEnv::log().warn("PfEMPAnalysis::getSelectGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
-
-    }
-
-  }
-
-  return gene_map;
+  return var_gene_vector;
 
 }
 
 
+kgl::GeneVector kgl::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
-kgl::PfEMPAnalysis::VariantGeneMap kgl::PfEMPAnalysis::getAllGeneMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
-
-  VariantGeneMap gene_map;
+  GeneVector all_genes;
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
     for (auto const& [gene_id, gene_ptr] : contig_ptr->getGeneMap()) {
 
-      std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
-
-      std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
-
-      auto [iter, result] = gene_map.insert({gene_ptr->id(), map_value});
-
-      if(not result) {
-
-        ExecEnv::log().warn("PfEMPAnalysis::getSelectGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
-
-      }
+      all_genes.push_back(gene_ptr);
 
     }
 
   }
 
-  return gene_map;
-
-}
-
-
-// Get variants only occurring within codingFeatures for all mRNA sequences.
-void kgl::PfEMPAnalysis::getGeneVariants(VariantGeneMap& gene_map, const std::shared_ptr<const PopulationDB>& population_ptr) {
-
-  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
-
-    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
-
-      if (contig_ptr->getMap().empty()) {
-
-        continue;
-
-      }
-
-      for (auto const &[gene_id, value_pair]: gene_map) {
-
-        auto const &[gene_ptr, gene_contig_ptr] = value_pair;
-
-        if (gene_ptr->contig()->contigId() == contig_id) {
-
-          auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_ptr);
-
-          // Only analyze the first sequence.
-          if (not coding_sequence_array->empty()) {
-
-            auto sequence_ptr = coding_sequence_array->getFirst();
-
-            for (const auto &[feature_id, feature_ptr]: sequence_ptr->getFeatureMap()) {
-
-              gene_contig_ptr->merge(contig_ptr->subset(feature_ptr->sequence().begin(), feature_ptr->sequence().end()));
-
-            } // For all cds
-
-          } // if not empty
-
-        } // if same contig.
-
-      } // genemap
-
-    } // contig
-
-  } // genome
+  return all_genes;
 
 }
 

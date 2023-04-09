@@ -56,7 +56,6 @@ std::string kgl::Feature::featureText(char delimiter) const {
      << sequence().length() << delimiter
      << "Offset:[" << delimiter
      << sequence().begin() << delimiter
-     << "," << delimiter
      << sequence().end() << delimiter
      << ") Strand:" << delimiter
       << sequence().strandText() << delimiter
