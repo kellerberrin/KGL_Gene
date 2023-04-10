@@ -50,25 +50,25 @@ std::optional<std::shared_ptr<kgl::ContigDB>> kgl::GenomeDB::getCreateContig(con
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
 
-  auto result = contig_map_.find(contig_id);
+  auto found = contig_map_.find(contig_id);
 
-  if (result != contig_map_.end()) {
+  if (found != contig_map_.end()) {
 
-    return result->second;
+    return found->second;
 
   } else {
 
     auto contig_ptr = std::make_shared<ContigDB>(contig_id);
-    auto insert_result = contig_map_.try_emplace(contig_id, contig_ptr);
+    auto [inserted, insert_result] = contig_map_.insert({contig_id, contig_ptr});
 
-    if (not insert_result.second) {
+    if (not insert_result) {
 
       ExecEnv::log().error("GenomeDB::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
       return std::nullopt;
 
     }
 
-    return contig_ptr;
+    return inserted->second;
 
   }
 

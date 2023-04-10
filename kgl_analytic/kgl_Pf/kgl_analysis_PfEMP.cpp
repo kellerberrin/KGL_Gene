@@ -56,8 +56,8 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 //  performPFEMP1UPGMA();
 
   // Select the genes we are interested in analyzing for genome variants.
-  select_gene_map_.createGeneMap(getSelectGenes(genome_3D7_ptr_));
-  all_gene_map_.createGeneMap(getAllGenes(genome_3D7_ptr_));
+  select_gene_map_.setGeneVector(getSelectGenes(genome_3D7_ptr_));
+  all_gene_map_.setGeneVector(getAllGenes(genome_3D7_ptr_));
 
   return true;
 

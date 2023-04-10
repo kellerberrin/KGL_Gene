@@ -10,25 +10,9 @@
 
 
 
-void kgl::GenomeGeneVariantAnalysis::createGeneMap(const GeneVector& gene_vector) {
+void kgl::GenomeGeneVariantAnalysis::setGeneVector(const GeneVector& gene_vector) {
 
-  variant_gene_map_.clear();
-
-  for (auto const& gene_ptr : gene_vector) {
-
-    std::shared_ptr<ContigDB> gene_contig_ptr(std::make_shared<ContigDB>(gene_ptr->id()));
-
-    std::pair<std::shared_ptr<const GeneFeature>, std::shared_ptr<ContigDB>> map_value{ gene_ptr, gene_contig_ptr};
-
-    auto [iter, result] = variant_gene_map_.insert({gene_ptr->id(), map_value});
-
-    if(not result) {
-
-      ExecEnv::log().warn("PGenomeGeneVariantAnalysis::createGeneMap; Duplicate Gene Id: {}", gene_ptr->id());
-
-    }
-
-  }
+  gene_vector_ = gene_vector;
 
 }
 
@@ -38,6 +22,19 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
+    // Get/Create the matching genome from the gene population
+
+    auto gene_genome_opt = gene_population_ptr->getCreateGenome(genome_id);
+
+    if (not gene_genome_opt) {
+
+      ExecEnv::log().error("GenomeGeneVariantAnalysis::genePopulationVariants; Unable to get/create genome: {}", genome_id);
+      continue;
+
+    }
+
+    auto gene_genome_ptr = gene_genome_opt.value();
+
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
       if (contig_ptr->getMap().empty()) {
@@ -46,11 +43,22 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
       }
 
-      for (auto const &[gene_id, value_pair]: variant_gene_map_) {
-
-        auto const &[gene_ptr, gene_contig_ptr] = value_pair;
+      for (auto const& gene_ptr : gene_vector_) {
 
         if (gene_ptr->contig()->contigId() == contig_id) {
+
+          // Get/Create the gene contig from the gene population.
+          auto gene_contig_opt = gene_genome_ptr->getCreateContig(gene_ptr->id());
+
+          if (not gene_contig_opt) {
+
+            ExecEnv::log().error("GenomeGeneVariantAnalysis::genePopulationVariants; Unable to get/create gene Contig: {}, Genome: {}",
+                                 gene_ptr->id(), gene_genome_ptr->genomeId());
+            continue;
+
+          }
+
+          auto gene_contig_ptr = gene_contig_opt.value();
 
           auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_ptr);
 
@@ -61,6 +69,7 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
             for (const auto &[feature_id, feature_ptr]: sequence_ptr->getFeatureMap()) {
 
+              // Retrieve a gene contig containing all variants within the gene coding sequence.
               gene_contig_ptr->merge(contig_ptr->subset(feature_ptr->sequence().begin(), feature_ptr->sequence().end()));
 
             } // For all cds
@@ -84,14 +93,27 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
 
   if (not variant_file.good()) {
 
-    ExecEnv::log().error("GenomeGeneVariantAnalysis::createGeneMap; Unable to open gene variant results file: {}", variant_file_name);
+    ExecEnv::log().error("GenomeGeneVariantAnalysis::setGeneVector; Unable to open gene variant results file: {}", variant_file_name);
     return;
 
   }
 
-  for (auto const& [gene_id, value_pair] : variant_gene_map_) {
+  variant_file << "Gene_ID"
+               << CSV_DELIMITER_
+               << "Coding Length"
+               << CSV_DELIMITER_
+               << "Variant Count"
+               << CSV_DELIMITER_
+               << "Variant Rate"
+               << CSV_DELIMITER_
+               << "Unique Variants"
+               << CSV_DELIMITER_
+               << "Unique Variant Rate"
+               << CSV_DELIMITER_
+               << "Gene Detail"
+               << '\n';
 
-    auto const& [gene_ptr, contig_ptr] = value_pair;
+  for (auto const& gene_ptr : gene_vector_) {
 
     auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
@@ -102,10 +124,21 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
 
     }
 
+    auto aggregated_gene_contig_ptr = std::make_unique<ContigDB>(gene_ptr->id());
+    for (auto const& [gene_genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
+
+      auto gene_contig_opt = gene_genome_ptr->getContig(gene_ptr->id());
+      if (gene_contig_opt) {
+
+        aggregated_gene_contig_ptr->merge(gene_contig_opt.value());
+
+      }
+
+    }
     // Actual variants
-    size_t variant_count = contig_ptr->variantCount();
+    size_t variant_count = aggregated_gene_contig_ptr->variantCount();
     // Determine the number of unique variants.
-    auto unique_variant_contig = contig_ptr->filterVariants(UniqueUnphasedFilter());
+    auto unique_variant_contig = aggregated_gene_contig_ptr->filterVariants(UniqueUnphasedFilter());
     size_t unique_variant_count = unique_variant_contig->variantCount();
 
     double variant_rate{0.0};
@@ -117,25 +150,17 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
 
     }
 
-    variant_file << gene_id
-                 << CSV_DELIMITER_
-                 << "Coding Length:"
+
+
+    variant_file << gene_ptr->id()
                  << CSV_DELIMITER_
                  << coding_length
                  << CSV_DELIMITER_
-                 << "Variant Count:"
-                 << CSV_DELIMITER_
                  << variant_count
-                 << CSV_DELIMITER_
-                 << "Variant Rate:"
                  << CSV_DELIMITER_
                  << variant_rate
                  << CSV_DELIMITER_
-                 << "Unique Variants:"
-                 << CSV_DELIMITER_
                  << unique_variant_count
-                 << CSV_DELIMITER_
-                 << "Unique Variant Rate:"
                  << CSV_DELIMITER_
                  << unique_variant_rate
                  << CSV_DELIMITER_
@@ -144,3 +169,10 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
   }
 
 }
+
+
+kgl::GeneGenomeAnalysis::GeneGenomeAnalysis(const std::shared_ptr<const ContigDB>& gene_unique_variants) {
+
+
+}
+

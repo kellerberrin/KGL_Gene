@@ -22,20 +22,52 @@ class GenomeGeneVariantAnalysis {
 
 public:
 
-  GenomeGeneVariantAnalysis() = default;
+  GenomeGeneVariantAnalysis() {
+
+    gene_population_ptr = std::make_unique<PopulationDB>("GenePopulation", DataSourceEnum::Falciparum);
+
+  }
   ~GenomeGeneVariantAnalysis() = default;
 
-  void getGeneVariants(const std::shared_ptr<const PopulationDB> &population_ptr);
   void writeGeneResults(const std::string &file_name);
-  void createGeneMap(const GeneVector& gene_vector);
+  void setGeneVector(const GeneVector& gene_vector);
+  void getGeneVariants(const std::shared_ptr<const PopulationDB> &population_ptr);
 
 private:
 
-  VariantGeneMap variant_gene_map_;   // Population variant of selected genes.
+  GeneVector gene_vector_;   // Gene vector of interest.
+  std::unique_ptr<PopulationDB> gene_population_ptr; // Each contig per genome is a gene in the gene vector
 
   constexpr static const char CSV_DELIMITER_ = ',';
 
+
+
 };
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class GeneGenomeAnalysis {
+
+  using VariantGenomeCount = std::map<std::string, std::pair<std::shared_ptr<const Variant>, std::vector<GenomeId_t>>>;
+
+public:
+
+  explicit GeneGenomeAnalysis(const std::shared_ptr<const ContigDB>& gene_unique_variants);
+  ~GeneGenomeAnalysis() = default;
+
+private:
+
+  VariantGenomeCount gene_genome_analysis_;
+
+  constexpr static const char* NULL_VARIANT_ = "NullVariant";
+
+};
+
 
 
 
