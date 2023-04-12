@@ -24,7 +24,7 @@ public:
 
   GenomeGeneVariantAnalysis() {
 
-    gene_population_ptr = std::make_unique<PopulationDB>("GenePopulation", DataSourceEnum::Falciparum);
+    gene_population_ptr = std::make_shared<PopulationDB>("GenePopulation", DataSourceEnum::Falciparum);
 
   }
   ~GenomeGeneVariantAnalysis() = default;
@@ -36,7 +36,7 @@ public:
 private:
 
   GeneVector gene_vector_;   // Gene vector of interest.
-  std::unique_ptr<PopulationDB> gene_population_ptr; // Each contig per genome is a gene in the gene vector
+  std::shared_ptr<PopulationDB> gene_population_ptr; // Each contig per genome is a gene in the gene vector
 
   constexpr static const char CSV_DELIMITER_ = ',';
 
@@ -51,20 +51,42 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct GenomeCount {
+
+  std::shared_ptr<const Variant> variant_ptr_;
+  std::vector<GenomeId_t> genome_vector_;
+
+};
+using GenomeCountMap = std::map<std::string, std::shared_ptr<GenomeCount>>;
+using GenomeCountSorted = std::multimap<size_t, std::shared_ptr<const GenomeCount>, std::greater<>>;
+
 class GeneGenomeAnalysis {
 
-  using VariantGenomeCount = std::map<std::string, std::pair<std::shared_ptr<const Variant>, std::vector<GenomeId_t>>>;
 
 public:
 
-  explicit GeneGenomeAnalysis(const std::shared_ptr<const ContigDB>& gene_unique_variants);
+
+  // Initialized with the unique variants in the coding region of a Gene.
+  GeneGenomeAnalysis(std::shared_ptr<const GeneFeature> gene_ptr,
+                     const std::shared_ptr<const ContigDB>& gene_unique_variants);
   ~GeneGenomeAnalysis() = default;
+
+  void analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr);
+
+  [[nodiscard]] const std::vector<GenomeId_t>& zeroVariants() const { return zero_variants_; }
+
+  // Returns the GenomeCount objects in descending count order.
+  [[nodiscard]] GenomeCountSorted getCountSorted() const;
+  // Returns the variants with only one genome (singletons)
+  [[nodiscard]] std::vector<std::shared_ptr<const GenomeCount>> getSingletons() const;
 
 private:
 
-  VariantGenomeCount gene_genome_analysis_;
+  std::shared_ptr<const GeneFeature> gene_ptr_;
+  std::shared_ptr<GenomeCountMap> gene_genome_analysis_ptr_;
+  std::vector<GenomeId_t> zero_variants_;
 
-  constexpr static const char* NULL_VARIANT_ = "NullVariant";
+  bool addVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
 };
 

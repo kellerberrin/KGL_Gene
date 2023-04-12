@@ -54,6 +54,8 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 }
 
 
+
+
 // Clone with modified phase.
 std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) const {
 
