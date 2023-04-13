@@ -54,7 +54,8 @@ private:
 struct GenomeCount {
 
   std::shared_ptr<const Variant> variant_ptr_;
-  std::vector<GenomeId_t> genome_vector_;
+  std::set<GenomeId_t> genome_set_;
+  std::set<GenomeId_t> homozygous_set_;
 
 };
 using GenomeCountMap = std::map<std::string, std::shared_ptr<GenomeCount>>;
@@ -77,8 +78,33 @@ public:
 
   // Returns the GenomeCount objects in descending count order.
   [[nodiscard]] GenomeCountSorted getCountSorted() const;
-  // Returns the variants with only one genome (singletons)
-  [[nodiscard]] std::vector<std::shared_ptr<const GenomeCount>> getSingletons() const;
+  // Returns the variants present in only one genome (singletons)
+  [[nodiscard]] std::vector<std::shared_ptr<const GenomeCount>> getSingletonVariants() const;
+  // Returns the genomes containing variants unique to that genome (singleton genomes).
+  [[nodiscard]] std::set<kgl::GenomeId_t> getSingletonGenomes() const;
+  // Returns the top n variant counts.
+  template<size_t N>
+  [[nodiscard]] std::array<size_t, N> getTopCounts() const {
+
+    std::array<size_t, N> top_count_variants{0};
+    size_t index = 0;
+    for (auto const& [count, genome_count] : getCountSorted()) {
+
+      if (index >= N) {
+
+        break;
+
+      }
+
+      top_count_variants[index] = count;
+
+      ++index;
+
+    }
+
+    return top_count_variants;
+
+  }
 
 private:
 

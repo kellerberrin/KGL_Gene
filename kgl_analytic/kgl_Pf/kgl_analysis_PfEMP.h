@@ -79,9 +79,13 @@ private:
   constexpr static const char* RIFIN_FAMILY_ = "RIFIN";
   constexpr static const char* STEVOR_FAMILY_ = "STEVOR";
   constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
+  constexpr static const char* TRNA_FAMILY_ = "TRNA";
+  constexpr static const char* RIBOSOME_FAMILY_ = "RIBOSOM";
+
 
   // The genes we are interested in.
-  GenomeGeneVariantAnalysis select_gene_map_;   // Var rifin stevor RUF6
+  GenomeGeneVariantAnalysis translation_gene_map_;   // tRNA, Ribosomes
+  GenomeGeneVariantAnalysis antigenic_gene_map_;   // Var rifin stevor RUF6
   GenomeGeneVariantAnalysis all_gene_map_;     // All genes.
 
   // File name constants.
@@ -97,7 +101,9 @@ private:
   [[nodiscard]] GeneVector getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
                                         , const std::string& description_text) const;
 
-  [[nodiscard]] GeneVector getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr) const;
+  [[nodiscard]] GeneVector getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                               const std::string& desc_uc_text = "",
+                                               size_t max_size = 0) const;
 
   [[nodiscard]] GeneVector proximityGenes(size_t radius,
                                           const std::shared_ptr<const GeneFeature>& target_ptr,
@@ -114,8 +120,9 @@ private:
   void checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
                             const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const;
 
-  [[nodiscard]] GeneVector getSelectGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  [[nodiscard]] GeneVector getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
   [[nodiscard]] GeneVector getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  [[nodiscard]] GeneVector getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
 
 };
 

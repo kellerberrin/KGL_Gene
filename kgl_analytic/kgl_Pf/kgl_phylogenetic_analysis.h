@@ -87,7 +87,7 @@ class GenomicMutation {
 public:
 
   GenomicMutation() = default;
-  virtual ~GenomicMutation() = default;
+  ~GenomicMutation() = default;
 
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   [[nodiscard]]  static bool writeMutantProteins( const std::string& fastaFile,

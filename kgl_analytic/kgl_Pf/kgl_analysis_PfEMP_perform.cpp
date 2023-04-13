@@ -90,7 +90,9 @@ kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
 }
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr) const {
+kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                                        const std::string& desc_uc_text,
+                                                        size_t max_size) const {
 
   GeneVector gene_vector;
   size_t contig_count{0};
@@ -101,7 +103,10 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
 
     for (auto const &[gene_offset, gene_ptr]: contig_ptr->getGeneMap()) {
 
-      if (GeneFeature::ncRNACoding(gene_ptr) and  gene_ptr->sequence().length() <= 300) {
+      auto description = gene_ptr->descriptionText();
+      if (GeneFeature::ncRNACoding(gene_ptr)
+          and  (gene_ptr->sequence().length() <= max_size or max_size == 0)
+          and (Utility::toupper(description).find(desc_uc_text) != std::string::npos or desc_uc_text.empty())) {
 
         gene_vector.push_back(gene_ptr);
 
@@ -114,6 +119,8 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
   return gene_vector;
 
 }
+
+
 
 [[nodiscard]] kgl::GeneVector kgl::PfEMPAnalysis::proximityGenes(size_t radius,
                                                                  const std::shared_ptr<const GeneFeature>& target_ptr,

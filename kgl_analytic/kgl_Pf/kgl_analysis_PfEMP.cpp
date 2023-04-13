@@ -56,8 +56,9 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 //  performPFEMP1UPGMA();
 
   // Select the genes we are interested in analyzing for genome variants.
-  select_gene_map_.setGeneVector(getSelectGenes(genome_3D7_ptr_));
+  antigenic_gene_map_.setGeneVector(getAntiGenicGenes(genome_3D7_ptr_));
   all_gene_map_.setGeneVector(getAllGenes(genome_3D7_ptr_));
+  translation_gene_map_.setGeneVector(getTranslationGenes(genome_3D7_ptr_));
 
   return true;
 
@@ -101,8 +102,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
 //  checkDistanceMatrix(population_ptr, filtered_population_ptr);
 
-  select_gene_map_.getGeneVariants(filtered_population_ptr);
-  all_gene_map_.getGeneVariants(filtered_population_ptr);
+  translation_gene_map_.getGeneVariants(monoclonal_population_ptr);
+  antigenic_gene_map_.getGeneVariants(monoclonal_population_ptr);
+  all_gene_map_.getGeneVariants(monoclonal_population_ptr);
 
   return true;
 
@@ -122,13 +124,17 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  std::string variant_file_name = std::string(VARIANT_COUNT_) + "Select" + std::string(VARIANT_COUNT_EXT_);
+  std::string variant_file_name = std::string(VARIANT_COUNT_) + "Translation" + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-  select_gene_map_.writeGeneResults(variant_file_name);
+  translation_gene_map_.writeGeneResults(variant_file_name);
 
-  std::string all_variant_file_name = std::string(VARIANT_COUNT_) + "All" + std::string(VARIANT_COUNT_EXT_);
-  all_variant_file_name = Utility::filePath(all_variant_file_name, ident_work_directory_);
-  all_gene_map_.writeGeneResults(all_variant_file_name);
+  variant_file_name = std::string(VARIANT_COUNT_) + "AntiGenic" + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  antigenic_gene_map_.writeGeneResults(variant_file_name);
+
+  variant_file_name = std::string(VARIANT_COUNT_) + "All" + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  all_gene_map_.writeGeneResults(variant_file_name);
 
   return true;
 
@@ -136,7 +142,7 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getSelectGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::GeneVector kgl::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
   auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
@@ -152,6 +158,17 @@ kgl::GeneVector kgl::PfEMPAnalysis::getSelectGenes(const std::shared_ptr<const G
   //  var_gene_vector.insert( var_gene_vector.end(), ncRNA_gene_vector.begin(), ncRNA_gene_vector.end() );
 
   return var_gene_vector;
+
+}
+
+kgl::GeneVector kgl::PfEMPAnalysis::getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+
+  // Get the gene families of interest.
+  auto trna_gene_vector = getncRNAGeneVector(genome_ptr, TRNA_FAMILY_);
+  auto ribosome_gene_vector = getGeneVector(genome_ptr, RIBOSOME_FAMILY_);
+  trna_gene_vector.insert(trna_gene_vector.end(), ribosome_gene_vector.begin(), ribosome_gene_vector.end() );
+
+  return trna_gene_vector;
 
 }
 
