@@ -5,6 +5,7 @@
 
 #include "kgl_analysis_PfEMP_variant.h"
 #include "kgl_variant_filter.h"
+#include "kel_utility.h"
 
 #include <fstream>
 
@@ -116,15 +117,17 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                << CSV_DELIMITER_
                << "No Variant Genomes"
                << CSV_DELIMITER_
-               << "Variant Top1 Genomes"
+               << "Genotypes"
                << CSV_DELIMITER_
-               << "Variant Top2 Genomes"
+               << "Top1 Genotype"
                << CSV_DELIMITER_
-               << "Variant Top3 Genomes"
+               << "Top2 Genotype"
                << CSV_DELIMITER_
-               << "Variant Top4 Genomes"
+               << "Top3 Genotype"
                << CSV_DELIMITER_
-               << "Variant Top5 Genomes"
+               << "Top4 Genotype"
+               << CSV_DELIMITER_
+               << "Top5 Genotype"
                << CSV_DELIMITER_
                << "Gene Detail"
                << '\n';
@@ -170,7 +173,12 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
     // Generate genome per variant statistics.
     GeneGenomeAnalysis gene_genome_analysis(gene_ptr, unique_variant_contig);
     gene_genome_analysis.analyzeGenePopulation(gene_population_ptr);
-    auto top_count_variants = gene_genome_analysis.getTopCounts<5>();
+//    auto top_count_variants = gene_genome_analysis.getTopCounts<5>();
+
+    // Generate unique genotypes.
+    GenotypeAnalysis genotype_analysis(gene_ptr);
+    genotype_analysis.analyzeGenePopulation(gene_population_ptr);
+    auto top_count_genotypes = genotype_analysis.getTopCounts<5>();
 
     variant_file << gene_ptr->id()
                  << CSV_DELIMITER_
@@ -190,21 +198,29 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                  << CSV_DELIMITER_
                  << gene_genome_analysis.zeroVariants().size()
                  << CSV_DELIMITER_
-                 << top_count_variants[0]
+                 << genotype_analysis.getGenoTypeMap().size()
                  << CSV_DELIMITER_
-                 << top_count_variants[1]
+                 << top_count_genotypes[0]
                  << CSV_DELIMITER_
-                 << top_count_variants[2]
+                 << top_count_genotypes[1]
                  << CSV_DELIMITER_
-                 << top_count_variants[3]
+                 << top_count_genotypes[2]
                  << CSV_DELIMITER_
-                 << top_count_variants[4]
+                 << top_count_genotypes[3]
+                 << CSV_DELIMITER_
+                 << top_count_genotypes[4]
                  << CSV_DELIMITER_
                  << gene_ptr->featureText(CSV_DELIMITER_)
                  << '\n';
   } // Per gene.
 
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 kgl::GeneGenomeAnalysis::GeneGenomeAnalysis(std::shared_ptr<const GeneFeature> gene_ptr,
@@ -237,7 +253,6 @@ void kgl::GeneGenomeAnalysis::analyzeGenePopulation(const std::shared_ptr<const 
 
   for (auto const& [gene_genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
 
-    // Gene contig should exist for each genome even if empty (no variants)
     auto gene_contig_opt = gene_genome_ptr->getContig(gene_ptr_->id());
     if (not gene_contig_opt) {
 
@@ -253,7 +268,8 @@ void kgl::GeneGenomeAnalysis::analyzeGenePopulation(const std::shared_ptr<const 
 
     } else {
 
-      // Create an object to process all variants.
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // A local object to process all variants.
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       class ProcessVariants {
 
@@ -354,5 +370,107 @@ std::set<kgl::GenomeId_t> kgl::GeneGenomeAnalysis::getSingletonGenomes() const {
   }
 
   return singleton_genomes;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
+
+  for (auto const& [genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
+
+  // Find the gene contig (or not).
+    auto gene_contig_opt = gene_genome_ptr->getContig(gene_ptr_->id());
+    if (not gene_contig_opt) {
+
+      continue;
+
+    }
+
+    auto gene_contig_ptr = gene_contig_opt.value();
+    // Don't record no variant genotypes.
+    if (gene_contig_ptr->variantCount() == 0) {
+
+      continue;
+
+    }
+
+    size_t genotype_hash = genotypeHash(gene_contig_ptr);
+
+    auto find_iter = genotype_map_.find(genotype_hash);
+    if (find_iter == genotype_map_.end()) {
+
+      auto genotype_ptr = std::make_shared<GenotypeCount>();
+      genotype_ptr->genotype_hash_ = genotype_hash;
+      genotype_ptr->genotype_ = gene_contig_ptr;
+      genotype_ptr->genomes_.push_back(genome_id);
+
+      auto [insert_iter, insert_result] = genotype_map_.insert({genotype_hash, genotype_ptr});
+      if (not insert_result) {
+
+        ExecEnv::log().error("GenotypeAnalysis::analyzeGenePopulation; could not insert (duplicate) genotype for gene: {}, genome: {}",
+                             gene_ptr_->id(), genome_id);
+
+      }
+
+    } else {
+
+      auto& [geno_hash, genotype_ptr] = *find_iter;
+      genotype_ptr->genomes_.push_back(genome_id);
+
+    }
+
+  } // For all genomes.
+
+}
+
+
+size_t kgl::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>& genotype) {
+
+  struct GenotypeVariants {
+
+    // The Pf7 data is presented as diploid to assess COI. Only generate the hash from unique variants (ignore homozygous variants).
+    std::map<std::string, std::shared_ptr<const Variant>> unique_genotype_variants_;
+
+    bool processAllVariants(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      auto hash_str = variant_ptr->HGVS();
+      unique_genotype_variants_.insert({hash_str, variant_ptr});
+      return true;
+
+    }
+
+  };
+
+  GenotypeVariants genotype_variants;
+  genotype->processAll(genotype_variants, &GenotypeVariants::processAllVariants);
+
+  size_t geno_hash{0};
+
+  // A bit dodgy, there may be hash collisions. This should be tested.
+  for (auto const& [hash_str, variant_ptr] : genotype_variants.unique_genotype_variants_) {
+
+    geno_hash += Utility::hash(hash_str);
+
+  }
+
+  return geno_hash;
+
+}
+
+kgl::GenotypeCountSorted kgl::GenotypeAnalysis::getCountSorted() const {
+
+  GenotypeCountSorted  count_sorted_map;
+  for (auto& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    count_sorted_map.insert({genotype_ptr->genomes_.size(), genotype_ptr});
+
+  }
+
+  return count_sorted_map;
 
 }

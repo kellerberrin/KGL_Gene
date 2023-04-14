@@ -51,6 +51,7 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// The genome statistics for each variant.
 struct GenomeCount {
 
   std::shared_ptr<const Variant> variant_ptr_;
@@ -81,6 +82,8 @@ public:
   // Returns the variants present in only one genome (singletons)
   [[nodiscard]] std::vector<std::shared_ptr<const GenomeCount>> getSingletonVariants() const;
   // Returns the genomes containing variants unique to that genome (singleton genomes).
+  // Note that this is not the same as getSingletonVariants() since we can have multiple singleton variants
+  // per singleton genome. In general, getSingletonGenomes() <= getSingletonVariants().
   [[nodiscard]] std::set<kgl::GenomeId_t> getSingletonGenomes() const;
   // Returns the top n variant counts.
   template<size_t N>
@@ -116,6 +119,69 @@ private:
 
 };
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct GenotypeCount {
+
+  std::shared_ptr<const ContigDB> genotype_;
+  std::vector<GenomeId_t> genomes_;
+  size_t genotype_hash_;
+
+};
+
+using GenotypeMap = std::map<size_t, std::shared_ptr<GenotypeCount>>;
+using GenotypeCountSorted = std::multimap<size_t, std::shared_ptr<const GenotypeCount>, std::greater<>>;
+
+class GenotypeAnalysis {
+
+public:
+
+  explicit GenotypeAnalysis(std::shared_ptr<const GeneFeature> gene_ptr) : gene_ptr_(std::move(gene_ptr)) {}
+  ~GenotypeAnalysis() = default;
+
+  void analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr);
+  [[nodiscard]] const GenotypeMap& getGenoTypeMap() const { return genotype_map_; }
+  // Returns the GenomeCount objects in descending count order.
+  [[nodiscard]] GenotypeCountSorted getCountSorted() const;
+
+  // Returns the top n genotypes.
+  template<size_t N>
+  [[nodiscard]] std::array<size_t, N> getTopCounts() const {
+
+    std::array<size_t, N> top_count_genotypes{0};
+    size_t index = 0;
+    for (auto const& [count, genotype_ptr] : getCountSorted()) {
+
+      if (index >= N) {
+
+        break;
+
+      }
+
+      top_count_genotypes[index] = count;
+
+      ++index;
+
+    }
+
+    return top_count_genotypes;
+
+  }
+
+private:
+
+  std::shared_ptr<const GeneFeature> gene_ptr_;
+  GenotypeMap genotype_map_;
+
+  size_t genotypeHash(const std::shared_ptr<const ContigDB>& genotype);
+
+
+};
 
 
 
