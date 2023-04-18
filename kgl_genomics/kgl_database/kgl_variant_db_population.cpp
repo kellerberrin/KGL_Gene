@@ -74,7 +74,7 @@ bool kgl::PopulationDB::addGenome(const std::shared_ptr<GenomeDB>& genome_ptr) {
 
 }
 
-
+// Multi-thread for speed.
 size_t kgl::PopulationDB::variantCount() const {
 
   // Check edge condition.
@@ -88,25 +88,17 @@ size_t kgl::PopulationDB::variantCount() const {
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<size_t>> future_vector;
-  // Required by the thread pool.
-  /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
-  struct CountClass {
-
-    static size_t countGenome(std::shared_ptr<const GenomeDB> genome_ptr) { return genome_ptr->variantCount(); };
-
-  } ;
-
+  // Thread pool work lambda
+  auto count_lambda =  [](const std::shared_ptr<const GenomeDB>& genome_ptr)->size_t { return genome_ptr->variantCount(); };
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    std::future<size_t> future = thread_pool.enqueueFuture(&CountClass::countGenome, genome_ptr);
+    std::future<size_t> future = thread_pool.enqueueFuture(count_lambda, genome_ptr);
     future_vector.push_back(std::move(future));
 
   }
 
-
-  size_t variant_count = 0;
-
+  size_t variant_count{0};
   // Add the genome variant counts.
   for (auto& future : future_vector) {
 
@@ -117,8 +109,6 @@ size_t kgl::PopulationDB::variantCount() const {
   return variant_count;
 
 }
-
-
 
 
 // Multi-tasking filtering for large populations.

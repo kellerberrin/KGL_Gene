@@ -232,17 +232,17 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
 
 
 bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
-                                           std::shared_ptr<const DNASequenceDistance> dna_distance_metric,
-                                           std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                           std::shared_ptr<const GenomeReference> genome_db,
-                                           std::shared_ptr<const PopulationDB> pop_variant_ptr) {
+                                           const std::shared_ptr<const DNASequenceDistance>& dna_distance_metric,
+                                           const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                           const std::shared_ptr<const GenomeReference>& genome_db,
+                                           const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
   std::fstream out_file(file_name, std::fstream::out | std::fstream::app);
   if (!out_file) {
 
-    ExecEnv::log().error("Cannot open output CSV file (--outCSVFile): {}", file_name);
+    ExecEnv::log().error("Cannot open output CSV file: {}", file_name);
     return false;
 
   }
@@ -250,41 +250,41 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
   out_file << GenomicSequence::outputRegionHeader(CSV_delimiter) << CSV_delimiter;
   out_file << outputRegionHeader(CSV_delimiter) << '\n';
 
-  for(auto const& genome_variant : pop_variant_ptr->getMap()) {
+  for(auto const& [genome_id, genome_variant_ptr] : pop_variant_ptr->getMap()) {
 
-    ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
+    ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_id);
     size_t sequence_count = 0;
 
-    for (auto const& contig : genome_db->getMap()) {
+    for (auto const& [contig_id, contig_ptr] : genome_db->getMap()) {
 
       std::shared_ptr<const TranscriptionSequence> previous_seq_ptr = nullptr;
 
-      for (auto const& gene : contig.second->getGeneMap()) {
+      for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
-        auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene.second);
-        for (auto const& sequence : coding_seq_ptr->getMap()) {
+        auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
+        for (auto const& [sequence_id, sequence_ptr] : coding_seq_ptr->getMap()) {
 
           ContigSize_t front_porch_size;
           ContigOffset_t front_porch_offset;
           if (not previous_seq_ptr) {
 
             front_porch_offset = 0;
-            front_porch_size = sequence.second->start();
+            front_porch_size = sequence_ptr->start();
 
           } else {
 
             front_porch_offset = previous_seq_ptr->end();
-            if (front_porch_offset <= sequence.second->start()) {
+            if (front_porch_offset <= sequence_ptr->start()) {
 
-              front_porch_size = sequence.second->start() - front_porch_offset;
+              front_porch_size = sequence_ptr->start() - front_porch_offset;
 
             } else {
 
               ExecEnv::log().info("Sequence: {} end offset: {} overlaps sequence: {} begin offset: {}",
                                   previous_seq_ptr->getParent()->id(),
                                   previous_seq_ptr->end(),
-                                  sequence.second->getParent()->id(),
-                                  sequence.second->start());
+                                  sequence_ptr->getParent()->id(),
+                                  sequence_ptr->start());
 
               front_porch_size = 0;
 
@@ -294,21 +294,21 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
           out_file << GenomicSequence::outputGenomeRegion(CSV_delimiter,
                                                           dna_distance_metric,
-                                                          contig.first,
+                                                          contig_id,
                                                           front_porch_offset,
                                                           front_porch_size,
-                                                          genome_variant.second,
+                                                          genome_variant_ptr,
                                                           genome_db);
           out_file << CSV_delimiter;
           out_file << outputSequence(CSV_delimiter,
                                      dna_distance_metric,
                                      amino_distance_metric,
-                                     sequence.second,
+                                     sequence_ptr,
                                      genome_db,
-                                     genome_variant.second);
+                                     genome_variant_ptr);
           out_file << '\n';
           ++sequence_count;
-          previous_seq_ptr = sequence.second;
+          previous_seq_ptr = sequence_ptr;
 
         }
 
@@ -316,7 +316,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
     }
 
-    ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+    ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_id, sequence_count);
 
   }
 
@@ -327,9 +327,9 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
 bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
                                                 SequenceAnalysisType analysis_type,
-                                                std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
-                                                std::shared_ptr<const GenomeReference> genome_db,
-                                                std::shared_ptr<const PopulationDB> pop_variant_ptr) {
+                                                const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
+                                                const std::shared_ptr<const GenomeReference>& genome_db,
+                                                const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -352,12 +352,12 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
     for (const auto& [gene, gene_ptr] : contig_ptr->getGeneMap()) {
 
       auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
-      for (const auto& [sequence, sequence_ptr] : coding_seq_ptr->getMap()) {
+      for (const auto& [sequence_id, sequence_ptr] : coding_seq_ptr->getMap()) {
 
 
         out_file << contig_ptr->contigSize() << CSV_delimiter;
         out_file << gene_ptr->id() << CSV_delimiter;
-        out_file << sequence << CSV_delimiter;
+        out_file << sequence_id << CSV_delimiter;
         out_file << sequence_ptr->start() << CSV_delimiter;
         out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
 
@@ -416,20 +416,20 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
                                                  sequence_ptr->end(),
                                                  variant_map)) {
 
-            ExecEnv::log().warn("GenomicMutation::outputDNASequenceCSV, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
-                                genome, gene, sequence);
+            ExecEnv::log().warn("GenomicMutation::outputDNASequenceCSV, Problem retrieving variants, genome: {}, gene: {}, sequence_id: {}",
+                                genome, gene, sequence_id);
             return false;
 
           }
 
 
-          if (GenomeMutation::mutantCodingDNA( contig,
-                                               gene_ptr->id(),
-                                               sequence,
-                                               genome_db,
-                                               variant_map,
-                                               reference_sequence,
-                                               mutant_sequence)) {
+          if (GenomeMutation::mutantCodingDNA(contig,
+                                              gene_ptr->id(),
+                                              sequence_id,
+                                              genome_db,
+                                              variant_map,
+                                              reference_sequence,
+                                              mutant_sequence)) {
 
 
             switch(analysis_type) {
@@ -478,7 +478,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
           } else {
 
-            ExecEnv::log().error("outputDNASequenceCSV(), Error Processing sequence: {}", sequence);
+            ExecEnv::log().error("outputDNASequenceCSV(), Error Processing sequence_id: {}", sequence_id);
             return false;
 
           }
@@ -503,9 +503,9 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
 
 bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
-                                                  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                  std::shared_ptr<const PopulationDB> pop_variant_ptr) {
+                                                  const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                  const std::shared_ptr<const GenomeReference>& genome_db,
+                                                  const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -519,28 +519,28 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
   out_file << outputSequenceHeader(CSV_delimiter, pop_variant_ptr) << '\n';
 
-  for (auto contig : genome_db->getMap()) {
+  for (auto const& [contig_id, contig_ptr] : genome_db->getMap()) {
 
-    ExecEnv::log().info("outputAminoSequenceCSV(), Processing contig: {}", contig.first);
+    ExecEnv::log().info("outputAminoSequenceCSV(), Processing contig: {}", contig_id);
 
     size_t sequence_count = 0;
 
-    for (auto gene : contig.second->getGeneMap()) {
+    for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
-      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene.second);
-      for (auto sequence : coding_seq_ptr->getMap()) {
+      auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
+      for (auto const& [sequence_id, sequence_ptr] : coding_seq_ptr->getMap()) {
 
 
-        out_file << contig.second->contigSize() << CSV_delimiter;
-        out_file << gene.second->id() << CSV_delimiter;
-        out_file << sequence.first << CSV_delimiter;
-        out_file << sequence.second->start() << CSV_delimiter;
-        out_file << sequence.second->codingNucleotides() << CSV_delimiter;
+        out_file << contig_ptr->contigSize() << CSV_delimiter;
+        out_file << gene_ptr->id() << CSV_delimiter;
+        out_file << sequence_id << CSV_delimiter;
+        out_file << sequence_ptr->start() << CSV_delimiter;
+        out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
 
         DNA5SequenceCoding coding_dna_sequence;
-        if (contig.second->getDNA5SequenceCoding(sequence.second, coding_dna_sequence)) {
+        if (contig_ptr->getDNA5SequenceCoding(sequence_ptr, coding_dna_sequence)) {
 
-          out_file << (contig.second->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
+          out_file << (contig_ptr->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
 
         } else {
 
@@ -548,7 +548,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
         }
 
-        AminoSequence amino_reference  = contig.second->getAminoSequence(coding_dna_sequence);
+        AminoSequence amino_reference  = contig_ptr->getAminoSequence(coding_dna_sequence);
         out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference, amino_reference.countSymbols()) << CSV_delimiter;
         out_file << SequenceComplexity::complexityLempelZiv(coding_dna_sequence) << CSV_delimiter;
         out_file << SequenceComplexity::relativeCpGIslands(coding_dna_sequence) << CSV_delimiter;  // GC count.
@@ -563,9 +563,9 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
         out_file << CSV_delimiter;
         std::vector<std::string> description_vec;
 
-        if (not gene.second->getAttributes().getDescription(description_vec)) {
+        if (not gene_ptr->getAttributes().getDescription(description_vec)) {
 
-          ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene.second->id());
+          ExecEnv::log().error("outputSequenceCSV(), Cannot get description vector for Gene: {}", gene_ptr->id());
 
         }
 
@@ -584,13 +584,13 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
           OffsetVariantMap variant_map;
 
-          if (not genome_ptr->getSortedVariants( contig.first,
+          if (not genome_ptr->getSortedVariants( contig_id,
                                                  VariantPhase::HAPLOID_PHASED,
-                                                 sequence.second->start(),
-                                                 sequence.second->end(),
+                                                 sequence_ptr->start(),
+                                                 sequence_ptr->end(),
                                                  variant_map)) {
 
-            ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}", genome, contig.first);
+            ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}", genome, contig_id);
             return false;
 
           }
@@ -598,15 +598,15 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
           AminoSequence amino_reference_seq;
           AminoSequence amino_mutant;
 
-          if (GenomeMutation::mutantProteins( contig.first,
-                                              gene.second->id(),
-                                              sequence.first,
+          if (GenomeMutation::mutantProteins( contig_id,
+                                              gene_ptr->id(),
+                                              sequence_id,
                                               genome_db,
                                               variant_map,
                                               amino_reference_seq,
                                               amino_mutant)) {
 
-            switch (contig.second->proteinSequenceAnalysis(amino_mutant)) {
+            switch (contig_ptr->proteinSequenceAnalysis(amino_mutant)) {
 
               case ProteinSequenceAnalysis::VALID_SEQUENCE: {
 
@@ -622,7 +622,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
               case ProteinSequenceAnalysis::NONSENSE_MUTATION: {
 
-                size_t valid_seq_size = contig.second->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
+                size_t valid_seq_size = contig_ptr->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
                 double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq.length());
                 out_file << proportion << CSV_delimiter;
 
@@ -637,7 +637,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
           } else {
 
-            ExecEnv::log().error("outputSequenceCSV(), Error Processing sequence: {}", sequence.first);
+            ExecEnv::log().error("outputSequenceCSV(), Error Processing sequence: {}", sequence_id);
             return false;
 
           }
@@ -663,7 +663,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
 
 std::string kgl::GenomicMutation::outputSequenceHeader(char delimiter,
-                                                       std::shared_ptr<const PopulationDB> pop_variant_ptr) {
+                                                       const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
   std::stringstream ss;
 
@@ -701,8 +701,8 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
                                                   const ContigId_t& contig_id,
                                                   const FeatureIdent_t& gene_id,
                                                   const FeatureIdent_t& sequence_id,
-                                                  std::shared_ptr<const GenomeReference> genome_db,
-                                                  std::shared_ptr<const PopulationDB> pop_variant_ptr) {
+                                                  const std::shared_ptr<const GenomeReference>& genome_db,
+                                                  const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
   const char CSV_delimiter = ',';
   // open the file.
@@ -795,8 +795,8 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
                                                 const ContigId_t& contig_id,
                                                 const FeatureIdent_t& gene_id,
                                                 const FeatureIdent_t& sequence_id,
-                                                std::shared_ptr<const GenomeReference> genome_db,
-                                                std::shared_ptr<const PopulationDB> pop_variant_ptr,
+                                                const std::shared_ptr<const GenomeReference>& genome_db,
+                                                const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
                                                 const PfGenomeAuxData& aux_Pf3k_data) {
 
   const char CSV_delimiter = ',';
@@ -837,7 +837,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
   };
 
   std::vector<GenomeMap> genome_vector;
-  for( auto [genome, genome_ptr] : pop_variant_ptr->getMap()) {
+  for( auto const& [genome, genome_ptr] : pop_variant_ptr->getMap()) {
 
     ExecEnv::log().info("outputMutationCSV(), Processing genome: {}", genome);
     size_t sequence_count = 0;
@@ -875,9 +875,9 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
                                          reference_sequence,
                                          mutant_sequence)) {
 
-      for (auto variant : variant_map) {
+      for (auto const& [offset, variant_ptr] : variant_map) {
 
-        variant_file << variant.second->output(CSV_delimiter, VariantOutputIndex::START_1_BASED, false);
+        variant_file << variant_ptr->output(CSV_delimiter, VariantOutputIndex::START_1_BASED, false);
 
       }
 
@@ -1033,11 +1033,11 @@ std::string kgl::GenomicMutation::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::GenomicMutation::outputSequence(char delimiter,
-                                                 std::shared_ptr<const CodingDNASequenceDistance> dna_distance_metric,
-                                                 std::shared_ptr<const AminoSequenceDistance> amino_distance_metric,
-                                                 std::shared_ptr<const TranscriptionSequence> coding_sequence,
-                                                 std::shared_ptr<const GenomeReference> genome_db,
-                                                 std::shared_ptr<const GenomeDB> genome_variant) {
+                                                 const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
+                                                 const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                 const std::shared_ptr<const TranscriptionSequence>& coding_sequence,
+                                                 const std::shared_ptr<const GenomeReference>& genome_db,
+                                                 const std::shared_ptr<const GenomeDB>& genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
   std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();

@@ -12,6 +12,7 @@
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_distance_parser.h"
 #include "kgl_analysis_PfEMP_variant.h"
+#include "kgl_analysis_PfEMP_heterozygous.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -87,6 +88,9 @@ private:
   GenomeGeneVariantAnalysis translation_gene_map_;   // tRNA, Ribosomes
   GenomeGeneVariantAnalysis antigenic_gene_map_;   // Var rifin stevor RUF6
   GenomeGeneVariantAnalysis all_gene_map_;     // All genes.
+
+  // General variant statistics.
+  HeteroHomoZygous hetero_homo_zygous_;
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};

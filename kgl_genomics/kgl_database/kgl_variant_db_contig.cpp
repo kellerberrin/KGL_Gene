@@ -98,11 +98,11 @@ bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> o
 size_t kgl::ContigDB::variantCount() const {
 
 
-  size_t variant_count = 0;
+  size_t variant_count{0};
 
-  for (auto const &offset_variant_vector : getMap()) {
+  for (auto const &[offset, variant_vector_ptr] : getMap()) {
 
-    variant_count += offset_variant_vector.second->getVariantArray().size();
+    variant_count += variant_vector_ptr->getVariantArray().size();
 
   }
 
@@ -327,20 +327,21 @@ bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
   auto upper_bound = contig_offset_map_.upper_bound(end-1); //  [start, end)
 
   // If there is a prior variant that overlaps the start address, then push this onto the variant map.
-
   if (lower_bound != contig_offset_map_.end() and lower_bound != contig_offset_map_.begin()) {
 
     auto previous_offset_ptr = std::prev(lower_bound);
 
-    const OffsetDBArray& previous_offset_variants = previous_offset_ptr->second->getVariantArray();
+    auto const& [offset, offset_db_ptr] = *previous_offset_ptr;
 
-    for (const auto& variant : previous_offset_variants) {
+    const OffsetDBArray& previous_offset_variants = offset_db_ptr->getVariantArray();
 
-      if (variant->phaseId() == phase or phase == VariantPhase::UNPHASED) {
+    for (const auto& variant_ptr : previous_offset_variants) {
 
-        if (variant->offset() + variant->referenceSize() > start) {
+      if (variant_ptr->phaseId() == phase or phase == VariantPhase::UNPHASED) {
 
-          variant_map.emplace(variant->offset(), variant);
+        if (variant_ptr->offset() + variant_ptr->referenceSize() > start) {
+
+          variant_map.emplace(variant_ptr->offset(), variant_ptr);
 
         }
 
@@ -350,18 +351,18 @@ bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
 
   }
 
-
-
+  // Get all variants between the lower and upper bounds.
   for (auto it = lower_bound; it != upper_bound; ++it) {
 
+    auto const& [offset, offset_db_ptr] = *it;
 
-    const OffsetDBArray& previous_offset_variants = it->second->getVariantArray();
+    const OffsetDBArray& previous_offset_variants = offset_db_ptr->getVariantArray();
 
-    for (const auto& variant : previous_offset_variants) {
+    for (const auto& variant_ptr : previous_offset_variants) {
 
-      if (variant->phaseId() == phase or phase == VariantPhase::UNPHASED) {
+      if (variant_ptr->phaseId() == phase or phase == VariantPhase::UNPHASED) {
 
-        variant_map.emplace(it->first, variant);
+        variant_map.emplace(offset, variant_ptr);
 
       }
 
@@ -379,11 +380,18 @@ void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 
   for (auto iter = variant_map.begin(); iter != variant_map.end(); ++iter) {
 
-    if (iter == variant_map.begin()) continue;
+    // Ignore the first entry.
+    if (iter == variant_map.begin()) {
 
-    int delete_size = std::prev(iter)->second->referenceSize() - std::prev(iter)->second->alternateSize();
+      continue;
 
-    int offset_gap = iter->second->offset() - std::prev(iter)->second->offset();
+    }
+
+    auto const& [previous_offset, previous_variant_ptr] = *std::prev(iter);
+    auto const& [offset, variant_ptr] = *iter;
+
+    int64_t delete_size = previous_variant_ptr->referenceSize() - previous_variant_ptr->alternateSize();
+    int64_t offset_gap = variant_ptr->offset() - previous_variant_ptr->offset();
 
     if (delete_size >= offset_gap) {
 

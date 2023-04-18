@@ -131,11 +131,11 @@ bool kgl::GenomeDB::addContig(const std::shared_ptr<ContigDB>& contig_ptr) {
 
 size_t kgl::GenomeDB::variantCount() const {
 
-  size_t variant_count = 0;
+  size_t variant_count{0};
 
-  for (auto contig : getMap()) {
+  for (auto const& [contig_id, contig_ptr] : getMap()) {
 
-    variant_count += contig.second->variantCount();
+    variant_count += contig_ptr->variantCount();
 
   }
 

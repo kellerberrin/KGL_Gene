@@ -144,7 +144,7 @@ private:
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
   const VariantEvidence evidence_;                      // VCF File based information payload about this variant
   const ContigId_t contig_id_;                          // The contig of this variant
-  const ContigOffset_t contig_reference_offset_;        // Physical Location of the the start of the reference sequence the contig.
+  const ContigOffset_t contig_reference_offset_;        // Physical Location of the start of the reference sequence the contig.
   const AlleleOffset_t contig_allele_offset_;           // Offset to where the allele actually occurs. Always 0 for an SNP, always > 0 for an indel.
   const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.

@@ -10,6 +10,9 @@
 #include <fstream>
 
 
+namespace kgl = kellerberrin::genome;
+
+
 
 void kgl::GenomeGeneVariantAnalysis::setGeneVector(const GeneVector& gene_vector) {
 
@@ -119,6 +122,12 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                << CSV_DELIMITER_
                << "Genotypes"
                << CSV_DELIMITER_
+               << "Gini"
+               << CSV_DELIMITER_
+               << "HRel"
+               << CSV_DELIMITER_
+               << "IQV"
+               << CSV_DELIMITER_
                << "Top1 Genotype"
                << CSV_DELIMITER_
                << "Top2 Genotype"
@@ -199,6 +208,12 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                  << gene_genome_analysis.zeroVariants().size()
                  << CSV_DELIMITER_
                  << genotype_analysis.getGenoTypeMap().size()
+                 << CSV_DELIMITER_
+                 << genotype_analysis.Gini()
+                 << CSV_DELIMITER_
+                 << genotype_analysis.HRel()
+                 << CSV_DELIMITER_
+                 << genotype_analysis.IQV()
                  << CSV_DELIMITER_
                  << top_count_genotypes[0]
                  << CSV_DELIMITER_
@@ -387,6 +402,7 @@ void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const Po
     auto gene_contig_opt = gene_genome_ptr->getContig(gene_ptr_->id());
     if (not gene_contig_opt) {
 
+      zero_variants_.push_back(genome_id);
       continue;
 
     }
@@ -395,6 +411,7 @@ void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const Po
     // Don't record no variant genotypes.
     if (gene_contig_ptr->variantCount() == 0) {
 
+      zero_variants_.push_back(genome_id);
       continue;
 
     }
@@ -465,12 +482,123 @@ size_t kgl::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>
 kgl::GenotypeCountSorted kgl::GenotypeAnalysis::getCountSorted() const {
 
   GenotypeCountSorted  count_sorted_map;
-  for (auto& [geno_hash, genotype_ptr] : genotype_map_) {
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
 
     count_sorted_map.insert({genotype_ptr->genomes_.size(), genotype_ptr});
 
   }
 
   return count_sorted_map;
+
+}
+
+// The gini coefficient
+double kgl::GenotypeAnalysis::Gini() const {
+
+  const size_t genotype_count = genotype_map_.size() + 1; // categories.
+  if (genotype_count <= 1) {
+
+    return 1.0;
+
+  }
+
+  size_t total_genomes = zero_variants_.size();
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    total_genomes += genotype_ptr->genomes_.size();
+
+  }
+  // Generate the frequencies.
+  std::vector<double> genotype_frequencies;
+  genotype_frequencies.push_back(zero_variants_.size());
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    double frequency = static_cast<double>(genotype_ptr->genomes_.size());
+    genotype_frequencies.push_back(frequency);
+
+  }
+
+  double sum{0.0};
+  for (size_t i = 0; i < (genotype_count - 1); ++i) {
+
+    for (size_t j = i+ 1; j < genotype_count; ++j) {
+
+        sum += std::fabs(genotype_frequencies[i] - genotype_frequencies[j]);
+
+    }
+
+  }
+
+  double scaling = 1.0 / (static_cast<double>(total_genomes) * static_cast<double>(genotype_count - 1));
+
+  return 1.0 - (scaling * sum);
+
+}
+
+// A modified Shannon entropy measure for different category (genotype) counts.
+double kgl::GenotypeAnalysis::HRel() const {
+
+  const size_t genotype_count = genotype_map_.size() + 1; // categories.
+  if (genotype_count <= 1) {
+
+    return 0.0;
+
+  }
+
+  size_t total_genomes = zero_variants_.size();
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    total_genomes += genotype_ptr->genomes_.size();
+
+  }
+  // Generate the frequencies.
+  double proportion = static_cast<double>(zero_variants_.size()) / static_cast<double>(total_genomes);
+  double sum = std::log2(proportion) * proportion;
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    if (genotype_ptr->genomes_.empty()) {
+
+      ExecEnv::log().warn("GenotypeAnalysis::HRel; Unexpected empty genotype");
+      continue;
+
+    }
+    proportion = static_cast<double>(genotype_ptr->genomes_.size()) / static_cast<double>(total_genomes);
+    sum += std::log2(proportion) * proportion;
+
+  }
+
+  return (-1.0 * sum) / std::log2(genotype_count);
+
+}
+
+// Index of qualitative variation.
+double kgl::GenotypeAnalysis::IQV() const {
+
+  const size_t genotype_count = genotype_map_.size() + 1; // categories.
+  if (genotype_count <= 1) {
+
+    return 1.0;
+
+  }
+
+  size_t total_genomes = zero_variants_.size();
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    total_genomes += genotype_ptr->genomes_.size();
+
+  }
+  // Generate the frequencies.
+  double proportion = static_cast<double>(zero_variants_.size()) / (static_cast<double>(total_genomes) * 100.0);
+  double sum = (proportion * proportion);
+  for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
+
+    proportion = static_cast<double>(genotype_ptr->genomes_.size()) / (static_cast<double>(total_genomes) * 100.0);
+    sum += (proportion * proportion);
+
+  }
+
+  double scale = static_cast<double>(genotype_count) / static_cast<double>(genotype_count - 1);
+
+  return scale * (1.0 - sum);
 
 }

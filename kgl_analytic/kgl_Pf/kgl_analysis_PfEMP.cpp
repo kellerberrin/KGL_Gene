@@ -106,6 +106,26 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   antigenic_gene_map_.getGeneVariants(monoclonal_population_ptr);
   all_gene_map_.getGeneVariants(monoclonal_population_ptr);
 
+  size_t count{0};
+  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
+
+    ExecEnv::log().info("***** Genome: {}, Genome Count: {}", genome_id, genome_ptr->variantCount());
+
+    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+
+      ExecEnv::log().info("***** Genome: {}, Genome Count: {}, Contig: {}, Contig Count: {}",
+                          genome_id, genome_ptr->variantCount(), contig_id, contig_ptr->variantCount());
+
+    }
+
+    if (count >= 10) break;
+    ++count;
+
+  }
+
+  // General variant statistics.
+  hetero_homo_zygous_.analyzeVariantPopulation(monoclonal_population_ptr);
+
   return true;
 
 }
@@ -135,6 +155,10 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   variant_file_name = std::string(VARIANT_COUNT_) + "All" + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   all_gene_map_.writeGeneResults(variant_file_name);
+
+  variant_file_name = std::string("VariantStatistics") + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  hetero_homo_zygous_.write_results(variant_file_name);
 
   return true;
 

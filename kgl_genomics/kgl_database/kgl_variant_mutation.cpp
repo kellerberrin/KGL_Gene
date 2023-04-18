@@ -53,19 +53,19 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
   SignedOffset_t sequence_size_modify;
   variant_mutation_offset_.clearIndelOffset();
 
-  for (auto const& variant : region_variant_map) {
+  for (auto const& [variant_offset, variant_ptr] : region_variant_map) {
 
     // Adjust the mutation offset for indels.
-    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant.second->offset());
+    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant_ptr->offset());
 
     // Adjust the offset for the sequence offset
     adjusted_offset = adjusted_offset - contig_offset;
 
     // Mutate the sequence
-    if (not variant.second->mutateSequence(adjusted_offset, dna_sequence, sequence_size_modify)) {
+    if (not variant_ptr->mutateSequence(adjusted_offset, dna_sequence, sequence_size_modify)) {
 
       ExecEnv::log().info("mutateDNA(), DNA mutation failed for variant: {}",
-                          variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
+                          variant_ptr->output(' ',VariantOutputIndex::START_0_BASED, true));
 
       ExecEnv::log().info("mutateDNA(), Offset: {}, Sequence Length: {}, list of all sequence variants follows:",
                           contig_offset, dna_sequence.length());
@@ -80,10 +80,10 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     }
 
     // Update the mutation offset for indels.
-    if (not variant_mutation_offset_.updateIndelAccounting(variant.second, sequence_size_modify)) {
+    if (not variant_mutation_offset_.updateIndelAccounting(variant_ptr, sequence_size_modify)) {
 
       ExecEnv::log().error( "Problem updating indel mutated sequence length by variant: {}",
-                            variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
+                            variant_ptr->output(' ',VariantOutputIndex::START_0_BASED, true));
 
     }
 

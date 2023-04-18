@@ -89,7 +89,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
                                           DNA5SequenceCoding& reference_sequence,
                                           DNA5SequenceCoding& mutant_sequence) {
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
+  auto contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("mutantCodingDNA(), Could not find contig: {} in genome database", contig_id);
@@ -97,9 +97,11 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
 
   }
 
+  auto& contig_ptr = contig_opt.value();
+
   // Get the coding sequence.
   std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
-  if (not contig_opt.value()->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  if (not contig_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
 
     ExecEnv::log().warn("mutantCodingDNA(), Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
     return false;
@@ -107,7 +109,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
   }
 
 
-  if (not contig_opt.value()->getDNA5SequenceCoding(coding_sequence_ptr, reference_sequence))  {
+  if (not contig_ptr->getDNA5SequenceCoding(coding_sequence_ptr, reference_sequence))  {
 
     ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
     return false;

@@ -173,10 +173,16 @@ public:
 
   }
 
+  // Quantitative Variation Statistics for category (genotype) data.
+  [[nodiscard]] double Gini() const;   // The Gini coefficient.
+  [[nodiscard]] double HRel() const;   // A modified Shannon entropy measure for different category (genotype) counts.
+  [[nodiscard]] double IQV() const;    // Index of qualitative variation.
+
 private:
 
   std::shared_ptr<const GeneFeature> gene_ptr_;
   GenotypeMap genotype_map_;
+  std::vector<GenomeId_t> zero_variants_;
 
   size_t genotypeHash(const std::shared_ptr<const ContigDB>& genotype);
 
