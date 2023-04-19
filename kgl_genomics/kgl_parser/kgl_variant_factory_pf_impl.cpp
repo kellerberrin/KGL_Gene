@@ -108,10 +108,10 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
     return;
   }
 
-  size_t genotype_count = 0;
-  for (auto const& genotype : vcf_record_ptr->genotypeInfos)
+  for (size_t genotype_count = 0;  genotype_count < vcf_record_ptr->genotypeInfos.size(); ++genotype_count)
   {
 
+    auto const& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
     std::vector<std::string_view> genotype_formats = Utility::viewTokenizer(genotype, FORMAT_SEPARATOR_);
 
     // Require GT format field.
@@ -368,9 +368,6 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
       }
 
     }
-
-    // Next genome name.
-    ++genotype_count;
 
   }
 

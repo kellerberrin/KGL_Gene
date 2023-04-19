@@ -89,11 +89,12 @@ void kgl::Genome1000VCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_re
   }
 
   // For all genotypes.
-  size_t genotype_count = 0;
+
   std::map<size_t, std::vector<GenomeId_t>> phase_A_map, phase_B_map;
-  for (auto const& genotype : vcf_record_ptr->genotypeInfos)
+  for (size_t genotype_count = 0; genotype_count< vcf_record_ptr->genotypeInfos.size(); ++genotype_count)
   {
 
+    auto const& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
     auto indices = alternateIndex(contig, genotype, alt_vector);
 
     if (indices.first != REFERENCE_VARIANT_INDEX_) {
@@ -107,9 +108,6 @@ void kgl::Genome1000VCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_re
       phase_B_map[indices.second-1].push_back(getGenomeNames()[genotype_count]);
 
     }
-
-    // Next genome name.
-    ++genotype_count;
 
   }
 

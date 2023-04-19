@@ -31,10 +31,9 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
-        if (offset_array_ptr->getVariantArray().size() == 1) {
+        for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
 
-          ++contig_count.single_variant_;
-          if (offset_array_ptr->getVariantArray().front()->isSNP()) {
+          if (variant_ptr->isSNP()) {
 
             ++contig_count.snp_count_;
 
@@ -44,42 +43,21 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
           }
 
+        }
+
+        if (offset_array_ptr->getVariantArray().size() == 1) {
+
+          ++contig_count.single_variant_;
+
         } else if (offset_array_ptr->getVariantArray().size() == 2) {
 
           if (offset_array_ptr->getVariantArray().front()->HGVS() == offset_array_ptr->getVariantArray().back()->HGVS()) {
 
             ++contig_count.homozygous_count_;
-            if (offset_array_ptr->getVariantArray().front()->isSNP()) {
-
-              contig_count.snp_count_ += 2;
-
-            } else {
-
-              ++contig_count.indel_count_ += 2;
-
-            }
 
           } else {
 
             ++contig_count.heterozygous_count_;
-            if (offset_array_ptr->getVariantArray().front()->isSNP()) {
-
-              ++contig_count.snp_count_;
-
-            } else {
-
-              ++contig_count.indel_count_;
-
-            }
-            if (offset_array_ptr->getVariantArray().back()->isSNP()) {
-
-              ++contig_count.snp_count_;
-
-            } else {
-
-              ++contig_count.indel_count_;
-
-            }
 
           }
 
