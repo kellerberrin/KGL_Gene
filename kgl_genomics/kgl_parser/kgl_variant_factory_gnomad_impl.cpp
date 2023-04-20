@@ -94,18 +94,20 @@ void kgl::GenomeGnomadVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_
   for (size_t genotype_count = 0; genotype_count < vcf_record_ptr->genotypeInfos.size(); ++genotype_count)
   {
 
-    auto const& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
-    auto indices = alternateIndex(genotype, alt_vector);
+    const std::string& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
+    const std::string& genome = getGenomeNames()[genotype_count];
 
-    if (indices.first != REFERENCE_VARIANT_INDEX_) {
+    auto const [A_index, B_index] = alternateIndex(genotype, alt_vector);
 
-      phase_A_map[indices.first-1].push_back(getGenomeNames()[genotype_count]);
+    if (A_index != REFERENCE_VARIANT_INDEX_) {
+
+      phase_A_map[A_index-1].push_back(genome);
 
     }
 
-    if (indices.second != REFERENCE_VARIANT_INDEX_) {
+    if (B_index != REFERENCE_VARIANT_INDEX_) {
 
-      phase_B_map[indices.second-1].push_back(getGenomeNames()[genotype_count]);
+      phase_B_map[B_index-1].push_back(genome);
 
     }
 

@@ -92,6 +92,11 @@ private:
   // General variant statistics.
   HeteroHomoZygous hetero_homo_zygous_;
 
+  // Filter constants.
+  constexpr static const size_t MINIMUM_READ_DEPTH_{10};
+  constexpr static const char* VQSLOD_FILTER_NAME_{"VQSLOD"};
+  constexpr static const double VQSLOD_GEQ_VALUE_{0.1};
+
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};
   constexpr static const char* NEWICK_EXT_{".txt"};
@@ -127,6 +132,7 @@ private:
   [[nodiscard]] GeneVector getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
   [[nodiscard]] GeneVector getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
   [[nodiscard]] GeneVector getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
+
 
 };
 

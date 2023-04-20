@@ -13,6 +13,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <optional>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This class holds the evidence that resulted in the creation of a variant.
@@ -33,29 +34,32 @@ public:
    FormatData( size_t ref_count,
                size_t alt_count,
                size_t DP_count,
-               Phred_t GQ_value,
-               Phred_t quality) : ref_count_(ref_count),
+               float GQ_value,
+               float quality) : ref_count_(ref_count),
                                   alt_count_(alt_count),
                                   DP_count_(DP_count),
-                                  GQ_value_(GQ_value),
+                                  GQ_prob_(convertFromPhred(GQ_value)),
                                   quality_(quality) {}
   ~FormatData() = default;
 
   [[nodiscard]] size_t refCount() const { return ref_count_; }
   [[nodiscard]] size_t altCount() const { return alt_count_; }
   [[nodiscard]] size_t DPCount() const { return DP_count_; }
-  [[nodiscard]] Phred_t GQValue() const { return GQ_value_; }
-  [[nodiscard]] Phred_t Quality() const { return quality_; }
+  [[nodiscard]] float GQProbWrongVariant() const { return GQ_prob_; }
+  [[nodiscard]] float Quality() const { return quality_; }
 
   [[nodiscard]] std::string output(char delimiter) const;
+
+  // Convert -10log10(x) to double
+  [[nodiscard]] static float convertFromPhred(float scaled) { return std::pow(10.0, (scaled / -10.0)); }
 
 private:
 
   size_t ref_count_;
   size_t alt_count_;
   size_t DP_count_;
-  Phred_t GQ_value_;
-  Phred_t quality_;
+  float GQ_prob_;
+  float quality_;
 
 };
 
@@ -97,10 +101,34 @@ public:
   [[nodiscard]] DataSourceEnum dataSource() const { return data_source_; }
 
   // Must be checked for null pointer before use.
-  [[nodiscard]] std::shared_ptr<const DataMemoryBlock> infoData() const { return info_data_block_; }
+  [[nodiscard]] std::optional<std::shared_ptr<const DataMemoryBlock>> infoData() const {
+
+    if (info_data_block_) {
+
+      return info_data_block_;
+
+    }  else {
+
+      return std::nullopt;
+
+    }
+
+  }
 
   // Must be checked for null pointer before use.
-  [[nodiscard]] std::shared_ptr<const FormatData> formatData() const { return format_data_; }
+  [[nodiscard]] std::optional<std::shared_ptr<const FormatData>> formatData() const
+  {
+    if (format_data_) {
+
+      return format_data_;
+
+    } else {
+
+      return std::nullopt;
+
+    }
+
+  }
 
   [[nodiscard]] uint32_t altVariantIndex() const { return alternate_variant_index_; }
 

@@ -100,8 +100,7 @@ bool kgl::VepSubStringFilter::applyFilter(const Variant& variant) const {
 bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
 
   auto variant_hash = variant.HGVS();
-  auto const& result = hashed_variants_.find(variant_hash);
-  if (result != hashed_variants_.end()) {
+  if (hashed_variants_.contains(variant_hash)) {
 
     return false;
 
@@ -128,8 +127,7 @@ bool kgl::UniqueUnphasedFilter::applyFilter(const Variant& variant) const {
 bool kgl::UniquePhasedFilter::applyFilter(const Variant& variant) const {
 
   auto variant_hash = variant.HGVS_Phase();
-  auto const& result = hashed_variants_.find(variant_hash);
-  if (result != hashed_variants_.end()) {
+  if (hashed_variants_.contains(variant_hash)) {
 
     return false;
 
@@ -156,11 +154,10 @@ bool kgl::UniquePhasedFilter::applyFilter(const Variant& variant) const {
 
 bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
 
-  std::optional<std::shared_ptr<const FormatData>> count_evidence_opt = variant.evidence().formatData();
+  if (variant.evidence().formatData()) {
 
-  if (count_evidence_opt) {
-
-    return (count_evidence_opt.value()->refCount() + count_evidence_opt.value()->altCount()) >= minimum_count_;
+    auto const& format_data = *(variant.evidence().formatData().value());
+    return (format_data.refCount() + format_data.altCount()) >= minimum_count_;
 
   } else {
 
@@ -180,11 +177,11 @@ bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
 
 bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 
-  std::optional<std::shared_ptr<const FormatData>> count_evidence = variant.evidence().formatData();
 
-  if (count_evidence) {
+  if (variant.evidence().formatData()) {
 
-    return count_evidence.value()->DPCount() >= minimum_count_;
+    auto const& format_data = *(variant.evidence().formatData().value());
+    return format_data.DPCount() >= minimum_count_;
 
   } else {
 

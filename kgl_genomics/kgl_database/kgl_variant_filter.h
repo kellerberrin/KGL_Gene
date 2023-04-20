@@ -175,7 +175,7 @@ class InfoGEQFloatFilter : public VariantFilter {
 
 public:
 
-  InfoGEQFloatFilter(const std::string& field_name, double comparison_value)  // How the filter responds if the data is missing.
+  InfoGEQFloatFilter(const std::string& field_name, double comparison_value)
   : info_filter_(field_name), comparison_value_(comparison_value) {
 
     std::stringstream ss;
@@ -477,7 +477,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // ReturnType both variants if and only there are 2 variants at the location that are identical disregarding phase.
-// Note If the the variants are phased then the filter will pass back 2 identical variants which may need to be
+// Note If the variants are phased then the filter will pass back 2 identical variants which may need to be
 // further filtered for uniqueness. The inSituFilter version deletes all variant offsets that are not homozygous.
 // The homozygous filter must be called first before any other filter and cannot be used in a compound filter.
 //

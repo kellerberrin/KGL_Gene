@@ -19,7 +19,7 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   if (formatData()) {
 
-    ss << formatData()->output(delimiter);
+    ss << formatData().value()->output(delimiter);
 
   }
 
@@ -36,7 +36,7 @@ std::string kgl::FormatData::output(char delimiter) const {
   ss << delimiter << "RefCount:" << refCount();
   ss << delimiter << "AltCount:" << altCount();
   ss << delimiter << "DPCount:" << DPCount();
-  ss << delimiter << "GQValue:" << GQValue();
+  ss << delimiter << "GQProbWrongVariant:" << GQProbWrongVariant();
   ss << delimiter << "Quality:" << Quality();
 
   return ss.str();

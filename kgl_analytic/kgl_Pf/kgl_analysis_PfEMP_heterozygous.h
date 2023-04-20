@@ -43,6 +43,9 @@ private:
   VariantAnalysisMap variant_analysis_map_;
   constexpr static const char CSV_DELIMITER_ = ',';
 
+  [[nodiscard]] double getVQSLOD(const std::shared_ptr<const Variant>& variant_ptr);
+  constexpr static const char* VQSLOD_FILTER_NAME_{"VQSLOD"};
+
 };
 
 

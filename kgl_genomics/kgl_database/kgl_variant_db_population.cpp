@@ -453,7 +453,8 @@ std::optional<std::shared_ptr<const kgl::InfoEvidenceHeader>> kgl::PopulationDB:
 
           if (variant_ptr->evidence().infoData()) {
 
-            return variant_ptr->evidence().infoData()->evidenceHeader();
+            auto const& info_data = *(variant_ptr->evidence().infoData().value());
+            return info_data.evidenceHeader();
 
           }
 

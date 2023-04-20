@@ -132,7 +132,8 @@ std::optional<const kgl::InfoSubscribedField> kgl::InfoEvidenceAnalysis::getSubs
 
   if (variant.evidence().infoData()) {
 
-    return variant.evidence().infoData()->evidenceHeader()->getSubscribedField(field_ident);
+    const auto& info_data = *(variant.evidence().infoData().value());
+    return info_data.evidenceHeader()->getSubscribedField(field_ident);
 
   }
 
@@ -151,7 +152,7 @@ std::optional<kgl::InfoDataVariant> kgl::InfoEvidenceAnalysis::getInfoData( cons
     auto info_data_ptr = variant.evidence().infoData();
     if (info_data_ptr) {
 
-      const DataMemoryBlock &data_block = *info_data_ptr;
+      const DataMemoryBlock &data_block = *(info_data_ptr.value());
 
       InfoDataVariant variant_data = field_opt->getData(data_block);
 
@@ -219,7 +220,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
   }
 
   // Access the data block and retrieve the vep field vector.
-  const DataMemoryBlock &data_block = *variant.evidence().infoData();
+  const DataMemoryBlock &data_block = *(variant.evidence().infoData().value());
 
   const std::vector<std::string> vep_field_vector = varianttoStrings(vep_field_obj.getData(data_block));
 

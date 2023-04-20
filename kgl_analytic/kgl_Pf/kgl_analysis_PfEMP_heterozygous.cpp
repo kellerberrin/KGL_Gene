@@ -3,7 +3,7 @@
 //
 
 #include "kgl_analysis_PfEMP_heterozygous.h"
-
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include <fstream>
 
 
@@ -67,8 +67,10 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
                               genome_id, contig_id, offset, offset_array_ptr->getVariantArray().size());
           for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
 
-            ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, Variant: {}",
-                                genome_id, contig_id, offset, variant_ptr->HGVS());
+            ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, Variant: {}, Format: {}, VQSLOD: {}",
+                                genome_id, contig_id, offset, variant_ptr->HGVS(),
+                                variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED),
+                                getVQSLOD(variant_ptr));
 
           }
 
@@ -139,3 +141,23 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
   }
 
 }
+
+double kgl::HeteroHomoZygous::getVQSLOD(const std::shared_ptr<const Variant>& variant_ptr) {
+
+  auto field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, VQSLOD_FILTER_NAME_);
+  if (field_opt) {
+
+    std::vector<double> float_vector = InfoEvidenceAnalysis::varianttoFloats(field_opt.value());
+    if (float_vector.size() == 1) {
+
+      return float_vector.front();
+//      return std::pow(10.0, float_vector.front());
+
+    }
+
+  }
+
+  return std::nan("n/a");
+
+}
+

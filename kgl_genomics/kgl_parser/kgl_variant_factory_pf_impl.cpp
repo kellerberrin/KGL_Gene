@@ -108,10 +108,13 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
     return;
   }
 
+  // For each genome.
   for (size_t genotype_count = 0;  genotype_count < vcf_record_ptr->genotypeInfos.size(); ++genotype_count)
   {
 
-    auto const& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
+    const std::string& genotype = vcf_record_ptr->genotypeInfos[genotype_count];
+    const std::string& genome_name = getGenomeNames()[genotype_count];
+
     std::vector<std::string_view> genotype_formats = Utility::viewTokenizer(genotype, FORMAT_SEPARATOR_);
 
     // Require GT format field.
@@ -171,7 +174,7 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
     }
 
     // Get the GQ field if it exists.
-    double GQ_value{0.0};
+    float GQ_value{0.0};
     if (GQ_offset_opt) {
 
       if (GQ_offset_opt.value() < genotype_formats.size()) {
@@ -186,7 +189,15 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
 
           } else {
 
-            GQ_value = std::stof(GQ_text);
+            try {
+
+              GQ_value = std::stof(GQ_text);
+
+            } catch(std::exception& e) {
+
+              ExecEnv::log().error("PfVCFImpl::ParseRecord; Cannot convert GQ_text: {} to float, reason: {}", GQ_text, e.what());
+
+            }
 
           }
 
@@ -270,7 +281,6 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
 
     }
 
-    const std::string &genome_name = getGenomeNames()[genotype_count];
 
     if (A_allele > 0) {
 
