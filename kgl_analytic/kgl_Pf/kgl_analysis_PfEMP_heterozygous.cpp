@@ -144,16 +144,10 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
 
 double kgl::HeteroHomoZygous::getVQSLOD(const std::shared_ptr<const Variant>& variant_ptr) {
 
-  auto field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, VQSLOD_FILTER_NAME_);
+  auto field_opt = InfoEvidenceAnalysis::getTypedInfoData<double>(*variant_ptr, VQSLOD_FILTER_NAME_);
   if (field_opt) {
 
-    std::vector<double> float_vector = InfoEvidenceAnalysis::varianttoFloats(field_opt.value());
-    if (float_vector.size() == 1) {
-
-      return float_vector.front();
-//      return std::pow(10.0, float_vector.front());
-
-    }
+    return field_opt.value();
 
   }
 

@@ -46,6 +46,17 @@ private:
 using VepValueMap = std::vector<std::map<std::string, std::string>>;
 using VepIndexVector = std::vector<std::pair<std::string, size_t>>;
 
+
+template<typename T>
+concept ValidInfoDataType =
+std::same_as<T, std::vector<int64_t>> ||
+std::same_as<T, std::vector<double>> ||
+std::same_as<T, std::vector<std::string>> ||
+                std::same_as<T, int64_t> ||
+                std::same_as<T, double> ||
+                std::same_as<T, std::string> ||
+                std::same_as<T, bool>;
+
 class InfoEvidenceAnalysis {
 
 public:
@@ -82,7 +93,9 @@ public:
   static void vepSubFieldValues( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
   // Count discrete values.
   static void vepSubFieldCount( std::string vep_sub_field, const std::shared_ptr<const PopulationDB>& population);
-
+  // Type template getTypedData
+  template<typename T> requires ValidInfoDataType<T>
+  static std::optional<T> getTypedInfoData( const Variant& variant, const std::string& field_ident);
 
 public:
 
@@ -93,6 +106,169 @@ public:
 
 
 };
+
+// Can only be templated with double, std::vector<double>, int64_t, std::vector<int64_t>, std::string,
+// std::vector<string> and bool (add concepts).
+template<typename T> requires ValidInfoDataType<T>
+std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant, const std::string& field_ident) {
+
+  std::optional<const InfoSubscribedField> field_opt = getSubscribedField(variant, field_ident);
+
+  if (field_opt) {
+
+    auto info_data_ptr = variant.evidence().infoData();
+    if (info_data_ptr) {
+
+      const DataMemoryBlock &data_block = *(info_data_ptr.value());
+
+      {
+
+        auto const& field_info = field_opt.value();
+        // Check that this is the correct index for the data block.
+        // Should never happen (but best to check).
+        if (field_info.getDataHeader() != data_block.evidenceHeader()) {
+
+          ExecEnv::log().error( "InfoEvidenceAnalysis::getTypedInfoData, Incorrect Subscribed Field Index used Access Info Data Block");
+          return std::nullopt; // Inaccessible variant data, will trigger downstream errors.
+
+        }
+
+        auto resource_type = field_info.getDataHandle().resourceType();
+
+        if constexpr(std::is_same_v<T, double>) {
+
+          if (resource_type != DataResourceType::Float) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getFloat(field_info.getDataHandle());
+          if (info_data.size() != 1) {
+
+            return std::nullopt;
+
+          }
+
+          return info_data.front();
+
+        }
+
+        if constexpr(std::is_same_v<T, std::vector<double>>) {
+
+          if (resource_type != DataResourceType::Float) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getFloat(field_info.getDataHandle());
+
+          return info_data;
+
+        }
+
+        if constexpr(std::is_same_v<T, int64_t>) {
+
+          if (resource_type != DataResourceType::Integer) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getInteger(field_info.getDataHandle());
+          if (info_data.size() != 1) {
+
+            return std::nullopt;
+
+          }
+
+          return info_data.front();
+
+        }
+
+        if constexpr(std::is_same_v<T, std::vector<int64_t>>) {
+
+          if (resource_type != DataResourceType::Integer) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getInteger(field_info.getDataHandle());
+
+          return info_data;
+
+        }
+
+
+        if constexpr(std::is_same_v<T, std::string>) {
+
+          if (resource_type != DataResourceType::String) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getString(field_info.getDataHandle());
+          if (info_data.size() != 1) {
+
+            return std::nullopt;
+
+          }
+
+          return info_data.front();
+
+        }
+
+        if constexpr(std::is_same_v<T, std::vector<std::string>>) {
+
+          if (resource_type != DataResourceType::String) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getInteger(field_info.getDataHandle());
+
+          return info_data;
+
+        }
+
+        if constexpr(std::is_same_v<T, bool>) {
+
+          if (resource_type != DataResourceType::Boolean) {
+
+            return std::nullopt;
+
+          }
+
+          auto info_data = data_block.getBoolean(field_info.getDataHandle());
+
+          return info_data;
+
+        }
+
+        ExecEnv::log().error( "InfoEvidenceAnalysis::getTypedInfoData, Internal data type unknown");
+
+      }
+
+    }
+
+  }
+
+  return std::nullopt;
+
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 using VepFieldValueMap = std::map<std::string, size_t>;
 
