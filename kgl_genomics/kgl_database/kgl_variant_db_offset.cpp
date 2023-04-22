@@ -66,6 +66,20 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituFilter(const VariantFilter &filte
 
 }
 
+std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::offsetFilter(const VariantFilter &filter) const {
+
+  std::shared_ptr<OffsetDB> filtered_offset_ptr(std::make_shared<OffsetDB>());
+
+
+
+  return filtered_offset_ptr;
+
+}
+
+
+
+
+
 std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const VariantFilter &filter) {
 
   std::pair<size_t, size_t> offset_count{0, 0};
@@ -74,9 +88,11 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const VariantFilter &filt
   OffsetDBArray filtered_variants;
   filtered_variants.reserve(offset_count.first);
 
+  auto variant_filter_ptr = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
+
   for (auto const &variant_ptr : variant_vector_) {
 
-    if (filter.applyFilter(*variant_ptr)) {
+    if (variant_filter_ptr->applyFilter(*variant_ptr)) {
 
       filtered_variants.push_back(variant_ptr);
 

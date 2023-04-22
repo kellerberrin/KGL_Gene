@@ -144,42 +144,42 @@ size_t kgl::GenomeDB::variantCount() const {
 }
 
 
-std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::filterVariants(const VariantFilter& filter) const {
+std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::genomeFilter(const VariantFilter& filter) const {
 
+  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   // Only genome filter is implemented at this level.
   if (filter.filterType() == FilterType::GenomeFilter) {
 
-    std::shared_ptr<const GenomeFilter> genome_filter = std::dynamic_pointer_cast<const GenomeFilter>(filter.clone());
+    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
     if (not genome_filter) {
 
-      ExecEnv::log().error("GenomeDB::inSituFilter; unable to clone/cast GenomeFilter");
-      return filterVariants(TrueFilter());
+      ExecEnv::log().error("GenomeDB::filter; unable to clone/cast GenomeFilter");
+      return filtered_genome_ptr;
 
     }
 
-    if (genome_filter->filterGenome(genomeId())) {
+    if (genome_filter->applyFilter(*this)) {
 
       // Called recursively, copy all contigs and offsets.
-      return filterVariants(TrueFilter());
+      return genomeFilter(TrueFilter());
 
     }
 
     // Else return an empty genome object.
-    return std::make_shared<GenomeDB>(genomeId());
+    return filtered_genome_ptr;
 
   }
 
   // All other filters.
   // Filter the contigs.
-  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
-    auto filtered_contig = contig_ptr->filterVariants(filter);
+    auto filtered_contig = contig_ptr->contigFilter(filter);
     if (not filtered_contig->getMap().empty()) {
 
       if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
-        ExecEnv::log().error("GenomeDB::filterVariants(), Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
+        ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
 
       }
 
@@ -200,7 +200,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
 
     std::pair<size_t, size_t> genome_count{0, 0};
     genome_count.first = variantCount();
-    std::shared_ptr<const GenomeFilter> genome_filter = std::dynamic_pointer_cast<const GenomeFilter>(filter.clone());
+    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
     if (not genome_filter) {
 
       ExecEnv::log().error("GenomeDB::inSituFilter; unable to clone/cast GenomeFilter");
@@ -209,7 +209,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
 
     }
 
-    if (not genome_filter->filterGenome(genomeId())) {
+    if (not genome_filter->applyFilter(*this)) {
 
       // Called recursively, delete all contigs and offsets.
       return inSituFilter(FalseFilter());
@@ -229,21 +229,6 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
     auto contig_count = contig_ptr->inSituFilter(filter);
     genome_count.first += contig_count.first;
     genome_count.second += contig_count.second;
-
-  }
-  // Delete the empty contigs.
-  auto it = contig_map_.begin();
-  while (it != contig_map_.end()) {
-
-    if (it->second->getMap().empty()) {
-
-      it = contig_map_.erase(it);
-
-    } else {
-
-      ++it;
-
-    }
 
   }
 
@@ -273,7 +258,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const Ge
 
     if (contig_count.first != contig_count.second) {
 
-      ExecEnv::log().warn("GenomeDB::validate(), Genome: {} Validation Failed in Contig: {}, Total Variants: {} Validated: {}",
+      ExecEnv::log().warn("GenomeDB::validate(), Genome: {} Validation Failed in Contig: {}, Total filter: {} Validated: {}",
                           genomeId(), contig_id, contig_count.first, contig_count.second);
 
     }

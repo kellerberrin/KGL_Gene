@@ -409,7 +409,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const Populatio
 
   } // contig
 
-  ExecEnv::log().info("Analysis: {},  Variants processed: {}", ident(), variant_count);
+  ExecEnv::log().info("Analysis: {},  filter processed: {}", ident(), variant_count);
 
   return true;
 

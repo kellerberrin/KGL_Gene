@@ -40,6 +40,9 @@ public:
   void setVariantArray(const OffsetDBArray& update) { variant_vector_ = update; }
 
   void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
+
+  std::shared_ptr<OffsetDB> offsetFilter(const VariantFilter &filter) const;
+
   std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
 
   // setIntersection returns an OffsetDB that contains unique variants present in both offsets.

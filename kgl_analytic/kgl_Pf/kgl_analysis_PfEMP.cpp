@@ -107,7 +107,7 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   all_gene_map_.getGeneVariants(monoclonal_population_ptr);
 
   // General variant statistics.
-  auto filtered_monoclonal_ptr =  monoclonal_population_ptr->filterVariants(DPCountFilter(MINIMUM_READ_DEPTH_));
+  auto filtered_monoclonal_ptr = monoclonal_population_ptr->populationFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
   hetero_homo_zygous_.analyzeVariantPopulation(filtered_monoclonal_ptr);
 
   return true;

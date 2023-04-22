@@ -110,11 +110,11 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                << CSV_DELIMITER_
                << "Variant Rate"
                << CSV_DELIMITER_
-               << "Unique Variants"
+               << "Unique filter"
                << CSV_DELIMITER_
                << "Unique Variant Rate"
                << CSV_DELIMITER_
-               << "Single Genome Variants"
+               << "Single Genome filter"
                << CSV_DELIMITER_
                << "Single Variant Genomes"
                << CSV_DELIMITER_
@@ -166,7 +166,7 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
     // Actual variants
     size_t variant_count = aggregated_gene_contig_ptr->variantCount();
     // Determine the number of unique variants.
-    auto unique_variant_contig = aggregated_gene_contig_ptr->filterVariants(UniqueUnphasedFilter());
+    auto unique_variant_contig = aggregated_gene_contig_ptr->contigFilter(UniqueUnphasedFilter());
     size_t unique_variant_count = unique_variant_contig->variantCount();
 
 

@@ -36,7 +36,7 @@ public:
   // Spawns indexing thread.
   void commenceIndexing() ;
 
-  // Variants are enqueued by the parser threads.
+  // filter are enqueued by the parser threads.
   void enqueueVariant(std::unique_ptr<const Variant>&& variant_ptr);
 
   // After the parser threads return, then halt and join.

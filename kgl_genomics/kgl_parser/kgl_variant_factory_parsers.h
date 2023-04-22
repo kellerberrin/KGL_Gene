@@ -109,7 +109,7 @@ private:
     // Validate the parsed VCF population against the specified reference genome.
     auto [total_variants, validated_variants] = vcf_population_ptr->validate(ref_genome);
 
-    ExecEnv::log().info("File: {}, Total Variants: {}, Validated Variants: {} ({})",
+    ExecEnv::log().info("File: {}, Total Variants: {}, Validated filter: {} ({})",
                         vcf_population_ptr->populationId(), total_variants, validated_variants, ref_genome->genomeId());
 
     return vcf_population_ptr;

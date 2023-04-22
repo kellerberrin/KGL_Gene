@@ -113,7 +113,7 @@ size_t kgl::PopulationDB::variantCount() const {
 
 // Multi-tasking filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
-std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const VariantFilter& filter) const {
+std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::populationFilter(const VariantFilter& filter) const {
 
   // Create the new population.
   std::shared_ptr<PopulationDB> filtered_population_ptr(std::make_shared<PopulationDB>(populationId(), dataSource()));
@@ -134,7 +134,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
                           std::shared_ptr<const VariantFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
 
-    return genome_ptr->filterVariants(*filter_ptr);
+    return genome_ptr->genomeFilter(*filter_ptr);
 
   };
 
@@ -152,13 +152,9 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   for (auto& future : future_vector) {
 
     std::shared_ptr<GenomeDB> filtered_genome_ptr = future.get();
-    if (not filtered_genome_ptr->getMap().empty()) {
+    if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
 
-      if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
-
-        ExecEnv::log().error("PopulationDB::filterVariants; could not add filtered genome to the population");
-
-      }
+      ExecEnv::log().error("PopulationDB::filter; could not add filtered genome to the population");
 
     }
 
@@ -214,22 +210,6 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
     auto [original_count, filtered_count] = future.get();
     filter_counts.first += original_count;
     filter_counts.second += filtered_count;
-
-  }
-
-  // Delete empty genomes.
-  auto it = genome_map_.begin();
-  while (it != genome_map_.end()) {
-
-    if (it->second->getMap().empty()) {
-
-      it = genome_map_.erase(it);
-
-    } else {
-
-      ++it;
-
-    }
 
   }
 
@@ -317,7 +297,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::validate(const std::shared_ptr<cons
 
     if (genome_count.first != genome_count.second) {
 
-      ExecEnv::log().warn("PopulationDB::validate(), Population: {} Failed to Validate, Total Variants: {}, Validated: {}",
+      ExecEnv::log().warn("PopulationDB::validate(), Population: {} Failed to Validate, Total filter: {}, Validated: {}",
                           populationId(), genome_count.first, genome_count.second);
 
     }

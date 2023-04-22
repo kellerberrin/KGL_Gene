@@ -175,7 +175,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
   // A vector for futures.
   std::vector<std::future<GeneMutation>> future_vector;
 
-  ExecEnv::log().info("Unphased variants sorted by Ensembl Gene code: {}, Total Unphased Variants: {}",
+  ExecEnv::log().info("Unphased variants sorted by Ensembl Gene code: {}, Total Unphased filter: {}",
                       ensembl_index_map_ptr->size(), unphased_population_ptr->variantCount());
   // Queue a thread for each gene.
   for (auto& gene_mutation : gene_vector_) {

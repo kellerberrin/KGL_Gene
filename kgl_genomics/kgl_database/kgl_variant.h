@@ -107,7 +107,7 @@ public:
 
   [[nodiscard]] std::string typeText() const;
 
-  [[nodiscard]] bool filterVariant(const VariantFilter& filter) const { return filter.applyFilter(*this); }
+  [[nodiscard]] bool filterVariant(const FilterVariants& filter) const { return filter.applyFilter(*this); }
 
   // Location specific parameters.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }

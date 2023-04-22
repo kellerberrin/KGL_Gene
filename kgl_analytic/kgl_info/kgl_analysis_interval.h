@@ -87,7 +87,7 @@ public:
   void addTransitionCount(const size_t transition_count) { transition_count_ += transition_count; }
   [[nodiscard]] size_t transitionCount() const { return transition_count_; }
 
-  // Variants with vep high and moderate consequences (only Gnomad data)
+  // filter with vep high and moderate consequences (only Gnomad data)
    [[nodiscard]] size_t consequenceCount() const { return info_interval_data_.consequenceCount(); }
 
   // Total variants
@@ -169,7 +169,7 @@ private:
   std::string work_directory_;
   std::string ident_work_directory_;
 
-  // First count is Variants the second is SNPs.
+  // First count is filter the second is SNPs.
   using IntervalVector = std::vector<IntervalData>;
   using IntervalMap = std::map<ContigId_t, IntervalVector>;
   IntervalMap interval_map_;

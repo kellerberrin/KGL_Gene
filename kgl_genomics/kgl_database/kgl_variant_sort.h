@@ -23,13 +23,13 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Variants indexed by their Ensembl gene id retrieved from the vep field.
+// filter indexed by their Ensembl gene id retrieved from the vep field.
 using EnsemblIndexMap = std::multimap<std::string, std::shared_ptr<const Variant>>;
 
-// Variants indexed by their variant id ('rsXXXXXXXXX').
+// filter indexed by their variant id ('rsXXXXXXXXX').
 using VariantIdIndexMap = std::map<std::string, std::shared_ptr<const Variant>>;
 
-// Variants indexed by genome and then by variant id ('rsXXXXXXXXX').
+// filter indexed by genome and then by variant id ('rsXXXXXXXXX').
 using VariantGenomeIndexMap = std::map<std::string,  std::shared_ptr<VariantIdIndexMap>>;
 
 // Indexed by variant_ID with value as Ensembl codes.
@@ -59,7 +59,7 @@ public:
   // A population of variants indexed by variant id.
   [[nodiscard]] static std::shared_ptr<VariantIdIndexMap> variantIdIndex(const std::shared_ptr<const PopulationDB>& population_ptr);
 
-  // Variants indexed by genome and then by variant id ('rsXXXXXXXXX').
+  // filter indexed by genome and then by variant id ('rsXXXXXXXXX').
   [[nodiscard]] static std::shared_ptr<VariantGenomeIndexMap> variantGenomeIndex(const std::shared_ptr<const PopulationDB>& population_ptr);
 
   // Multithreaded version indexes by variant id ('rsXXXXXXXXX') using a thread for each genome.

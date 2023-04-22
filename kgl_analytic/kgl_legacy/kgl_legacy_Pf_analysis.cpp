@@ -54,7 +54,7 @@ for (const auto &[vcf_ident, vcf_file] : vcf_map) {
     // Basic statistics to output
     // unphased_population_ptr->popStatistics();
     // Filter unphased variants for minimum read statistics.
-    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filterVariants(
+    std::shared_ptr<UnphasedPopulation> filtered_unphased_ptr = parsed_variants->filter(
     AndFilter(DPCountFilter(30), RefAltCountFilter(30)));
 
     // Process Filtered Unphased Heterozygous Statistics
@@ -96,7 +96,7 @@ for (const auto &[vcf_ident, vcf_file] : vcf_map) {
                                                                                           runtime_options.getEvidenceMap());
 
     std::pair<size_t, size_t> valid_count = parsed_variants->validate(reference_genome_ptr);
-    ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated Variants: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
+    ExecEnv::log().info("Genome: {}, Total Variants: {}, Validated filter: {}", parsed_variants->genomeId(), valid_count.first, valid_count.second);
 
   }
 

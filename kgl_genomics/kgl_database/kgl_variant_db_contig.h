@@ -36,7 +36,7 @@ public:
   [[nodiscard]] ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return filterVariants(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return contigFilter(TrueFilter()); }
 
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
 
@@ -49,7 +49,7 @@ public:
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
 
   // Create a filtered contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> filterVariants(const VariantFilter &filter) const;
+  [[nodiscard]] std::shared_ptr<ContigDB> contigFilter(const VariantFilter &filter) const;
 
   // Filter this contig (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.

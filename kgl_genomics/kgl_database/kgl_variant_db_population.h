@@ -46,7 +46,7 @@ public:
   PopulationDB& operator=(const PopulationDB&) = delete; // Use deep copy.
 
   // Use this to copy the object. Just the trivial 'TrueFilter'.
-  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return filterVariants(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return populationFilter(TrueFilter()); }
 
   // Use this to empty the object. Just the trivial 'FalseFilter'.
   std::pair<size_t, size_t> clear() { return inSituFilter(FalseFilter()); }
@@ -62,7 +62,7 @@ public:
 
   // Creates a filtered copy of the population database.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.
-  [[nodiscard]] std::shared_ptr<PopulationDB> filterVariants(const VariantFilter& filter) const;
+  [[nodiscard]] std::shared_ptr<PopulationDB> populationFilter(const VariantFilter& filter) const;
 
   // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.

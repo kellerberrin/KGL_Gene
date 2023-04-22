@@ -262,7 +262,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 
     // Sort variants by Gene Ensembl Code
     auto sorted_variants_ptr = std::make_shared<SortedVariantAnalysis>(unphased_population_ptr_);
-    ExecEnv::log().info("Unphased Variants Sorted by VEP Gene Identifier: {}, number sorted by non-ensembl identifier: {}",
+    ExecEnv::log().info("Unphased filter Sorted by VEP Gene Identifier: {}, number sorted by non-ensembl identifier: {}",
                         sorted_variants_ptr->ensemblMap()->size(), VariantSort::nonEnsemblIdentifiers(*(sorted_variants_ptr->ensemblMap())));
     // Perform the analysis
     gene_mutation_.variantAnalysis( population_ptr_,
