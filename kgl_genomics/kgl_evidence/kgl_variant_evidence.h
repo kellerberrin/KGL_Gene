@@ -38,7 +38,7 @@ public:
                float quality) : ref_count_(ref_count),
                                   alt_count_(alt_count),
                                   DP_count_(DP_count),
-                                  GQ_prob_(convertFromPhred(GQ_value)),
+                                  GQ_prob_(GQ_value),
                                   quality_(quality) {}
   ~FormatData() = default;
 

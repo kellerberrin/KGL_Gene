@@ -128,24 +128,35 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
         // Should never happen (but best to check).
         if (field_info.getDataHeader() != data_block.evidenceHeader()) {
 
-          ExecEnv::log().error( "InfoEvidenceAnalysis::getTypedInfoData, Incorrect Subscribed Field Index used Access Info Data Block");
+          ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Incorrect Subscribed Field Index used Access Info Data Block");
           return std::nullopt; // Inaccessible variant data, will trigger downstream errors.
 
         }
 
         auto resource_type = field_info.getDataHandle().resourceType();
 
+// Each of the sections below conditionally compiles using "if constexpr" depending on template type <T>.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         if constexpr(std::is_same_v<T, double>) {
 
           if (resource_type != DataResourceType::Float) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not floating point.", field_ident);
             return std::nullopt;
 
           }
 
           auto info_data = data_block.getFloat(field_info.getDataHandle());
-          if (info_data.size() != 1) {
+          // Empty is assumed to be a valid missing value.
+          if (info_data.empty()) {
 
+            return std::nullopt;
+
+          } else if (info_data.size() != 1) {
+
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not a floating point scalar, vector size: {}.",
+                                 field_ident, info_data.size());
             return std::nullopt;
 
           }
@@ -153,11 +164,14 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
           return info_data.front();
 
         }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if constexpr(std::is_same_v<T, std::vector<double>>) {
 
           if (resource_type != DataResourceType::Float) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not floating point (vector).", field_ident);
             return std::nullopt;
 
           }
@@ -168,17 +182,27 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
 
         }
 
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         if constexpr(std::is_same_v<T, int64_t>) {
 
           if (resource_type != DataResourceType::Integer) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not integer.", field_ident);
             return std::nullopt;
 
           }
 
           auto info_data = data_block.getInteger(field_info.getDataHandle());
-          if (info_data.size() != 1) {
+          // Empty is assumed to be a valid missing value.
+          if (info_data.empty()) {
 
+            return std::nullopt;
+
+          } else if (info_data.size() != 1) {
+
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not an integer scalar, vector size: {}",
+                                 field_ident, info_data.size());
             return std::nullopt;
 
           }
@@ -186,11 +210,14 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
           return info_data.front();
 
         }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if constexpr(std::is_same_v<T, std::vector<int64_t>>) {
 
           if (resource_type != DataResourceType::Integer) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not integer (vector).", field_ident);
             return std::nullopt;
 
           }
@@ -201,18 +228,27 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
 
         }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if constexpr(std::is_same_v<T, std::string>) {
 
           if (resource_type != DataResourceType::String) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not a std::string.", field_ident);
             return std::nullopt;
 
           }
 
           auto info_data = data_block.getString(field_info.getDataHandle());
-          if (info_data.size() != 1) {
+          // Empty is assumed to be a valid missing value.
+          if (info_data.empty()) {
 
+            return std::nullopt;
+
+          } else if (info_data.size() != 1) {
+
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not a std::string scalar, vector size: {}",
+                                 field_ident, info_data.size());
             return std::nullopt;
 
           }
@@ -221,10 +257,13 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
 
         }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         if constexpr(std::is_same_v<T, std::vector<std::string>>) {
 
           if (resource_type != DataResourceType::String) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not a std::string (vector).", field_ident);
             return std::nullopt;
 
           }
@@ -235,10 +274,13 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
 
         }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         if constexpr(std::is_same_v<T, bool>) {
 
           if (resource_type != DataResourceType::Boolean) {
 
+            ExecEnv::log().warn( "InfoEvidenceAnalysis::getTypedInfoData, Subscribed Field: {} is not a bool.", field_ident);
             return std::nullopt;
 
           }
@@ -248,6 +290,8 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
           return info_data;
 
         }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         ExecEnv::log().error( "InfoEvidenceAnalysis::getTypedInfoData, Internal data type unknown");
 
@@ -260,44 +304,6 @@ std::optional<T> InfoEvidenceAnalysis::getTypedInfoData( const Variant& variant,
   return std::nullopt;
 
 }
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-using VepFieldValueMap = std::map<std::string, size_t>;
-
-class VepSubFieldValues {
-
-public:
-
-  VepSubFieldValues(std::string vep_sub_field) : vep_sub_field_(std::move(vep_sub_field)) {}
-  ~VepSubFieldValues() = default;
-
-  [[nodiscard]] const VepFieldValueMap& getMap() const { return field_value_map_; }
-
-  // For a single variant
-  bool getSubFieldValues(const std::shared_ptr<const Variant>& variant_ptr);
-  // For a population.
-  bool getPopulationValues(const std::shared_ptr<const PopulationDB>& population_ptr);
-  // For a genome
-  bool getGenomeValues(const std::shared_ptr<const GenomeDB>& genome_ptr);
-  // For a contig.
-  bool getContigValues(const std::shared_ptr<const ContigDB>& contig_ptr);
-
-private:
-
-  const std::string vep_sub_field_;
-  VepFieldValueMap field_value_map_;
-
-
-}; // struct.
-
 
 
 

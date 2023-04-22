@@ -304,7 +304,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_pf7_sample_parser.cpp
-        kgl_genomics/kgl_parser/kgl_pf7_sample_parser.h kgl_genomics/kgl_parser/kgl_pf7_fws_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_fws_parser.h kgl_genomics/kgl_parser/kgl_pf7_distance_parser.cpp kgl_genomics/kgl_parser/kgl_pf7_distance_parser.h)
+        kgl_genomics/kgl_parser/kgl_pf7_sample_parser.h
+        kgl_genomics/kgl_parser/kgl_pf7_fws_parser.cpp
+        kgl_genomics/kgl_parser/kgl_pf7_fws_parser.h
+        kgl_genomics/kgl_parser/kgl_pf7_distance_parser.cpp
+        kgl_genomics/kgl_parser/kgl_pf7_distance_parser.h
+        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.cpp
+        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -527,7 +533,13 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
         kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h
         kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h)
+        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES

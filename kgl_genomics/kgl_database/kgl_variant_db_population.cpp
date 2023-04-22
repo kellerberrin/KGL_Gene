@@ -131,21 +131,18 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::filterVariants(const Varia
   // A vector for futures.
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
   // Required by the thread pool.
-  /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
-  struct FilterClass {
+  auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
+                          std::shared_ptr<const VariantFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
 
-    static std::shared_ptr<GenomeDB>
-    filterGenome(std::shared_ptr<GenomeDB> genome_ptr,
-                 std::shared_ptr<const VariantFilter>& filter_ptr) { return genome_ptr->filterVariants(*filter_ptr); };
+    return genome_ptr->filterVariants(*filter_ptr);
 
-
-  } ;
+  };
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
     std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
-    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(&FilterClass::filterGenome, genome_ptr, filter_ptr);
+    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
   }
@@ -193,20 +190,19 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   // A vector for futures.
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
   // Required by the thread pool.
-  /// todo: This could be re-coded as a lambda, investigate threadpool type deduction for lambda functions.
-  struct FilterClass {
 
-    static std::pair<size_t, size_t>
-    inSituFilterGenome(std::shared_ptr<GenomeDB> genome_ptr,
-                       std::shared_ptr<const VariantFilter>& filter_ptr) { return genome_ptr->inSituFilter(*filter_ptr); };
+  auto filter_lambda = [](std::shared_ptr<GenomeDB> genome_ptr,
+                          std::shared_ptr<const VariantFilter> filter_ptr) -> std::pair<size_t, size_t> {
 
-  } ;
+    return genome_ptr->inSituFilter(*filter_ptr);
+
+  };
 
   // Queue a thread for each genome.
   for (auto& [genome_id, genome_ptr] : getMap()) {
 
     std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(&FilterClass::inSituFilterGenome, genome_ptr, filter_ptr);
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
   }
@@ -215,9 +211,9 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   std::pair<size_t, size_t> filter_counts{0, 0};
   for (auto& future : future_vector) {
 
-    auto genome_count = future.get();
-    filter_counts.first += genome_count.first;
-    filter_counts.second += genome_count.second;
+    auto [original_count, filtered_count] = future.get();
+    filter_counts.first += original_count;
+    filter_counts.second += filtered_count;
 
   }
 
