@@ -112,28 +112,24 @@ size_t kgl::ContigDB::variantCount() const {
 
 
 // Creates a copy of the contig that only contains variants passing the filter condition.
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::contigFilter(const VariantFilter &filter) const {
+// Note that we delete any empty offsets.
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::copyFilter(const BaseFilter &filter) const {
 
   std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
-  // Only genome filter is implemented at this level.
-  if (filter.filterType() == FilterType::ContigFilter) {
-
-    std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
-    if (not contig_filter) {
-
-      ExecEnv::log().error("ContigDB::filter; unable to clone/cast ContigFilter: {}", filter.filterName());
-      return filtered_contig_ptr;
-
-    }
+  // Only contig filter is implemented at this level.
+  std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
+  if (contig_filter) {
 
     if (contig_filter->applyFilter(*this)) {
 
       // Called recursively, copy all contigs and offsets.
-      return contigFilter(TrueFilter());
+      auto contig_ptr = copyFilter(TrueFilter());
+      contig_ptr->trimEmpty();  // Remove any empty offsets.
+      return contig_ptr;
 
     }
 
-    // Else return an empty genome object.
+    // Else return an empty contig object.
     return filtered_contig_ptr;
 
   }
@@ -144,60 +140,79 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::contigFilter(const VariantFilter &
 
     std::unique_ptr<OffsetDB> filtered_offset(std::make_unique<OffsetDB>());
     filtered_offset->setVariantArray(offset_ptr->getVariantArray());
-    filtered_offset->inSituFilter(filter);
+    filtered_offset->selfFilter(filter);
     if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset))) {
 
-      ExecEnv::log().error("ContigDB::filter; Problem adding variant at offset: {}, to contig: {}",
-                           offset, contigId());
+      ExecEnv::log().error("ContigDB::filter; Problem adding offset: {}, to contig: {}", offset, contigId());
 
     }
 
   }
 
+  filtered_contig_ptr->trimEmpty();  // Remove any empty offsets.
   return filtered_contig_ptr;
 
 }
 
-
-// Filters variants inSitu
+// Filters inSitu
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::ContigDB::inSituFilter(const VariantFilter &filter) {
+// Note that we delete any empty offsets.
+std::pair<size_t, size_t> kgl::ContigDB::selfFilter(const BaseFilter &filter) {
 
-  std::pair<size_t, size_t> contig_count{0, 0};
   // Only genome filter is implemented at this level.
-  if (filter.filterType() == FilterType::ContigFilter) {
-
-    contig_count.first = variantCount();
-    std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
-    if (not contig_filter) {
-
-      ExecEnv::log().error("ContigDB::inSituFilter; unable to clone/cast Contig Filter: {}", filter.filterName());
-      contig_count.second = contig_count.first;
-      return contig_count;
-
-    }
+  std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
+  if (contig_filter) {
 
     if (not contig_filter->applyFilter(*this)) {
 
       // Called recursively, delete all contigs and offsets.
-      return inSituFilter(FalseFilter());
+      auto filter_count = selfFilter(FalseFilter());
+      trimEmpty();  // Remove any empty offsets.
+      return filter_count;
 
     }
 
-    contig_count.second = contig_count.first;
-    return contig_count;
+    size_t variant_count = variantCount();
+    return { variant_count, variant_count };
 
   }
 
+  std::pair<size_t, size_t> contig_count{0, 0};
   for (auto& [offset, offset_ptr] : contig_offset_map_) {
 
-    auto const offset_count = offset_ptr->inSituFilter(filter);
+    auto const offset_count = offset_ptr->selfFilter(filter);
     contig_count.first += offset_count.first;
     contig_count.second += offset_count.second;
 
   } // for all offsets
 
+  trimEmpty();  // Remove any empty offsets.
   return contig_count;
+
+}
+
+// Deletes any empty Offsets, returns number deleted.
+size_t kgl::ContigDB::trimEmpty() {
+
+  size_t delete_count{0};
+  // Delete empty genomes.
+  auto it = contig_offset_map_.begin();
+  while (it != contig_offset_map_.end()) {
+
+    if (it->second->getVariantArray().empty()) {
+
+      it = contig_offset_map_.erase(it);
+      ++delete_count;
+
+    } else {
+
+      ++it;
+
+    }
+
+  }
+
+  return delete_count;
 
 }
 

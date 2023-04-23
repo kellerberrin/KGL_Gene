@@ -66,7 +66,7 @@ private:
                      std::shared_ptr<const PopulationDB> vcf_population,
                      std::ostream& result_file);
 
-  void analyzeFilteredPopulation( const VariantFilter& filter,
+  void analyzeFilteredPopulation( const BaseFilter& filter,
                                   std::shared_ptr<const PopulationDB> vcf_population,
                                   std::ostream& result_file);
 

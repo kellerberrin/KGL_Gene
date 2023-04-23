@@ -46,12 +46,12 @@ enum class FilterType   { InfoFilter,
                           AndFilter,
                           OrFilter };
 
-class VariantFilter {
+class BaseFilter {
 
 public:
 
-  VariantFilter() = default;
-  virtual ~VariantFilter() = default;
+  BaseFilter() = default;
+  virtual ~BaseFilter() = default;
 
   [[nodiscard]] virtual FilterType filterType() const = 0;
 
@@ -59,14 +59,14 @@ public:
 
   void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
 
-  [[nodiscard]] virtual std::shared_ptr<VariantFilter> clone() const = 0;
+  [[nodiscard]] virtual std::shared_ptr<BaseFilter> clone() const = 0;
 
 private:
 
   std::string filter_name_;
 
 };
-
+//using VariantFilter = BaseFilter;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -77,7 +77,7 @@ private:
 
 class GenomeDB;   // Forward decl.
 
-class FilterGenomes : public VariantFilter {
+class FilterGenomes : public BaseFilter {
 
 public:
 
@@ -101,7 +101,7 @@ private:
 
 class ContigDB;   // Forward decl.
 
-class FilterContigs : public VariantFilter {
+class FilterContigs : public BaseFilter {
 
 public:
 
@@ -126,7 +126,7 @@ private:
 
 class OffsetDB;   // Forward decl.
 
-class FilterOffsets : public VariantFilter {
+class FilterOffsets : public BaseFilter {
 
 public:
 
@@ -150,7 +150,7 @@ private:
 
 class Variant;   // Forward decl.
 
-class FilterVariants : public VariantFilter {
+class FilterVariants : public BaseFilter {
 
 public:
 

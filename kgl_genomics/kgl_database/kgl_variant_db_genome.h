@@ -37,7 +37,7 @@ public:
   [[nodiscard]] GenomeDB& operator=(const GenomeDB&) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const { return genomeFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const { return copyFilter(TrueFilter()); }
 
   // Unconditionally merge (retains duplicates) genomes and variants into this genome.
   [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome);
@@ -48,11 +48,14 @@ public:
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
-  [[nodiscard]] std::shared_ptr<GenomeDB> genomeFilter(const VariantFilter& filter) const;
-
+  // Return a filtered copy of the genome.
+  [[nodiscard]] std::shared_ptr<GenomeDB> copyFilter(const BaseFilter& filter) const;
   // Filter this genome in Situ. (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-  std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
+  std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
+
+  // Deletes any empty Contigs, returns number deleted.
+  size_t trimEmpty();
 
   [[nodiscard]] const ContigDBMap& getMap() const { return contig_map_; }
 

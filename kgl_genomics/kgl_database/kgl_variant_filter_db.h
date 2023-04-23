@@ -38,7 +38,7 @@ public:
 
   [[nodiscard]] bool applyFilter(const GenomeDB& genome) const override { return filter_genomes_.contains(genome.genomeId()); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<GenomeFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<GenomeFilter>(*this); }
 
 private:
 
@@ -73,7 +73,7 @@ public:
 
   [[nodiscard]] bool applyFilter(const ContigDB& contig) const override { return filter_contigs_.contains(contig.contigId()); }
 
-  [[nodiscard]] std::shared_ptr<VariantFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
 
 private:
 

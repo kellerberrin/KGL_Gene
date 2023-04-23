@@ -179,8 +179,8 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
       auto population = std::const_pointer_cast<PopulationDB>(const_population);
 
       ExecEnv::log().info("Begin uniqueness filter for population: {} variant count: {}", population->populationId(), population->variantCount());
-      auto pass_results = population->inSituFilter(PassFilter());
-      auto diploid_results = population->inSituFilter(DiploidFilter());
+      auto pass_results = population->selfFilter(PassFilter());
+      auto diploid_results = population->selfFilter(DiploidFilter());
       ExecEnv::log().info("Filtered Population: {} 'SNP and Pass' count: {}, 'Diploid' count: {}",
                           population->populationId(), pass_results.second, diploid_results.second);
 

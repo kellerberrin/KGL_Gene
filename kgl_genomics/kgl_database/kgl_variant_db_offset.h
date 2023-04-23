@@ -41,10 +41,11 @@ public:
 
   void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
 
-  std::shared_ptr<OffsetDB> offsetFilter(const VariantFilter &filter) const;
-
-  std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
-
+  // Return a filtered copy of the offset.
+  [[nodiscard]] std::shared_ptr<OffsetDB> copyFilter(const BaseFilter &filter) const;
+  // Filter this offset.
+  // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
+  std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
   // setIntersection returns an OffsetDB that contains unique variants present in both offsets.
   // The VariantEquality flag determines whether variant phase is used in the equality.
   [[nodiscard]] std::unique_ptr<OffsetDB> setIntersection(const OffsetDB& intersection_offset, VariantEquality variant_equality) const;
@@ -61,9 +62,9 @@ private:
   constexpr static const size_t INITIAL_VECTOR_SIZE_ = 2;
 
   // General purpose filter.
-  std::pair<size_t, size_t> inSituGeneral(const VariantFilter &filter);
+  std::pair<size_t, size_t> inSituGeneral(const BaseFilter &filter);
   // Filters for unique variants up to phase.
-  std::pair<size_t, size_t> inSituUnique(const VariantFilter &filter);
+  std::pair<size_t, size_t> inSituUnique(const BaseFilter &filter);
   // Ensure max 2 variants per offset.
   // Note that VCF indels are generally offset by +1 because they always contain
   // a reference to the base that preceeds the indel for verification.

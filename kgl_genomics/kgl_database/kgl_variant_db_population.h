@@ -46,10 +46,10 @@ public:
   PopulationDB& operator=(const PopulationDB&) = delete; // Use deep copy.
 
   // Use this to copy the object. Just the trivial 'TrueFilter'.
-  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return populationFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return copyFilter(TrueFilter()); }
 
   // Use this to empty the object. Just the trivial 'FalseFilter'.
-  std::pair<size_t, size_t> clear() { return inSituFilter(FalseFilter()); }
+  std::pair<size_t, size_t> clear() { return selfFilter(FalseFilter()); }
 
   // Create the genome variant if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<GenomeDB>> getCreateGenome(const GenomeId_t& genome_id);
@@ -61,14 +61,14 @@ public:
   [[nodiscard]] size_t variantCount() const;
 
   // Creates a filtered copy of the population database.
-  // We can multi-thread because smart pointer reference counting (only) is thread safe.
-  [[nodiscard]] std::shared_ptr<PopulationDB> populationFilter(const VariantFilter& filter) const;
+  // This is multi-threaded across genomes to be time efficient for large databases.
+  [[nodiscard]] std::shared_ptr<PopulationDB> copyFilter(const BaseFilter& filter) const;
 
   // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.
-  // inSituFilter returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+  // selfFilter returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that remain after filtering.
-  std::pair<size_t, size_t> inSituFilter(const VariantFilter& filter);
+  std::pair<size_t, size_t> selfFilter(const BaseFilter& filter);
 
   // ReturnType the underlying genome map.
   [[nodiscard]] const GenomeDBMap& getMap() const { return genome_map_; }
@@ -76,6 +76,10 @@ public:
   // Unconditionally adds a genome to the population, returns false if the genome already exists.
   bool addGenome(const std::shared_ptr<GenomeDB>& genome);
 
+  // Deletes any empty Genomes, returns number deleted.
+  size_t trimEmpty();
+  // The opposite of the above. Ensures that all genomes have an identical number of contigs, even if empty.
+  size_t squareContigs();
   // Unconditionally add a variant to the population.
   // This function is thread safe for concurrent updates.
   // The population structure cannot be 'read' while it is being updated.
@@ -108,7 +112,7 @@ private:
   PopulationId_t population_id_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
-  // mutex to lock the structure when performing an inSituFilter.
+  // mutex to lock the structure when performing an selfFilter.
   mutable std::mutex insitufilter_mutex_;
 
 };

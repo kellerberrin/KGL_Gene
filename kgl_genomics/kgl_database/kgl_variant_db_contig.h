@@ -36,7 +36,7 @@ public:
   [[nodiscard]] ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return contigFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return copyFilter(TrueFilter()); }
 
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
 
@@ -48,13 +48,14 @@ public:
 
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
 
-  // Create a filtered contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> contigFilter(const VariantFilter &filter) const;
-
+  // Return a filtered copy of the contig.
+  [[nodiscard]] std::shared_ptr<ContigDB> copyFilter(const BaseFilter &filter) const;
   // Filter this contig (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-  std::pair<size_t, size_t> inSituFilter(const VariantFilter &filter);
+  std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
 
+  // Deletes any empty Offsets, returns number deleted.
+  size_t trimEmpty();
   // Processes all variants in the contig with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.

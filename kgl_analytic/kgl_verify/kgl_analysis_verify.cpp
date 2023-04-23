@@ -52,11 +52,11 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
     if (file_characteristic.data_source == DataSourceEnum::Genome1000
         or file_characteristic.data_source == DataSourceEnum::GnomadGenome3_1) {
 
-      auto pass_results = non_const_population->inSituFilter(PassFilter());
+      auto pass_results = non_const_population->selfFilter(PassFilter());
       ExecEnv::log().info("Population: {}, pre filter count: {}, 'Pass' variants: {}",
                           non_const_population->populationId(), pass_results.first, pass_results.second);
 
-      auto diploid_results = non_const_population->inSituFilter(DiploidFilter());
+      auto diploid_results = non_const_population->selfFilter(DiploidFilter());
       ExecEnv::log().info("Population: {}, pre filter count: {}, 'Diploid' variants: {}",
                           non_const_population->populationId(), diploid_results.first, diploid_results.second);
 
@@ -171,7 +171,7 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
                         non_const_population->populationId(), non_const_population->variantCount(), Variant::objectCount(),
                         DataMemoryBlock::objectCount(), mem_pair.first, mem_pair.second);
 
-    auto empty_count = non_const_population->inSituFilter(FalseFilter());
+    auto empty_count = non_const_population->selfFilter(FalseFilter());
 
     AuditMemory::trimFreeStore();
 

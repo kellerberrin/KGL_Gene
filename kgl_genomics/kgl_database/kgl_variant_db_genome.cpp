@@ -144,24 +144,17 @@ size_t kgl::GenomeDB::variantCount() const {
 }
 
 
-std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::genomeFilter(const VariantFilter& filter) const {
+std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filter) const {
 
   std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   // Only genome filter is implemented at this level.
-  if (filter.filterType() == FilterType::GenomeFilter) {
-
-    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
-    if (not genome_filter) {
-
-      ExecEnv::log().error("GenomeDB::filter; unable to clone/cast GenomeFilter");
-      return filtered_genome_ptr;
-
-    }
+  std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
+  if (genome_filter) {
 
     if (genome_filter->applyFilter(*this)) {
 
       // Called recursively, copy all contigs and offsets.
-      return genomeFilter(TrueFilter());
+      return copyFilter(TrueFilter());
 
     }
 
@@ -174,14 +167,10 @@ std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::genomeFilter(const VariantFilter& 
   // Filter the contigs.
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
-    auto filtered_contig = contig_ptr->contigFilter(filter);
-    if (not filtered_contig->getMap().empty()) {
+    auto filtered_contig = contig_ptr->copyFilter(filter);
+    if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
-      if (not filtered_genome_ptr->addContig(filtered_contig)) {
-
-        ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
-
-      }
+      ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
 
     }
 
@@ -193,31 +182,21 @@ std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::genomeFilter(const VariantFilter& 
 
 
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filter) {
+std::pair<size_t, size_t> kgl::GenomeDB::selfFilter(const BaseFilter& filter) {
 
   // Only genome filter is implemented at this level.
-  if (filter.filterType() == FilterType::GenomeFilter) {
-
-    std::pair<size_t, size_t> genome_count{0, 0};
-    genome_count.first = variantCount();
-    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
-    if (not genome_filter) {
-
-      ExecEnv::log().error("GenomeDB::inSituFilter; unable to clone/cast GenomeFilter");
-      genome_count.second = genome_count.first;
-      return genome_count;
-
-    }
+  std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
+  if (genome_filter) {
 
     if (not genome_filter->applyFilter(*this)) {
 
       // Called recursively, delete all contigs and offsets.
-      return inSituFilter(FalseFilter());
+      return selfFilter(FalseFilter());
 
     }
 
-    genome_count.second = genome_count.first;
-    return genome_count;
+    size_t variant_count = variantCount();
+    return {variant_count, variant_count};
 
   }
 
@@ -226,7 +205,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
   std::pair<size_t, size_t> genome_count{0, 0};
   for (auto& [contig_id, contig_ptr] : contig_map_) {
 
-    auto contig_count = contig_ptr->inSituFilter(filter);
+    auto contig_count = contig_ptr->selfFilter(filter);
     genome_count.first += contig_count.first;
     genome_count.second += contig_count.second;
 
@@ -236,7 +215,30 @@ std::pair<size_t, size_t> kgl::GenomeDB::inSituFilter(const VariantFilter& filte
 
 }
 
+// Deletes any empty Contigs, returns number deleted.
+size_t kgl::GenomeDB::trimEmpty() {
 
+  size_t delete_count{0};
+  // Delete empty genomes.
+  auto it = contig_map_.begin();
+  while (it != contig_map_.end()) {
+
+    if (it->second->variantCount() == 0) {
+
+      it = contig_map_.erase(it);
+      ++delete_count;
+
+    } else {
+
+      ++it;
+
+    }
+
+  }
+
+  return delete_count;
+
+}
 
 // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
 // The second integer is the number variants that pass inspection by comparison to the genome database.

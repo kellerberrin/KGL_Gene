@@ -166,7 +166,7 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
     // Actual variants
     size_t variant_count = aggregated_gene_contig_ptr->variantCount();
     // Determine the number of unique variants.
-    auto unique_variant_contig = aggregated_gene_contig_ptr->contigFilter(UniqueUnphasedFilter());
+    auto unique_variant_contig = aggregated_gene_contig_ptr->copyFilter(UniqueUnphasedFilter());
     size_t unique_variant_count = unique_variant_contig->variantCount();
 
 

@@ -31,6 +31,12 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
+        if (offset_array_ptr->getVariantArray().empty()) {
+
+          continue;
+
+        }
+
         for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
 
           if (variant_ptr->isSNP()) {
@@ -44,6 +50,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
           }
 
         }
+
 
         if (offset_array_ptr->getVariantArray().size() == 1) {
 

@@ -99,7 +99,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
 
   }
 
-  auto hom_clinvar = subject_clinvar->contigFilter(HomozygousFilter());
+  auto hom_clinvar = subject_clinvar->copyFilter(HomozygousFilter());
   if (hom_clinvar->variantCount() > 0) {
 
     ++hom_genome_;
@@ -143,7 +143,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const C
 
 std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::shared_ptr<const ContigDB> clinvar_contig) {
 
-  return clinvar_contig->contigFilter(InfoSubStringFilter(CLINVAR_CLNSIG_FIELD, CLINVAR_PATH_SIGNIF));
+  return clinvar_contig->copyFilter(InfoSubStringFilter(CLINVAR_CLNSIG_FIELD, CLINVAR_PATH_SIGNIF));
 
 }
 

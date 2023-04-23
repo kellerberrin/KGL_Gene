@@ -106,8 +106,11 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   antigenic_gene_map_.getGeneVariants(monoclonal_population_ptr);
   all_gene_map_.getGeneVariants(monoclonal_population_ptr);
 
-  // General variant statistics.
-  auto filtered_monoclonal_ptr = monoclonal_population_ptr->populationFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
+  // Filtered for variant quality. Read depth >= 10.
+  auto filtered_monoclonal_ptr = monoclonal_population_ptr->copyFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
+  // Filtered population should contain all contigs for all genomes.
+  filtered_monoclonal_ptr->squareContigs();
+  // Analyze for Homozygous and overlapping variants.
   hetero_homo_zygous_.analyzeVariantPopulation(filtered_monoclonal_ptr);
 
   return true;

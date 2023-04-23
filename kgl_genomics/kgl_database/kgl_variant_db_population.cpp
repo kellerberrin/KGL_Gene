@@ -113,7 +113,7 @@ size_t kgl::PopulationDB::variantCount() const {
 
 // Multi-tasking filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
-std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::populationFilter(const VariantFilter& filter) const {
+std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::copyFilter(const BaseFilter& filter) const {
 
   // Create the new population.
   std::shared_ptr<PopulationDB> filtered_population_ptr(std::make_shared<PopulationDB>(populationId(), dataSource()));
@@ -132,16 +132,16 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::populationFilter(const Var
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
   // Required by the thread pool.
   auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
-                          std::shared_ptr<const VariantFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
+                          std::shared_ptr<const BaseFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
 
-    return genome_ptr->genomeFilter(*filter_ptr);
+    return genome_ptr->copyFilter(*filter_ptr);
 
   };
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
+    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
     std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
@@ -167,7 +167,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::populationFilter(const Var
 // Multi-threaded filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
 // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& filter) {
+std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter) {
 
   // This routine modifies the populationDB data structure, so only permit one thread at a time.
   // Note the routine is internally multi-threaded.
@@ -188,16 +188,16 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   // Required by the thread pool.
 
   auto filter_lambda = [](std::shared_ptr<GenomeDB> genome_ptr,
-                          std::shared_ptr<const VariantFilter> filter_ptr) -> std::pair<size_t, size_t> {
+                          std::shared_ptr<const BaseFilter> filter_ptr) -> std::pair<size_t, size_t> {
 
-    return genome_ptr->inSituFilter(*filter_ptr);
+    return genome_ptr->selfFilter(*filter_ptr);
 
   };
 
   // Queue a thread for each genome.
   for (auto& [genome_id, genome_ptr] : getMap()) {
 
-    std::shared_ptr<const VariantFilter> filter_ptr = filter.clone();
+    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
     std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
     future_vector.push_back(std::move(future));
 
@@ -214,6 +214,75 @@ std::pair<size_t, size_t> kgl::PopulationDB::inSituFilter(const VariantFilter& f
   }
 
   return filter_counts;
+
+}
+
+
+size_t kgl::PopulationDB::trimEmpty() {
+
+  size_t delete_count{0};
+  // Delete empty genomes.
+  auto it = genome_map_.begin();
+  while (it != genome_map_.end()) {
+
+    if (it->second->variantCount() == 0) {
+
+      it = genome_map_.erase(it);
+      ++delete_count;
+
+    } else {
+
+      ++it;
+
+    }
+
+  }
+
+  return delete_count;
+
+}
+
+size_t kgl::PopulationDB::squareContigs() {
+
+  size_t add_contigs{0};
+
+  // Get a set of all contigs in all genomes.
+  std::set<std::string> contig_set;
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+
+      contig_set.insert(contig_id);
+
+    }
+
+  }
+
+  // Ensure each genome has all contigs in the set.
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    for (auto const& contig_id : contig_set) {
+
+      if (not genome_ptr->getMap().contains(contig_id)) {
+
+        auto contig_opt = genome_ptr->getCreateContig(contig_id);
+        if (not contig_opt) {
+
+          ExecEnv::log().error("PopulationDB::squareContigs; Unable to add contig: {} to genome: {}", contig_id, genome_id);
+
+        } else {
+
+          ++add_contigs;
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return add_contigs;
 
 }
 

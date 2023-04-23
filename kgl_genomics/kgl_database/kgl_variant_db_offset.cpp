@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::pair<size_t, size_t> kgl::OffsetDB::inSituFilter(const VariantFilter &filter) {
+std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
 
   switch(filter.filterType()) {
 
@@ -59,28 +59,56 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituFilter(const VariantFilter &filte
       return {variant_vector_.size(), variant_vector_.size()};
 
     default:
-      ExecEnv::log().error("OffsetDB::inSituFilter; Unknown filter type");
+      ExecEnv::log().error("OffsetDB::selfFilter; Unknown filter type");
       return {variant_vector_.size(), variant_vector_.size()};
 
   }
 
 }
 
-std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::offsetFilter(const VariantFilter &filter) const {
+std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filter) const {
 
   std::shared_ptr<OffsetDB> filtered_offset_ptr(std::make_shared<OffsetDB>());
 
+  std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
+  if (offset_filter) {
 
+    if (offset_filter->applyFilter(*this)) {
+
+      // Called recursively, copy all variants.
+      return copyFilter(TrueFilter());
+
+    }
+
+    // Else return an empty offset object.
+    return filtered_offset_ptr;
+
+  }
+
+  // Only variant filters should be at this level, so we check for this.
+  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
+  if (not variant_filter) {
+
+    ExecEnv::log().error("OffsetDB::copyFilter; Filter: {} is not a variant_filter.", filter.filterName());
+
+  }
+  // Filter the variants.
+  for (const auto& variant_ptr : variant_vector_) {
+
+    if (variant_filter->applyFilter(*variant_ptr)) {
+
+      filtered_offset_ptr->addVariant(variant_ptr);
+
+    }
+
+  }
 
   return filtered_offset_ptr;
 
 }
 
 
-
-
-
-std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const VariantFilter &filter) {
+std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const BaseFilter &filter) {
 
   std::pair<size_t, size_t> offset_count{0, 0};
 
@@ -147,7 +175,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::inSituHomozygous() {
 }
 
 
-std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const VariantFilter &filter) {
+std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const BaseFilter &filter) {
 
   std::pair<size_t, size_t> offset_count{0, 0};
   std::unordered_set<std::string> hash_set;

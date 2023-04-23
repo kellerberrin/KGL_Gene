@@ -76,7 +76,7 @@ bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_o
     }
 
     // Only want SNP variants and variants that passed all VCF filters.
-    unphased_population_ = unphased_population_->populationFilter(AndFilter(SNPFilter(), PassFilter()));
+    unphased_population_ = unphased_population_->copyFilter(AndFilter(SNPFilter(), PassFilter()));
 
   }
   
