@@ -5,6 +5,7 @@
 #include "kgl_analysis_mutation_gene_variant.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_factory_vcf_evidence_vep.h"
+#include "kgl_variant_filter_db.h"
 #include "kel_distribution.h"
 
 

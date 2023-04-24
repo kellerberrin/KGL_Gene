@@ -3,9 +3,26 @@
 //
 
 #include "kgl_variant_db_population.h"
+#include "kgl_variant_filter.h"
 
 namespace kgl = kellerberrin::genome;
 
+
+// Use this to copy the object. Just the trivial 'TrueFilter'.
+std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::deepCopy() const {
+
+  return copyFilter(TrueFilter());
+
+}
+
+// Use this to empty the object. Just the trivial 'FalseFilter'.
+std::pair<size_t, size_t> kgl::PopulationDB::clear() {
+
+  auto variant_count = selfFilter(FalseFilter());
+  trimEmpty();
+  return variant_count;
+
+}
 
 // This function is used by VCF parsers to create a variant database.
 // The function has been made thread safe for multiple parser thread access.

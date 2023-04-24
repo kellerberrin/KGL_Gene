@@ -4,7 +4,7 @@
 
 
 #include "kgl_analysis_PfEMP_variant.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db.h"
 #include "kel_utility.h"
 
 #include <fstream>

@@ -4,84 +4,19 @@
 
 
 #include "kgl_variant_db_offset.h"
-#include "kgl_variant_db_freq.h"
-#include <unordered_set>
+#include "kgl_variant_filter_db.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
+std::unique_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filter) const {
 
-std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
-
-  switch(filter.filterType()) {
-
-    case FilterType::InfoFilter:
-    case FilterType::VepSubStringFilter:
-    case FilterType::InfoGEQIntegerFilter:
-    case FilterType::InfoGEQFloatFilter:
-    case FilterType::InfoSubStringFilter:
-    case FilterType::InfoBooleanFilter:
-    case FilterType::RefAltCountFilter:
-    case FilterType::DPCountFilter:
-    case FilterType::PhaseFilter:
-    case FilterType::PassFilter:
-    case FilterType::SNPFilter:
-    case FilterType::ContigFilter:
-    case FilterType::RegionFilter:
-    case FilterType::NotFilter:
-    case FilterType::AndFilter:
-    case FilterType::OrFilter:
-      return inSituGeneral(filter);
-
-    case FilterType::HomozygousFilter:
-      return inSituHomozygous();
-
-    case FilterType::DiploidFilter:
-      return inSituDiploid();
-
-    case FilterType::UniqueUnphasedFilter:
-    case FilterType::UniquePhasedFilter:
-      return inSituUnique(filter);
-
-    case FilterType::TrueFilter:
-      return  {variant_vector_.size(), variant_vector_.size()};
-
-    case FilterType::FalseFilter: {
-
-      size_t vector_size = variant_vector_.size();
-      variant_vector_.clear();
-      return { vector_size, 0};
-
-    }
-
-    case FilterType::GenomeFilter:   // Not implemented at this level.
-      return {variant_vector_.size(), variant_vector_.size()};
-
-    default:
-      ExecEnv::log().error("OffsetDB::selfFilter; Unknown filter type");
-      return {variant_vector_.size(), variant_vector_.size()};
-
-  }
-
-}
-
-std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filter) const {
-
-  std::shared_ptr<OffsetDB> filtered_offset_ptr(std::make_shared<OffsetDB>());
 
   std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
   if (offset_filter) {
 
-    if (offset_filter->applyFilter(*this)) {
-
-      // Called recursively, copy all variants.
-      return copyFilter(TrueFilter());
-
-    }
-
-    // Else return an empty offset object.
-    return filtered_offset_ptr;
+    return offset_filter->applyFilter(*this);
 
   }
 
@@ -92,7 +27,9 @@ std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filte
     ExecEnv::log().error("OffsetDB::copyFilter; Filter: {} is not a variant_filter.", filter.filterName());
 
   }
+
   // Filter the variants.
+  std::unique_ptr<OffsetDB> filtered_offset_ptr(std::make_unique<OffsetDB>());
   for (const auto& variant_ptr : variant_vector_) {
 
     if (variant_filter->applyFilter(*variant_ptr)) {
@@ -108,123 +45,51 @@ std::shared_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filte
 }
 
 
-std::pair<size_t, size_t> kgl::OffsetDB::inSituGeneral(const BaseFilter &filter) {
+std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
 
-  std::pair<size_t, size_t> offset_count{0, 0};
+  std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
+  if (offset_filter) {
 
-  offset_count.first = variant_vector_.size();
+    size_t prior_count = variant_vector_.size();
+
+    auto filtered_offset_ptr = offset_filter->applyFilter(*this);
+    variant_vector_ = std::move(filtered_offset_ptr->variant_vector_);
+
+    size_t post_count = variant_vector_.size();
+
+    return { prior_count, post_count};
+
+  }
+
+  std::pair<size_t, size_t> filter_count{0, 0};
+  // Only variant filters should be at this level, so we check for this.
+  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
+  filter_count.first = variant_vector_.size();
+  if (not variant_filter) {
+
+    ExecEnv::log().error("OffsetDB::selfFilter; Filter: {} is not a variant_filter.", filter.filterName());
+    filter_count.second = filter_count.first;
+    return filter_count;
+
+  }
+  // Filter the variants.
   OffsetDBArray filtered_variants;
-  filtered_variants.reserve(offset_count.first);
+  for (const auto& variant_ptr : variant_vector_) {
 
-  auto variant_filter_ptr = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
-
-  for (auto const &variant_ptr : variant_vector_) {
-
-    if (variant_filter_ptr->applyFilter(*variant_ptr)) {
+    if (variant_filter->applyFilter(*variant_ptr)) {
 
       filtered_variants.push_back(variant_ptr);
 
     }
 
   }
+  filter_count.second = filtered_variants.size();
+  variant_vector_ = std::move(filtered_variants);
 
-  offset_count.second = filtered_variants.size();
-
-  if (offset_count.first != offset_count.second) {
-
-    if (not filtered_variants.empty()) {
-
-      variant_vector_ = std::move(filtered_variants);
-
-
-    } else {
-
-      variant_vector_.clear();
-
-    }
-
-  }
-
-  return offset_count;
+  return filter_count;
 
 }
 
-// If there are 2 identical variants, disregarding phase, then the variants are retained else they are deleted.
-std::pair<size_t, size_t> kgl::OffsetDB::inSituHomozygous() {
-
-  std::pair<size_t, size_t> offset_count{0, 0};
-
-  offset_count.first = variant_vector_.size();
-
-  if (offset_count.first == 2) {
-
-    if (variant_vector_[0]->HGVS() == variant_vector_[0]->HGVS()) {
-
-      offset_count.second = offset_count.first;
-      return offset_count;
-
-    }
-
-  }
-
-  variant_vector_.clear();
-  offset_count.second = 0;
-
-  return offset_count;
-
-}
-
-
-std::pair<size_t, size_t> kgl::OffsetDB::inSituUnique(const BaseFilter &filter) {
-
-  std::pair<size_t, size_t> offset_count{0, 0};
-  std::unordered_set<std::string> hash_set;
-
-  offset_count.first = variant_vector_.size();
-  OffsetDBArray filtered_variants;
-  filtered_variants.reserve(offset_count.first);
-  bool unique_phased = filter.filterType() == FilterType::UniquePhasedFilter;
-
-  for (auto const &variant_ptr : variant_vector_) {
-
-    auto variant_hash = unique_phased ? variant_ptr->HGVS_Phase() : variant_ptr->HGVS();
-    auto const &result = hash_set.find(variant_hash);
-    if (result == hash_set.end()) {
-
-      filtered_variants.push_back(variant_ptr);
-
-      auto const&[iter, insert_result] = hash_set.emplace(std::move(variant_hash));
-      if (not insert_result) {
-
-        ExecEnv::log().error("OffsetDB::inSituUnique; variant hash: {} cannot be inserted",
-                             (unique_phased ? variant_ptr->HGVS_Phase() : variant_ptr->HGVS()));
-
-      }
-
-    }
-
-  }
-
-  offset_count.second = filtered_variants.size();
-
-  if (offset_count.first != offset_count.second) {
-
-    if (not filtered_variants.empty()) {
-
-      variant_vector_ = std::move(filtered_variants);
-
-
-    } else {
-
-      variant_vector_.clear();
-
-    }
-
-  }
-
-  return offset_count;
-
-}
 
 // setIntersection returns an offset that contains unique variants present in both offsets.
 // The VariantEquality flag determines whether variant phase is used in the equality.

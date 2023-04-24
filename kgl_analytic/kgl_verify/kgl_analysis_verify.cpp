@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_verify.h"
 #include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db.h"
 
 #include <chrono>
 #include <thread>

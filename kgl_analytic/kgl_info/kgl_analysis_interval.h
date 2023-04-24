@@ -11,6 +11,7 @@
 #include "kgl_analysis_virtual.h"
 #include "kgl_analysis_age.h"
 #include "kgl_variant_filter.h"
+#include "kgl_variant_filter_info.h"
 #include "kel_percentile.h"
 
 #include <array>

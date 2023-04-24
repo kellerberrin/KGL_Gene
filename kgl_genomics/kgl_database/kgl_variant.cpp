@@ -4,6 +4,7 @@
 
 #include <ostream>
 #include "kgl_variant.h"
+#include "kgl_variant_filter_type.h"
 #include "kel_patterns.h"
 
 
@@ -91,6 +92,20 @@ std::string kgl::Variant::typeText() const {
   }
 
   return "NOT_IMPLEMENTED";  // Not reached, to keep the compiler happy.
+
+}
+
+bool kgl::Variant::filterVariant(const BaseFilter& filter) const {
+
+  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
+  if (variant_filter) {
+
+    return variant_filter->applyFilter(*this);
+
+  }
+
+  ExecEnv::log().error("Variant::filterVariant; Filter: {} is not a variant filter", filter.filterName());
+  return false;
 
 }
 

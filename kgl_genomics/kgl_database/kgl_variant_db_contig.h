@@ -8,7 +8,6 @@
 
 #include "kel_utility.h"
 #include "kgl_variant.h"
-#include "kgl_variant_filter.h"
 #include "kgl_variant_db_offset.h"
 #include "kgl_variant_mutation.h"
 
@@ -33,10 +32,10 @@ public:
   virtual ~ContigDB() = default;
 
   ContigDB(const ContigDB &) = delete; // Use deep copy.
-  [[nodiscard]] ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
+  ContigDB &operator=(const ContigDB &) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const { return copyFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<ContigDB> deepCopy() const;
 
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
 

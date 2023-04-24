@@ -12,7 +12,7 @@
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 #include "kgl_analysis_null.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_info.h"
 #include "kgl_analysis_age.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace

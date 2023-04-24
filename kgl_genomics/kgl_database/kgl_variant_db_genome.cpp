@@ -3,10 +3,17 @@
 //
 
 #include "kgl_variant_db_genome.h"
+#include "kgl_variant_filter.h"
 
 namespace kgl = kellerberrin::genome;
 
 
+// Use this to copy the object.
+std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::deepCopy() const {
+
+  return copyFilter(TrueFilter());
+
+}
 
 // unconditionally merge (retains duplicates) genomes and variants into this genome.
 size_t kgl::GenomeDB::mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome) {
@@ -146,31 +153,22 @@ size_t kgl::GenomeDB::variantCount() const {
 
 std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filter) const {
 
-  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   // Only genome filter is implemented at this level.
   std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
   if (genome_filter) {
 
-    if (genome_filter->applyFilter(*this)) {
-
-      // Called recursively, copy all contigs and offsets.
-      return copyFilter(TrueFilter());
-
-    }
-
-    // Else return an empty genome object.
-    return filtered_genome_ptr;
+    return genome_filter->applyFilter(*this);
 
   }
-
   // All other filters.
   // Filter the contigs.
+  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
     auto filtered_contig = contig_ptr->copyFilter(filter);
     if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
-      ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to inserted filtered Contig: {}", genomeId(), contig_id);
+      ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to insert filtered Contig: {}", genomeId(), contig_id);
 
     }
 
@@ -188,15 +186,14 @@ std::pair<size_t, size_t> kgl::GenomeDB::selfFilter(const BaseFilter& filter) {
   std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
   if (genome_filter) {
 
-    if (not genome_filter->applyFilter(*this)) {
+    size_t prior_count = variantCount();
 
-      // Called recursively, delete all contigs and offsets.
-      return selfFilter(FalseFilter());
+    auto genome_ptr = genome_filter->applyFilter(*this);
+    contig_map_ = std::move(genome_ptr->contig_map_);
 
-    }
+    size_t post_count = variantCount();
 
-    size_t variant_count = variantCount();
-    return {variant_count, variant_count};
+    return {prior_count, post_count};
 
   }
 

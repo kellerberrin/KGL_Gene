@@ -5,11 +5,8 @@
 #ifndef KGL_VARIANT_FILTER_VIRTUAL_H
 #define KGL_VARIANT_FILTER_VIRTUAL_H
 
-
-#include <map>
+#include <string>
 #include <memory>
-#include <vector>
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The abstract_ VariantFilter class uses the visitor pattern.
@@ -20,32 +17,6 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-enum class FilterType   { InfoFilter,
-                          VepSubStringFilter,
-                          InfoGEQIntegerFilter,
-                          InfoGEQFloatFilter,
-                          InfoSubStringFilter,
-                          InfoBooleanFilter,
-                          RefAltCountFilter,
-                          DPCountFilter,
-                          UniqueUnphasedFilter,  // Uniqueness excludes phase info
-                          UniquePhasedFilter,   // Uniqueness includes phase info
-                          HomozygousFilter,   // 2 identical variants, phase not tested
-                          DiploidFilter, // Ensure max two variants per offset.
-                          GenomeFilter, // Filter genomes
-                          PhaseFilter,
-                          PassFilter,
-                          SNPFilter,
-                          ContigFilter,
-                          VariantFilter,
-                          OffsetFilter,
-                          RegionFilter,
-                          TrueFilter,
-                          FalseFilter,
-                          NotFilter,
-                          AndFilter,
-                          OrFilter };
-
 class BaseFilter {
 
 public:
@@ -53,10 +24,7 @@ public:
   BaseFilter() = default;
   virtual ~BaseFilter() = default;
 
-  [[nodiscard]] virtual FilterType filterType() const = 0;
-
   [[nodiscard]] std::string filterName() const { return filter_name_; }
-
   void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
 
   [[nodiscard]] virtual std::shared_ptr<BaseFilter> clone() const = 0;
@@ -66,109 +34,6 @@ private:
   std::string filter_name_;
 
 };
-//using VariantFilter = BaseFilter;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class GenomeDB;   // Forward decl.
-
-class FilterGenomes : public BaseFilter {
-
-public:
-
-  FilterGenomes() = default;
-  ~FilterGenomes() override = default;
-
-  [[nodiscard]] virtual bool applyFilter(const GenomeDB& genome) const = 0;
-  [[nodiscard]] FilterType filterType() const override { return FilterType::GenomeFilter; }
-
-private:
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class ContigDB;   // Forward decl.
-
-class FilterContigs : public BaseFilter {
-
-public:
-
-  FilterContigs() = default;
-  ~FilterContigs() override = default;
-
-  [[nodiscard]] virtual bool applyFilter(const ContigDB& contig) const = 0;
-  [[nodiscard]] FilterType filterType() const override { return FilterType::ContigFilter; }
-
-private:
-
-};
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class OffsetDB;   // Forward decl.
-
-class FilterOffsets : public BaseFilter {
-
-public:
-
-  FilterOffsets() = default;
-  ~FilterOffsets() override = default;
-
-  [[nodiscard]] virtual bool applyFilter(const OffsetDB& variant) const = 0;
-  [[nodiscard]] FilterType filterType() const override { return FilterType::OffsetFilter; }
-
-private:
-
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class Variant;   // Forward decl.
-
-class FilterVariants : public BaseFilter {
-
-public:
-
-  FilterVariants() = default;
-  ~FilterVariants() override = default;
-
-  [[nodiscard]] virtual bool applyFilter(const Variant& variant) const = 0;
-  [[nodiscard]] FilterType filterType() const override { return FilterType::VariantFilter; }
-
-private:
-
-};
-
-
-
-
-
-
 
 
 

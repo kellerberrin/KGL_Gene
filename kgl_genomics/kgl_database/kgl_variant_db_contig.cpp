@@ -4,12 +4,18 @@
 
 
 #include "kgl_variant_db_contig.h"
+#include "kgl_variant_filter.h"
 
 namespace kgl = kellerberrin::genome;
 
+// Use this to copy the object.
+std::shared_ptr<kgl::ContigDB> kgl::ContigDB::deepCopy() const {
+
+  return copyFilter(TrueFilter());
+
+}
 
 // Unconditionally adds a variant to the contig.
-
 bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
   // Lock this function to concurrent access.
@@ -115,33 +121,23 @@ size_t kgl::ContigDB::variantCount() const {
 // Note that we delete any empty offsets.
 std::shared_ptr<kgl::ContigDB> kgl::ContigDB::copyFilter(const BaseFilter &filter) const {
 
-  std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
   // Only contig filter is implemented at this level.
   std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
   if (contig_filter) {
 
-    if (contig_filter->applyFilter(*this)) {
-
-      // Called recursively, copy all contigs and offsets.
-      auto contig_ptr = copyFilter(TrueFilter());
-      contig_ptr->trimEmpty();  // Remove any empty offsets.
-      return contig_ptr;
-
-    }
-
-    // Else return an empty contig object.
+    auto filtered_contig_ptr = contig_filter->applyFilter(*this);
+    filtered_contig_ptr->trimEmpty();  // Remove any empty offsets.
     return filtered_contig_ptr;
 
   }
 
   // All other filters.
-  // Filter the contigs.
+  // Filter the offsets.
+  std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
   for (const auto& [offset, offset_ptr] : getMap()) {
 
-    std::unique_ptr<OffsetDB> filtered_offset(std::make_unique<OffsetDB>());
-    filtered_offset->setVariantArray(offset_ptr->getVariantArray());
-    filtered_offset->selfFilter(filter);
-    if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset))) {
+    auto filtered_offset_ptr = offset_ptr->copyFilter(filter);
+    if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset_ptr))) {
 
       ExecEnv::log().error("ContigDB::filter; Problem adding offset: {}, to contig: {}", offset, contigId());
 
@@ -163,17 +159,15 @@ std::pair<size_t, size_t> kgl::ContigDB::selfFilter(const BaseFilter &filter) {
   std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
   if (contig_filter) {
 
-    if (not contig_filter->applyFilter(*this)) {
+    size_t prior_count = variantCount();
 
-      // Called recursively, delete all contigs and offsets.
-      auto filter_count = selfFilter(FalseFilter());
-      trimEmpty();  // Remove any empty offsets.
-      return filter_count;
+    auto filtered_contig_ptr = contig_filter->applyFilter(*this);
+    contig_offset_map_ = std::move(filtered_contig_ptr->contig_offset_map_);
+    trimEmpty();  // Remove any empty offsets.
 
-    }
+    size_t post_count = variantCount();
 
-    size_t variant_count = variantCount();
-    return { variant_count, variant_count };
+    return { prior_count, post_count };
 
   }
 
@@ -234,7 +228,6 @@ std::optional<kgl::OffsetDBArray> kgl::ContigDB::findOffsetArray(ContigOffset_t 
   }
 
 }
-
 
 
 std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(const Variant& variant) const {

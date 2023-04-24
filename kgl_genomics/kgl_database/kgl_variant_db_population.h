@@ -7,9 +7,8 @@
 
 
 #include "kgl_variant_db_genome.h"
-#include "kgl_variant_filter.h"
 #include "kgl_data_file_type.h"
-#include "../../kel_thread/kel_workflow_threads.h"
+#include "kel_workflow_threads.h"
 
 
 #include <map>
@@ -46,10 +45,10 @@ public:
   PopulationDB& operator=(const PopulationDB&) = delete; // Use deep copy.
 
   // Use this to copy the object. Just the trivial 'TrueFilter'.
-  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const { return copyFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<PopulationDB> deepCopy() const;
 
   // Use this to empty the object. Just the trivial 'FalseFilter'.
-  std::pair<size_t, size_t> clear() { return selfFilter(FalseFilter()); }
+  std::pair<size_t, size_t> clear();
 
   // Create the genome variant if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<GenomeDB>> getCreateGenome(const GenomeId_t& genome_id);

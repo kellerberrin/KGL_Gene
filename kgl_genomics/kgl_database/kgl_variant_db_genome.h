@@ -9,7 +9,6 @@
 
 #include "kel_utility.h"
 #include "kgl_variant.h"
-#include "kgl_variant_filter.h"
 #include "kgl_variant_db_offset.h"
 #include "kgl_variant_db_contig.h"
 
@@ -30,14 +29,14 @@ class GenomeDB {
 
 public:
 
-  explicit GenomeDB(const GenomeId_t& genome_id) : genome_id_(genome_id) {}
+  explicit GenomeDB(GenomeId_t genome_id) : genome_id_(std::move(genome_id)) {}
   virtual ~GenomeDB() = default;
 
   GenomeDB(const GenomeDB&) = delete; // Use deep copy.
-  [[nodiscard]] GenomeDB& operator=(const GenomeDB&) = delete; // Use deep copy.
+  GenomeDB& operator=(const GenomeDB&) = delete; // Use deep copy.
 
   // Use this to copy the object.
-  [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const { return copyFilter(TrueFilter()); }
+  [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const;
 
   // Unconditionally merge (retains duplicates) genomes and variants into this genome.
   [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome);

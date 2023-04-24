@@ -5,7 +5,7 @@
 #ifndef KGL_VARIANT_FILTER_DB_H
 #define KGL_VARIANT_FILTER_DB_H
 
-
+#include "kgl_variant_filter_type.h"
 #include "kgl_variant_db_genome.h"
 #include "kel_utility.h"
 
@@ -13,77 +13,90 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Filter a population for genomes.
+// ReturnType both variants if and only there are 2 variants at the location that are identical disregarding phase.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class GenomeFilter : public FilterGenomes {
+
+class HomozygousFilter: public FilterOffsets {
 
 public:
 
-  explicit GenomeFilter(const std::vector<GenomeId_t> &filtered_genomes) {
+  HomozygousFilter() { filterName("Homozygous"); }
+  ~HomozygousFilter() override = default;
 
-    filterName("GenomeFilter");
+  // Dummy implementation. Implemented at offset level
+  [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HomozygousFilter>(); }
 
-    for (auto const &genome_id: filtered_genomes) {
-
-      filter_genomes_.insert(genome_id);
-
-    }
-
-  }
-  ~GenomeFilter() override = default;
-
-  [[nodiscard]] bool applyFilter(const GenomeDB& genome) const override { return filter_genomes_.contains(genome.genomeId()); }
-
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<GenomeFilter>(*this); }
 
 private:
-
-  std::unordered_set<GenomeId_t> filter_genomes_;
 
 };
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Filter for contigs within a genome.
+// Ensure max 2 variants per offset.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ContigFilter : public FilterContigs {
+class DiploidFilter: public FilterOffsets {
 
 public:
 
-  explicit ContigFilter(const std::vector<ContigId_t> &filtered_contigs) {
+  DiploidFilter() { filterName("DiploidFilter"); }
+  ~DiploidFilter() override = default;
 
-    filterName("Contig Filter");
-
-    for (auto const &contig_id: filtered_contigs) {
-
-      filter_contigs_.insert(contig_id);
-
-    }
-
-  }
-  ~ContigFilter() override = default;
-
-  [[nodiscard]] bool applyFilter(const ContigDB& contig) const override { return filter_contigs_.contains(contig.contigId()); }
-
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<ContigFilter>(*this); }
+  [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<DiploidFilter>(); }
 
 private:
-
-  std::unordered_set<ContigId_t> filter_contigs_;
 
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Unique variants disregarding phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UniqueUnphasedFilter: public FilterOffsets {
+
+public:
+
+  UniqueUnphasedFilter() { filterName("UniqueUnphasedFilter"); }
+  ~UniqueUnphasedFilter() override = default;
+
+  [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<UniqueUnphasedFilter>(*this); }
 
 
+private:
+
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Unique variants including phase.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class UniquePhasedFilter: public FilterOffsets {
+
+public:
+
+  UniquePhasedFilter() { filterName("UniquePhasedFilter"); }
+  UniquePhasedFilter(const UniquePhasedFilter&) = default;
+
+  [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<UniquePhasedFilter>(*this); }
+
+private:
+
+
+};
 
 
 } // End namespace.
