@@ -144,7 +144,13 @@ std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const C
 
 std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::shared_ptr<const ContigDB> clinvar_contig) {
 
-  return clinvar_contig->copyFilter(InfoSubStringFilter(CLINVAR_CLNSIG_FIELD, CLINVAR_PATH_SIGNIF));
+  auto substringLambda = [](const std::string& field_str)->bool {
+
+    return Utility::toupper(field_str).find(CLINVAR_PATH_SIGNIF) != std::string::npos;
+
+  };
+
+  return clinvar_contig->copyFilter(InfoFilter<std::string, false>(CLINVAR_CLNSIG_FIELD, substringLambda));
 
 }
 

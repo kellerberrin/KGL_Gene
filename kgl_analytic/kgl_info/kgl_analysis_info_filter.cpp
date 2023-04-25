@@ -166,7 +166,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
   const std::string VQSLOD_FIELD{"VQSLOD"};
   // const double VQSLOD_LEVEL{1.775};
   const double VQSLOD_LEVEL{1.2168};
-  auto vqslod_filter = InfoGEQFloatFilter(VQSLOD_FIELD, VQSLOD_LEVEL);
+  auto vqslod_filter = InfoFilter<double, false>(VQSLOD_FIELD, [VQSLOD_LEVEL](double compare) ->bool { return compare >= VQSLOD_LEVEL; });
 
   std::shared_ptr<PopulationDB> filtered_population = vcf_population->copyFilter(vqslod_filter);
 
@@ -179,7 +179,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
   const std::string RANDOM_FOREST_FIELD{"rf_tp_probability"};
   const double RANDOM_FOREST_LEVEL{0.90};
 
-  auto random_forest_filter = InfoGEQFloatFilter(RANDOM_FOREST_FIELD, RANDOM_FOREST_LEVEL);
+  auto random_forest_filter = InfoFilter<double, false>(RANDOM_FOREST_FIELD, [RANDOM_FOREST_LEVEL](double compare)->bool { return compare >= RANDOM_FOREST_LEVEL; });
 
   filtered_population = filtered_population->copyFilter(random_forest_filter);
 
@@ -222,8 +222,8 @@ bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::Popula
   const std::string vep_high_impact("HIGH");
   const std::string vep_moderate_impact("MODERATE");
 
-  auto high_impact_filter =  VepSubStringFilter(vep_sub_field, vep_high_impact);
-  auto moderate_impact_filter = VepSubStringFilter(vep_sub_field, vep_moderate_impact);
+  auto high_impact_filter =  VepSubStringFilter<false>(vep_sub_field, vep_high_impact);
+  auto moderate_impact_filter = VepSubStringFilter<false>(vep_sub_field, vep_moderate_impact);
   auto vep_impact_filter = OrFilter(high_impact_filter, moderate_impact_filter);
   // Analyze high and moderate impact variants.
   analyzeFilteredPopulation(vep_impact_filter, vcf_population, outfile);
@@ -317,11 +317,15 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             std::shared_ptr<const PopulationDB> vcf_population,
                                             std::ostream& result_file) {
 
-  analyzeFilteredPopulation(NotFilter(InfoGEQFloatFilter(info_field_ident, field_values.front())), vcf_population, result_file);
+  auto float_front_lambda = [value=field_values.front()](double compare)->bool { return compare >= value; };
+
+  analyzeFilteredPopulation(NotFilter(InfoFilter<double, false>(info_field_ident, float_front_lambda)), vcf_population, result_file);
 
   for (auto value : field_values) {
 
-    analyzeFilteredPopulation(InfoGEQFloatFilter(info_field_ident, value), vcf_population, result_file);
+    auto float_value_lambda = [value](double compare)->bool { return compare >= value; };
+
+    analyzeFilteredPopulation(InfoFilter<double, false>(info_field_ident, float_value_lambda), vcf_population, result_file);
 
   }
 

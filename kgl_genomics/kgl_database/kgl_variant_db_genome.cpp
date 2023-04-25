@@ -118,20 +118,20 @@ std::optional<std::shared_ptr<const kgl::ContigDB>> kgl::GenomeDB::getContig(con
 }
 
 
-bool kgl::GenomeDB::addContig(const std::shared_ptr<ContigDB>& contig_ptr) {
+bool kgl::GenomeDB::addContig(std::shared_ptr<ContigDB> contig_ptr) {
 
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
 
-  auto result = contig_map_.try_emplace(contig_ptr->contigId(), contig_ptr);
+  auto [iter, result] = contig_map_.try_emplace(contig_ptr->contigId(), contig_ptr);
 
-  if (not result.second) {
+  if (not result) {
 
     ExecEnv::log().error("GenomeDB::addContig(); could not add contig: {} (duplicate) to the genome", contig_ptr->contigId());
 
   }
 
-  return result.second;
+  return result;
 
 }
 
@@ -151,7 +151,7 @@ size_t kgl::GenomeDB::variantCount() const {
 }
 
 
-std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filter) const {
+std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filter) const {
 
   // Only genome filter is implemented at this level.
   std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
@@ -162,10 +162,10 @@ std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filte
   }
   // All other filters.
   // Filter the contigs.
-  std::shared_ptr<GenomeDB> filtered_genome_ptr(std::make_shared<GenomeDB>(genomeId()));
+  std::unique_ptr<GenomeDB> filtered_genome_ptr(std::make_unique<GenomeDB>(genomeId()));
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
-    auto filtered_contig = contig_ptr->copyFilter(filter);
+    std::shared_ptr<ContigDB> filtered_contig = contig_ptr->copyFilter(filter);
     if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
       ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to insert filtered Contig: {}", genomeId(), contig_id);

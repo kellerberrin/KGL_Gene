@@ -102,7 +102,9 @@ std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecor
     return VCFRecord::createEOFMarker();
 
   }
-
+ //**********
+  size_t line_number = line.lineCount();
+ //**********
   std::unique_ptr<VCFRecord> vcf_record_ptr(std::make_unique<VCFRecord>(std::move(line)));
 
   std::vector<std::string_view> field_views = Utility::viewTokenizer(vcf_record_ptr->line_record_str, VCF_FIELD_DELIMITER_CHAR_);
@@ -153,6 +155,15 @@ std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecor
     vcf_record_ptr->qual = std::stod(std::string(field_views[QUALITY_FIELD_IDX_]));
 
   }
+  //***************
+  if (line_number == 45487) {
+
+    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, Quality Text: {}, Quality Float: {}", 119825, std::string(field_views[QUALITY_FIELD_IDX_]), vcf_record_ptr->qual);
+    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, First 4000 chars: {}", 119825, vcf_record_ptr->line_record_str.substr(0, 4000));
+
+  }
+  //***************
+
   vcf_record_ptr->filter = field_views[FILTER_FIELD_IDX_];
   vcf_record_ptr->info = field_views[INFO_FIELD_IDX_];
 

@@ -48,7 +48,7 @@ public:
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
 
   // Return a filtered copy of the contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> copyFilter(const BaseFilter &filter) const;
+  [[nodiscard]] std::unique_ptr<ContigDB> copyFilter(const BaseFilter &filter) const;
   // Filter this contig (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);

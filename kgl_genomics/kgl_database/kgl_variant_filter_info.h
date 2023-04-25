@@ -10,84 +10,84 @@
 #include "kgl_variant.h"
 #include "kel_utility.h"
 #include "kgl_variant_filter.h"
+#include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 #include <unordered_set>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// These objects filter on Info field criteria specified in the supplied filter lambda.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using InfoFilterLambda = std::function<bool(const InfoDataVariant&)>;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Helper class finds the Info field (if it exists).
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InfoFilterImpl  {
-
-public:
-
-  explicit InfoFilterImpl(std::string field_name) : field_name_(std::move(field_name)) {}
-  InfoFilterImpl(const InfoFilterImpl&) = default;
-  ~InfoFilterImpl() = default;
-
-  [[nodiscard]] bool applyFilter(const InfoFilterLambda& filter_lambda, const Variant& variant) const;
-
-  [[nodiscard]] std::string fieldName() const { return field_name_; }
-
-private:
-
-  const std::string field_name_;
-
-
-};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // General Info filter class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// InfoType can only be templated with double, std::vector<double>, int64_t, std::vector<int64_t>, std::string,
+// std::vector<string> and bool.
+// Template Missing is the return value if the info field is not found.
+
+template<typename InfoType, bool Missing>
+requires ValidInfoDataType<InfoType>
 class InfoFilter : public FilterVariants {
 
 public:
 
-  InfoFilter(const std::string& field_name, InfoFilterLambda filter_lambda)
-      : info_filter_(field_name), filter_lambda_(std::move(filter_lambda)) {
+  InfoFilter(const std::string& field_name, const std::function<bool(const InfoType&)>& filter_lambda)
+      : field_name_(field_name), filter_lambda_(filter_lambda) {
 
-    filterName(field_name);
+    filterName("Info Filter: " + field_name);
 
   }
   ~InfoFilter() override = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<InfoFilter>(*this); }
 
 private:
 
-  const InfoFilterImpl info_filter_;
-  const InfoFilterLambda filter_lambda_;
+  const std::string field_name_;
+  const std::function<bool(const InfoType&)> filter_lambda_;
 
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename InfoType, bool Missing>
+requires ValidInfoDataType<InfoType>
+bool InfoFilter<InfoType, Missing>::applyFilter(const Variant& variant) const {
+
+  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<InfoType>( variant, field_name_);
+  if (info_opt) {
+
+    return filter_lambda_(info_opt.value());
+
+  } else {
+
+    return Missing;
+
+  }
+
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Filter on a Vep subfield found in the Gnomad Homosapien data. Will silently return false for all other data.
 //
 // If the vep field contains the specified sub-string then the filter returns 'true'.
-// If the the empty string "" is specified then the corresponding vep field must be empty to return true.
+// If the empty string "" is specified then the corresponding vep field must be empty to return true.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template<bool Missing>
 class VepSubStringFilter : public FilterVariants {
 
 public:
 
-  VepSubStringFilter(std::string vep_field_name, std::string sub_string)  // How the filter responds if the data is missing.
+  VepSubStringFilter(std::string vep_field_name, std::string sub_string)
       : vep_field_name_(std::move(vep_field_name)),  sub_string_(std::move(sub_string)) {
 
     std::stringstream ss;
-    ss << "Vep Info SubField: " << vep_field_name_ << " contains sub string \"" << sub_string_ <<"\"";
+    ss << "Vep Info SubField: " << vep_field_name_ << " contains sub string '" << sub_string_ << "'";
     filterName(ss.str());
 
   }
@@ -103,228 +103,68 @@ private:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Integer Info Filter. Returns true if a scalar integer and greater or equal to the comparison value.
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Vep Filter implementation.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class InfoGEQIntegerFilter : public FilterVariants {
+template<bool Missing>
+bool VepSubStringFilter<Missing>::applyFilter(const Variant& variant) const {
 
-public:
+  std::optional<std::unique_ptr<const VEPSubFieldEvidence>> vep_fields_opt = InfoEvidenceAnalysis::getVepSubFields(variant);
 
-  InfoGEQIntegerFilter(const std::string& field_name, int64_t comparison_value)  // How the filter responds if the data is missing.
-      : info_filter_(field_name), comparison_value_(comparison_value) {
+  if (vep_fields_opt) {
 
-    std::stringstream ss;
-    ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
-    filterName(ss.str());
+    const VEPSubFieldEvidence& vep_fields = *vep_fields_opt.value();
 
-  }
-  ~InfoGEQIntegerFilter() override = default;
+    std::optional<size_t> vep_index_opt = vep_fields.vepHeader()->getSubFieldIndex(vep_field_name_);
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<InfoGEQIntegerFilter>(*this); }
+    if (not vep_index_opt) {
 
+      ExecEnv::log().error("VepSubStringFilter::applyFilter; could not find VEP field: {} in VEP fields", vep_field_name_);
+      for (auto const& sub_field : vep_fields.vepHeader()->subFieldHeaders()) {
 
-private:
+        ExecEnv::log().info("VepSubStringFilter::applyFilter; available VEP field: {} in VEP fields", sub_field);
 
-  const InfoFilterImpl info_filter_;
-  const int64_t comparison_value_;
-  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
+      }
+      return Missing;
 
-    auto p_integer_vector = std::get_if<std::vector<int64_t>>(&data_variant);
-    if (p_integer_vector != nullptr) {
+    }
 
-      if (p_integer_vector->size() == 1) {
+    size_t field_index = vep_index_opt.value();
 
-        return (p_integer_vector->front() >= this->comparison_value_);
+    for (auto const& vep_field : vep_fields.vepFields()) {
 
-      } else {
+      const std::vector<std::string_view>& sub_fields = VEPSubFieldEvidence::vepSubFields(vep_field);
 
-        return false;
+      if (sub_fields.size() != vep_fields.vepHeader()->subFieldHeaders().size()) {
+
+        ExecEnv::log().error("VepSubStringFilter::applyFilter; VEP sub-field count: {} not equal to VEP header size: {}",
+                             sub_fields.size(),vep_fields.vepHeader()->subFieldHeaders().size());
+        return Missing;
 
       }
 
-    } else {
+      const std::string_view& sub_field = sub_fields[field_index];
 
-      return false;
+      if (sub_string_.empty()) {
 
-    }
+        return Utility::trimAllWhiteSpace(std::string(sub_field)).empty();
 
-  };
+      } else if (sub_field.find(sub_string_) != std::string::npos) {
 
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Float Info Filter. Returns true if a scalar float and greater or equal to the comparison value.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InfoGEQFloatFilter : public FilterVariants {
-
-public:
-
-  InfoGEQFloatFilter(const std::string& field_name, double comparison_value)
-      : info_filter_(field_name), comparison_value_(comparison_value) {
-
-    std::stringstream ss;
-    ss << "VCF Info Field: " << field_name << " >= " << comparison_value;
-    filterName(ss.str());
-
-  }
-  ~InfoGEQFloatFilter() override = default;
-
-
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<InfoGEQFloatFilter>(*this); }
-
-private:
-
-  const InfoFilterImpl info_filter_;
-  const double comparison_value_;
-  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
-
-    auto p_float_vector = std::get_if<std::vector<double>>(&data_variant);
-    if (p_float_vector != nullptr) {
-
-      if (p_float_vector->size() == 1) {
-
-        return (p_float_vector->front() >= this->comparison_value_);
-
-      } else {
-
-        return false;
+        return true;
 
       }
 
-    } else {
+    } // for all vep fields
 
-      return false;
+  } // has vep.
 
-    }
+  return false;
 
-  };
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// String Info Filter. Returns true if a string Info field contains a specified substring (including itself).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InfoSubStringFilter : public FilterVariants {
-
-public:
-
-  InfoSubStringFilter(const std::string& field_name, std::string sub_string, bool case_sensitive = false)  // How the filter responds if the data is missing.
-      : info_filter_(field_name), sub_string_(std::move(sub_string)), case_sensitive_(case_sensitive) {
-
-    std::stringstream ss;
-    ss << "VCF Info Field: " << field_name << " contains sub string \"" << sub_string <<"\"";
-    filterName(ss.str());
-    if (not case_sensitive_) {
-
-      sub_string_ = Utility::toupper(sub_string_);
-
-    }
-
-  }
-  ~InfoSubStringFilter() override = default;
-
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<InfoSubStringFilter>(*this); }
-
-private:
-
-  const InfoFilterImpl info_filter_;
-  std::string sub_string_;
-  const bool case_sensitive_;
-  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
-
-    auto p_string_vector = std::get_if<std::vector<std::string>>(&data_variant);
-    if (p_string_vector != nullptr) {
-
-      if (not p_string_vector->empty()) {
-
-        for (auto const& value : *p_string_vector) {
-
-          bool result;
-          if (case_sensitive_) {
-
-            result = value.find(sub_string_) != std::string::npos;
-
-          } else {
-
-            result = Utility::toupper(value).find(sub_string_) != std::string::npos;
-
-          }
-
-          if (result) {
-
-            return true;
-
-          }
-
-        }
-
-        return false;
-
-      } else {
-
-        return false;
-
-      }
-
-    } else {
-
-      return false;
-
-    }
-
-  };
-
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Boolean Filter. Returns true if a boolean info field is true. Can be used with the Negation filter below.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class InfoBooleanFilter : public FilterVariants {
-
-public:
-
-  explicit InfoBooleanFilter(const std::string& field_name)  // How the filter responds if the data is missing.
-      : info_filter_(field_name) {
-
-    std::stringstream ss;
-    ss << "VCF Boolean Info Field: " << field_name;
-    filterName(ss.str());
-
-  }
-  ~InfoBooleanFilter() override = default;
-
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return info_filter_.applyFilter(filter_lambda_, variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<InfoBooleanFilter>(*this); }
-
-private:
-
-  const InfoFilterImpl info_filter_;
-  const InfoFilterLambda filter_lambda_ = [this] (const InfoDataVariant& data_variant) -> bool {
-
-    auto p_bool = std::get_if<bool>(&data_variant);
-    if (p_bool != nullptr) {
-
-      return *p_bool;
-
-    } else {
-
-      return false;
-
-    }
-
-  };
-
-};
-
+}
 
 
 } // Namespace

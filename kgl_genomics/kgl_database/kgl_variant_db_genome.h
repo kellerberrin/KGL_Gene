@@ -48,7 +48,7 @@ public:
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
   // Return a filtered copy of the genome.
-  [[nodiscard]] std::shared_ptr<GenomeDB> copyFilter(const BaseFilter& filter) const;
+  [[nodiscard]] std::unique_ptr<GenomeDB> copyFilter(const BaseFilter& filter) const;
   // Filter this genome in Situ. (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
@@ -85,7 +85,7 @@ private:
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
 
-  [[nodiscard]] bool addContig(const std::shared_ptr<ContigDB>& contig_ptr);
+  [[nodiscard]] bool addContig(std::shared_ptr<ContigDB> contig_ptr);
 
 };
 

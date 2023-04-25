@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_PfEMP.h"
 #include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -107,7 +108,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   all_gene_map_.getGeneVariants(monoclonal_population_ptr);
 
   // Filtered for variant quality. Read depth >= 10.
-  auto filtered_monoclonal_ptr = monoclonal_population_ptr->copyFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
+  std::shared_ptr<PopulationDB> filtered_monoclonal_ptr = monoclonal_population_ptr->copyFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
+
+  //  filtered_monoclonal_ptr->selfFilter(UniquePhasedFilter());
   // Filtered population should contain all contigs for all genomes.
   filtered_monoclonal_ptr->squareContigs();
   // Analyze for Homozygous and overlapping variants.

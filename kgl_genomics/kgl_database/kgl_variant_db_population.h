@@ -18,7 +18,6 @@
 
 namespace kellerberrin::genome {   //  organization::project
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // The population level contains genomes, which in turn contain contigs (chromosomes),
@@ -34,11 +33,11 @@ class PopulationDB : public DataDB {
 
 public:
 
-  PopulationDB(const PopulationId_t& population_id, DataSourceEnum data_source) : DataDB(data_source), population_id_(population_id) {}
+  PopulationDB(PopulationId_t population_id, DataSourceEnum data_source) : DataDB(data_source), population_id_(std::move(population_id)) {}
   PopulationDB(const PopulationDB&) = delete; // Use deep copy.
   ~PopulationDB() override { clear(); }  // Experimental, may be quicker than relying on smart pointer reference counting.
 
-  // Preferred to fieldId().
+  // Preferred to fileId().
   [[nodiscard]] const std::string& populationId() const { return population_id_; }
   [[nodiscard]] const std::string& fileId() const override { return populationId(); }
 
@@ -61,7 +60,7 @@ public:
 
   // Creates a filtered copy of the population database.
   // This is multi-threaded across genomes to be time efficient for large databases.
-  [[nodiscard]] std::shared_ptr<PopulationDB> copyFilter(const BaseFilter& filter) const;
+  [[nodiscard]] std::unique_ptr<PopulationDB> copyFilter(const BaseFilter& filter) const;
 
   // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.
@@ -111,7 +110,7 @@ private:
   PopulationId_t population_id_;
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex add_variant_mutex_;
-  // mutex to lock the structure when performing an selfFilter.
+  // mutex to lock the structure when performing a selfFilter.
   mutable std::mutex insitufilter_mutex_;
 
 };

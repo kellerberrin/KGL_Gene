@@ -130,10 +130,10 @@ size_t kgl::PopulationDB::variantCount() const {
 
 // Multi-tasking filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
-std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::copyFilter(const BaseFilter& filter) const {
+std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::copyFilter(const BaseFilter& filter) const {
 
   // Create the new population.
-  std::shared_ptr<PopulationDB> filtered_population_ptr(std::make_shared<PopulationDB>(populationId(), dataSource()));
+  std::unique_ptr<PopulationDB> filtered_population_ptr(std::make_unique<PopulationDB>(populationId(), dataSource()));
 
   // Edge Condition, if no genomes then simply exit.
   if (getMap().empty()) {

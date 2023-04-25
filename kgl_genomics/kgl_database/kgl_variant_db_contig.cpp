@@ -119,7 +119,7 @@ size_t kgl::ContigDB::variantCount() const {
 
 // Creates a copy of the contig that only contains variants passing the filter condition.
 // Note that we delete any empty offsets.
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::copyFilter(const BaseFilter &filter) const {
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::copyFilter(const BaseFilter &filter) const {
 
   // Only contig filter is implemented at this level.
   std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
@@ -133,7 +133,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::copyFilter(const BaseFilter &filte
 
   // All other filters.
   // Filter the offsets.
-  std::shared_ptr<ContigDB> filtered_contig_ptr(std::make_shared<ContigDB>(contigId()));
+  std::unique_ptr<ContigDB> filtered_contig_ptr(std::make_unique<ContigDB>(contigId()));
   for (const auto& [offset, offset_ptr] : getMap()) {
 
     auto filtered_offset_ptr = offset_ptr->copyFilter(filter);

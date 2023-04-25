@@ -26,8 +26,8 @@ class InfoIntervalData {
 
 public:
 
-  InfoIntervalData() : vep_impact_filter_(VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_HIGH_IMPACT_),
-                                          VepSubStringFilter(VEP_IMPACT_FIELD_, VEP_MODERATE_FIELD_)),
+  InfoIntervalData() : vep_impact_filter_(VepSubStringFilter<false>(VEP_IMPACT_FIELD_, VEP_HIGH_IMPACT_),
+                                          VepSubStringFilter<false>(VEP_IMPACT_FIELD_, VEP_MODERATE_FIELD_)),
                                           age_analysis_("AgeInterval") {}
   ~InfoIntervalData() = default;
 
