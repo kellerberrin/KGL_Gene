@@ -5,6 +5,7 @@
 #include "kgl_analysis_PfEMP.h"
 #include "kgl_variant_filter.h"
 #include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_info.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -80,43 +81,138 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
   }
 
-  ExecEnv::log().info("Unfiltered Population: {}, Genome count: {}, Variant Count: {}",
-                      population_ptr->populationId(),
-                      population_ptr->getMap().size(),
-                      population_ptr->variantCount());
+  auto filtered_population_ptr = qualityFilter(population_ptr);
 
-  auto filtered_population_ptr = Pf7_sample_ptr_->filterPassQCGenomes(population_ptr);
-
-  ExecEnv::log().info("QC Pass Filtered Population: {}, Genome count: {}, Variant Count: {}, Sample Data Count: {}",
-                      filtered_population_ptr->populationId(),
+  ExecEnv::log().info("Population Returned Filtered Size Genome count: {}, Variant Count: {}",
                       filtered_population_ptr->getMap().size(),
-                      filtered_population_ptr->variantCount(),
-                      Pf7_sample_ptr_->getMap().size());
-
-  auto monoclonal_population_ptr = Pf7_fws_ptr_->filterFWS(FwsFilterType::GREATER_EQUAL, MONOCLONAL_FWS_THRESHOLD, filtered_population_ptr);
-
-  ExecEnv::log().info("MonoClonal Filtered Population: {}, Genome count: {}, Variant Count: {}, FWS Data Count: {}",
-                      monoclonal_population_ptr->populationId(),
-                      monoclonal_population_ptr->getMap().size(),
-                      monoclonal_population_ptr->variantCount(),
-                      Pf7_fws_ptr_->getMap().size());
+                      filtered_population_ptr->variantCount());
 
 //  checkDistanceMatrix(population_ptr, filtered_population_ptr);
 
-  translation_gene_map_.getGeneVariants(monoclonal_population_ptr);
-  antigenic_gene_map_.getGeneVariants(monoclonal_population_ptr);
-  all_gene_map_.getGeneVariants(monoclonal_population_ptr);
+  // Analyze gene variant info
+  translation_gene_map_.getGeneVariants(filtered_population_ptr);
+  antigenic_gene_map_.getGeneVariants(filtered_population_ptr);
+  all_gene_map_.getGeneVariants(filtered_population_ptr);
 
-  // Filtered for variant quality. Read depth >= 10.
-  std::shared_ptr<PopulationDB> filtered_monoclonal_ptr = monoclonal_population_ptr->copyFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
 
-  //  filtered_monoclonal_ptr->selfFilter(UniquePhasedFilter());
-  // Filtered population should contain all contigs for all genomes.
-  filtered_monoclonal_ptr->squareContigs();
   // Analyze for Homozygous and overlapping variants.
-  hetero_homo_zygous_.analyzeVariantPopulation(filtered_monoclonal_ptr);
+  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr);
 
   return true;
+
+}
+
+// Quality filter the variants using read depth, VQSLOD and other statistics
+std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) {
+
+
+  size_t unfiltered_count = unfiltered_population_ptr->variantCount();
+  ExecEnv::log().info("Unfiltered Population: {}, Genome count: {}, Variant Count: {}",
+                      unfiltered_population_ptr->populationId(),
+                      unfiltered_population_ptr->getMap().size(),
+                      unfiltered_count);
+
+  // Shallow filter only.
+  auto filtered_qc_population_ptr = Pf7_sample_ptr_->filterPassQCGenomes(unfiltered_population_ptr);
+
+  size_t qc_count = filtered_qc_population_ptr->variantCount();
+  double qc_filtered = 100.0 * (static_cast<double>(unfiltered_count - qc_count) / static_cast<double>(unfiltered_count));
+  ExecEnv::log().info("Filter P7 QC Pass Genome count: {}, Variant Count: {}, Sample Data Count: {}, %filtered: {}",
+                      filtered_qc_population_ptr->getMap().size(),
+                      qc_count,
+                      Pf7_sample_ptr_->getMap().size(),
+                      qc_filtered);
+
+  // Shallow filter only.
+  auto monoclonal_population_ptr = Pf7_fws_ptr_->filterFWS(FwsFilterType::GREATER_EQUAL, MONOCLONAL_FWS_THRESHOLD, filtered_qc_population_ptr);
+
+  size_t monoclonal_count = monoclonal_population_ptr->variantCount();
+  double mono_filtered = 100.0 * (static_cast<double>(qc_count - monoclonal_count) / static_cast<double>(qc_count));
+  ExecEnv::log().info("Filter MonoClonal FWS: {}, Genome Count: {},Variant Count: {}, %filtered: {}",
+                      MONOCLONAL_FWS_THRESHOLD,
+                      monoclonal_population_ptr->getMap().size(),
+                      monoclonal_count,
+                      mono_filtered);
+
+  // Filter on VQSLOD if it exists, if field not present then the variant is not filtered.
+  auto vqslod_filter_lambda = [vsqlod=VQSLOD_LEVEL_](double compare) ->bool { return compare >= vsqlod; };
+  auto vqslod_filter = InfoFilter<double, true>(VQSLOD_FIELD_, vqslod_filter_lambda);
+  monoclonal_population_ptr->selfFilter(vqslod_filter);
+
+  size_t vqslod_count = monoclonal_population_ptr->variantCount();
+  double vqslod_filtered = 100.0 * (static_cast<double>(monoclonal_count - vqslod_count) / static_cast<double>(monoclonal_count));
+  ExecEnv::log().info("Filter >= VQSLOD level {}, Variant Count: {}, %filtered: {}", VQSLOD_LEVEL_, vqslod_count, vqslod_filtered);
+
+  // Filter on QD if it exists, if field not present then the variant is not filtered.
+  auto qd_filter_lambda = [qd=QD_LEVEL_](double compare) ->bool { return compare >= qd; };
+  auto qd_filter = InfoFilter<double, true>(QD_FIELD_, qd_filter_lambda);
+  monoclonal_population_ptr->selfFilter(qd_filter);
+
+  size_t qd_count = monoclonal_population_ptr->variantCount();
+  double qd_filtered = 100.0 * (static_cast<double>(vqslod_count - qd_count) / static_cast<double>(vqslod_count));
+  ExecEnv::log().info("Filter >= QD level {}, Variant Count: {}, %filtered: {}", QD_LEVEL_, qd_count, qd_filtered);
+
+  // Filter on MQ if it exists, if field not present then the variant is not filtered.
+  auto mq_filter_lambda = [mq=MQ_LEVEL_](double compare) ->bool { return compare >= mq; };
+  auto mq_filter = InfoFilter<double, true>(MQ_FIELD_, mq_filter_lambda);
+  monoclonal_population_ptr->selfFilter(mq_filter);
+
+  size_t mq_count = monoclonal_population_ptr->variantCount();
+  double mq_filtered = 100.0 * (static_cast<double>(qd_count - mq_count) / static_cast<double>(qd_count));
+  ExecEnv::log().info("Filter >= MQ level {}, Variant Count: {}, %filtered: {}", MQ_LEVEL_, mq_count, mq_filtered);
+
+  // Filter on SOR if it exists, if field not present then the variant is not filtered.
+  auto sor_filter_lambda = [sor=SOR_LEVEL_](double compare) ->bool { return compare <= sor; };
+  auto sor_filter = InfoFilter<double, true>(SOR_FIELD_, sor_filter_lambda);
+  monoclonal_population_ptr->selfFilter(sor_filter);
+
+  size_t sor_count = monoclonal_population_ptr->variantCount();
+  double sor_filtered = 100.0 * (static_cast<double>(mq_count - sor_count) / static_cast<double>(mq_count));
+  ExecEnv::log().info("Filter <= SOR level {}, Variant Count: {}, %filtered: {}", SOR_LEVEL_, sor_count, sor_filtered);
+
+  // Filter on MQRankSum if it exists, if field not present then the variant is not filtered.
+  auto mq_rank_sum_filter_lambda = [mqrs=MQRankSum_LEVEL_](double compare) ->bool { return compare >= mqrs; };
+  auto mq_rank_sum_filter = InfoFilter<double, true>(MQRankSum_FIELD_, mq_rank_sum_filter_lambda);
+  monoclonal_population_ptr->selfFilter(mq_rank_sum_filter);
+
+  size_t mqrs_count = monoclonal_population_ptr->variantCount();
+  double mqrs_filtered = 100.0 * (static_cast<double>(sor_count - mqrs_count) / static_cast<double>(sor_count));
+  ExecEnv::log().info("Filter >= MQRankSum level {}, Variant Count: {}, %filtered: {}", MQRankSum_LEVEL_, mqrs_count, mqrs_filtered);
+
+  // Filter on MQRankSum if it exists, if field not present then the variant is not filtered.
+  auto read_sum_filter_lambda = [rprs=ReadPosRankSum_LEVEL_](double compare) ->bool { return compare >= rprs; };
+  auto read_sum_filter = InfoFilter<double, true>(ReadPosRankSum_FIELD_, read_sum_filter_lambda);
+  monoclonal_population_ptr->selfFilter(read_sum_filter);
+
+  size_t rprs_count = monoclonal_population_ptr->variantCount();
+  double rprs_filtered = 100.0 * (static_cast<double>(mqrs_count - rprs_count) / static_cast<double>(mqrs_count));
+  ExecEnv::log().info("Filter >= ReadPosRankSum {}, Variant Count: {}, %filtered: {}", ReadPosRankSum_LEVEL_, rprs_count, rprs_filtered);
+
+  // Filtered for variant quality. Read depth >= 10.
+  monoclonal_population_ptr->selfFilter(DPCountFilter(MINIMUM_READ_DEPTH_));
+
+  size_t depth_count = monoclonal_population_ptr->variantCount();
+  double depth_filtered = 100.0 * (static_cast<double>(rprs_count - depth_count) / static_cast<double>(rprs_count));
+  ExecEnv::log().info("Filter >= Read Depth: {} Genome count: {}, Variant Count: {}, %filtered: {}",
+                      MINIMUM_READ_DEPTH_,
+                      monoclonal_population_ptr->getMap().size(),
+                      depth_count,
+                      depth_filtered);
+
+  // Filter for unique variants at each offset.
+  //  filtered_monoclonal_ptr->selfFilter(UniqueUnphasedFilter());
+
+  // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
+  // And when the resultant population pointers go out of scope they will take the shared population structure with them.
+  auto filtered_population_ptr = monoclonal_population_ptr->deepCopy();
+  // Filtered population should contain all contigs for all genomes.
+  filtered_population_ptr->squareContigs();
+
+  ExecEnv::log().info("Population Final Filtered Size Genome count: {}, Variant Count: {}",
+                      filtered_population_ptr->getMap().size(),
+                      filtered_population_ptr->variantCount());
+
+  return filtered_population_ptr;
 
 }
 

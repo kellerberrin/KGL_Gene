@@ -152,7 +152,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
   auto unphased_contig = contig_opt.value();
 
   auto found_all_unphased = unphased_contig->findContig(span_contig);
-  std::shared_ptr<const ContigDB> found_hom_variants = span_contig->copyFilter(HomozygousFilter());
+  std::shared_ptr<const ContigDB> found_hom_variants = span_contig->shallowCopyFilter(HomozygousFilter());
 
   vep_info.all_lof = vepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);
   vep_info.hom_lof = vepCount(found_hom_variants, LOF_VEP_FIELD_, LOF_HC_VALUE_);

@@ -11,7 +11,8 @@ namespace kgl = kellerberrin::genome;
 // Use this to copy the object.
 std::shared_ptr<kgl::GenomeDB> kgl::GenomeDB::deepCopy() const {
 
-  return copyFilter(TrueFilter());
+  // Can use the shallow filter because all variants are copied across.
+  return shallowCopyFilter(TrueFilter());
 
 }
 
@@ -151,7 +152,7 @@ size_t kgl::GenomeDB::variantCount() const {
 }
 
 
-std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filter) const {
+std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::shallowCopyFilter(const BaseFilter& filter) const {
 
   // Only genome filter is implemented at this level.
   std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
@@ -165,7 +166,7 @@ std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::copyFilter(const BaseFilter& filte
   std::unique_ptr<GenomeDB> filtered_genome_ptr(std::make_unique<GenomeDB>(genomeId()));
   for (const auto& [contig_id, contig_ptr] : getMap()) {
 
-    std::shared_ptr<ContigDB> filtered_contig = contig_ptr->copyFilter(filter);
+    std::shared_ptr<ContigDB> filtered_contig = contig_ptr->shallowCopyFilter(filter);
     if (not filtered_genome_ptr->addContig(filtered_contig)) {
 
       ExecEnv::log().error("GenomeDB::filter; Genome: {}, Unable to insert filtered Contig: {}", genomeId(), contig_id);

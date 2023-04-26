@@ -43,8 +43,16 @@ private:
   VariantAnalysisMap variant_analysis_map_;
   constexpr static const char CSV_DELIMITER_ = ',';
 
-  [[nodiscard]] double getVQSLOD(const std::shared_ptr<const Variant>& variant_ptr);
-  constexpr static const char* VQSLOD_FILTER_NAME_{"VQSLOD"};
+  constexpr static const char* VQSLOD_FIELD_{"VQSLOD"};
+  constexpr static const char* FS_FIELD_{"FS"};
+  constexpr static const char* SOR_FIELD_{"SOR"};
+  constexpr static const char* QD_FIELD_{"QD"};
+  constexpr static const char* MQ_FIELD_{"MQ"};
+  constexpr static const char* MQRankSum_FIELD_{"MQRankSum"};
+  constexpr static const char* ReadPosRankSum_FIELD_{"ReadPosRankSum"};
+
+  [[nodiscard]] double getInfoField(const std::shared_ptr<const Variant>& variant_ptr, std::string field_id);
+
 
 };
 

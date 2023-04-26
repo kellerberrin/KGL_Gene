@@ -61,7 +61,7 @@ public:
   [[nodiscard]] const Pf7SampleMap& getMap() const { return Pf7Sample_map_; }
 
   // Population must be PF7
-  std::shared_ptr<const PopulationDB> filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
+  [[nodiscard]] std::shared_ptr<PopulationDB> filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
 
 private:
 

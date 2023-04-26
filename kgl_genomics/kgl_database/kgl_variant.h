@@ -112,7 +112,8 @@ public:
   // Location specific parameters.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   // Actual offset of the allele. For SNPs offset() == referenceOffset(). For indels (generally) offset() == referenceOffset() + 1
-  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_ + contig_allele_offset_; }
+//  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_ + contig_allele_offset_; }
+  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
   // The zero based offset of the allele. This is NOT the 1 based offset used in Gffs etc.
   [[nodiscard]] ContigOffset_t referenceOffset() const { return contig_reference_offset_; }
   [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
@@ -138,6 +139,9 @@ public:
 
   [[nodiscard]] static size_t objectCount() { return object_count_; }
 
+  // Generate a CIGAR by comparing the reference to the alternate.
+  [[nodiscard]] std::string alternateCigar() const;
+
 private:
 
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
@@ -151,8 +155,6 @@ private:
 
   inline static std::atomic<size_t> object_count_{0};
 
-  // Generate a CIGAR by comparing the reference to the alternate.
-  [[nodiscard]] std::string alternateCigar() const;
 
   [[nodiscard]] size_t alternateSize(size_t reference_size) const;
 

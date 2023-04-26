@@ -157,7 +157,7 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                  const std::shared_ptr<const ContigDB>& locus_list ) {
 
   // Only want SNP variants.
-  auto snp_contig_ptr = contig_ptr->copyFilter(SNPFilter());
+  auto snp_contig_ptr = contig_ptr->shallowCopyFilter(SNPFilter());
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;
@@ -229,7 +229,7 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                            const std::shared_ptr<const ContigDB>& locus_list ) {
 
   // Only want SNP variants.
-  auto snp_contig_ptr = contig_ptr->copyFilter(SNPFilter());
+  auto snp_contig_ptr = contig_ptr->shallowCopyFilter(SNPFilter());
 
   // Entropy source is the Mersenne twister.
   RandomEntropySource entropy_mt;

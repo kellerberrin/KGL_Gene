@@ -35,7 +35,8 @@ void kgl::Pf7SampleResource::indexPf7SampleData() {
 }
 
 // Population must be PF7
-std::shared_ptr<const kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
+// Important - this code above only filters a shallow copy of the population.
+std::shared_ptr<kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
 
 
   auto filtered_ptr = std::make_shared<kgl::PopulationDB>(Pf7_unfiltered_ptr->populationId() + "_QC_Pass",

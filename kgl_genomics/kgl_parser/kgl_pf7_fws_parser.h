@@ -47,9 +47,9 @@ public:
   [[nodiscard]] const Pf7FwsMap& getMap() const { return Pf7Fws_map_; }
 
   // Population must be PF7
-  std::shared_ptr<const PopulationDB> filterFWS(FwsFilterType filter_type,
-                                                double fws_threshold,
-                                                const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
+  [[nodiscard]] std::shared_ptr<PopulationDB> filterFWS( FwsFilterType filter_type,
+                                                         double fws_threshold,
+                                                         const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
 
 private:
 

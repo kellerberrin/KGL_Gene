@@ -17,9 +17,29 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   ss << delimiter   << "VCFRecord:" << vcfRecordCount();
 
+  ss << delimiter << "Pass Filter:" << (passFilter() ? "true" : "false");
+
+  ss << delimiter << "Alt Variants:" << altVariantCount();
+
+  ss << delimiter << "Alt Variant Index:" << altVariantIndex();
+
   if (formatData()) {
 
     ss << formatData().value()->output(delimiter);
+
+  } else {
+
+    ss << delimiter << "No Format Data";
+
+  }
+
+  if (infoData()) {
+
+    ss << delimiter << "Info Data Available";
+
+  } else {
+
+    ss << delimiter << "No Info Data";
 
   }
 

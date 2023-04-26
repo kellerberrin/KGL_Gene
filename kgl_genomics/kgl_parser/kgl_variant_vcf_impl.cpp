@@ -156,10 +156,11 @@ std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecor
 
   }
   //***************
-  if (line_number == 45487) {
+  const size_t test_line_number = 45237;
+  if (line_number == test_line_number) {
 
-    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, Quality Text: {}, Quality Float: {}", 119825, std::string(field_views[QUALITY_FIELD_IDX_]), vcf_record_ptr->qual);
-    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, First 4000 chars: {}", 119825, vcf_record_ptr->line_record_str.substr(0, 4000));
+    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, Quality Text: {}, Quality Float: {}", test_line_number, std::string(field_views[QUALITY_FIELD_IDX_]), vcf_record_ptr->qual);
+    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, First 4000 chars: {}", test_line_number, vcf_record_ptr->line_record_str.substr(0, 4000));
 
   }
   //***************

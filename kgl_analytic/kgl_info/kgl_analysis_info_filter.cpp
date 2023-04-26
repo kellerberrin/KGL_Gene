@@ -168,7 +168,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
   const double VQSLOD_LEVEL{1.2168};
   auto vqslod_filter = InfoFilter<double, false>(VQSLOD_FIELD, [VQSLOD_LEVEL](double compare) ->bool { return compare >= VQSLOD_LEVEL; });
 
-  std::shared_ptr<PopulationDB> filtered_population = vcf_population->copyFilter(vqslod_filter);
+  std::shared_ptr<PopulationDB> filtered_population = vcf_population->shallowCopyFilter(vqslod_filter);
 
   size_t filtered_VQSLOD = filtered_population->variantCount();
   double percent_filtered =  (static_cast<double>(filtered_VQSLOD) / static_cast<double>(unfiltered)) * 100.0;
@@ -181,7 +181,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
 
   auto random_forest_filter = InfoFilter<double, false>(RANDOM_FOREST_FIELD, [RANDOM_FOREST_LEVEL](double compare)->bool { return compare >= RANDOM_FOREST_LEVEL; });
 
-  filtered_population = filtered_population->copyFilter(random_forest_filter);
+  filtered_population = filtered_population->shallowCopyFilter(random_forest_filter);
 
   size_t filtered_random_forest = filtered_population->variantCount();
   percent_filtered =  (static_cast<double>(filtered_random_forest) / static_cast<double>(unfiltered)) * 100.0;
@@ -317,15 +317,29 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             std::shared_ptr<const PopulationDB> vcf_population,
                                             std::ostream& result_file) {
 
-  auto float_front_lambda = [value=field_values.front()](double compare)->bool { return compare >= value; };
+  if (field_values.empty()) {
 
-  analyzeFilteredPopulation(NotFilter(InfoFilter<double, false>(info_field_ident, float_front_lambda)), vcf_population, result_file);
+    ExecEnv::log().error("nfoFilterAnalysis::analyzeField; Unaexpected empty value vector");
+    return;
+
+  }
+
+  // Comparison lambda returns true if compare is less than the front value.
+  auto float_front_lambda = [value=field_values.front()](double compare)->bool { return compare < value; };
+  // Comparison filter returns false if the info_field_ident does not exist.
+  InfoFilter<double, false> compare_front_filter(info_field_ident, float_front_lambda);
+
+  analyzeFilteredPopulation(compare_front_filter, vcf_population, result_file);
 
   for (auto value : field_values) {
 
+    // Comparison lambda returns true if compare is greater or equal than the iterated field value.
     auto float_value_lambda = [value](double compare)->bool { return compare >= value; };
 
-    analyzeFilteredPopulation(InfoFilter<double, false>(info_field_ident, float_value_lambda), vcf_population, result_file);
+    // Comparison filter returns false if the info_field_ident does not exist.
+    InfoFilter<double, false> compare_value_filter(info_field_ident, float_value_lambda);
+
+    analyzeFilteredPopulation(compare_value_filter, vcf_population, result_file);
 
   }
 
@@ -342,9 +356,9 @@ void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const BaseFilter& filte
   ExecEnv::log().info("Analysis Package: {}, executing age analysis: {}", ident(), title);
   InfoAgeAnalysis age_analysis(title);
   // Filter the variant population
-  std::shared_ptr<const PopulationDB> filtered_population = vcf_population->copyFilter(filter);
+  auto filtered_population_ptr = vcf_population->shallowCopyFilter(filter);
   // Gather the age profile.
-  filtered_population->processAll(age_analysis, &InfoAgeAnalysis::processVariant);
+  filtered_population_ptr->processAll(age_analysis, &InfoAgeAnalysis::processVariant);
   // Write results
   result_file << age_analysis;
 

@@ -11,7 +11,8 @@ namespace kgl = kellerberrin::genome;
 // Use this to copy the object. Just the trivial 'TrueFilter'.
 std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::deepCopy() const {
 
-  return copyFilter(TrueFilter());
+  // Can use the shallow filter because all variants are copied across
+  return shallowCopyFilter(TrueFilter());
 
 }
 
@@ -130,7 +131,7 @@ size_t kgl::PopulationDB::variantCount() const {
 
 // Multi-tasking filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
-std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::copyFilter(const BaseFilter& filter) const {
+std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::shallowCopyFilter(const BaseFilter& filter) const {
 
   // Create the new population.
   std::unique_ptr<PopulationDB> filtered_population_ptr(std::make_unique<PopulationDB>(populationId(), dataSource()));
@@ -151,7 +152,7 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::copyFilter(const BaseFilte
   auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
                           std::shared_ptr<const BaseFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
 
-    return genome_ptr->copyFilter(*filter_ptr);
+    return genome_ptr->shallowCopyFilter(*filter_ptr);
 
   };
 

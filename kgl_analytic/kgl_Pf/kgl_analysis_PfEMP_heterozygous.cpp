@@ -72,12 +72,26 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
           ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, unexpected number of variants: {}",
                               genome_id, contig_id, offset, offset_array_ptr->getVariantArray().size());
+
+
           for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
 
-            ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, Variant: {}, Format: {}, VQSLOD: {}",
-                                genome_id, contig_id, offset, variant_ptr->HGVS(),
-                                variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED),
-                                getVQSLOD(variant_ptr));
+            ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, Variant: {}, Cigar: {}, Format: {}",
+                                genome_id,
+                                contig_id,
+                                offset,
+                                variant_ptr->HGVS(),
+                                variant_ptr->alternateCigar(),
+                                variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED));
+
+            ExecEnv::log().warn("VQSLOD: {}, FS: {}, SOR: {}, QD: {}, MQ: {}, MQRankSum: {}, ReadPosRankSum: {}",
+                                getInfoField(variant_ptr, VQSLOD_FIELD_),
+                                getInfoField(variant_ptr, FS_FIELD_),
+                                getInfoField(variant_ptr, SOR_FIELD_),
+                                getInfoField(variant_ptr, QD_FIELD_),
+                                getInfoField(variant_ptr, MQ_FIELD_),
+                                getInfoField(variant_ptr, MQRankSum_FIELD_),
+                                getInfoField(variant_ptr, ReadPosRankSum_FIELD_));
 
           }
 
@@ -149,9 +163,9 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
 
 }
 
-double kgl::HeteroHomoZygous::getVQSLOD(const std::shared_ptr<const Variant>& variant_ptr) {
+double kgl::HeteroHomoZygous::getInfoField(const std::shared_ptr<const Variant> &variant_ptr, std::string field_id)  {
 
-  auto field_opt = InfoEvidenceAnalysis::getTypedInfoData<double>(*variant_ptr, VQSLOD_FILTER_NAME_);
+  auto field_opt = InfoEvidenceAnalysis::getTypedInfoData<double>(*variant_ptr, field_id);
   if (field_opt) {
 
     return field_opt.value();

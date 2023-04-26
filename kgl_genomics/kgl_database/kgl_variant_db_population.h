@@ -60,7 +60,8 @@ public:
 
   // Creates a filtered copy of the population database.
   // This is multi-threaded across genomes to be time efficient for large databases.
-  [[nodiscard]] std::unique_ptr<PopulationDB> copyFilter(const BaseFilter& filter) const;
+  // Important, returns a shallow copy of the population - only use for CPU/memory efficiency.
+  [[nodiscard]] std::unique_ptr<PopulationDB> shallowCopyFilter(const BaseFilter& filter) const;
 
   // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
   // We can multi-thread because smart pointer reference counting (only) is thread safe.

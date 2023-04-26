@@ -33,8 +33,9 @@ public:
   OffsetDB() { variant_vector_.reserve(INITIAL_VECTOR_SIZE_); }
   ~OffsetDB() = default;
 
-  OffsetDB(const OffsetDB &) = delete;
-  OffsetDB& operator=(const OffsetDB &) = delete;
+  OffsetDB(const OffsetDB &) = delete; // Use deepCopy()
+  OffsetDB& operator=(const OffsetDB &) = delete; // Use deepCopy()
+
 
   [[nodiscard]] const OffsetDBArray& getVariantArray() const { return variant_vector_; }
   void setVariantArray(const OffsetDBArray& update) { variant_vector_ = update; }
@@ -42,6 +43,8 @@ public:
   void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
 
   // Return a filtered copy of the offset.
+  // Offset is the bottom level of the population structure, so a true/deep copy of the filtered offset is returned
+  // unlike the higher levels of Population/Genome/Contig.
   [[nodiscard]] std::unique_ptr<OffsetDB> copyFilter(const BaseFilter &filter) const;
   // Filter this offset.
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
