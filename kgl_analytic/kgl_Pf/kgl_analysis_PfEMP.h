@@ -60,23 +60,9 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
 
   // Filter constants.
+  constexpr static const bool FILTER_QC_ACTIVE_{true};
+  constexpr static const bool FILTER_FWS_ACTIVE_{true};
   constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
-  constexpr static const char* VQSLOD_FIELD_{"VQSLOD"};
-//  constexpr static const double VQSLOD_LEVEL_{1.775};
-  constexpr static const double VQSLOD_LEVEL_{1.2168};
-  constexpr static const size_t MINIMUM_READ_DEPTH_{5};
-  constexpr static const char* QD_FIELD_{"QD"};
-  constexpr static const double QD_LEVEL_{2.0};
-  constexpr static const char* MQ_FIELD_{"MQ"};
-  constexpr static const double MQ_LEVEL_{35.0};
-  constexpr static const char* SOR_FIELD_{"SOR"};
-  constexpr static const double SOR_LEVEL_{3.0};
-  constexpr static const char* MQRankSum_FIELD_{"MQRankSum"};
-  constexpr static const double MQRankSum_LEVEL_{-12.5};
-  constexpr static const char* ReadPosRankSum_FIELD_{"ReadPosRankSum"};
-  constexpr static const double ReadPosRankSum_LEVEL_{-8.0};
-
-
 
   void performPFEMP1UPGMA();
 
