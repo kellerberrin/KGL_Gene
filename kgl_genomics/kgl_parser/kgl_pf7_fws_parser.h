@@ -46,6 +46,8 @@ public:
 
   [[nodiscard]] const Pf7FwsMap& getMap() const { return Pf7Fws_map_; }
 
+  [[nodiscard]] double getFWS(const GenomeId_t& genome) const;
+
   // Population must be PF7
   [[nodiscard]] std::shared_ptr<PopulationDB> filterFWS( FwsFilterType filter_type,
                                                          double fws_threshold,

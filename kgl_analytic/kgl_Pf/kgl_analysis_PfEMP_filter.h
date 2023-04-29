@@ -81,7 +81,7 @@ private:
   constexpr static const char* VQSLOD_FIELD_{"VQSLOD"};
   // constexpr static const double VQSLOD_LEVEL_{1.775};
   // constexpr static const double VQSLOD_LEVEL_{1.2168};
-  constexpr static const double VQSLOD_LEVEL_{0.5};
+  constexpr static const double VQSLOD_LEVEL_{0.0};
   constexpr static const char* QD_FIELD_{"QD"};
   constexpr static const double QD_LEVEL_{2.0};
   constexpr static const char* MQ_FIELD_{"MQ"};

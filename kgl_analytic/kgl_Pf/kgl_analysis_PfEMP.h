@@ -61,7 +61,7 @@ private:
 
   // Filter constants.
   constexpr static const bool FILTER_QC_ACTIVE_{true};
-  constexpr static const bool FILTER_FWS_ACTIVE_{true};
+  constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
 
   void performPFEMP1UPGMA();

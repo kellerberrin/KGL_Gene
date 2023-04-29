@@ -32,6 +32,22 @@ void kgl::Pf7FwsResource::indexPf7FwsData() {
 
 }
 
+double kgl::Pf7FwsResource::getFWS(const GenomeId_t& genome_id) const {
+
+  if (getMap().contains(genome_id)) {
+
+    auto sample_iter = getMap().find(genome_id);
+    auto const &[id, sample_data] = *sample_iter;
+    return sample_data.FWS_value;
+
+  }
+
+  ExecEnv::log().warn("Pf7FwsResource::filterFWS; Unable to find FWS statistic for genome: {}", genome_id);
+  return std::nan("n/a");
+
+}
+
+
 // Population must be PF7
 // Important - this code above only filters a shallow copy of the population.
 std::shared_ptr<kgl::PopulationDB> kgl::Pf7FwsResource::filterFWS( FwsFilterType filter_type,

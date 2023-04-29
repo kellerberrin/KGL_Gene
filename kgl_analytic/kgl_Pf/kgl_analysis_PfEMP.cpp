@@ -95,7 +95,7 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
 
   // Analyze for Homozygous and overlapping variants.
-  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr);
+  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_);
 
   return true;
 

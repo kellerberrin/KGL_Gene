@@ -11,15 +11,19 @@ namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr) {
+void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
+                                                     const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) {
 
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    auto& genome_count_map = variant_analysis_map_[genome_id];
+    double FWS_statistic = Pf7_fws_ptr->getFWS(genome_id);
+    auto [genome_iter, result] = variant_analysis_map_.try_emplace(genome_id, genome_id, FWS_statistic);
+    auto& [_genome_id, analysis_obj] = *genome_iter;
 
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
-      auto& contig_count = genome_count_map[contig_id];
+      auto [contig_iter, contig_result] = analysis_obj.getMap().try_emplace(contig_id);
+      auto& [_contig_id, contig_count] = *contig_iter;
 
       if (contig_ptr->variantCount() == 0) {
 
@@ -84,14 +88,6 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
                                 variant_ptr->alternateCigar(),
                                 variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED));
 
-            ExecEnv::log().warn("VQSLOD: {}, FS: {}, SOR: {}, QD: {}, MQ: {}, MQRankSum: {}, ReadPosRankSum: {}",
-                                getInfoField(variant_ptr, VQSLOD_FIELD_),
-                                getInfoField(variant_ptr, FS_FIELD_),
-                                getInfoField(variant_ptr, SOR_FIELD_),
-                                getInfoField(variant_ptr, QD_FIELD_),
-                                getInfoField(variant_ptr, MQ_FIELD_),
-                                getInfoField(variant_ptr, MQRankSum_FIELD_),
-                                getInfoField(variant_ptr, ReadPosRankSum_FIELD_));
 
           }
 
@@ -106,7 +102,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
+void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
   std::ofstream analysis_file(file_name);
 
@@ -117,28 +113,39 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
 
   }
 
-  analysis_file << "Genome"
-               << CSV_DELIMITER_
-               << "Contig"
-               << CSV_DELIMITER_
-               << "Variant Count"
-               << CSV_DELIMITER_
-               << "Single Variant"
-               << CSV_DELIMITER_
-               << "Homozygous"
-               << CSV_DELIMITER_
-               << "Heterozygous"
-               << CSV_DELIMITER_
-               << "SNP"
-               << CSV_DELIMITER_
-               << "Indel"
-               << '\n';
+  // Write the header.
+  // Get the number of contigs.
+  auto& [genome, contig_data] = *variant_analysis_map_.begin();
+  size_t contig_count = contig_data.getMap().size();
 
-  for (auto const& [genome_id, contig_map] : variant_analysis_map_) {
+  analysis_file << "Genome" << CSV_DELIMITER_ << "FWS";
 
-    analysis_file << genome_id;
+  for (size_t i = 0; i < contig_count; ++i) {
 
-    for (auto const& [contig_id, variant_counts] : contig_map) {
+    analysis_file << CSV_DELIMITER_
+                  << "Contig"
+                  << CSV_DELIMITER_
+                  << "Variant Count"
+                  << CSV_DELIMITER_
+                  << "Single Variant"
+                  << CSV_DELIMITER_
+                  << "Homozygous"
+                  << CSV_DELIMITER_
+                  << "Heterozygous"
+                  << CSV_DELIMITER_
+                  << "SNP"
+                  << CSV_DELIMITER_
+                  << "Indel";
+
+  }
+
+  analysis_file << '\n';
+
+  for (auto& [genome_id, contig_map] : variant_analysis_map_) {
+
+    analysis_file << genome_id << CSV_DELIMITER_ << contig_map.getFWS();
+
+    for (auto& [contig_id, variant_counts] : contig_map.getMap()) {
 
       analysis_file << CSV_DELIMITER_
                     << contig_id
@@ -160,19 +167,6 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) const {
     analysis_file << '\n';
 
   }
-
-}
-
-double kgl::HeteroHomoZygous::getInfoField(const std::shared_ptr<const Variant> &variant_ptr, std::string field_id)  {
-
-  auto field_opt = InfoEvidenceAnalysis::getTypedInfoData<double>(*variant_ptr, field_id);
-  if (field_opt) {
-
-    return field_opt.value();
-
-  }
-
-  return std::nan("n/a");
 
 }
 
