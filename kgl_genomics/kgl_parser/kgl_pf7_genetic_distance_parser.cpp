@@ -2,7 +2,7 @@
 // Created by kellerberrin on 3/04/23.
 //
 
-#include "kgl_pf7_distance_parser.h"
+#include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kel_mt_buffer.h"
 
@@ -11,12 +11,12 @@
 namespace kgl = kellerberrin::genome;
 
 
-double kgl::Pf7DistanceResource::getDistance(size_t x_index, size_t y_index) const {
+double kgl::Pf7GeneticDistanceResource::getDistance(size_t x_index, size_t y_index) const {
 
 
   if (x_index >= sample_size_ or y_index >= sample_size_) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::getDistance; x_index: {}, y_index: {} out of bounds, indices must be in the range [0, {})",
+    ExecEnv::log().warn("Pf7GeneticDistanceResource::getDistance; x_index: {}, y_index: {} out of bounds, indices must be in the range [0, {})",
                         x_index, y_index, sample_size_);
 
     return std::nan(NAN_TEXT_);
@@ -29,12 +29,12 @@ double kgl::Pf7DistanceResource::getDistance(size_t x_index, size_t y_index) con
 
 }
 
-double kgl::Pf7DistanceResource::getDistance(const std::string& sample_x, const std::string& sample_y) const {
+double kgl::Pf7GeneticDistanceResource::getDistance(const std::string& sample_x, const std::string& sample_y) const {
 
   auto x_iter = sample_index_map_ptr_->find(sample_x);
   if (x_iter == sample_index_map_ptr_->end()) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::getDistance; x sample id: {} not found", sample_x);
+    ExecEnv::log().warn("Pf7GeneticDistanceResource::getDistance; x sample id: {} not found", sample_x);
     return std::nan(NAN_TEXT_);
 
   }
@@ -44,7 +44,7 @@ double kgl::Pf7DistanceResource::getDistance(const std::string& sample_x, const 
   auto y_iter = sample_index_map_ptr_->find(sample_y);
   if (y_iter == sample_index_map_ptr_->end()) {
 
-    ExecEnv::log().warn("Pf7DistanceResource::getDistance; y sample id: {} not found", sample_y);
+    ExecEnv::log().warn("Pf7GeneticDistanceResource::getDistance; y sample id: {} not found", sample_y);
     return std::nan(NAN_TEXT_);
 
   }

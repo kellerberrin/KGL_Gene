@@ -23,19 +23,19 @@ namespace kellerberrin::genome {   //  organization level namespace
 using SampleIndexMap = std::map<std::string, size_t>;
 
 
-class Pf7DistanceResource : public ResourceBase {
+class Pf7GeneticDistanceResource : public ResourceBase {
 
 public:
 
-  Pf7DistanceResource(std::string identifier,
-                      std::shared_ptr<const SampleIndexMap> index_map_ptr,
-                      std::shared_ptr<double[]> distance_matrix_ptr)
+  Pf7GeneticDistanceResource(std::string identifier,
+                             std::shared_ptr<const SampleIndexMap> index_map_ptr,
+                             std::shared_ptr<double[]> distance_matrix_ptr)
       : ResourceBase(ResourceProperties::PF7DISTANCE_RESOURCE_ID_, std::move(identifier)),
         sample_index_map_ptr_(std::move(index_map_ptr)),
         distance_matrix_ptr_(std::move(distance_matrix_ptr)),
         sample_size_(sample_index_map_ptr_->size()) {}
-  Pf7DistanceResource(const Pf7DistanceResource&) = default;
-  ~Pf7DistanceResource() override = default;
+  Pf7GeneticDistanceResource(const Pf7GeneticDistanceResource&) = default;
+  ~Pf7GeneticDistanceResource() override = default;
 
   [[nodiscard]] std::shared_ptr<const SampleIndexMap> distanceSamples() const { return sample_index_map_ptr_; }
   [[nodiscard]] double getDistance(size_t x_index, size_t y_index) const;

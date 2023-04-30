@@ -138,11 +138,13 @@ void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr
 
          if (GT_format == MISSING_VALUE_) {
 
-           ExecEnv::log().warn("PfVCFImpl::ParseRecord; GT format field: {} is missing for Genotype: {}.", GT_format, genotype);
+           ExecEnv::log().warn("PfVCFImpl::ParseRecord; VCF Record: {}, Genome: {}, GT format field: {} is missing for Genotype: {}.",
+                               vcf_record_ptr->line_number, genome_name, GT_format, genotype);
 
          } else {
 
-           ExecEnv::log().error("PfVCFImpl::ParseRecord; GT format field: {} is not diploid for Genotype.", GT_format, genotype);
+           ExecEnv::log().error("PfVCFImpl::ParseRecord; VCF record: {}, Genome: {}, GT format field: {} is not diploid for Genotype: {}.",
+                                vcf_record_ptr->line_number, genome_name, GT_format, genotype);
 
          }
 

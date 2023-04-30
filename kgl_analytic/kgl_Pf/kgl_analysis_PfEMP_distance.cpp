@@ -17,13 +17,13 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   // Diagonal distance
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const size_t distance_sample_size = Pf7_distance_ptr_->distanceSamples()->size();
+  const size_t distance_sample_size = Pf7_genetic_distance_ptr_->distanceSamples()->size();
   double sum_diagonal{0.0};
   size_t diagonal_count{0};
   size_t nan_count{0};
   for (size_t x_index = 0; x_index < distance_sample_size; ++x_index) {
 
-    double distance = Pf7_distance_ptr_->getDistance(x_index, x_index);
+    double distance = Pf7_genetic_distance_ptr_->getDistance(x_index, x_index);
     if (std::isnan(distance)) {
 
       ++nan_count;
@@ -48,7 +48,7 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   nan_count = 0;
   for (auto const& [genome_id, genome_ptr] : all_population_ptr->getMap()) {
 
-    double distance = Pf7_distance_ptr_->getDistance(genome_id, genome_id);
+    double distance = Pf7_genetic_distance_ptr_->getDistance(genome_id, genome_id);
     if (std::isnan(distance)) {
 
       ++nan_count;
@@ -76,7 +76,7 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
     for (auto const& [x_genome_id, x_genome_ptr] : filtered_population_ptr->getMap()) {
 
-      double distance = Pf7_distance_ptr_->getDistance(x_genome_id, y_genome_id);
+      double distance = Pf7_genetic_distance_ptr_->getDistance(x_genome_id, y_genome_id);
       if (std::isnan(distance)) {
 
         continue;
@@ -129,7 +129,7 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
       }
 
-      double distance = Pf7_distance_ptr_->getDistance(x_index, y_index);
+      double distance = Pf7_genetic_distance_ptr_->getDistance(x_index, y_index);
       if (std::isnan(distance)) {
 
         ++nan_count;
@@ -166,7 +166,7 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
       }
 
-      double distance = Pf7_distance_ptr_->getDistance(x_genome_id, y_genome_id);
+      double distance = Pf7_genetic_distance_ptr_->getDistance(x_genome_id, y_genome_id);
       if (std::isnan(distance)) {
 
         ++nan_count;
@@ -195,8 +195,8 @@ void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
     for (size_t x_index = 0; x_index < distance_sample_size; ++x_index) {
 
-      double distance = Pf7_distance_ptr_->getDistance(x_index, y_index);
-      double sym_distance = Pf7_distance_ptr_->getDistance(x_index, y_index);
+      double distance = Pf7_genetic_distance_ptr_->getDistance(x_index, y_index);
+      double sym_distance = Pf7_genetic_distance_ptr_->getDistance(x_index, y_index);
       if (std::isnan(distance) and std::isnan(sym_distance)) {
 
         ++sym_equal;

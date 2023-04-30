@@ -24,7 +24,10 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
   Pf7_fws_ptr_ = resource_ptr->getSingleResource<const Pf7FwsResource>(ResourceProperties::PF7FWS_RESOURCE_ID_);
-  Pf7_distance_ptr_ = resource_ptr->getSingleResource<const Pf7DistanceResource>(ResourceProperties::PF7DISTANCE_RESOURCE_ID_);
+  Pf7_genetic_distance_ptr_ = resource_ptr->getSingleResource<const Pf7GeneticDistanceResource>(ResourceProperties::PF7DISTANCE_RESOURCE_ID_);
+  Pf7_physical_distance_ptr_ = std::make_shared<const Pf7SampleLocation>(Pf7_sample_ptr_);
+
+  testPhysicalDistances();
 
   // Setup and clear the directories to hold analysis output.
   // The top level directory for this analysis type.
@@ -184,3 +187,26 @@ kgl::GeneVector kgl::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const Geno
 
 }
 
+void kgl::PfEMPAnalysis::testPhysicalDistances() {
+
+  std::string check_location{"Khartoum"};
+  for (auto const& [location, location_latlong] : Pf7_physical_distance_ptr_->adminLocations()) {
+
+    ExecEnv::log().info("Location: {}, latitude: {}, longitude: {}, Distance from {}: {}",
+                        location, location_latlong.latitudeDegrees(), location_latlong.longitudeDegrees(),
+                        check_location, Pf7_physical_distance_ptr_->locationDistance(check_location, location));
+
+  }
+
+
+  std::string check_country{"Gambia"};
+  for (auto const& [country, country_latlong] : Pf7_physical_distance_ptr_->countryLocations()) {
+
+    ExecEnv::log().info("Country: {}, latitude: {}, longitude: {}, Distance from {}: {}",
+                        country, country_latlong.latitudeDegrees(), country_latlong.longitudeDegrees(),
+                        check_country, Pf7_physical_distance_ptr_->locationDistance(check_country, country));
+
+  }
+
+
+}

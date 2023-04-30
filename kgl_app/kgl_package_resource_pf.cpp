@@ -5,7 +5,7 @@
 #include "kgl_package.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
-#include "kgl_pf7_distance_parser.h"
+#include "kgl_pf7_genetic_distance_parser.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -112,9 +112,9 @@ void kgl::ExecutePackage::loadPf7DistanceResource(const std::string& resource_ty
 
   }
 
-  std::shared_ptr<Pf7DistanceResource> Pf7Distance_ptr(std::make_shared<Pf7DistanceResource>(Pf7_Distance_ident,
-                                                                                             Pf7_Distance_parser.getSampleMap(),
-                                                                                             Pf7_Distance_parser.getDistanceMatrix()));
+  std::shared_ptr<Pf7GeneticDistanceResource> Pf7Distance_ptr(std::make_shared<Pf7GeneticDistanceResource>(Pf7_Distance_ident,
+                                                                                                           Pf7_Distance_parser.getSampleMap(),
+                                                                                                           Pf7_Distance_parser.getDistanceMatrix()));
 
   resource_ptr->addResource(Pf7Distance_ptr);
 
