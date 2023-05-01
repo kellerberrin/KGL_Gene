@@ -48,7 +48,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //<help>The Number of allele offsets to examine, set to High Value for entire contig; Integer</help>
 //<parameterIdent>LociiCount</parameterIdent>
 //
-//<help>The minimum distance between allele offsets to minimize any linkage disequilibrium effects; Integer</help>
+//<help>The minimum calculateDistance between allele offsets to minimize any linkage disequilibrium effects; Integer</help>
 //<parameterIdent>SamplingDistance</parameterIdent>
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

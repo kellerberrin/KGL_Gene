@@ -171,7 +171,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   if (result.status != EDLIB_STATUS_OK) {
 
-    ExecEnv::log().error("Problem calculating Global Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+    ExecEnv::log().error("Problem calculating Global Levenshtein calculateDistance using edlib; sequenceA: {}, sequenceB: {}",
                               sequenceA, sequenceB);
     edlibFreeAlignResult(result);
     return 0;
@@ -192,7 +192,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   EdlibAlignResult result;
   // The smaller sequence is presented first with local sequence matching.
-  // A distance metric must always be symmetric -> d(x,y) = d(y,x).
+  // A calculateDistance metric must always be symmetric -> d(x,y) = d(y,x).
   // This could be a bug in EDLIB.
   if (sequenceA.size() <= sequenceB.size()) {
 
@@ -216,7 +216,7 @@ kgl::CompareDistance_t kgl::SequenceDistanceImpl::SequenceManipImpl::Levenshtein
 
   if (result.status != EDLIB_STATUS_OK) {
 
-    ExecEnv::log().error("Problem calculating Local Levenshtein distance using edlib; sequenceA: {}, sequenceB: {}",
+    ExecEnv::log().error("Problem calculating Local Levenshtein calculateDistance using edlib; sequenceA: {}, sequenceB: {}",
                               sequenceA, sequenceB);
     edlibFreeAlignResult(result);
     return 0;

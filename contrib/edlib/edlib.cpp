@@ -491,7 +491,7 @@ static inline bool allBlockCellsLarger(const Block block, const int k) {
 
 
 /**
- * Uses Myers' bit-vector algorithm to find edit distance for one of semi-global alignment methods.
+ * Uses Myers' bit-vector algorithm to find edit calculateDistance for one of semi-global alignment methods.
  * @param [in] Peq  Query profile.
  * @param [in] W  Size of padding in last block.
  *                TODO: Calculate this directly from query, instead of passing it.
@@ -502,7 +502,7 @@ static inline bool allBlockCellsLarger(const Block block, const int k) {
  * @param [in] targetLength
  * @param [in] k
  * @param [in] mode  EDLIB_MODE_HW or EDLIB_MODE_SHW
- * @param [out] bestScore_  Edit distance.
+ * @param [out] bestScore_  Edit calculateDistance.
  * @param [out] positions_  Array of 0-indexed positions in target at which best score was found.
                             Make sure to free this array with free().
  * @param [out] numPositions_  Number of positions in the positions_ array.
@@ -669,7 +669,7 @@ static int myersCalcEditDistanceSemiGlobal(
 
 
 /**
- * Uses Myers' bit-vector algorithm to find edit distance for global(NW) alignment method.
+ * Uses Myers' bit-vector algorithm to find edit calculateDistance for global(NW) alignment method.
  * @param [in] Peq  Query profile.
  * @param [in] W  Size of padding in last block.
  *                TODO: Calculate this directly from query, instead of passing it.
@@ -679,7 +679,7 @@ static int myersCalcEditDistanceSemiGlobal(
  * @param [in] target
  * @param [in] targetLength
  * @param [in] k
- * @param [out] bestScore_  Edit distance.
+ * @param [out] bestScore_  Edit calculateDistance.
  * @param [out] position_  0-indexed position in target at which best score was found.
  * @param [in] findAlignment  If true, whole matrix is remembered and alignment data is returned.
  *                            Quadratic amount of memory is consumed.

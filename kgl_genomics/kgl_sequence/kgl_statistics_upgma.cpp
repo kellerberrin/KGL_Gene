@@ -15,7 +15,7 @@ namespace bnu = boost::numeric::ublas;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation of a strict lower triangular distance matrix using the Boost library.
+// Implementation of a strict lower triangular calculateDistance matrix using the Boost library.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -45,7 +45,7 @@ kgl::DistanceType_t kgl::DistanceMatrix::BoostDistanceMatrix::getDistance(size_t
 
   if (i >= size() or i >= size()) {
 
-    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    ExecEnv::log().error("Index too large i: {}, j:{} for calculateDistance matrix size: {}", i, j, size());
     return 0;
 
   }
@@ -70,7 +70,7 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 
   if (i >= size() or i >= size()) {
 
-    ExecEnv::log().error("Index too large i: {}, j:{} for distance matrix size: {}", i, j, size());
+    ExecEnv::log().error("Index too large i: {}, j:{} for calculateDistance matrix size: {}", i, j, size());
     return;
 
   }
@@ -96,7 +96,7 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Public class of the UPGMA distance matrix.
+// Public class of the UPGMA calculateDistance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 kgl::DistanceMatrix::DistanceMatrix() : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(1)) {}
@@ -297,7 +297,7 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
   if (range == 0.0) {
 
-    ExecEnv::log().error("UPGMAMatrix::normalizeDistance() distance range for all nodes is zero");
+    ExecEnv::log().error("UPGMAMatrix::normalizeDistance() calculateDistance range for all nodes is zero");
     return;
 
   }
@@ -318,7 +318,7 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
 
 
-// Reduces the distance matrix.
+// Reduces the calculateDistance matrix.
 // The reduced column is the left most column (column, j index = 0)
 void kgl::UPGMAMatrix::reduceDistance(size_t i, size_t j) {
 
@@ -432,7 +432,7 @@ bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t mini
   merged_node->addOutNode(row_node);
   merged_node->addOutNode(column_node);
   // Insert the merged node at the front of the vector.
-  // This matches the pattern of the reduction of the distance matrix (above).
+  // This matches the pattern of the reduction of the calculateDistance matrix (above).
   node_vector_ptr_->insert(node_vector_ptr_->begin(), merged_node);
 
   return true;

@@ -27,16 +27,16 @@ extern "C" {
         /**
          * Prefix method. Similar to global method, but with a small twist - gap at query end is not penalized.
          * What that means is that deleting elements from the end of second sequence is "free"!
-         * For example, if we had "AACT" and "AACTGGC", edit distance would be 0, because removing "GGC" from the end
-         * of second sequence is "free" and does not count into total edit distance. This method is appropriate
+         * For example, if we had "AACT" and "AACTGGC", edit calculateDistance would be 0, because removing "GGC" from the end
+         * of second sequence is "free" and does not count into total edit calculateDistance. This method is appropriate
          * when you want to find out how well first sequence fits at the beginning of second sequence.
          */
         EDLIB_MODE_SHW,
         /**
          * Infix method. Similar as prefix method, but with one more twist - gaps at query end and start are
          * not penalized. What that means is that deleting elements from the start and end of second sequence is "free"!
-         * For example, if we had ACT and CGACTGAC, edit distance would be 0, because removing CG from the start
-         * and GAC from the end of second sequence is "free" and does not count into total edit distance.
+         * For example, if we had ACT and CGACTGAC, edit calculateDistance would be 0, because removing CG from the start
+         * and GAC from the end of second sequence is "free" and does not count into total edit calculateDistance.
          * This method is appropriate when you want to find out how well first sequence fits at any part of
          * second sequence.
          * For example, if your second sequence was a long text and your first sequence was a sentence from that text,
@@ -50,9 +50,9 @@ extern "C" {
      * Alignment tasks - what do you want Edlib to do?
      */
     typedef enum {
-        EDLIB_TASK_DISTANCE,  //!< Find edit distance and end locations.
-        EDLIB_TASK_LOC,       //!< Find edit distance, end locations and start locations.
-        EDLIB_TASK_PATH       //!< Find edit distance, end locations and start locations and alignment path.
+        EDLIB_TASK_DISTANCE,  //!< Find edit calculateDistance and end locations.
+        EDLIB_TASK_LOC,       //!< Find edit calculateDistance, end locations and start locations.
+        EDLIB_TASK_PATH       //!< Find edit calculateDistance, end locations and start locations and alignment path.
     } EdlibAlignTask;
 
     /**
@@ -84,9 +84,9 @@ extern "C" {
      */
     typedef struct {
         /**
-         * Set k to non-negative value to tell edlib that edit distance is not larger than k.
+         * Set k to non-negative value to tell edlib that edit calculateDistance is not larger than k.
          * Smaller k can significantly improve speed of computation.
-         * If edit distance is larger than k, edlib will set edit distance to -1.
+         * If edit distance is larger than k, edlib will set edit calculateDistance to -1.
          * Set k to negative value and edlib will internally auto-adjust k until score is found.
          */
         int k;
@@ -101,9 +101,9 @@ extern "C" {
 
         /**
          * Alignment task - tells Edlib what to calculate. Less to calculate, faster it is.
-         * EDLIB_TASK_DISTANCE - find edit distance and end locations of optimal alignment paths in target.
-         * EDLIB_TASK_LOC - find edit distance and start and end locations of optimal alignment paths in target.
-         * EDLIB_TASK_PATH - find edit distance, alignment path (and start and end locations of it in target).
+         * EDLIB_TASK_DISTANCE - find edit calculateDistance and end locations of optimal alignment paths in target.
+         * EDLIB_TASK_LOC - find edit calculateDistance and start and end locations of optimal alignment paths in target.
+         * EDLIB_TASK_PATH - find edit calculateDistance, alignment path (and start and end locations of it in target).
          */
         EdlibAlignTask task;
 
@@ -149,14 +149,14 @@ extern "C" {
         int status;
 
         /**
-         * -1 if k is non-negative and edit distance is larger than k.
+         * -1 if k is non-negative and edit calculateDistance is larger than k.
          */
         int editDistance;
 
         /**
          * Array of zero-based positions in target where optimal alignment paths end.
          * If gap after query is penalized, gap counts as part of query (NW), otherwise not.
-         * Set to NULL if edit distance is larger than k.
+         * Set to NULL if edit calculateDistance is larger than k.
          * If you do not free whole result object using edlibFreeAlignResult(), do not forget to use free().
          */
         int* endLocations;
@@ -165,7 +165,7 @@ extern "C" {
          * Array of zero-based positions in target where optimal alignment paths start,
          * they correspond to endLocations.
          * If gap before query is penalized, gap counts as part of query (NW), otherwise not.
-         * Set to NULL if not calculated or if edit distance is larger than k.
+         * Set to NULL if not calculated or if edit calculateDistance is larger than k.
          * If you do not free whole result object using edlibFreeAlignResult(), do not forget to use free().
          */
         int* startLocations;
@@ -208,10 +208,10 @@ extern "C" {
 
 
     /**
-     * Aligns two sequences (query and target) using edit distance (levenshtein distance).
+     * Aligns two sequences (query and target) using edit distance (levenshtein calculateDistance).
      * Through config parameter, this function supports different alignment methods (global, prefix, infix),
      * as well as different modes of search (tasks).
-     * It always returns edit distance and end locations of optimal alignment in target.
+     * It always returns edit calculateDistance and end locations of optimal alignment in target.
      * It optionally returns start locations of optimal alignment in target and alignment path,
      * if you choose appropriate tasks.
      * @param [in] query  First sequence.
@@ -219,7 +219,7 @@ extern "C" {
      * @param [in] target  Second sequence.
      * @param [in] targetLength  Number of characters in second sequence.
      * @param [in] config  Additional alignment parameters, like alignment method and wanted results.
-     * @return  Result of alignment, which can contain edit distance, start and end locations and alignment path.
+     * @return  Result of alignment, which can contain edit calculateDistance, start and end locations and alignment path.
      *          Make sure to clean up the object using edlibFreeAlignResult() or by manually freeing needed members.
      */
     EdlibAlignResult edlibAlign(const char* query, int queryLength,

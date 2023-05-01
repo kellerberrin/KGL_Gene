@@ -26,7 +26,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const Vi
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAProteinDistance");
+    ExecEnv::log().error("UPGMAProteinDistance::distance; Unexpected error, could not down-cast node pointer to UPGMAProteinDistance");
     return 1.0;
 
   }
@@ -46,14 +46,14 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const Vi
 
     } else {
 
-      ExecEnv::log().error("distance(), Unexpected error, could not find Genome: {}, sequence: {}",
+      ExecEnv::log().error("UPGMAProteinDistance::distance; Unexpected error, could not find Genome: {}, sequence: {}",
                            node_ptr->genomeId(), protein_id);
 
     }
 
   }
 
-  ExecEnv::log().info("distance(), Genome: {}, Genome: {}; {} distance: {}, Gene Family: {}, Gene Count: {}",
+  ExecEnv::log().info("UPGMAProteinDistance::distance; Genome: {}, Genome: {}; {} distance: {}, Gene Family: {}, Gene Count: {}",
                       genomeId(), node_ptr->genomeId(), sequence_distance_->distanceType(), total_distance, protein_family_, gene_count);
   return total_distance;
 
@@ -138,7 +138,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
   if (coding_seq_ptr->empty()) {
 
-    ExecEnv::log().critical("mutateProtein(), Gene contains no coding sequence : genome: {} gene: {}",
+    ExecEnv::log().critical("UPGMAGeneDistance::mutateProtein; Gene contains no coding sequence : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
 
   }
@@ -150,7 +150,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
   if (coding_seq_ptr->size() > 1) {
 
-    ExecEnv::log().warn("mutateProtein(),  Genome: {} gene: {} contains: {} sequences using sequence: {}",
+    ExecEnv::log().warn("UPGMAGeneDistance::mutateProtein;  Genome: {} gene: {} contains: {} sequences using sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
 
   }
@@ -166,7 +166,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
                                                   sequence->end(),
                                                   variant_map)) {
 
-    ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
+    ExecEnv::log().warn("UPGMAGeneDistance::mutateProtein; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_id, sequence_id);
     return;
 
@@ -190,7 +190,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const Virtu
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to UPGMAGeneDistance");
+    ExecEnv::log().error("UPGMAGeneDistance::distance; Unexpected error, could not down-cast node pointer to UPGMAGeneDistance");
     return 1.0;
 
   }
@@ -199,7 +199,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const Virtu
   CompareDistance_t contig_score = sequence_distance_->amino_distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("distance(), Genome: {}, Gene: {}, Gene: {}; {} distance: {}, Gene Family: {}",
+  ExecEnv::log().info("UPGMAGeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {} calculateDistance: {}, Gene Family: {}",
                       genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
                       sequence_distance_->distanceType(), total_distance, protein_family_);
 
@@ -243,7 +243,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
   if (coding_seq_ptr->size() > 1) {
 
-    ExecEnv::log().warn("write_node(),  Genome: {} gene: {} contains: {} sequences using sequence: {}",
+    ExecEnv::log().warn("UPGMAATP4Distance::writeNode;  Genome: {} gene: {} contains: {} sequences using sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
 
   }
@@ -259,7 +259,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
                                                   sequence->end(),
                                                   variant_map)) {
 
-    ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
+    ExecEnv::log().warn("UPGMAATP4Distance::writeNode; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_id, sequence_id);
     return;
 
@@ -273,7 +273,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
                                          reference_sequence,
                                          mutant_sequence)) {
 
-    ExecEnv::log().critical("write_node(), Cannot mutate sequence for : genome: {} gene: {}",
+    ExecEnv::log().critical("UPGMAATP4Distance::writeNode; Cannot mutate sequence for : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
 
   }
@@ -298,7 +298,7 @@ std::shared_ptr<const kgl::TranscriptionSequence>  kgl::ReferenceGeneDistance::g
 
   if (coding_seq_ptr->empty()) {
 
-    ExecEnv::log().critical("ReferenceGeneDistance::getSequence(); Gene contains no coding sequence : gene: {}", gene_ptr_->id());
+    ExecEnv::log().critical("ReferenceGeneDistance::getCodingSequence; Gene contains no coding sequence : gene: {}", gene_ptr_->id());
 
   }
 
@@ -309,7 +309,7 @@ std::shared_ptr<const kgl::TranscriptionSequence>  kgl::ReferenceGeneDistance::g
     std::string gene_id = coding_sequence->getGene()->id();
     std::string sequence_id = coding_sequence->getParent()->id();
 
-    ExecEnv::log().warn("ReferenceGeneDistance::getSequence;  Gene: {} contains: {} CDS sequences. Using sequence: {}",
+    ExecEnv::log().warn("ReferenceGeneDistance::getCodingSequence;  Gene: {} contains: {} CDS sequences. Using sequence: {}",
                         gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
 
   }
@@ -360,7 +360,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to DNAGeneDistance");
+    ExecEnv::log().error("DNAGeneDistance::distance; Unexpected error, could not down-cast node pointer to DNAGeneDistance");
     return 1.0;
 
   }
@@ -368,7 +368,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
   bool verbose = false;
   if (verbose) {
 
-    ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+    ExecEnv::log().info("calculateDistance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
                         sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
                         node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(), protein_family_);
   }
@@ -380,7 +380,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
   if (verbose) {
 
-    ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+    ExecEnv::log().info("calculateDistance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
                         sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
                         node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(),
                         total_distance, protein_family_);
@@ -421,7 +421,7 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("distance(), Unexpected error, could not down-cast node pointer to DNAGeneDistance");
+    ExecEnv::log().error("AminoGeneDistance::distance; Unexpected error, could not down-cast node pointer to DNAGeneDistance");
     return 1.0;
 
   }
@@ -429,7 +429,7 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
   bool verbose = false;
   if (verbose) {
 
-    ExecEnv::log().info("distance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
+    ExecEnv::log().info("calculateDistance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
                         sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
                         node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(), protein_family_);
 
@@ -443,7 +443,7 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
 
   if (verbose) {
 
-    ExecEnv::log().info("distance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
+    ExecEnv::log().info("calculateDistance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
                           sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
                           node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(),
                           total_distance, protein_family_);

@@ -26,9 +26,9 @@ namespace kellerberrin::ontology {
 	 "Semantic similarity measures as tools for exploring the gene ontology,"
 	 Pac Symp Biocomput, pp. 601-12, 2003.
 	  
-	distance = IC(termA) + IC(termB) - 2*IC(MICA)
+	calculateDistance = IC(termA) + IC(termB) - 2*IC(MICA)
 	maxDistance = 2*IC(single annotation)
-	similarity = 1 - distance/maxDistance
+	similarity = 1 - calculateDistance/maxDistance
 	(see Lord et queue_tidal_state_.)
 
 */

@@ -16,7 +16,7 @@ namespace kgl = kellerberrin::genome;
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::LocationCoordinates::LocationCoordinates(const std::string& latitude_text, const std::string& longitude_text) {
+void kgl::LocationCoordinates::convertLatLong(const std::string& latitude_text, const std::string& longitude_text) {
 
   try {
 
@@ -56,10 +56,21 @@ kgl::LocationCoordinates::LocationCoordinates(const std::string& latitude_text, 
 
   }
 
+
+
 }
 
 
 double kgl::LocationCoordinates::distance_km(const LocationCoordinates& other_location) const {
+
+  auto const& [location_text, location_type] = location_;
+  auto const& [other_location_text, other_location_type] = other_location.location_;
+
+  if (location_text == other_location_text) {
+
+    return 0.0;
+
+  }
 
   double spherical_offset = std::sin(latitude_) * std::sin(other_location.latitude_);
   spherical_offset += std::cos(latitude_) * std::cos(other_location.latitude_) * std::cos((other_location.longitude_ - longitude_));
@@ -78,56 +89,89 @@ double kgl::LocationCoordinates::distance_km(const LocationCoordinates& other_lo
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::Pf7SampleLocation::initializeLocationMaps() {
+void kgl::Pf7SampleLocation::initializeLocationMaps(const std::shared_ptr<const Pf7SampleResource>& sample_resource_ptr) {
 
-  for (auto const& [sample_id, sample_record] : sample_resource_ptr_->getMap()) {
+  for (auto const& [sample_id, sample_record] : sample_resource_ptr->getMap()) {
 
-    if (not admin_location_.contains(sample_record.location1_)) {
+    if (not sample_record.location1_.empty()) {
 
-      auto [iter, result] = admin_location_.try_emplace(sample_record.location1_,
-                                                                         sample_record.location1_latitude_,
-                                                                         sample_record.location1_longitude_);
+      auto location_iter = location_map_.find(sample_record.location1_);
+      if (location_iter == location_map_.end()) {
 
-      if (not result) {
+        auto [iter, result] = location_map_.try_emplace(sample_record.location1_,
+                                                        sample_record.location1_latitude_,
+                                                        sample_record.location1_longitude_,
+                                                        sample_record.location1_,
+                                                        LocationType::City);
 
-        ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store location: {}", sample_record.location1_);
+        if (not result) {
+
+          ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store location: {}", sample_record.location1_);
+
+        }
+
+      } else {
+
+        auto& [location, location_record] = *location_iter;
+        location_record.addSample(sample_id);
 
       }
 
-    }
+    } // empty()
 
-    if (not country_location_.contains(sample_record.country_)) {
+    if (not sample_record.country_.empty()) {
 
-      auto [iter, result] = country_location_.try_emplace(sample_record.country_,
+      auto location_iter = location_map_.find(sample_record.country_);
+      if (location_iter == location_map_.end()) {
+
+        auto [iter, result] = location_map_.try_emplace(sample_record.country_,
                                                         sample_record.country_latitude_,
-                                                        sample_record.country_longitude_);
+                                                        sample_record.country_longitude_,
+                                                        sample_record.country_,
+                                                        LocationType::Country);
 
-      if (not result) {
+        if (not result) {
 
-        ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store country: {}", sample_record.location1_);
+          ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store country: {}", sample_record.location1_);
+
+        }
+
+      } else {
+
+        auto& [location, location_record] = *location_iter;
+        location_record.addSample(sample_id);
 
       }
 
-    }
+    } // Empty
 
   } // For loop.
 
+  // Create the distance cache.
+  createDistanceCache();
+
 }
 
-double kgl::Pf7SampleLocation::locationDistance(const std::string& location1, const std::string& location2) const {
+double kgl::Pf7SampleLocation::calculateDistance(const std::string& location1, const std::string& location2) const {
 
-  auto loc1_iter = admin_location_.find(location1);
-  if (loc1_iter == admin_location_.end()) {
+  if (location1 == location2) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::locationDistance; Could not find location: {}", location1);
     return 0.0;
 
   }
 
-  auto loc2_iter = admin_location_.find(location2);
-  if (loc2_iter == admin_location_.end()) {
+  auto loc1_iter = location_map_.find(location1);
+  if (loc1_iter == location_map_.end()) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::locationDistance; Could not find location: {}", location2);
+    ExecEnv::log().warn("Pf7SampleLocation::calculateDistance; Could not find location: {}", location1);
+    return 0.0;
+
+  }
+
+  auto loc2_iter = location_map_.find(location2);
+  if (loc2_iter == location_map_.end()) {
+
+    ExecEnv::log().warn("Pf7SampleLocation::calculateDistance; Could not find location: {}", location2);
     return 0.0;
 
   }
@@ -139,85 +183,104 @@ double kgl::Pf7SampleLocation::locationDistance(const std::string& location1, co
 
 }
 
-double kgl::Pf7SampleLocation::countryDistance(const std::string& country1, const std::string& country2) const {
 
+void kgl::Pf7SampleLocation::createDistanceCache() {
 
-  auto country1_iter = country_location_.find(country1);
-  if (country1_iter == country_location_.end()) {
+  for (auto const& [location1, location_record1] : location_map_) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::contryDistance; Could not find Country: {}", country1);
+    for (auto const& [location2, location_record2] : location_map_) {
+
+      auto& distance_map = distance_cache_[location1];
+      distance_map[location2] = calculateDistance(location1, location2);
+
+    }
+
+  }
+
+}
+
+double kgl::Pf7SampleLocation::distance(const std::string& location1, const std::string& location2) const {
+
+  auto location1_iter = distance_cache_.find(location1);
+  if (location1_iter == distance_cache_.end()) {
+
+    ExecEnv::log().warn("Pf7SampleLocation::distance; Location: {} not found in distance cache", location1);
     return 0.0;
 
   }
 
-  auto country2_iter = country_location_.find(country2);
-  if (country2_iter == country_location_.end()) {
+  auto const& [location1_text, location_map] = *location1_iter;
 
-    ExecEnv::log().warn("Pf7SampleLocation::countryDistance; Could not find Country: {}", country2);
+  auto location2_iter = location_map.find(location2);
+  if (location2_iter == location_map.end()) {
+
+    ExecEnv::log().warn("Pf7SampleLocation::distance; Location: {} not found in distance cache", location2);
     return 0.0;
 
   }
 
-  auto const& [loc1, country1_latlong] = *country1_iter;
-  auto const& [loc2, country2_latlong] = *country2_iter;
+  auto const& [location2_text, distance] = *location2_iter;
 
-  return country1_latlong.distance_km(country2_latlong);
+  return distance;
 
 }
 
 
-double kgl::Pf7SampleLocation::sampleLocationDistance(const std::string& sample1, const std::string& sample2) const {
+std::vector<std::string> kgl::Pf7SampleLocation::locationRadius(const std::string& location, double radius) const {
 
-  auto const& sampleMap = sample_resource_ptr_->getMap();
+  std::vector<std::string> locations;
 
-  auto sample1_iter = sampleMap.find(sample1);
-  if (sample1_iter == sampleMap.end()) {
+  auto location_iter = distance_cache_.find(location);
+  if (location_iter == distance_cache_.end()) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::sampleLocationDistance; Could not find Sample: {}", sample1);
-    return 0.0;
-
-  }
-
-  auto sample2_iter = sampleMap.find(sample1);
-  if (sample2_iter == sampleMap.end()) {
-
-    ExecEnv::log().warn("Pf7SampleLocation::sampleLocationDistance; Could not find Sample: {}", sample2);
-    return 0.0;
+    ExecEnv::log().warn("Pf7SampleLocation::locationRadius; Location: {} not found in distance cache", location);
+    return locations;
 
   }
 
-  auto const& [sample1_id, sample1_record] = *sample1_iter;
-  auto const& [sample2_id, sample2_record] = *sample2_iter;
+  auto const& [location_text, location_map] = *location_iter;
 
-  return locationDistance(sample1_record.location1_, sample2_record.location1_);
+  for (auto const& [radius_location, distance] : location_map) {
+
+    if (distance <= radius) {
+
+      locations.push_back(radius_location);
+
+    }
+
+  }
+
+  return locations;
 
 }
 
 
-double kgl::Pf7SampleLocation::sampleCountryDistance(const std::string& sample1, const std::string& sample2) const {
+std::vector<std::string> kgl::Pf7SampleLocation::sampleRadius(const std::string& location, double radius) const {
 
+  std::vector<std::string> sample_vec;
 
-  auto const& sampleMap = sample_resource_ptr_->getMap();
+  auto location_vector = locationRadius(location, radius);
 
-  auto sample1_iter = sampleMap.find(sample1);
-  if (sample1_iter == sampleMap.end()) {
+  for (auto const& location : location_vector) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::sampleCountryDistance; Could not find Sample: {}", sample1);
-    return 0.0;
+    auto location_iter = location_map_.find(location);
+    if (location_iter == location_map_.end()) {
+
+      ExecEnv::log().warn("Pf7SampleLocation::sampleRadius; Location: {} not found in distance cache", location);
+      sample_vec.clear();
+      return sample_vec;
+
+    }
+
+    auto const& [location_text, location_record] = *location_iter;
+    for (auto const& sample_text : location_record.locationSamples()) {
+
+      sample_vec.push_back(sample_text);
+
+    }
 
   }
 
-  auto sample2_iter = sampleMap.find(sample1);
-  if (sample2_iter == sampleMap.end()) {
-
-    ExecEnv::log().warn("Pf7SampleLocation::sampleCountryDistance; Could not find Sample: {}", sample2);
-    return 0.0;
-
-  }
-
-  auto const& [sample1_id, sample1_record] = *sample1_iter;
-  auto const& [sample2_id, sample2_record] = *sample2_iter;
-
-  return countryDistance(sample1_record.country_, sample2_record.country_);
+  return sample_vec;
 
 }

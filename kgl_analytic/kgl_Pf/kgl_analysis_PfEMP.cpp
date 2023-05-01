@@ -98,7 +98,7 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
 
   // Analyze for Homozygous and overlapping variants.
-  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_);
+  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_, Pf7_sample_ptr_, Pf7_physical_distance_ptr_);
 
   return true;
 
@@ -189,24 +189,38 @@ kgl::GeneVector kgl::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const Geno
 
 void kgl::PfEMPAnalysis::testPhysicalDistances() {
 
-  std::string check_location{"Khartoum"};
-  for (auto const& [location, location_latlong] : Pf7_physical_distance_ptr_->adminLocations()) {
+  ExecEnv::log().info("Number of Locations: {}", Pf7_physical_distance_ptr_->locationMap().size());
 
-    ExecEnv::log().info("Location: {}, latitude: {}, longitude: {}, Distance from {}: {}",
-                        location, location_latlong.latitudeDegrees(), location_latlong.longitudeDegrees(),
-                        check_location, Pf7_physical_distance_ptr_->locationDistance(check_location, location));
+  const double radius{1000.0};
+  const std::string check_location{"Greater Accra"};
+  for (auto const& [location, location_record] : Pf7_physical_distance_ptr_->locationMap()) {
+
+    auto const& [loc, type] = location_record.location();
+    ExecEnv::log().info("Location: {}, Location type: {}, Samples: {}, latitude: {}, longitude: {}, Distance from {}: {}, Radius: {}, Locations:{}, Samples: {}",
+                        location, (type == LocationType::City ? "City" : "Country"),
+                        location_record.locationSamples().size(),
+                        location_record.latitudeDegrees(), location_record.longitudeDegrees(),
+                        check_location, Pf7_physical_distance_ptr_->calculateDistance(check_location, location),
+                        radius, Pf7_physical_distance_ptr_->locationRadius(location, radius).size(),
+                        Pf7_physical_distance_ptr_->sampleRadius(location, radius).size());
+
+  }
+
+  const double radius2{0.0};
+  const std::string check_country{"Ghana"};
+  for (auto const& [location, location_record] : Pf7_physical_distance_ptr_->locationMap()) {
+
+    auto const& [loc, type] = location_record.location();
+    ExecEnv::log().info("Location: {}, Location type: {}, Samples: {}, latitude: {}, longitude: {}, Distance from {}: {}, Radius: {}, Locations:{}, Samples: {}",
+                        location, (type == LocationType::City ? "City" : "Country"),
+                        location_record.locationSamples().size(),
+                        location_record.latitudeDegrees(), location_record.longitudeDegrees(),
+                        check_country, Pf7_physical_distance_ptr_->distance(check_country, location),
+                        radius2, Pf7_physical_distance_ptr_->locationRadius(location, radius2).size(),
+                        Pf7_physical_distance_ptr_->sampleRadius(location, radius2).size());
 
   }
 
-
-  std::string check_country{"Gambia"};
-  for (auto const& [country, country_latlong] : Pf7_physical_distance_ptr_->countryLocations()) {
-
-    ExecEnv::log().info("Country: {}, latitude: {}, longitude: {}, Distance from {}: {}",
-                        country, country_latlong.latitudeDegrees(), country_latlong.longitudeDegrees(),
-                        check_country, Pf7_physical_distance_ptr_->locationDistance(check_country, country));
-
-  }
 
 
 }

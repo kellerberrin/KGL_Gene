@@ -12,12 +12,30 @@ namespace kgl = kellerberrin::genome;
 
 
 void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
-                                                     const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) {
+                                                     const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr,
+                                                     const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
+                                                     const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr) {
 
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
     double FWS_statistic = Pf7_fws_ptr->getFWS(genome_id);
-    auto [genome_iter, result] = variant_analysis_map_.try_emplace(genome_id, genome_id, FWS_statistic);
+    std::string city;
+    std::string country;
+    std::string study;
+    std::string year;
+
+    if (Pf7_sample_ptr->getMap().contains(genome_id)) {
+
+      auto iter = Pf7_sample_ptr->getMap().find(genome_id);
+      auto const& [sample_id, sample_record] = *iter;
+      city = sample_record.location1_;
+      country = sample_record.country_;
+      study = sample_record.study_;
+      year = sample_record.year_;
+
+    }
+
+    auto [genome_iter, result] = variant_analysis_map_.try_emplace(genome_id, genome_id, FWS_statistic, city, country, study, year);
     auto& [_genome_id, analysis_obj] = *genome_iter;
 
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -118,7 +136,12 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
   auto& [genome, contig_data] = *variant_analysis_map_.begin();
   size_t contig_count = contig_data.getMap().size();
 
-  analysis_file << "Genome" << CSV_DELIMITER_ << "FWS";
+  analysis_file << "Genome" << CSV_DELIMITER_
+                << "FWS" << CSV_DELIMITER_
+                << "City" << CSV_DELIMITER_
+                << "Country" << CSV_DELIMITER_
+                << "Study" << CSV_DELIMITER_
+                << "Year";
 
   for (size_t i = 0; i < contig_count; ++i) {
 
@@ -143,7 +166,12 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
   for (auto& [genome_id, contig_map] : variant_analysis_map_) {
 
-    analysis_file << genome_id << CSV_DELIMITER_ << contig_map.getFWS();
+    analysis_file << genome_id << CSV_DELIMITER_
+                  << contig_map.getFWS() << CSV_DELIMITER_
+                  << contig_map.getCity() << CSV_DELIMITER_
+                  << contig_map.getCountry() << CSV_DELIMITER_
+                  << contig_map.getStudy() << CSV_DELIMITER_
+                  << contig_map.getYear();
 
     for (auto& [contig_id, variant_counts] : contig_map.getMap()) {
 
