@@ -60,9 +60,9 @@ class Pf7SampleLocation {
 
 public:
 
-  explicit Pf7SampleLocation(const std::shared_ptr<const Pf7SampleResource>& sample_resource_ptr) {
+  explicit Pf7SampleLocation(const Pf7SampleResource& sample_resource) {
 
-    initializeLocationMaps(sample_resource_ptr);
+    initializeLocationMaps(sample_resource);
 
   }
   ~Pf7SampleLocation() = default;
@@ -81,7 +81,7 @@ private:
 
   SampleLocationMap location_map_;
   DistanceCache distance_cache_;
-  void initializeLocationMaps(const std::shared_ptr<const Pf7SampleResource>& sample_resource_ptr);
+  void initializeLocationMaps(const Pf7SampleResource& sample_resource_ptr);
   void createDistanceCache();
 
 };

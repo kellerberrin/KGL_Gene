@@ -9,6 +9,72 @@
 
 namespace kgl = kellerberrin::genome;
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Frequency filter using AF or MLEAF
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kgl::P7FrequencyFilter::applyFilter(const Variant &variant) const {
+
+  size_t alt_count = variant.evidence().altVariantCount();
+  size_t alt_index = variant.evidence().altVariantIndex();
+
+  ++freq_filter_stats_.unfiltered_;
+
+  std::string info_field = info_field_ == FreqInfoField::AF ? AF_FIELD_ : MLEAF_FIELD_;
+  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<std::vector<double>>(variant, info_field);
+  if (info_opt) {
+
+    std::vector<double> info_vector = std::move(info_opt.value());
+    if (info_vector.size() != alt_count) {
+
+      ExecEnv::log().error("P7FrequencyFilter::applyFilter; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
+                           info_vector.size(), alt_count, info_field);
+
+      return false;
+
+    }
+    if (info_vector.size() <= alt_index) {
+
+      ExecEnv::log().error("P7FrequencyFilter::applyFilter; alt variant index: {} out of range for vector size:{}, Info field: {}",
+                           alt_index, info_vector.size(), info_field);
+      return false;
+
+    }
+
+    if (info_vector[alt_index] >= freq_cutoff_) {
+
+      ++freq_filter_stats_.accepted_;
+      return true;
+
+    } else {
+
+      ++freq_filter_stats_.rejected_;
+      return false;
+
+    }
+
+  }
+
+  ++freq_filter_stats_.missing_;
+
+  return true;
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Simple object to collect filter statistics for each filter field.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 void kgl::FilterFieldInfo::printStats() const {
 
   ExecEnv::log().info("Filter: {}, Level: {}, Variants: {}, Accepted: {:.2f}%, Rejected: {:.2f}%, Rejection Rate: {:.2f}%, Missing Info Field: {:.2f}%",
@@ -21,6 +87,14 @@ void kgl::FilterFieldInfo::printStats() const {
                       missingPercent());
 
 }
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Bespoke variant quality filter for the P7 Pf database.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Before filtering.
@@ -294,6 +368,19 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
   P7VariantFilter::initializeStats();
   auto filtered_population_ptr = monoclonal_population_ptr->shallowCopyFilter(info_field_filter);
   P7VariantFilter::printStats();
+
+  // Frequency Filter.
+  P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, 0.1);
+  P7FrequencyFilter::freq_filter_stats_.initialize();
+  filtered_population_ptr  = filtered_population_ptr->shallowCopyFilter(af_frequency_filter);
+  P7FrequencyFilter::freq_filter_stats_.printStats();
+
+  // Frequency Filter.
+  P7FrequencyFilter mleaf_frequency_filter(FreqInfoField::MLEAF, 0.1);
+  P7FrequencyFilter::freq_filter_stats_.initialize();
+  filtered_population_ptr  = filtered_population_ptr->shallowCopyFilter(mleaf_frequency_filter);
+  P7FrequencyFilter::freq_filter_stats_.printStats();
+
 
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.

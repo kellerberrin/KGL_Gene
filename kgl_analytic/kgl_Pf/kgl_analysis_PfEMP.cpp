@@ -25,7 +25,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
   Pf7_fws_ptr_ = resource_ptr->getSingleResource<const Pf7FwsResource>(ResourceProperties::PF7FWS_RESOURCE_ID_);
   Pf7_genetic_distance_ptr_ = resource_ptr->getSingleResource<const Pf7GeneticDistanceResource>(ResourceProperties::PF7DISTANCE_RESOURCE_ID_);
-  Pf7_physical_distance_ptr_ = std::make_shared<const Pf7SampleLocation>(Pf7_sample_ptr_);
+  Pf7_physical_distance_ptr_ = std::make_shared<const Pf7SampleLocation>(*Pf7_sample_ptr_);
 
   testPhysicalDistances();
 

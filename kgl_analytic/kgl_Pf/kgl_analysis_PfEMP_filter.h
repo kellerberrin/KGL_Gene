@@ -14,7 +14,6 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Simple object to collect filter statistics for each filter field.
@@ -47,6 +46,40 @@ private:
   [[nodiscard]] double rejectedPercent() const { return unfiltered_ > 0 ? 100.0 * (static_cast<double>(rejected_) / static_cast<double>(unfiltered_)) : 0.0; }
   [[nodiscard]] double missingPercent() const { return unfiltered_ > 0 ? 100.0 * (static_cast<double>(missing_) / static_cast<double>(unfiltered_)) : 0.0; }
   [[nodiscard]] double rejectionRate() const { return (accepted_ + rejected_) > 0 ? 100.0 * (static_cast<double>(rejected_) / static_cast<double>((accepted_ + rejected_))) : 0.0; }
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Frequency filter.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Which field to use.
+enum class FreqInfoField { AF, MLEAF };
+
+class P7FrequencyFilter : public FilterVariants {
+
+public:
+
+  P7FrequencyFilter(FreqInfoField info_field, double freq_cutoff) : info_field_(info_field), freq_cutoff_(freq_cutoff) { filterName("P7FrequencyFilter"); }
+  ~P7FrequencyFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const Variant &variant) const override;
+
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<P7FrequencyFilter>(*this); }
+
+  constexpr static const char* INFO_FREQ_FILTER_{"InfoFreqFilter"};
+  inline static FilterFieldInfo freq_filter_stats_{INFO_FREQ_FILTER_,  0.1};
+
+private:
+
+  constexpr static const char* AF_FIELD_{"AF"};
+  constexpr static const char* MLEAF_FIELD_{"MLEAF"};
+
+  FreqInfoField info_field_;
+  double freq_cutoff_;
 
 };
 

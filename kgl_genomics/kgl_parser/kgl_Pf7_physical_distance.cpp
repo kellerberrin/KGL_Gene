@@ -89,9 +89,9 @@ double kgl::LocationCoordinates::distance_km(const LocationCoordinates& other_lo
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::Pf7SampleLocation::initializeLocationMaps(const std::shared_ptr<const Pf7SampleResource>& sample_resource_ptr) {
+void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sample_resource) {
 
-  for (auto const& [sample_id, sample_record] : sample_resource_ptr->getMap()) {
+  for (auto const& [sample_id, sample_record] : sample_resource.getMap()) {
 
     if (not sample_record.location1_.empty()) {
 
