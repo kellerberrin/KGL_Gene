@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<kgl::ContigDB> kgl::ContigDB::deepCopy() const {
 
   // Can use the shallow filter because all variants are copied across.
-  return shallowCopyFilter(TrueFilter());
+  return viewFilter(TrueFilter());
 
 }
 
@@ -120,7 +120,7 @@ size_t kgl::ContigDB::variantCount() const {
 
 // Creates a copy of the contig that only contains variants passing the filter condition.
 // Note that we delete any empty offsets.
-std::unique_ptr<kgl::ContigDB> kgl::ContigDB::shallowCopyFilter(const BaseFilter &filter) const {
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filter) const {
 
   // Only contig filter is implemented at this level.
   std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());

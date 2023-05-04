@@ -60,11 +60,12 @@ public:
 
   // Creates a filtered copy of the population database.
   // This is multi-threaded across genomes to be time efficient for large databases.
-  // Important, returns a shallow copy of the population - only use for CPU/memory efficiency.
-  [[nodiscard]] std::unique_ptr<PopulationDB> shallowCopyFilter(const BaseFilter& filter) const;
+  // Important, CPU and memory efficient, but returns a shallow copy of the population.
+  // If the filtered view needs to be used in another program scope then use
+  // deepCopy() or selfFilter() to create a permanent view.
+  [[nodiscard]] std::unique_ptr<PopulationDB> viewFilter(const BaseFilter& filter) const;
 
-  // Filters the actual (this) population database, multi-threaded and more efficient for large databases.
-  // We can multi-thread because smart pointer reference counting (only) is thread safe.
+  // Filters the actual (this) population database, multi-threaded to be efficient for large databases.
   // selfFilter returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that remain after filtering.
   std::pair<size_t, size_t> selfFilter(const BaseFilter& filter);
@@ -78,6 +79,7 @@ public:
   // Deletes any empty Genomes, returns number deleted.
   size_t trimEmpty();
   // The opposite of the above. Ensures that all genomes have an identical number of contigs, even if empty.
+  // Returns the number of contigs that each genome now has,
   size_t squareContigs();
   // Unconditionally add a variant to the population.
   // This function is thread safe for concurrent updates.

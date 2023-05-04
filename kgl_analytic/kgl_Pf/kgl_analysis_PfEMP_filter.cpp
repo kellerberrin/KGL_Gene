@@ -75,11 +75,11 @@ bool kgl::P7FrequencyFilter::applyFilter(const Variant &variant) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::FilterFieldInfo::printStats() const {
+void kgl::FilterFieldInfo::printStats(double filter_level) const {
 
   ExecEnv::log().info("Filter: {}, Level: {}, Variants: {}, Accepted: {:.2f}%, Rejected: {:.2f}%, Rejection Rate: {:.2f}%, Missing Info Field: {:.2f}%",
                       filter_name_,
-                      filter_level_,
+                      filter_level,
                       unfiltered_.load(),
                       acceptedPercent(),
                       rejectedPercent(),
@@ -115,13 +115,13 @@ void kgl::P7VariantFilter::initializeStats() {
 // After filtering.
 void kgl::P7VariantFilter::printStats() {
 
-  vqslod_stats_.printStats();
-  qd_stats_.printStats();
-  mq_stats_.printStats(),
-  sor_stats_.printStats();
-  mqrs_stats_.printStats();
-  rprs_stats_.printStats();
-  if constexpr (READDEPTH_ACTIVE_)  depth_stats_.printStats();
+  vqslod_stats_.printStats(VQSLOD_LEVEL_);
+  qd_stats_.printStats(QD_LEVEL_);
+  mq_stats_.printStats(MQ_LEVEL_),
+  sor_stats_.printStats(SOR_LEVEL_);
+  mqrs_stats_.printStats(MQRANKSUM_LEVEL_);
+  rprs_stats_.printStats(READPOSRANKSUM_LEVEL_);
+  if constexpr (READDEPTH_ACTIVE_)  depth_stats_.printStats(MINIMUM_READDEPTH_);
 
   double accepted = unfiltered_variants_ > 0 ? (100.0 * (static_cast<double>(accepted_variants_) / static_cast<double>(unfiltered_variants_))) : 0.0;
   double rejected = unfiltered_variants_ > 0 ? (100.0 - accepted) : 0.0;
@@ -366,21 +366,24 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
   // Call bespoke variant filter.
   P7VariantFilter info_field_filter;
   P7VariantFilter::initializeStats();
-  auto filtered_population_ptr = monoclonal_population_ptr->shallowCopyFilter(info_field_filter);
+  auto filtered_population_ptr = monoclonal_population_ptr->viewFilter(info_field_filter);
   P7VariantFilter::printStats();
 
-  // Frequency Filter.
-  P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, 0.1);
-  P7FrequencyFilter::freq_filter_stats_.initialize();
-  filtered_population_ptr  = filtered_population_ptr->shallowCopyFilter(af_frequency_filter);
-  P7FrequencyFilter::freq_filter_stats_.printStats();
+  // AF Frequency Filter.
+  P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, VARIANT_FREQUENCY_CUTOFF_);
+  P7FrequencyFilter::initializeStats();
+  filtered_population_ptr  = filtered_population_ptr->viewFilter(af_frequency_filter);
+  P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
 
-  // Frequency Filter.
-  P7FrequencyFilter mleaf_frequency_filter(FreqInfoField::MLEAF, 0.1);
-  P7FrequencyFilter::freq_filter_stats_.initialize();
-  filtered_population_ptr  = filtered_population_ptr->shallowCopyFilter(mleaf_frequency_filter);
-  P7FrequencyFilter::freq_filter_stats_.printStats();
+  // MLEAF Frequency Filter (redundant).
+  if constexpr (MLEAF_FILTER_ACTIVE_) {
 
+    P7FrequencyFilter mleaf_frequency_filter(FreqInfoField::MLEAF, VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter::initializeStats();
+    filtered_population_ptr = filtered_population_ptr->viewFilter(mleaf_frequency_filter);
+    P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+
+  }
 
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.

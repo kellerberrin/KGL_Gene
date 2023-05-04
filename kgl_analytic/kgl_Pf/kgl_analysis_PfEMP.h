@@ -65,6 +65,8 @@ private:
   constexpr static const bool FILTER_QC_ACTIVE_{true};
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
+  constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
+  constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.25};
 
   void performPFEMP1UPGMA();
 

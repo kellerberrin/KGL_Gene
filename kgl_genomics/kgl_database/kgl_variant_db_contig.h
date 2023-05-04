@@ -49,7 +49,7 @@ public:
 
   // Return a filtered copy of the contig.
   // Important, returns a shallow copy of the contig - only use for CPU/memory efficiency.
-  [[nodiscard]] std::unique_ptr<ContigDB> shallowCopyFilter(const BaseFilter &filter) const;
+  [[nodiscard]] std::unique_ptr<ContigDB> viewFilter(const BaseFilter &filter) const;
   // Filter this contig (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);

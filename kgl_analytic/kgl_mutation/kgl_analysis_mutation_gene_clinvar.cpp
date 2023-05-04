@@ -100,7 +100,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
 
   }
 
-  auto hom_clinvar = subject_clinvar->shallowCopyFilter(HomozygousFilter());
+  auto hom_clinvar = subject_clinvar->viewFilter(HomozygousFilter());
   if (hom_clinvar->variantCount() > 0) {
 
     ++hom_genome_;
@@ -150,7 +150,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::sha
 
   };
 
-  return clinvar_contig->shallowCopyFilter(InfoFilter<std::string, false>(CLINVAR_CLNSIG_FIELD, substringLambda));
+  return clinvar_contig->viewFilter(InfoFilter<std::string, false>(CLINVAR_CLNSIG_FIELD, substringLambda));
 
 }
 

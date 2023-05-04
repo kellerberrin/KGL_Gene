@@ -25,11 +25,11 @@ class FilterFieldInfo {
 
 public:
 
-  FilterFieldInfo(std::string filter_name, double filter_level) : filter_name_(std::move(filter_name)), filter_level_(filter_level) {}
+  explicit FilterFieldInfo(std::string filter_name) : filter_name_(std::move(filter_name)) {}
   ~FilterFieldInfo() = default;
 
   void initialize() { unfiltered_ = 0; accepted_ = 0; rejected_ = 0; missing_ = 0; }
-  void printStats() const;
+  void printStats(double filter_level) const;
 
 
   std::atomic_uint64_t unfiltered_{0};
@@ -40,7 +40,6 @@ public:
 private:
 
   const std::string filter_name_;
-  double filter_level_{0.0};
 
   [[nodiscard]] double acceptedPercent() const { return unfiltered_ > 0 ? 100.0 * (static_cast<double>(accepted_) / static_cast<double>(unfiltered_)) : 0.0; }
   [[nodiscard]] double rejectedPercent() const { return unfiltered_ > 0 ? 100.0 * (static_cast<double>(rejected_) / static_cast<double>(unfiltered_)) : 0.0; }
@@ -71,7 +70,9 @@ public:
   [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<P7FrequencyFilter>(*this); }
 
   constexpr static const char* INFO_FREQ_FILTER_{"InfoFreqFilter"};
-  inline static FilterFieldInfo freq_filter_stats_{INFO_FREQ_FILTER_,  0.1};
+
+  static void initializeStats() { freq_filter_stats_.initialize(); }
+  static void printStats(double freq_cutoff) { freq_filter_stats_.printStats(freq_cutoff); }
 
 private:
 
@@ -80,6 +81,8 @@ private:
 
   FreqInfoField info_field_;
   double freq_cutoff_;
+
+  inline static FilterFieldInfo freq_filter_stats_{INFO_FREQ_FILTER_};
 
 };
 
@@ -138,13 +141,13 @@ private:
 
   // The statistics fields are static with atomic counters.
   // This is necessary because filters are cloned and run in separate threads,
-  inline static FilterFieldInfo vqslod_stats_{VQSLOD_FIELD_, VQSLOD_LEVEL_};
-  inline static FilterFieldInfo qd_stats_{QD_FIELD_, QD_LEVEL_};
-  inline static FilterFieldInfo mq_stats_{MQ_FIELD_, MQ_LEVEL_};
-  inline static FilterFieldInfo sor_stats_{SOR_FIELD_, SOR_LEVEL_};
-  inline static FilterFieldInfo mqrs_stats_{MQRANKSUM_FIELD_, MQRANKSUM_LEVEL_};
-  inline static FilterFieldInfo rprs_stats_{READPOSRANKSUM_FIELD_, READPOSRANKSUM_LEVEL_};
-  inline static FilterFieldInfo depth_stats_{READDEPTH_FIELD_, MINIMUM_READDEPTH_};
+  inline static FilterFieldInfo vqslod_stats_{VQSLOD_FIELD_};
+  inline static FilterFieldInfo qd_stats_{QD_FIELD_};
+  inline static FilterFieldInfo mq_stats_{MQ_FIELD_};
+  inline static FilterFieldInfo sor_stats_{SOR_FIELD_};
+  inline static FilterFieldInfo mqrs_stats_{MQRANKSUM_FIELD_};
+  inline static FilterFieldInfo rprs_stats_{READPOSRANKSUM_FIELD_};
+  inline static FilterFieldInfo depth_stats_{READDEPTH_FIELD_};
 
 };
 

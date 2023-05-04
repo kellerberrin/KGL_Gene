@@ -168,7 +168,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
   const double VQSLOD_LEVEL{1.2168};
   auto vqslod_filter = InfoFilter<double, false>(VQSLOD_FIELD, [VQSLOD_LEVEL](double compare) ->bool { return compare >= VQSLOD_LEVEL; });
 
-  std::shared_ptr<PopulationDB> filtered_population = vcf_population->shallowCopyFilter(vqslod_filter);
+  std::shared_ptr<PopulationDB> filtered_population = vcf_population->viewFilter(vqslod_filter);
 
   size_t filtered_VQSLOD = filtered_population->variantCount();
   double percent_filtered =  (static_cast<double>(filtered_VQSLOD) / static_cast<double>(unfiltered)) * 100.0;
@@ -181,7 +181,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
 
   auto random_forest_filter = InfoFilter<double, false>(RANDOM_FOREST_FIELD, [RANDOM_FOREST_LEVEL](double compare)->bool { return compare >= RANDOM_FOREST_LEVEL; });
 
-  filtered_population = filtered_population->shallowCopyFilter(random_forest_filter);
+  filtered_population = filtered_population->viewFilter(random_forest_filter);
 
   size_t filtered_random_forest = filtered_population->variantCount();
   percent_filtered =  (static_cast<double>(filtered_random_forest) / static_cast<double>(unfiltered)) * 100.0;
@@ -356,7 +356,7 @@ void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const BaseFilter& filte
   ExecEnv::log().info("Analysis Package: {}, executing age analysis: {}", ident(), title);
   InfoAgeAnalysis age_analysis(title);
   // Filter the variant population
-  auto filtered_population_ptr = vcf_population->shallowCopyFilter(filter);
+  auto filtered_population_ptr = vcf_population->viewFilter(filter);
   // Gather the age profile.
   filtered_population_ptr->processAll(age_analysis, &InfoAgeAnalysis::processVariant);
   // Write results

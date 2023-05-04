@@ -12,7 +12,7 @@ namespace kgl = kellerberrin::genome;
 std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::deepCopy() const {
 
   // Can use the shallow filter because all variants are copied across
-  return shallowCopyFilter(TrueFilter());
+  return viewFilter(TrueFilter());
 
 }
 
@@ -129,112 +129,6 @@ size_t kgl::PopulationDB::variantCount() const {
 }
 
 
-// Multi-tasking filtering for large populations.
-// We can do this because smart pointer reference counting (only) is thread safe.
-std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::shallowCopyFilter(const BaseFilter& filter) const {
-
-  // Create the new population.
-  std::unique_ptr<PopulationDB> filtered_population_ptr(std::make_unique<PopulationDB>(populationId(), dataSource()));
-
-  // Edge Condition, if no genomes then simply exit.
-  if (getMap().empty()) {
-
-    return filtered_population_ptr;
-
-  }
-
-  // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
-  WorkflowThreads thread_pool(thread_count);
-  // A vector for futures.
-  std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
-  // Required by the thread pool.
-  auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
-                          std::shared_ptr<const BaseFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
-
-    return genome_ptr->shallowCopyFilter(*filter_ptr);
-
-  };
-
-  // Queue a thread for each genome.
-  for (auto const& [genome_id, genome_ptr] : getMap()) {
-
-    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
-    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
-    future_vector.push_back(std::move(future));
-
-  }
-
-
-  // Add in the filtered genomes.
-  for (auto& future : future_vector) {
-
-    std::shared_ptr<GenomeDB> filtered_genome_ptr = future.get();
-    if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
-
-      ExecEnv::log().error("PopulationDB::filter; could not add filtered genome to the population");
-
-    }
-
-  }
-
-  return filtered_population_ptr;
-
-}
-
-// Multi-threaded filtering for large populations.
-// We can do this because smart pointer reference counting (only) is thread safe.
-// Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
-std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter) {
-
-  // This routine modifies the populationDB data structure, so only permit one thread at a time.
-  // Note the routine is internally multi-threaded.
-  std::scoped_lock lock(insitufilter_mutex_);
-
-  // Edge Condition, if no genomes then simply exit.
-  if (getMap().empty()) {
-
-    return {0, 0};
-
-  }
-
-  // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
-  WorkflowThreads thread_pool(thread_count);
-  // A vector for futures.
-  std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
-  // Required by the thread pool.
-
-  auto filter_lambda = [](std::shared_ptr<GenomeDB> genome_ptr,
-                          std::shared_ptr<const BaseFilter> filter_ptr) -> std::pair<size_t, size_t> {
-
-    return genome_ptr->selfFilter(*filter_ptr);
-
-  };
-
-  // Queue a thread for each genome.
-  for (auto& [genome_id, genome_ptr] : getMap()) {
-
-    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
-    future_vector.push_back(std::move(future));
-
-  }
-
-  // Wait for the threads to finish.
-  std::pair<size_t, size_t> filter_counts{0, 0};
-  for (auto& future : future_vector) {
-
-    auto [original_count, filtered_count] = future.get();
-    filter_counts.first += original_count;
-    filter_counts.second += filtered_count;
-
-  }
-
-  return filter_counts;
-
-}
-
 
 size_t kgl::PopulationDB::trimEmpty() {
 
@@ -262,7 +156,6 @@ size_t kgl::PopulationDB::trimEmpty() {
 
 size_t kgl::PopulationDB::squareContigs() {
 
-  size_t add_contigs{0};
 
   // Get a set of all contigs in all genomes.
   std::set<std::string> contig_set;
@@ -288,10 +181,6 @@ size_t kgl::PopulationDB::squareContigs() {
 
           ExecEnv::log().error("PopulationDB::squareContigs; Unable to add contig: {} to genome: {}", contig_id, genome_id);
 
-        } else {
-
-          ++add_contigs;
-
         }
 
       }
@@ -300,11 +189,9 @@ size_t kgl::PopulationDB::squareContigs() {
 
   }
 
-  return add_contigs;
+  return contig_set.size();
 
 }
-
-
 
 
 bool kgl::PopulationDB::addVariant( const std::shared_ptr<const Variant>& variant_ptr,
