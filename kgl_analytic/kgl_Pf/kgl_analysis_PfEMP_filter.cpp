@@ -370,10 +370,14 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
   P7VariantFilter::printStats();
 
   // AF Frequency Filter.
-  P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, VARIANT_FREQUENCY_CUTOFF_);
-  P7FrequencyFilter::initializeStats();
-  filtered_population_ptr  = filtered_population_ptr->viewFilter(af_frequency_filter);
-  P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+  if constexpr (AF_FILTER_ACTIVE_) {
+
+    P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter::initializeStats();
+    filtered_population_ptr = filtered_population_ptr->viewFilter(af_frequency_filter);
+    P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+
+  }
 
   // MLEAF Frequency Filter (redundant).
   if constexpr (MLEAF_FILTER_ACTIVE_) {
@@ -382,6 +386,13 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
     P7FrequencyFilter::initializeStats();
     filtered_population_ptr = filtered_population_ptr->viewFilter(mleaf_frequency_filter);
     P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+
+  }
+
+  // Filter for snp only.
+  if constexpr (SNP_FILTER_ACTIVE_) {
+
+    filtered_population_ptr = filtered_population_ptr->viewFilter(SNPFilter());
 
   }
 

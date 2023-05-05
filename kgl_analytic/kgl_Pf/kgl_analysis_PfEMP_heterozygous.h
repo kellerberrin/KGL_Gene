@@ -35,52 +35,31 @@ class VariantAnalysisObj {
 
 public:
 
-  VariantAnalysisObj(GenomeId_t genome, double FWS_statistic, std::string city,
-                     std::string country, std::string study, std::string year)
-  : genome_(std::move(genome)), FWS_statistic_(FWS_statistic), city_(std::move(city)),
-    country_(std::move(country)), study_(std::move(study)), year_(std::move(year)) {}
+  VariantAnalysisObj(GenomeId_t genome, const Pf7SampleRecord& sample_record, double fws_value)
+    : genome_(genome), sample_record_(sample_record), fws_value_(fws_value) {}
   ~VariantAnalysisObj() = default;
 
   [[nodiscard]] VariantAnalysisContigMap& getMap() { return analysis_map_; }
-  [[nodiscard]] double getFWS() const { return FWS_statistic_; }
+  [[nodiscard]] const VariantAnalysisContigMap& getConstMap() const { return analysis_map_; }
+  [[nodiscard]] double getFWS() const { return fws_value_; }
   [[nodiscard]] const GenomeId_t& getGenome() const { return genome_; }
-  [[nodiscard]] const std::string& getCity() const { return city_; }
-  [[nodiscard]] const std::string& getCountry() const { return country_; }
-  [[nodiscard]] const std::string& getStudy() const { return study_; }
-  [[nodiscard]] const std::string& getYear() const { return year_; }
-
-  bool addContigAnalysis(const ContigId_t& contig, VariantAnalysisType analysis) {
-
-    if (analysis_map_.contains(contig)) {
-
-      ExecEnv::log().error("VariantAnalysisObj::addContigAnalysis; analysis map for genome: {} contains contig: {}", genome_, contig);
-      return false;
-
-    }
-
-    analysis_map_[contig] = analysis;
-    return true;
-
-  }
-
+  [[nodiscard]] const std::string& getCity() const { return sample_record_.location1_; }
+  [[nodiscard]] const std::string& getCountry() const { return sample_record_.country_; }
+  [[nodiscard]] const std::string& getStudy() const { return sample_record_.study_; }
+  [[nodiscard]] const std::string& getYear() const { return sample_record_.year_; }
 
 private:
 
   GenomeId_t genome_;
-  double FWS_statistic_;
-  std::string city_;
-  std::string country_;
-  std::string study_;
-  std::string year_;
+  Pf7SampleRecord sample_record_;
+  double fws_value_;
   VariantAnalysisContigMap analysis_map_;
 
 };
 
 
-// The top level map key is Genome, the second level is Contig id.
-// using VariantAnalysisMap = std::map<std::string, std::map<std::string, VariantAnalysisType>>;
+// The top level map key is Genome (sample id), the second level is Contig id.
 using VariantAnalysisMap = std::map<std::string, VariantAnalysisObj>;
-
 class HeteroHomoZygous {
 
 public:
@@ -90,10 +69,13 @@ public:
 
   void analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
                                 const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr,
-                                const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
-                                const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr);
+                                const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr);
   void write_results(const std::string& file_name);
+  // If sample vector is empty then summarize all available genomes (samples).
+  VariantAnalysisType aggregateResults(const std::vector<GenomeId_t>& sample_vector) const;
 
+  void write_location_results(const std::string& file_name,
+                              const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr);
 
 private:
 

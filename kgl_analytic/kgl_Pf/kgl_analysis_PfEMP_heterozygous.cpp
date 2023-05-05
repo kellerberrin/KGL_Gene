@@ -13,29 +13,23 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
                                                      const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr,
-                                                     const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
-                                                     const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr) {
+                                                     const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr) {
 
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    double FWS_statistic = Pf7_fws_ptr->getFWS(genome_id);
-    std::string city;
-    std::string country;
-    std::string study;
-    std::string year;
 
-    if (Pf7_sample_ptr->getMap().contains(genome_id)) {
+    auto record_iter = Pf7_sample_ptr->getMap().find(genome_id);
+    if (record_iter == Pf7_sample_ptr->getMap().end()) {
 
-      auto iter = Pf7_sample_ptr->getMap().find(genome_id);
-      auto const& [sample_id, sample_record] = *iter;
-      city = sample_record.location1_;
-      country = sample_record.country_;
-      study = sample_record.study_;
-      year = sample_record.year_;
+      ExecEnv::log().error("HeteroHomoZygous::analyzeVariantPopulation; Unexpected, could not find sample record for genome:{}", genome_id);
+      continue;
 
     }
+    auto const& [sample_id, sample_record] = *record_iter;
 
-    auto [genome_iter, result] = variant_analysis_map_.try_emplace(genome_id, genome_id, FWS_statistic, city, country, study, year);
+    double FWS_statistic = Pf7_fws_ptr->getFWS(genome_id);
+
+    auto [genome_iter, result] = variant_analysis_map_.try_emplace(genome_id, genome_id, sample_record, FWS_statistic);
     auto& [_genome_id, analysis_obj] = *genome_iter;
 
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -49,8 +43,6 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       }
 
-      contig_count.total_variants_ = contig_ptr->variantCount();
-
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
         if (offset_array_ptr->getVariantArray().empty()) {
@@ -60,6 +52,8 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
         }
 
         for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
+
+          ++contig_count.total_variants_;
 
           if (variant_ptr->isSNP()) {
 
@@ -72,7 +66,6 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
           }
 
         }
-
 
         if (offset_array_ptr->getVariantArray().size() == 1) {
 
@@ -109,13 +102,13 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
           }
 
-        }
+        } // het or hom.
 
-      }
+      } // offset
 
-    }
+    } // contig
 
-  }
+  } // genome (sample)
 
 }
 
@@ -141,9 +134,10 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
                 << "City" << CSV_DELIMITER_
                 << "Country" << CSV_DELIMITER_
                 << "Study" << CSV_DELIMITER_
-                << "Year";
+                << "Year" << CSV_DELIMITER_
+                << "Hom/Het";
 
-  for (size_t i = 0; i < contig_count; ++i) {
+  for (size_t i = 0; i <= contig_count; ++i) {
 
     analysis_file << CSV_DELIMITER_
                   << "Contig"
@@ -166,12 +160,40 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
   for (auto& [genome_id, contig_map] : variant_analysis_map_) {
 
+
+    std::vector<GenomeId_t> single_vector{ genome_id };
+    auto aggregated = aggregateResults(single_vector);
+
+    double hom_het_ratio{0.0};
+    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
+    if (total_heterozygous > 0) {
+
+      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
+
+    }
+
     analysis_file << genome_id << CSV_DELIMITER_
                   << contig_map.getFWS() << CSV_DELIMITER_
                   << contig_map.getCity() << CSV_DELIMITER_
                   << contig_map.getCountry() << CSV_DELIMITER_
                   << contig_map.getStudy() << CSV_DELIMITER_
-                  << contig_map.getYear();
+                  << contig_map.getYear() << CSV_DELIMITER_
+                  << hom_het_ratio;
+
+    analysis_file << CSV_DELIMITER_
+                  << "Combined"
+                  << CSV_DELIMITER_
+                  << aggregated.total_variants_
+                  << CSV_DELIMITER_
+                  << aggregated.single_variant_
+                  << CSV_DELIMITER_
+                  << aggregated.homozygous_count_
+                  << CSV_DELIMITER_
+                  << aggregated.heterozygous_count_
+                  << CSV_DELIMITER_
+                  << aggregated.snp_count_
+                  << CSV_DELIMITER_
+                  << aggregated.indel_count_;
 
     for (auto& [contig_id, variant_counts] : contig_map.getMap()) {
 
@@ -198,3 +220,40 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
 }
 
+
+kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vector<GenomeId_t>& sample_vector) const {
+
+  VariantAnalysisType analysis_summary;
+  std::set<GenomeId_t> sample_set(sample_vector.begin(), sample_vector.end());
+
+  for (auto const& genome_id : sample_set) {
+
+    if (variant_analysis_map_.contains(genome_id)) {
+
+      auto const& [id, analysis_obj] = *variant_analysis_map_.find(genome_id);
+
+      for (auto const& [contig_id, het_hom_record] : analysis_obj.getConstMap()) {
+
+        analysis_summary.total_variants_ += het_hom_record.total_variants_;
+        analysis_summary.single_variant_ += het_hom_record.single_variant_;
+        analysis_summary.homozygous_count_ += het_hom_record.homozygous_count_;
+        analysis_summary.heterozygous_count_ += het_hom_record.heterozygous_count_;
+        analysis_summary.snp_count_ += het_hom_record.snp_count_;
+        analysis_summary.indel_count_ += het_hom_record.indel_count_;
+
+      }
+
+    }
+
+  }
+
+  return analysis_summary;
+
+}
+
+
+void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
+                                                   const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr) {
+
+
+}

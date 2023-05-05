@@ -58,7 +58,7 @@ private:
   std::shared_ptr<const Pf7GeneticDistanceResource> Pf7_genetic_distance_ptr_;
   std::shared_ptr<const Pf7SampleLocation> Pf7_physical_distance_ptr_;
   constexpr static const char PF3D7_IDENT_[]{"Pf3D7_62"};
-  std::shared_ptr<const GenomeReference> genome_3D7_ptr_;     // The Pf7 variant data was aligned on this genome.
+  std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
 
   // Filter constants.
@@ -66,7 +66,9 @@ private:
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
-  constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.25};
+  constexpr static const bool AF_FILTER_ACTIVE_{false};
+  constexpr static const bool SNP_FILTER_ACTIVE_{true};
+  constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
   void performPFEMP1UPGMA();
 

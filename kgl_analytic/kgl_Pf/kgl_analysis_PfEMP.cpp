@@ -96,9 +96,8 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   antigenic_gene_map_.getGeneVariants(filtered_population_ptr);
   all_gene_map_.getGeneVariants(filtered_population_ptr);
 
-
   // Analyze for Homozygous and overlapping variants.
-  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_, Pf7_sample_ptr_, Pf7_physical_distance_ptr_);
+  hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_, Pf7_sample_ptr_);
 
   return true;
 

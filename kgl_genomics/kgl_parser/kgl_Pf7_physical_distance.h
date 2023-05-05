@@ -47,14 +47,16 @@ private:
   std::pair<std::string, LocationType> location_;  // City or Country.
   std::vector<std::string> sample_id_vec_; // All samples at this location.
 
-  // Used to calculate great circle calculateDistance between 2 locations.
+  // Used to calculate great circle distance between 2 locations.
   constexpr static const double EARTH_RADIUS_KM_{6371.0};
 
   void convertLatLong(const std::string& latitude_text, const std::string& longitude_text);
 
 };
 
+// Use to 2 maps to cache the distance between any two locations (cities or countries).
 using DistanceCache = std::map<std::string, std::map<std::string, double>>;
+// Map to store location/country latitude and longitude and all samples located there.
 using SampleLocationMap = std::map<std::string, LocationCoordinates>;
 class Pf7SampleLocation {
 
@@ -67,7 +69,10 @@ public:
   }
   ~Pf7SampleLocation() = default;
 
+  // Expose all locations.
   [[nodiscard]] const SampleLocationMap& locationMap() const { return location_map_; }
+  // Expose the distance cache.
+  [[nodiscard]] const DistanceCache& distanceCache() const { return distance_cache_; }
   // Calculate great circle distances in kilometers
   [[nodiscard]] double calculateDistance(const std::string& location1, const std::string& location2) const;
   // Lookup the cache great circle distance.
