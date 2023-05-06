@@ -132,6 +132,10 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   hetero_homo_zygous_.write_results(variant_file_name);
 
+  variant_file_name = std::string("VariantLocation") + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  hetero_homo_zygous_.write_location_results(variant_file_name, Pf7_physical_distance_ptr_, SAMPLE_LOCATION_RADIUS_);
+
   return true;
 
 }

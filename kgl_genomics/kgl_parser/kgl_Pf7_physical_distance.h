@@ -21,7 +21,13 @@ public:
   LocationCoordinates(const std::string& latitude_text,
                       const std::string& longitude_text,
                       std::string location,
-                      LocationType location_type) : location_({std::move(location), location_type}) {
+                      LocationType location_type,
+                      std::string city,
+                      std::string country,
+                      std::string region) : location_({std::move(location), location_type}),
+                                                    city_(std::move(city)),
+                                                    country_(std::move(country)),
+                                                    region_(std::move(region)) {
 
     convertLatLong(latitude_text, longitude_text);
 
@@ -34,18 +40,29 @@ public:
   [[nodiscard]] double longitudeDegrees() const { return (longitude_ / (std::numbers::pi * 2.0)) * 360.0; }
   [[nodiscard]] const std::pair<std::string, LocationType>& location() const { return location_; }
   [[nodiscard]] const std::vector<std::string>& locationSamples() const { return sample_id_vec_; }
+  // Blank if the location is a country.
+  [[nodiscard]] const std::string& city() const { return city_; }
+  [[nodiscard]] const std::string& country() const { return country_; }
+  [[nodiscard]] const std::string& region() const { return region_; }
+  // Study/year pairs.
+  [[nodiscard]] const std::map<std::string, size_t>& locationStudies() const { return studies_; }
 
-  void addSample(std::string sample_id) { sample_id_vec_.push_back(std::move(sample_id)); }
 
   // Great circle calculateDistance between 2 locations.
   [[nodiscard]] double distance_km(const LocationCoordinates& other_location) const;
+
+  void addSample(std::string sample_id, const std::string& study, const std::string& year_str);
 
 private:
 
   double latitude_{0.0};     // In radians, -ve is South of the equator.
   double longitude_{0.0};    // In radians, -ve is West of Greenwich (the Prime Meridian).
-  std::pair<std::string, LocationType> location_;  // City or Country.
-  std::vector<std::string> sample_id_vec_; // All samples at this location.
+  std::pair<std::string, LocationType> location_;  // City or Country. This is the lat/long location.
+  std::string city_;  // This is blank if the location is a country.
+  std::string country_;
+  std::string region_;
+  std::vector<std::string> sample_id_vec_; // All samples/genomes at this location.
+  std::map<std::string, size_t> studies_; // All study and study year pairs
 
   // Used to calculate great circle distance between 2 locations.
   constexpr static const double EARTH_RADIUS_KM_{6371.0};
@@ -78,9 +95,15 @@ public:
   // Lookup the cache great circle distance.
   [[nodiscard]] double distance(const std::string& location1, const std::string& location2) const;
   // Get all locations within a radius from the specified location.
-  [[nodiscard]] std::vector<std::string> locationRadius(const std::string& location, double radius) const;
+  // The bool 'all' parameter (default false) determines if all locations within the great circle radius are used to generate
+  // the location vector. Otherwise, if the location is a city then only city locations are returned and if a country
+  // then only country locations are returned.
+  [[nodiscard]] std::vector<std::string> locationRadius(const std::string& location, double radius, bool all = false) const;
   // Get all sample ids. within a radius from the specified location.
-  [[nodiscard]] std::vector<std::string> sampleRadius(const std::string& location, double radius) const;
+  // The bool 'all' parameter (default false) determines if all locations within the great circle radius are used to generate
+  // the sample vector. Otherwise, if the location is a city then only samples (genomes) located in cities are returned and if a country
+  // then only samples (genomes) in countries are returned.
+  [[nodiscard]] std::vector<std::string> sampleRadius(const std::string& location, double radius, bool all = false) const;
 
 private:
 

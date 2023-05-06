@@ -82,6 +82,15 @@ double kgl::LocationCoordinates::distance_km(const LocationCoordinates& other_lo
 }
 
 
+void kgl::LocationCoordinates::addSample(std::string sample_id, const std::string& study, const std::string& year_str) {
+
+  sample_id_vec_.push_back(std::move(sample_id));
+  size_t year = std::stoll(year_str);
+  studies_[study] = year;
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -98,11 +107,14 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       auto location_iter = location_map_.find(sample_record.location1_);
       if (location_iter == location_map_.end()) {
 
-        auto [iter, result] = location_map_.try_emplace(sample_record.location1_,
-                                                        sample_record.location1_latitude_,
-                                                        sample_record.location1_longitude_,
-                                                        sample_record.location1_,
-                                                        LocationType::City);
+        auto [iter, result] = location_map_.try_emplace( sample_record.location1_,
+                                                                          sample_record.location1_latitude_,
+                                                                          sample_record.location1_longitude_,
+                                                                          sample_record.location1_,
+                                                                          LocationType::City,
+                                                                          sample_record.location1_,
+                                                                          sample_record.country_,
+                                                                          sample_record.population_);
 
         if (not result) {
 
@@ -113,7 +125,7 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       } else {
 
         auto& [location, location_record] = *location_iter;
-        location_record.addSample(sample_id);
+        location_record.addSample(sample_id, sample_record.study_, sample_record.year_);
 
       }
 
@@ -128,7 +140,10 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
                                                         sample_record.country_latitude_,
                                                         sample_record.country_longitude_,
                                                         sample_record.country_,
-                                                        LocationType::Country);
+                                                        LocationType::Country,
+                                                        std::string(),
+                                                        sample_record.country_,
+                                                        sample_record.population_);
 
         if (not result) {
 
@@ -139,7 +154,7 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       } else {
 
         auto& [location, location_record] = *location_iter;
-        location_record.addSample(sample_id);
+        location_record.addSample(sample_id, sample_record.study_, sample_record.year_);
 
       }
 
@@ -226,25 +241,63 @@ double kgl::Pf7SampleLocation::distance(const std::string& location1, const std:
 }
 
 
-std::vector<std::string> kgl::Pf7SampleLocation::locationRadius(const std::string& location, double radius) const {
+// Get all locations within a radius from the specified location.
+// The bool 'all' parameter (default false) determines if all locations within the great circle radius are used to generate
+// the location vector. Otherwise, if the location is a city then only city locations are returned and if a country
+// then only country locations are returned.
+std::vector<std::string> kgl::Pf7SampleLocation::locationRadius(const std::string& location, double radius, bool all) const {
 
   std::vector<std::string> locations;
 
-  auto location_iter = distance_cache_.find(location);
-  if (location_iter == distance_cache_.end()) {
+  auto cache_iter = distance_cache_.find(location);
+  if (cache_iter == distance_cache_.end()) {
 
     ExecEnv::log().warn("Pf7SampleLocation::locationRadius; Location: {} not found in distance cache", location);
     return locations;
 
   }
+  auto const& [cache_text, cache_map] = *cache_iter;
 
-  auto const& [location_text, location_map] = *location_iter;
+  auto location_iter = location_map_.find(location);
+  if (location_iter == location_map_.end()) {
 
-  for (auto const& [radius_location, distance] : location_map) {
+    ExecEnv::log().error("Pf7SampleLocation::locationRadius; Unexpected, Location: {} found in cache but not found in location map.", location);
+    return locations;
+
+  }
+  auto const& [location_text, location_record] = *location_iter;
+  auto [id, locationtype] = location_record.location();
+
+
+  for (auto const& [proximity_location, distance] : cache_map) {
 
     if (distance <= radius) {
 
-      locations.push_back(radius_location);
+      if (all) {
+
+        locations.push_back(proximity_location);
+
+      } else {
+
+        // Determine the proximity location type (city or country) and only add if the same as the location type.
+        auto proximity_iter = location_map_.find(proximity_location);
+        if (proximity_iter == location_map_.end()) {
+
+          ExecEnv::log().error("Pf7SampleLocation::locationRadius; Unexpected, Location: {} found in cache but not found in location map.", proximity_location);
+          locations.clear();
+          return locations;
+
+        }
+        auto const& [proximity_text, proximity_record] = *proximity_iter;
+        auto [prox_id, proximitytype] = proximity_record.location();
+
+        if (locationtype == proximitytype) {
+
+          locations.push_back(proximity_location);
+
+        }
+
+      }
 
     }
 
@@ -254,28 +307,31 @@ std::vector<std::string> kgl::Pf7SampleLocation::locationRadius(const std::strin
 
 }
 
-
-std::vector<std::string> kgl::Pf7SampleLocation::sampleRadius(const std::string& location, double radius) const {
+// Get all sample ids. within a radius from the specified location.
+// The bool 'all' parameter (default false) determines if all locations within the great circle radius are used to generate
+// the sample vector. Otherwise, if the location is a city then only samples (genomes) located in cities are returned and if a country
+// then only samples (genomes) in countries are returned.
+std::vector<std::string> kgl::Pf7SampleLocation::sampleRadius(const std::string& location, double radius, bool all) const {
 
   std::vector<std::string> sample_vec;
 
-  auto location_vector = locationRadius(location, radius);
+  auto location_vector = locationRadius(location, radius, all);
 
-  for (auto const& location : location_vector) {
+  for (auto const& proximity_location : location_vector) {
 
-    auto location_iter = location_map_.find(location);
-    if (location_iter == location_map_.end()) {
+    auto proximity_iter = location_map_.find(proximity_location);
+    if (proximity_iter == location_map_.end()) {
 
-      ExecEnv::log().warn("Pf7SampleLocation::sampleRadius; Location: {} not found in distance cache", location);
+      ExecEnv::log().warn("Pf7SampleLocation::sampleRadius; Location: {} not found in distance cache", proximity_location);
       sample_vec.clear();
       return sample_vec;
 
     }
 
-    auto const& [location_text, location_record] = *location_iter;
-    for (auto const& sample_text : location_record.locationSamples()) {
+    auto const& [proximity_text, proximity_record] = *proximity_iter;
+    for (auto const& genome_sample : proximity_record.locationSamples()) {
 
-      sample_vec.push_back(sample_text);
+      sample_vec.push_back(genome_sample);
 
     }
 

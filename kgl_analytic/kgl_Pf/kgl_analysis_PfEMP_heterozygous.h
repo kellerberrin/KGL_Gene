@@ -75,7 +75,8 @@ public:
   VariantAnalysisType aggregateResults(const std::vector<GenomeId_t>& sample_vector) const;
 
   void write_location_results(const std::string& file_name,
-                              const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr);
+                              const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
+                              double radius_km);
 
 private:
 

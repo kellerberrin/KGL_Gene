@@ -253,7 +253,109 @@ kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vect
 
 
 void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
-                                                   const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr) {
+                                                   const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
+                                                   double radius_km) {
+
+  std::ofstream analysis_file(file_name);
+
+  if (not analysis_file.good()) {
+
+    ExecEnv::log().error("HeteroHomoZygous::write_location_results; Unable to open results file: {}", file_name);
+    return;
+
+  }
+
+  analysis_file << "Location"
+                << CSV_DELIMITER_
+                << "Type"
+                << CSV_DELIMITER_
+                << "City"
+                << CSV_DELIMITER_
+                << "Country"
+                << CSV_DELIMITER_
+                << "Region"
+                << CSV_DELIMITER_
+                << "Radius KM"
+                << CSV_DELIMITER_
+                << "Genomes (samples)"
+                << CSV_DELIMITER_
+                << "Studies"
+                << CSV_DELIMITER_
+                << "Hom/Het"
+                << CSV_DELIMITER_
+                << "Variant Count"
+                << CSV_DELIMITER_
+                << "Variant Rate"
+                << CSV_DELIMITER_
+                << "Single Variant"
+                << CSV_DELIMITER_
+                << "Homozygous"
+                << CSV_DELIMITER_
+                << "Heterozygous"
+                << CSV_DELIMITER_
+                << "SNP"
+                << CSV_DELIMITER_
+                << "Indel" << '\n';
+
+
+  for (auto const& [location, location_record] : Pf7_physical_distance_ptr->locationMap()) {
+
+    auto radii_samples = Pf7_physical_distance_ptr->sampleRadius(location, radius_km);
+
+    auto aggregated = aggregateResults(radii_samples);
+
+    auto const& [loc, location_type] = location_record.location();
+
+    std::string type = location_type == LocationType::City ? "City" : "Country";
+
+    double hom_het_ratio{0.0};
+    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
+    if (total_heterozygous > 0) {
+
+      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
+
+    }
+
+    double variant_rate{0.0};
+    if (not radii_samples.empty()) {
+
+      variant_rate = static_cast<double>(aggregated.total_variants_) / static_cast<double>(radii_samples.size());
+
+    }
+
+    analysis_file << location
+                  << CSV_DELIMITER_
+                  << type
+                  << CSV_DELIMITER_
+                  << location_record.city()
+                  << CSV_DELIMITER_
+                  << location_record.country()
+                  << CSV_DELIMITER_
+                  << location_record.region()
+                  << CSV_DELIMITER_
+                  << radius_km
+                  << CSV_DELIMITER_
+                  << radii_samples.size()
+                  << CSV_DELIMITER_
+                  << location_record.locationStudies().size()
+                  << CSV_DELIMITER_
+                  << hom_het_ratio
+                  << CSV_DELIMITER_
+                  << aggregated.total_variants_
+                  << CSV_DELIMITER_
+                  << variant_rate
+                  << CSV_DELIMITER_
+                  << aggregated.single_variant_
+                  << CSV_DELIMITER_
+                  << aggregated.homozygous_count_
+                  << CSV_DELIMITER_
+                  << aggregated.heterozygous_count_
+                  << CSV_DELIMITER_
+                  << aggregated.snp_count_
+                  << CSV_DELIMITER_
+                  << aggregated.indel_count_ << '\n';
+
+  }
 
 
 }
