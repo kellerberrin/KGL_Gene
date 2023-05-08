@@ -39,6 +39,9 @@ public:
                                         std::vector<CigarEditItem>& parsed_cigar);
 
 
+  // The CigarVector contains (n x 'M') + (1 x 'X') and is an SNP.
+  [[nodiscard]] static bool isSNP(const std::string& reference, const std::string& alternate);
+
   // Generate a CIGAR from two sequences.
   [[nodiscard]] static std::string generateCigar(const std::string& reference, const std::string& alternate);
 
@@ -66,7 +69,7 @@ private:
 
 
 // Use edlib to generate a cigar string.
-  static void generateEditString(const std::string& reference, const std::string& alternate, std::vector<CigarEditType>& edit_vector);
+  static std::vector<CigarEditType> generateEditString(const std::string& reference, const std::string& alternate);
 
 };
 

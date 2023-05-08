@@ -47,6 +47,7 @@ public:
   // All VCF data has been presented, finalize analysis and write results
   [[nodiscard]] bool finalizeAnalysis() override;
 
+
 private:
 
   constexpr static const char PFEMPANALYSIS_IDENT_[]{"PfEMP"};
@@ -65,10 +66,9 @@ private:
   // Filter constants.
   constexpr static const bool FILTER_QC_ACTIVE_{true};
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
-  constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
   constexpr static const bool AF_FILTER_ACTIVE_{false};
-  constexpr static const bool SNP_FILTER_ACTIVE_{true};
+  constexpr static const bool SNP_FILTER_ACTIVE_{false};
   constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
   void performPFEMP1UPGMA();

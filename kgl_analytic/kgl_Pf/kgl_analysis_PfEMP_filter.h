@@ -110,7 +110,6 @@ public:
   // After filtering.
   static void printStats();
 
-
 private:
 
   // Filter constants.

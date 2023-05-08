@@ -3,6 +3,7 @@
 //
 
 #include "kgl_pf7_fws_parser.h"
+#include "kgl_variant_filter_db.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -42,7 +43,7 @@ double kgl::Pf7FwsResource::getFWS(const GenomeId_t& genome_id) const {
 
   }
 
-  ExecEnv::log().warn("Pf7FwsResource::filterFWS; Unable to find FWS statistic for genome: {}", genome_id);
+  ExecEnv::log().warn("Pf7FwsResource::viewFilterFWS; Unable to find FWS statistic for genome: {}", genome_id);
   return std::nan("n/a");
 
 }
@@ -50,14 +51,32 @@ double kgl::Pf7FwsResource::getFWS(const GenomeId_t& genome_id) const {
 
 // Population must be PF7
 // Important - this code above only filters a shallow copy of the population.
-std::shared_ptr<kgl::PopulationDB> kgl::Pf7FwsResource::filterFWS( FwsFilterType filter_type,
-                                                                   double fws_threshold,
-                                                                   const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
+std::shared_ptr<kgl::PopulationDB> kgl::Pf7FwsResource::viewFilterFWS(FwsFilterType filter_type,
+                                                                      double fws_threshold,
+                                                                      const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
 
-  auto filtered_ptr = std::make_shared<kgl::PopulationDB>(Pf7_unfiltered_ptr->populationId() + "_FWS_Filtered",
-                                                          Pf7_unfiltered_ptr->dataSource());
+  std::vector<kgl::GenomeId_t> population_genomes;
 
   for (auto const& [genome_id, genome_ptr] : Pf7_unfiltered_ptr->getMap()) {
+
+    population_genomes.push_back(genome_id);
+
+  }
+
+  auto filtered_genomes = filterFWS(filter_type, fws_threshold, population_genomes);
+
+  return Pf7_unfiltered_ptr->viewFilter(GenomeListFilter(filtered_genomes));
+
+}
+
+
+std::vector<kgl::GenomeId_t> kgl::Pf7FwsResource::filterFWS( FwsFilterType filter_type,
+                                                             double fws_threshold,
+                                                             const std::vector<GenomeId_t>& sample_vector) const {
+
+  std::vector<kgl::GenomeId_t> filtered_samples;
+
+  for (auto const& genome_id: sample_vector) {
 
     if (getMap().contains(genome_id)) {
 
@@ -66,23 +85,19 @@ std::shared_ptr<kgl::PopulationDB> kgl::Pf7FwsResource::filterFWS( FwsFilterType
       bool accept = filter_type == FwsFilterType::GREATER_EQUAL ? sample_data.FWS_value >= fws_threshold : sample_data.FWS_value <= fws_threshold;
       if (accept) {
 
-        if (not filtered_ptr->addGenome(genome_ptr)) {
-
-          ExecEnv::log().warn("Pf7FwsResource::filterFWS; Unable to add filtered genome: {} to filtered  population", genome_id);
-
-        }
+        filtered_samples.push_back(genome_id);
 
       } // Pass
 
     } else {
 
-      ExecEnv::log().warn("PPf7FwsResource::filterFWS; Genome: {} not found in sample data", genome_id);
+      ExecEnv::log().warn("Pf7FwsResource::filterFWS; Genome: {} not found in FWS data", genome_id);
 
     }
 
   } // For genomes.
 
-  return filtered_ptr;
+  return filtered_samples;
 
 }
 

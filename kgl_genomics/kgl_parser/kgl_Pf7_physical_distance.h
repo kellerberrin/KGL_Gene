@@ -17,19 +17,13 @@ struct LocationCoordinates {
 
 public:
 
-  // Assumes floating point text from the Pf7SampleResource object.
-  LocationCoordinates(const std::string& latitude_text,
-                      const std::string& longitude_text,
-                      std::string location,
-                      LocationType location_type,
-                      std::string city,
-                      std::string country,
-                      std::string region) : location_({std::move(location), location_type}),
-                                                    city_(std::move(city)),
-                                                    country_(std::move(country)),
-                                                    region_(std::move(region)) {
 
-    convertLatLong(latitude_text, longitude_text);
+  LocationCoordinates(std::string location,
+                      LocationType location_type,
+                      const Pf7SampleRecord& sample_record)
+                      : location_({std::move(location), location_type}) {
+
+    initSampleFields(sample_record);
 
   }
   ~LocationCoordinates() = default;
@@ -52,6 +46,7 @@ public:
   [[nodiscard]] double distance_km(const LocationCoordinates& other_location) const;
 
   void addSample(std::string sample_id, const std::string& study, const std::string& year_str);
+  void addSample(const Pf7SampleRecord& sample_record);
 
 private:
 
@@ -62,12 +57,13 @@ private:
   std::string country_;
   std::string region_;
   std::vector<std::string> sample_id_vec_; // All samples/genomes at this location.
-  std::map<std::string, size_t> studies_; // All study and study year pairs
+  std::map<std::string, size_t> studies_; // All [study, study_year] pairs
 
   // Used to calculate great circle distance between 2 locations.
   constexpr static const double EARTH_RADIUS_KM_{6371.0};
 
   void convertLatLong(const std::string& latitude_text, const std::string& longitude_text);
+  void initSampleFields(const Pf7SampleRecord& sample_record);
 
 };
 

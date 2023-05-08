@@ -36,6 +36,7 @@ struct Pf7SampleRecord {
   std::string callable_;
   std::string qc_pass_;
   constexpr static const char QC_PASS_UC_[]{"TRUE"}; // Uppercase sample qc pass text (actually "True").
+  [[nodiscard]] bool pass() const { return Utility::toupper(qc_pass_) == Pf7SampleRecord::QC_PASS_UC_; }
   std::string qc_fail_reason_;
   std::string sample_type_;
   std::string sample_in_pf6_;

@@ -187,6 +187,19 @@ std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_ind
 }
 
 
+bool kgl::Variant::isSNP() const {
+
+  if (reference().length() == 1 and alternate().length() == 1) {
+
+    return true;
+
+  }
+
+  // Check longer reference and alternate for effective SNP if a cigar of 1'X' and n'M'.
+  return ParseVCFCigar::isSNP(reference().getSequenceAsString(), alternate().getSequenceAsString());
+
+}
+
 
 std::string kgl::Variant::alternateCigar() const {
 

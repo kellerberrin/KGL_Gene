@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
+#include "kgl_analysis_PfEMP.h"
 #include <fstream>
 
 
@@ -253,8 +254,10 @@ kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vect
 
 
 void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
+                                                   const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
                                                    const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
-                                                   double radius_km) {
+                                                   double radius_km,
+                                                   const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) {
 
   std::ofstream analysis_file(file_name);
 
@@ -262,6 +265,18 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
 
     ExecEnv::log().error("HeteroHomoZygous::write_location_results; Unable to open results file: {}", file_name);
     return;
+
+  }
+
+  // Generate a set of Pass genomes.
+  std::set<GenomeId_t> pass_genomes;
+  for (auto const& [genome_id, sample_record] : Pf7_sample_ptr->getMap()) {
+
+    if (sample_record.pass()) {
+
+      pass_genomes.insert(genome_id);
+
+    }
 
   }
 
@@ -279,7 +294,11 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
                 << CSV_DELIMITER_
                 << "Genomes (samples)"
                 << CSV_DELIMITER_
+                << "Passed QC"
+                << CSV_DELIMITER_
                 << "Studies"
+                << CSV_DELIMITER_
+                << "QC Monoclonal"
                 << CSV_DELIMITER_
                 << "Hom/Het"
                 << CSV_DELIMITER_
@@ -300,7 +319,20 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
 
   for (auto const& [location, location_record] : Pf7_physical_distance_ptr->locationMap()) {
 
+    // All samples for location.
     auto radii_samples = Pf7_physical_distance_ptr->sampleRadius(location, radius_km);
+
+    // Get a vector of samples that have FWS statistics (have passed QC).
+    std::vector<GenomeId_t> radii_passed;
+    for (auto const& sample : radii_samples) {
+
+      if (pass_genomes.contains(sample)) {
+
+        radii_passed.push_back(sample);
+
+      }
+
+    }
 
     auto aggregated = aggregateResults(radii_samples);
 
@@ -323,6 +355,14 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
 
     }
 
+    double monoclonal{0.0};
+    if (not radii_passed.empty()){
+
+      auto mono_samples = Pf7_fws_ptr->filterFWS(FwsFilterType::GREATER_EQUAL, Pf7FwsResource::MONOCLONAL_FWS_THRESHOLD, radii_passed);
+      monoclonal = static_cast<double>(mono_samples.size()) / static_cast<double>(radii_passed.size());
+
+    }
+
     analysis_file << location
                   << CSV_DELIMITER_
                   << type
@@ -337,7 +377,11 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
                   << CSV_DELIMITER_
                   << radii_samples.size()
                   << CSV_DELIMITER_
+                  << radii_passed.size()
+                  << CSV_DELIMITER_
                   << location_record.locationStudies().size()
+                  << CSV_DELIMITER_
+                  << monoclonal
                   << CSV_DELIMITER_
                   << hom_het_ratio
                   << CSV_DELIMITER_

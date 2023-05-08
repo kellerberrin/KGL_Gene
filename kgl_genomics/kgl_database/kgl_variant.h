@@ -86,7 +86,8 @@ public:
 
   [[nodiscard]] VariantType variantType() const;
 
-  [[nodiscard]] bool isSNP() const { return reference().length() == 1 and alternate().length() == 1; }
+  // Includes ref, alt comparison with 1'X' and n'M' cigars.
+  [[nodiscard]] bool isSNP() const;
 
   [[nodiscard]] const DNA5SequenceLinear& reference() const { return reference_; }
 

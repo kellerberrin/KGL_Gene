@@ -48,10 +48,18 @@ public:
 
   [[nodiscard]] double getFWS(const GenomeId_t& genome) const;
 
-  // Population must be PF7
-  [[nodiscard]] std::shared_ptr<PopulationDB> filterFWS( FwsFilterType filter_type,
-                                                         double fws_threshold,
-                                                         const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
+  // Population must be PF7.
+  [[nodiscard]] std::shared_ptr<PopulationDB> viewFilterFWS(FwsFilterType filter_type,
+                                                            double fws_threshold,
+                                                            const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
+
+  [[nodiscard]] std::vector<GenomeId_t> filterFWS( FwsFilterType filter_type,
+                                                   double fws_threshold,
+                                                   const std::vector<GenomeId_t>& sample_vector) const;
+
+  // Suggested FWS threshold in 'Molecular approaches to determine
+  // the multiplicity of Plasmodium infections'.
+  constexpr static const double MONOCLONAL_FWS_THRESHOLD{0.95};
 
 private:
 

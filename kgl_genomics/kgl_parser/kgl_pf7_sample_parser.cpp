@@ -48,7 +48,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(c
 
       auto sample_iter = getMap().find(genome_id);
       auto const& [id, sample_data] = *sample_iter;
-      if (Utility::toupper(sample_data.qc_pass_) == Pf7SampleRecord::QC_PASS_UC_) {
+      if (sample_data.pass()) {
 
         if (not filtered_ptr->addGenome(genome_ptr)) {
 

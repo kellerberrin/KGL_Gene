@@ -16,6 +16,28 @@ namespace kgl = kellerberrin::genome;
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void kgl::LocationCoordinates::initSampleFields(const Pf7SampleRecord& sample_record) {
+
+  auto const& [location_str, location_type] = location_;
+
+  if (location_type == LocationType::City) {
+
+    city_ = sample_record.location1_;
+    convertLatLong(sample_record.location1_latitude_, sample_record.location1_longitude_);
+
+  } else {
+
+    city_.clear();
+    convertLatLong(sample_record.country_latitude_, sample_record.country_longitude_);
+
+  }
+
+  country_ = sample_record.country_;
+  region_ = sample_record.population_;
+
+}
+
+
 void kgl::LocationCoordinates::convertLatLong(const std::string& latitude_text, const std::string& longitude_text) {
 
   try {
@@ -91,6 +113,15 @@ void kgl::LocationCoordinates::addSample(std::string sample_id, const std::strin
 }
 
 
+void kgl::LocationCoordinates::addSample(const Pf7SampleRecord& sample_record) {
+
+  sample_id_vec_.push_back(sample_record.Pf7Sample_id);
+  size_t year = std::stoll(sample_record.year_);
+  studies_[sample_record.study_] = year;
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -108,13 +139,9 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       if (location_iter == location_map_.end()) {
 
         auto [iter, result] = location_map_.try_emplace( sample_record.location1_,
-                                                                          sample_record.location1_latitude_,
-                                                                          sample_record.location1_longitude_,
                                                                           sample_record.location1_,
                                                                           LocationType::City,
-                                                                          sample_record.location1_,
-                                                                          sample_record.country_,
-                                                                          sample_record.population_);
+                                                                          sample_record);
 
         if (not result) {
 
@@ -125,7 +152,7 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       } else {
 
         auto& [location, location_record] = *location_iter;
-        location_record.addSample(sample_id, sample_record.study_, sample_record.year_);
+        location_record.addSample(sample_record);
 
       }
 
@@ -137,13 +164,9 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       if (location_iter == location_map_.end()) {
 
         auto [iter, result] = location_map_.try_emplace(sample_record.country_,
-                                                        sample_record.country_latitude_,
-                                                        sample_record.country_longitude_,
-                                                        sample_record.country_,
-                                                        LocationType::Country,
-                                                        std::string(),
-                                                        sample_record.country_,
-                                                        sample_record.population_);
+                                                                         sample_record.country_,
+                                                                         LocationType::Country,
+                                                                         sample_record);
 
         if (not result) {
 
@@ -154,7 +177,7 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       } else {
 
         auto& [location, location_record] = *location_iter;
-        location_record.addSample(sample_id, sample_record.study_, sample_record.year_);
+        location_record.addSample(sample_record);
 
       }
 

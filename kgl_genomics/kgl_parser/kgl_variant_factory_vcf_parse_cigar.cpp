@@ -161,7 +161,44 @@ kgl::ContigOffset_t kgl::ParseVCFCigar::alleleOffset(const std::string& referenc
 
 }
 
+// The CigarVector contains (n x 'M') + (1 x 'X') and is, in effect, an SNP.
+bool kgl::ParseVCFCigar::isSNP(const std::string& reference, const std::string& alternate) {
 
+  // referance and alternate are different sizes then cannot be an SNP.
+  if (reference. size() != alternate.size()) {
+
+    return false;
+
+  }
+
+  std::vector<kgl::CigarEditType> edit_vector = generateEditString(reference, alternate);
+
+  size_t x_count{0};
+  for (auto item : edit_vector) {
+
+    if (item == CigarEditType::CHANGED) {
+
+      // More than 1 'X'
+      if (x_count > 0) {
+
+        return false;
+
+      }
+
+      ++x_count;
+
+    } else if (item != CigarEditType::UNCHANGED) {
+
+      return false;
+
+    }
+
+  }
+
+  // 1'X' and n'M'
+  return true;
+
+}
 
 
 // Use edlib to generate a cigar vector.
@@ -169,8 +206,8 @@ std::vector<kgl::CigarEditItem> kgl::ParseVCFCigar::generateEditVector(const std
                                                                        const std::string& alternate) {
 
   std::vector<kgl::CigarEditItem> item_vector;
-  std::vector<CigarEditType> edit_string;
-  generateEditString(reference, alternate, edit_string);
+
+  std::vector<CigarEditType> edit_string = generateEditString(reference, alternate);
 
   size_t same_count = 0;
   bool first_pass = true;
@@ -190,7 +227,7 @@ std::vector<kgl::CigarEditItem> kgl::ParseVCFCigar::generateEditVector(const std
 
     } else {
 
-      item_vector.emplace_back(CigarEditItem(same_count, previous_edit_item));
+      item_vector.emplace_back(same_count, previous_edit_item);
       same_count = 1;
       previous_edit_item = edit;
 
@@ -200,7 +237,7 @@ std::vector<kgl::CigarEditItem> kgl::ParseVCFCigar::generateEditVector(const std
 
   if (not first_pass) {
 
-    item_vector.emplace_back(CigarEditItem(same_count, previous_edit_item));
+    item_vector.emplace_back(same_count, previous_edit_item);
 
   }
 
@@ -211,15 +248,18 @@ std::vector<kgl::CigarEditItem> kgl::ParseVCFCigar::generateEditVector(const std
 
 
 // Use edlib to generate a cigar string.
-void kgl::ParseVCFCigar::generateEditString(const std::string& reference,
-                                            const std::string& alternate,
-                                            std::vector<CigarEditType>& edit_vector) {
+std::vector<kgl::CigarEditType> kgl::ParseVCFCigar::generateEditString(const std::string& reference,
+                                                                       const std::string& alternate) {
 
 
-  edit_vector.clear();
+  std::vector<CigarEditType> edit_vector;
 
-  EdlibAlignResult result = edlibAlign(alternate.c_str(), alternate.size(),reference.c_str(), reference.size(),
+  EdlibAlignResult result = edlibAlign(alternate.c_str(),
+                                       alternate.size(),
+                                       reference.c_str(),
+                                       reference.size(),
                                        edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_PATH, NULL, 0));
+
   if (result.status == EDLIB_STATUS_OK) {
 
     for (int i = 0; i < result.alignmentLength; ++i) {
@@ -260,6 +300,8 @@ void kgl::ParseVCFCigar::generateEditString(const std::string& reference,
   }
 
   edlibFreeAlignResult(result);
+
+  return edit_vector;
 
 }
 
