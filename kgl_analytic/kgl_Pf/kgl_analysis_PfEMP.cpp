@@ -116,6 +116,8 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
+  // Print results files.
+
   std::string variant_file_name = std::string(VARIANT_COUNT_) + "Translation" + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   translation_gene_map_.writeGeneResults(variant_file_name);
@@ -128,17 +130,25 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   all_gene_map_.writeGeneResults(variant_file_name);
 
+
+  // Get location summaries
+  auto location_summary_map = hetero_homo_zygous_.location_summary(Pf7_sample_ptr_,
+                                                                   Pf7_physical_distance_ptr_,
+                                                                   SAMPLE_LOCATION_RADIUS_,
+                                                                   Pf7_fws_ptr_);
+
+  // Update the FIS statistic.
+  hetero_homo_zygous_.UpdateSampleLocation(location_summary_map);
+
   variant_file_name = std::string("VariantStatistics") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   hetero_homo_zygous_.write_results(variant_file_name);
 
   variant_file_name = std::string("VariantLocation") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-  hetero_homo_zygous_.write_location_results( variant_file_name,
-                                              Pf7_sample_ptr_,
-                                              Pf7_physical_distance_ptr_,
-                                              SAMPLE_LOCATION_RADIUS_,
-                                              Pf7_fws_ptr_);
+
+  hetero_homo_zygous_.write_location_results( variant_file_name, location_summary_map);
+
 
   return true;
 

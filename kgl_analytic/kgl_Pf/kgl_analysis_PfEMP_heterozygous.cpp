@@ -132,6 +132,7 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
   analysis_file << "Genome" << CSV_DELIMITER_
                 << "FWS" << CSV_DELIMITER_
+                << "FIS (inbreed)" << CSV_DELIMITER_
                 << "City" << CSV_DELIMITER_
                 << "Country" << CSV_DELIMITER_
                 << "Study" << CSV_DELIMITER_
@@ -161,7 +162,6 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
   for (auto& [genome_id, contig_map] : variant_analysis_map_) {
 
-
     std::vector<GenomeId_t> single_vector{ genome_id };
     auto aggregated = aggregateResults(single_vector);
 
@@ -175,6 +175,7 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
     analysis_file << genome_id << CSV_DELIMITER_
                   << contig_map.getFWS() << CSV_DELIMITER_
+                  << contig_map.getFIS() << CSV_DELIMITER_
                   << contig_map.getCity() << CSV_DELIMITER_
                   << contig_map.getCountry() << CSV_DELIMITER_
                   << contig_map.getStudy() << CSV_DELIMITER_
@@ -253,20 +254,10 @@ kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vect
 }
 
 
-void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
-                                                   const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
-                                                   const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
-                                                   double radius_km,
-                                                   const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) {
-
-  std::ofstream analysis_file(file_name);
-
-  if (not analysis_file.good()) {
-
-    ExecEnv::log().error("HeteroHomoZygous::write_location_results; Unable to open results file: {}", file_name);
-    return;
-
-  }
+kgl:: LocationSummaryMap kgl::HeteroHomoZygous::location_summary( const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
+                                                                  const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
+                                                                  double radius_km,
+                                                                  const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) const {
 
   // Generate a set of Pass genomes.
   std::set<GenomeId_t> pass_genomes;
@@ -277,6 +268,151 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
       pass_genomes.insert(genome_id);
 
     }
+
+  }
+
+  LocationSummaryMap summary_map;
+  // Summarize each location.
+  for (auto const& [location, location_record] : Pf7_physical_distance_ptr->locationMap()) {
+
+    // All samples for location.
+    auto radii_samples = Pf7_physical_distance_ptr->sampleRadius(location, radius_km);
+
+    // Get a vector of samples that have FWS statistics (have passed QC).
+    std::vector<GenomeId_t> radii_passed;
+    for (auto const &sample: radii_samples) {
+
+      if (pass_genomes.contains(sample)) {
+
+        radii_passed.push_back(sample);
+
+      }
+
+    }
+
+    auto aggregated = aggregateResults(radii_samples);
+
+    auto const &[loc, location_type] = location_record.location();
+
+    std::string type = location_type == LocationType::City ? "City" : "Country";
+
+    double hom_het_ratio{0.0};
+    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
+    if (total_heterozygous > 0) {
+
+      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
+
+    }
+
+    double variant_rate{0.0};
+    if (not radii_samples.empty()) {
+
+      variant_rate = static_cast<double>(aggregated.total_variants_) / static_cast<double>(radii_samples.size());
+
+    }
+
+    double monoclonal{0.0};
+    if (not radii_passed.empty()) {
+
+      auto mono_samples = Pf7_fws_ptr->filterFWS(FwsFilterType::GREATER_EQUAL, Pf7FwsResource::MONOCLONAL_FWS_THRESHOLD, radii_passed);
+      monoclonal = static_cast<double>(mono_samples.size()) / static_cast<double>(radii_passed.size());
+
+    }
+
+    LocationSummary location_summary;
+
+    location_summary.location_ = location;
+    location_summary.location_type_ = location_type;
+    location_summary.city_ = location_record.city();
+    location_summary.country_ = location_record.city();
+    location_summary.region_ = location_record.region();
+    location_summary.radius_km_ = radius_km;
+    location_summary.radii_samples_ = radii_samples.size();
+    location_summary.radii_samples_OK_ = radii_passed.size();
+    location_summary.studies_ = location_record.locationStudies();
+    location_summary.monoclonal_Fst_ = monoclonal;
+    location_summary.hom_het_ratio_ = hom_het_ratio;
+    location_summary.total_variants_ = aggregated.total_variants_;
+    location_summary.variant_rate_ = variant_rate;
+    location_summary.single_variant_ = aggregated.single_variant_;
+    location_summary.homozygous_count_ = aggregated.homozygous_count_;
+    location_summary.heterozygous_count_ = aggregated.heterozygous_count_;
+    location_summary.snp_count_ = aggregated.snp_count_;
+    location_summary.indel_count_ = aggregated.indel_count_;
+
+    summary_map[location] = location_summary;
+
+  }
+
+  return summary_map;
+
+}
+
+
+void kgl::HeteroHomoZygous::UpdateSampleLocation(const LocationSummaryMap& location_summary_map) {
+
+  for (auto& [genome_id, contig_map] : variant_analysis_map_) {
+
+    // Lookup the location summary
+
+    auto record_iter = location_summary_map.find(contig_map.getCity());
+    if (record_iter != location_summary_map.end()) {
+
+      auto const& [city_location, city_location_summary] = *record_iter;
+
+      // If the city has below minimum samples then check the country
+      if (city_location_summary.radii_samples_OK_ < MINIMUM_LOCATION_SAMPLES_) {
+
+        if (location_summary_map.contains(contig_map.getCountry())) {
+
+          record_iter = location_summary_map.find(contig_map.getCountry());
+
+        } else {
+
+          ExecEnv::log().error("HeteroHomoZygous::UpdateSampleLocation; Unable to find the location record for sample/genome country: {}", contig_map.getCountry());
+          continue;
+
+        }
+
+      }
+
+    } else {
+
+      ExecEnv::log().error("HeteroHomoZygous::UpdateSampleLocation; Unable to find the location record for sample/genome city: {}", contig_map.getCity());
+      continue;
+
+    }
+
+    auto const& [location, location_summary] = *record_iter;
+    std::vector<GenomeId_t> single_vector{ genome_id };
+    auto aggregated = aggregateResults(single_vector);
+
+    double wrights_inbreeding{0.0};
+    if (location_summary.total_variants_ > 0 and aggregated.total_variants_ > 0) {
+
+      double expected_heterozygosity = static_cast<double>(location_summary.heterozygous_count_ + location_summary.single_variant_) / static_cast<double>(location_summary.total_variants_);
+      double observed_heterozygosity = static_cast<double>(aggregated.heterozygous_count_ + aggregated.single_variant_) / static_cast<double>(aggregated.total_variants_);
+
+      wrights_inbreeding = (expected_heterozygosity - observed_heterozygosity) / expected_heterozygosity;
+
+    }
+
+    contig_map.setFIS(wrights_inbreeding);
+
+  }
+
+}
+
+
+
+void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name, const LocationSummaryMap& summary_map) const {
+
+  std::ofstream analysis_file(file_name);
+
+  if (not analysis_file.good()) {
+
+    ExecEnv::log().error("HeteroHomoZygous::write_location_results; Unable to open results file: {}", file_name);
+    return;
 
   }
 
@@ -317,87 +453,44 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
                 << "Indel" << '\n';
 
 
-  for (auto const& [location, location_record] : Pf7_physical_distance_ptr->locationMap()) {
+  for (auto const& [location, summary] : summary_map) {
 
-    // All samples for location.
-    auto radii_samples = Pf7_physical_distance_ptr->sampleRadius(location, radius_km);
-
-    // Get a vector of samples that have FWS statistics (have passed QC).
-    std::vector<GenomeId_t> radii_passed;
-    for (auto const& sample : radii_samples) {
-
-      if (pass_genomes.contains(sample)) {
-
-        radii_passed.push_back(sample);
-
-      }
-
-    }
-
-    auto aggregated = aggregateResults(radii_samples);
-
-    auto const& [loc, location_type] = location_record.location();
-
-    std::string type = location_type == LocationType::City ? "City" : "Country";
-
-    double hom_het_ratio{0.0};
-    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
-    if (total_heterozygous > 0) {
-
-      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
-
-    }
-
-    double variant_rate{0.0};
-    if (not radii_samples.empty()) {
-
-      variant_rate = static_cast<double>(aggregated.total_variants_) / static_cast<double>(radii_samples.size());
-
-    }
-
-    double monoclonal{0.0};
-    if (not radii_passed.empty()){
-
-      auto mono_samples = Pf7_fws_ptr->filterFWS(FwsFilterType::GREATER_EQUAL, Pf7FwsResource::MONOCLONAL_FWS_THRESHOLD, radii_passed);
-      monoclonal = static_cast<double>(mono_samples.size()) / static_cast<double>(radii_passed.size());
-
-    }
 
     analysis_file << location
                   << CSV_DELIMITER_
-                  << type
+                  << (summary.location_type_ == LocationType::City ? "City" : "Country")
                   << CSV_DELIMITER_
-                  << location_record.city()
+                  << summary.city_
                   << CSV_DELIMITER_
-                  << location_record.country()
+                  << summary.country_
                   << CSV_DELIMITER_
-                  << location_record.region()
+                  << summary.region_
                   << CSV_DELIMITER_
-                  << radius_km
+                  << summary.radius_km_
                   << CSV_DELIMITER_
-                  << radii_samples.size()
+                  << summary.radii_samples_
                   << CSV_DELIMITER_
-                  << radii_passed.size()
+                  << summary.radii_samples_OK_
                   << CSV_DELIMITER_
-                  << location_record.locationStudies().size()
+                  << summary.studies_.size()
                   << CSV_DELIMITER_
-                  << monoclonal
+                  << summary.monoclonal_Fst_
                   << CSV_DELIMITER_
-                  << hom_het_ratio
+                  << summary.hom_het_ratio_
                   << CSV_DELIMITER_
-                  << aggregated.total_variants_
+                  << summary.total_variants_
                   << CSV_DELIMITER_
-                  << variant_rate
+                  << summary.variant_rate_
                   << CSV_DELIMITER_
-                  << aggregated.single_variant_
+                  << summary.single_variant_
                   << CSV_DELIMITER_
-                  << aggregated.homozygous_count_
+                  << summary.homozygous_count_
                   << CSV_DELIMITER_
-                  << aggregated.heterozygous_count_
+                  << summary.heterozygous_count_
                   << CSV_DELIMITER_
-                  << aggregated.snp_count_
+                  << summary.snp_count_
                   << CSV_DELIMITER_
-                  << aggregated.indel_count_ << '\n';
+                  << summary.indel_count_ << '\n';
 
   }
 

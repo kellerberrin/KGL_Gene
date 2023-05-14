@@ -115,6 +115,12 @@ void kgl::LocationCoordinates::addSample(std::string sample_id, const std::strin
 
 void kgl::LocationCoordinates::addSample(const Pf7SampleRecord& sample_record) {
 
+  if (sample_record.Pf7Sample_id == "PW0061-C" or sample_record.Pf7Sample_id == "SPT26229") {
+
+    ExecEnv::log().info("************ LocationCoordinates::addSample; added sample/genome: {}", sample_record.Pf7Sample_id);
+
+  }
+
   sample_id_vec_.push_back(sample_record.Pf7Sample_id);
   size_t year = std::stoll(sample_record.year_);
   studies_[sample_record.study_] = year;

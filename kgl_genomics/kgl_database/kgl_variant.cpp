@@ -186,17 +186,46 @@ std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_ind
 
 }
 
-
+// VCF files can specify SNPs as a cigar such as '4M1X8M'.
+// We extend the logic for this possibility.
 bool kgl::Variant::isSNP() const {
 
-  if (reference().length() == 1 and alternate().length() == 1) {
+  // Obvious SNP.
+  if (reference_.length() == 1 and alternate_.length() == 1) {
 
     return true;
 
   }
 
-  // Check longer reference and alternate for effective SNP if a cigar of 1'X' and n'M'.
-  return ParseVCFCigar::isSNP(reference().getSequenceAsString(), alternate().getSequenceAsString());
+  // Not SNP if different lengths.
+  if (reference_.length() != alternate_.length()) {
+
+    return false;
+
+  }
+
+  // Check only 1 nucleotide difference.
+  bool diff_found{false};
+  for (size_t i = 0; i < reference_.length(); ++i) {
+
+    if (reference_[i] != alternate_[i]) {
+
+      if (diff_found) {
+
+        return false;
+
+      }
+
+      diff_found = true;
+
+    }
+
+  }
+
+// Check longer reference and alternate for effective SNP if a cigar of 1'X' and n'M'.
+//  return ParseVCFCigar::isSNP(reference().getSequenceAsString(), alternate().getSequenceAsString());
+
+  return true;
 
 }
 
