@@ -309,7 +309,16 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_pf7_genetic_distance_parser.cpp
         kgl_genomics/kgl_parser/kgl_pf7_genetic_distance_parser.h
         kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.cpp
-        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.h kgl_genomics/kgl_database/kgl_variant_filter_db.h kgl_genomics/kgl_database/kgl_variant_filter_db.cpp kgl_genomics/kgl_database/kgl_variant_filter_type.h kgl_genomics/kgl_database/kgl_variant_filter_info.h kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.cpp kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.h kgl_genomics/kgl_database/kgl_variant_db_population_filter.cpp)
+        kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.h
+        kgl_genomics/kgl_database/kgl_variant_filter_db.h
+        kgl_genomics/kgl_database/kgl_variant_filter_db.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter_type.h
+        kgl_genomics/kgl_database/kgl_variant_filter_info.h
+        kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.cpp
+        kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.h
+        kgl_genomics/kgl_database/kgl_variant_db_population_filter.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter_features.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter_features.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )

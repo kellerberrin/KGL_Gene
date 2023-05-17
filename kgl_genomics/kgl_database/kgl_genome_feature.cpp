@@ -137,7 +137,7 @@ kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeat
 
 
 
-// This routine is recursive. Assumes all the CDS and EXON are leaf nodes in the feature hierarchy.
+// This routine is recursive. Assumes all the CDS and EXONs are leaf nodes in the feature hierarchy.
 bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
                                           const std::shared_ptr<const Feature>& parent_ptr,
                                           TranscriptionSequenceArray& sequence_array) {

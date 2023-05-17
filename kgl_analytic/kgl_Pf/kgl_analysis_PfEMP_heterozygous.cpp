@@ -114,7 +114,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
+void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, const LocationSummaryMap& location_summary) {
 
   std::ofstream analysis_file(file_name);
 
@@ -135,6 +135,7 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
                 << "FIS (inbreed)" << CSV_DELIMITER_
                 << "City" << CSV_DELIMITER_
                 << "Country" << CSV_DELIMITER_
+                << "Region" << CSV_DELIMITER_
                 << "Study" << CSV_DELIMITER_
                 << "Year" << CSV_DELIMITER_
                 << "Hom/Het";
@@ -173,11 +174,21 @@ void kgl::HeteroHomoZygous::write_results(const std::string& file_name) {
 
     }
 
+    std::string region;
+    if (location_summary.contains(contig_map.getCity())) {
+
+      auto iter = location_summary.find(contig_map.getCity());
+      auto const& [location, location_record] = *iter;
+      region = location_record.region_;
+
+    }
+
     analysis_file << genome_id << CSV_DELIMITER_
                   << contig_map.getFWS() << CSV_DELIMITER_
                   << contig_map.getFIS() << CSV_DELIMITER_
                   << contig_map.getCity() << CSV_DELIMITER_
                   << contig_map.getCountry() << CSV_DELIMITER_
+                  << region << CSV_DELIMITER_
                   << contig_map.getStudy() << CSV_DELIMITER_
                   << contig_map.getYear() << CSV_DELIMITER_
                   << hom_het_ratio;

@@ -41,7 +41,6 @@ private:
   constexpr static const char CSV_DELIMITER_ = ',';
 
 
-
 };
 
 

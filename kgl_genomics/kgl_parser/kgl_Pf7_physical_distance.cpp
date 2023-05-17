@@ -115,12 +115,6 @@ void kgl::LocationCoordinates::addSample(std::string sample_id, const std::strin
 
 void kgl::LocationCoordinates::addSample(const Pf7SampleRecord& sample_record) {
 
-  if (sample_record.Pf7Sample_id == "PW0061-C" or sample_record.Pf7Sample_id == "SPT26229") {
-
-    ExecEnv::log().info("************ LocationCoordinates::addSample; added sample/genome: {}", sample_record.Pf7Sample_id);
-
-  }
-
   sample_id_vec_.push_back(sample_record.Pf7Sample_id);
   size_t year = std::stoll(sample_record.year_);
   studies_[sample_record.study_] = year;
@@ -138,20 +132,25 @@ void kgl::LocationCoordinates::addSample(const Pf7SampleRecord& sample_record) {
 void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sample_resource) {
 
   for (auto const& [sample_id, sample_record] : sample_resource.getMap()) {
-
+    
     if (not sample_record.location1_.empty()) {
 
       auto location_iter = location_map_.find(sample_record.location1_);
       if (location_iter == location_map_.end()) {
 
-        auto [iter, result] = location_map_.try_emplace( sample_record.location1_,
-                                                                          sample_record.location1_,
-                                                                          LocationType::City,
-                                                                          sample_record);
+        auto [new_record_iter, result] = location_map_.try_emplace(sample_record.location1_,
+                                                                   sample_record.location1_,
+                                                                   LocationType::City,
+                                                                   sample_record);
 
         if (not result) {
 
           ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store location: {}", sample_record.location1_);
+
+        } else {
+
+          auto& [location, location_record] = *new_record_iter;
+          location_record.addSample(sample_record);
 
         }
 
@@ -169,14 +168,19 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
       auto location_iter = location_map_.find(sample_record.country_);
       if (location_iter == location_map_.end()) {
 
-        auto [iter, result] = location_map_.try_emplace(sample_record.country_,
-                                                                         sample_record.country_,
-                                                                         LocationType::Country,
-                                                                         sample_record);
+        auto [new_record_iter, result] = location_map_.try_emplace(sample_record.country_,
+                                                                   sample_record.country_,
+                                                                   LocationType::Country,
+                                                                   sample_record);
 
         if (not result) {
 
           ExecEnv::log().error("Pf7SampleLocation::initializeLocationMaps, unexpected; could not store country: {}", sample_record.location1_);
+
+        } else {
+
+          auto& [location, location_record] = *new_record_iter;
+          location_record.addSample(sample_record);
 
         }
 

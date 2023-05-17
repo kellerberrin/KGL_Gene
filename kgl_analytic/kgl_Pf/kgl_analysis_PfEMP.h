@@ -14,6 +14,7 @@
 #include "kgl_Pf7_physical_distance.h"
 #include "kgl_analysis_PfEMP_variant.h"
 #include "kgl_analysis_PfEMP_heterozygous.h"
+#include "kgl_variant_filter_features.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -64,6 +65,7 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
 
   // Filter constants.
+  constexpr static const bool CODING_FILTER_ACTIVE_{true};
   constexpr static const bool FILTER_QC_ACTIVE_{true};
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};

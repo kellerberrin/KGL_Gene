@@ -102,7 +102,7 @@ public:
   void analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
                                 const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr,
                                 const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr);
-  void write_results(const std::string& file_name);
+  void write_variant_results(const std::string& file_name, const LocationSummaryMap& location_summary);
   // If sample vector is empty then summarize all available genomes (samples).
   [[nodiscard]] VariantAnalysisType aggregateResults(const std::vector<GenomeId_t>& sample_vector) const;
 

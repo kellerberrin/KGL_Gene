@@ -5,6 +5,7 @@
 #include "kgl_analysis_PfEMP.h"
 #include "kgl_variant_filter.h"
 #include "kgl_variant_filter_info.h"
+#include "kgl_variant_filter_features.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -142,7 +143,7 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   variant_file_name = std::string("VariantStatistics") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-  hetero_homo_zygous_.write_results(variant_file_name);
+  hetero_homo_zygous_.write_variant_results(variant_file_name, location_summary_map);
 
   variant_file_name = std::string("VariantLocation") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);

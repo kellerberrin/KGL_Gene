@@ -396,9 +396,16 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   }
 
+  if constexpr(CODING_FILTER_ACTIVE_) {
+
+    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
+
+  }
+
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.
   auto deepcopy_population_ptr = filtered_population_ptr->deepCopy();
+
   // Filtered population should contain all contigs for all genomes.
   deepcopy_population_ptr->squareContigs();
 
