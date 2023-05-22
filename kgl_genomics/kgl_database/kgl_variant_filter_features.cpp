@@ -100,8 +100,18 @@ bool kgl::GeneCodingInterval::variantContained(const Variant &variant) const {
 
   auto const& [contig_id, interval_set] = *contig_iter;
 
-  // For now just see if the variant is within the coding intervals special indel code comes later.
-  bool result = bil::contains(interval_set, variant.offset());
+  bool result{false};
+  // If the variant is not an delete indel then just check if it within a coding interval
+  if (variant.variantType() != VariantType::INDEL_DELETE) {
+
+    result = bil::contains(interval_set, variant.offset() + variant.alleleOffset());
+
+  } else {
+  // A delete indel and we need to check any upstream effect on a coding interval.
+    ContigOffset_t delete_size = variant.reference().length() - variant.alternate().length();
+    result = bil::contains(interval_set, variant.offset() + variant.alleleOffset() + delete_size);
+
+  }
 
   return result;
 
@@ -175,8 +185,8 @@ bool kgl::FilterFeatureInterval::variantContained(const Variant &variant) const 
 
   auto const& [contig_id, interval_set] = *contig_iter;
 
-  // For now just see if the variant is within the coding intervals special indel code comes later.
-  bool result = bil::contains(interval_set, variant.offset());
+  // For now just see if the variant is within the feature interval.
+  bool result = bil::contains(interval_set, variant.offset() + variant.alleleOffset());
 
   return result;
 

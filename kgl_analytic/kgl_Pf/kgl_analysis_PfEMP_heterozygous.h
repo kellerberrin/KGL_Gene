@@ -115,6 +115,8 @@ public:
 
   void UpdateSampleLocation(const LocationSummaryMap& location_summary);
 
+  static void updateVariantAnalysisType(const std::unique_ptr<OffsetDB>& offset_ptr, VariantAnalysisType& analysis_record);
+
 private:
 
   VariantAnalysisMap variant_analysis_map_;

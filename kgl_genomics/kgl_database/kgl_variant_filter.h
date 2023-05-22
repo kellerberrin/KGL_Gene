@@ -7,6 +7,7 @@
 
 #include "kgl_variant.h"
 #include "kel_utility.h"
+#include "kgl_variant_filter.h"
 #include "kgl_variant_filter_type.h"
 
 

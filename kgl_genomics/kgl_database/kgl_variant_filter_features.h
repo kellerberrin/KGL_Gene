@@ -85,6 +85,7 @@ public:
 
   explicit FilterFeatures(const FilterFeatureVector& feature_vector);
   ~FilterFeatures() override;
+
   FilterFeatures(const FilterFeatures&);
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override;

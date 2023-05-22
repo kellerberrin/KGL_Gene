@@ -14,6 +14,7 @@
 #include "kgl_Pf7_physical_distance.h"
 #include "kgl_analysis_PfEMP_variant.h"
 #include "kgl_analysis_PfEMP_heterozygous.h"
+#include "kgl_analysis_PfEMP_FWS.h"
 #include "kgl_variant_filter_features.h"
 
 
@@ -103,7 +104,7 @@ private:
 
   // General variant statistics.
   HeteroHomoZygous hetero_homo_zygous_;
-
+  CalcFWS calc_fws_;
 
   // File name constants.
   constexpr static const char* NEWICK_{"newick_"};

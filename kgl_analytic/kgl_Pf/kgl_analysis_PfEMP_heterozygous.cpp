@@ -4,7 +4,6 @@
 
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
-#include "kgl_analysis_PfEMP.h"
 #include <fstream>
 
 
@@ -46,70 +45,74 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
-        if (offset_array_ptr->getVariantArray().empty()) {
-
-          continue;
-
-        }
-
-        for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
-
-          ++contig_count.total_variants_;
-
-          if (variant_ptr->isSNP()) {
-
-            ++contig_count.snp_count_;
-
-          } else {
-
-            ++contig_count.indel_count_;
-
-          }
-
-        }
-
-        if (offset_array_ptr->getVariantArray().size() == 1) {
-
-          ++contig_count.single_variant_;
-
-        } else if (offset_array_ptr->getVariantArray().size() == 2) {
-
-          if (offset_array_ptr->getVariantArray().front()->HGVS() == offset_array_ptr->getVariantArray().back()->HGVS()) {
-
-            ++contig_count.homozygous_count_;
-
-          } else {
-
-            ++contig_count.heterozygous_count_;
-
-          }
-
-        } else {
-
-          ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, unexpected number of variants: {}",
-                              genome_id, contig_id, offset, offset_array_ptr->getVariantArray().size());
-
-
-          for (auto const& variant_ptr : offset_array_ptr->getVariantArray()) {
-
-            ExecEnv::log().warn("HeteroHomoZygous::analyzeVariantPopulation; genome: {}, contig: {}, offset: {}, Variant: {}, Cigar: {}, Format: {}",
-                                genome_id,
-                                contig_id,
-                                offset,
-                                variant_ptr->HGVS(),
-                                variant_ptr->alternateCigar(),
-                                variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED));
-
-
-          }
-
-        } // het or hom.
+        updateVariantAnalysisType(offset_array_ptr, contig_count);
 
       } // offset
 
     } // contig
 
   } // genome (sample)
+
+}
+
+
+void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::unique_ptr<OffsetDB>& offset_ptr,
+                                                       VariantAnalysisType& analysis_record) {
+
+  if (offset_ptr->getVariantArray().empty()) {
+
+    return;
+
+  }
+
+  for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+    ++analysis_record.total_variants_;
+
+    if (variant_ptr->isSNP()) {
+
+      ++analysis_record.snp_count_;
+
+    } else {
+
+      ++analysis_record.indel_count_;
+
+    }
+
+  }
+
+  if (offset_ptr->getVariantArray().size() == 1) {
+
+    ++analysis_record.single_variant_;
+
+  } else if (offset_ptr->getVariantArray().size() == 2) {
+
+    if (offset_ptr->getVariantArray().front()->HGVS() == offset_ptr->getVariantArray().back()->HGVS()) {
+
+      ++analysis_record.homozygous_count_;
+
+    } else {
+
+      ++analysis_record.heterozygous_count_;
+
+    }
+
+  } else {
+
+    ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; offset, unexpected number of variants: {}", offset_ptr->getVariantArray().size());
+
+
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; Variant: {}, Cigar: {}, Format: {}",
+                          variant_ptr->HGVS(),
+                          variant_ptr->alternateCigar(),
+                          variant_ptr->evidence().output(',', VariantOutputIndex::START_0_BASED));
+
+
+    }
+
+  }
 
 }
 

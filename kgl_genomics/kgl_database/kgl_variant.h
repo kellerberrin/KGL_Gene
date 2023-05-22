@@ -42,7 +42,7 @@ enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { INDEL, TRANSITION, TRANSVERSION };
+enum class VariantType { INDEL_DELETE, INDEL_INSERT, TRANSITION, TRANSVERSION };
 
 // Type of variant equality, phased also checks the variant phase.
 enum class VariantEquality { PHASED, UNPHASED };
@@ -112,11 +112,11 @@ public:
 
   // Location specific parameters.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
-  // Actual offset of the allele. For SNPs offset() == referenceOffset(). For indels (generally) offset() == referenceOffset() + 1
-//  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_ + contig_allele_offset_; }
+  // The offset used for storing the allele in the database. Currently the same as the reference offset.
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
-  // The zero based offset of the allele. This is NOT the 1 based offset used in Gffs etc.
+  // The zero based offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
   [[nodiscard]] ContigOffset_t referenceOffset() const { return contig_reference_offset_; }
+  // Actual offset of the allele. For SNPs this will (generally) be zero. For indels this will (generally) be >= 1.
   [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
@@ -125,6 +125,8 @@ public:
   [[nodiscard]] std::string HGVS() const;
   // Phase specific hash. In HGVS format plus the variant phase (if applicable - may be unphased) in the format ":B".
   [[nodiscard]] std::string HGVS_Phase() const;
+
+  // The following are comparison functions for ordering variants.
   // Equality hash.
   [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? HGVS_Phase() : HGVS(); }
 
@@ -138,10 +140,11 @@ public:
 
   [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return HGVS_Phase() < cmp_var.HGVS_Phase(); }
 
-  [[nodiscard]] static size_t objectCount() { return object_count_; }
-
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;
+
+  // Used to check memory usage and identify any memory leaks.
+  [[nodiscard]] static size_t objectCount() { return object_count_; }
 
 private:
 

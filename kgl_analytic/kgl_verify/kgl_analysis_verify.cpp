@@ -88,8 +88,7 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
                 } else {
 
-                  auto insert_result = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
-                  const auto& [iter, bool_result] = insert_result;
+                  auto const& [iter, bool_result] = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
                   if (not bool_result) {
 
                     ExecEnv::log().error("Could not insert into allele count map");

@@ -3,8 +3,6 @@
 //
 
 #include "kgl_analysis_PfEMP.h"
-#include "kgl_variant_filter.h"
-#include "kgl_variant_filter_info.h"
 #include "kgl_variant_filter_features.h"
 
 
@@ -100,6 +98,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   // Analyze for Homozygous and overlapping variants.
   hetero_homo_zygous_.analyzeVariantPopulation(filtered_population_ptr, Pf7_fws_ptr_, Pf7_sample_ptr_);
 
+  // Calculate the FWS statistics.
+  calc_fws_.calcFwsStatistics(filtered_population_ptr);
+
   return true;
 
 }
@@ -150,6 +151,10 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   hetero_homo_zygous_.write_location_results( variant_file_name, location_summary_map);
 
+  variant_file_name = std::string("VariantFWS") + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+
+  calc_fws_.writeResults(variant_file_name);
 
   return true;
 

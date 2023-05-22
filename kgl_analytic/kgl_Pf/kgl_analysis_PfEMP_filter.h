@@ -62,6 +62,7 @@ class P7FrequencyFilter : public FilterVariants {
 
 public:
 
+  // Filters for variants with AF/LEAF values >= frequency_cutoff
   P7FrequencyFilter(FreqInfoField info_field, double freq_cutoff) : info_field_(info_field), freq_cutoff_(freq_cutoff) { filterName("P7FrequencyFilter"); }
   ~P7FrequencyFilter() override = default;
 

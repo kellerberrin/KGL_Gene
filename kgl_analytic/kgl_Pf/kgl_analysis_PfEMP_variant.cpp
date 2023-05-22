@@ -551,6 +551,12 @@ double kgl::GenotypeAnalysis::HRel() const {
     total_genomes += genotype_ptr->genomes_.size();
 
   }
+
+  if (total_genomes == 0) {
+
+    return 0.0;
+
+  }
   // Generate the frequencies.
   double proportion = static_cast<double>(zero_variants_.size()) / static_cast<double>(total_genomes);
   double sum = std::log2(proportion) * proportion;
@@ -587,6 +593,13 @@ double kgl::GenotypeAnalysis::IQV() const {
     total_genomes += genotype_ptr->genomes_.size();
 
   }
+  
+  if (total_genomes == 0) {
+
+    return 1.0;
+
+  }
+
   // Generate the frequencies.
   double proportion = static_cast<double>(zero_variants_.size()) / (static_cast<double>(total_genomes) * 100.0);
   double sum = (proportion * proportion);

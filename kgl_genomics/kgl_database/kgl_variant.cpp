@@ -77,13 +77,13 @@ std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) con
 }
 
 
-
-
 std::string kgl::Variant::typeText() const {
 
   switch(variantType()) {
 
-    case VariantType::INDEL: return "INDEL";
+    case VariantType::INDEL_INSERT: return "INDEL_INSERT";
+
+    case VariantType::INDEL_DELETE: return "INDEL_DELETE";
 
     case VariantType::TRANSVERSION: return "TRANSVERSION";
 
@@ -114,7 +114,7 @@ kgl::VariantType kgl::Variant::variantType() const {
 
   if (not isSNP()) {
 
-    return VariantType::INDEL;
+    return (reference().length() <= alternate().length()) ?  VariantType::INDEL_INSERT : VariantType::INDEL_DELETE;
 
   } else {
 
