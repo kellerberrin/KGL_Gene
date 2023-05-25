@@ -1,9 +1,9 @@
 //
-// Created by kellerberrin on 27/04/23.
+// Created by kellerberrin on 24/05/23.
 //
 
-#ifndef KGL_ANALYSIS_PFEMP_FILTER_H
-#define KGL_ANALYSIS_PFEMP_FILTER_H
+#ifndef KGL_VARIANT_FILTER_Pf7_H
+#define KGL_VARIANT_FILTER_Pf7_H
 
 
 #include "kgl_variant.h"
@@ -51,7 +51,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Frequency filter.
+// Pf7 Frequency filter.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,4 +155,4 @@ private:
 } // Namespace.
 
 
-#endif //KGL_ANALYSIS_PFEMP_FILTER_H
+#endif //KGL_VARIANT_FILTER_Pf7_H

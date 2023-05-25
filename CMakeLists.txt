@@ -318,7 +318,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.h
         kgl_genomics/kgl_database/kgl_variant_db_population_filter.cpp
         kgl_genomics/kgl_database/kgl_variant_filter_features.cpp
-        kgl_genomics/kgl_database/kgl_variant_filter_features.h)
+        kgl_genomics/kgl_database/kgl_variant_filter_features.h kgl_genomics/kgl_database/kgl_variant_filter_Pf7.cpp kgl_genomics/kgl_database/kgl_variant_filter_Pf7.h kgl_genomics/kgl_database/kgl_variant_db_variant.cpp kgl_genomics/kgl_database/kgl_variant_db_variant.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
@@ -547,7 +547,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES

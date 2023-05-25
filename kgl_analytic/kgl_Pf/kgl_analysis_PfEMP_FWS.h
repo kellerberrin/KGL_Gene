@@ -35,7 +35,7 @@ public:
 
   void calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population);
   [[nodiscard]] const GenomeFWSMap& getMap() const { return genome_fws_map_; }
-  void writeResults(const std::string& file_name) const;
+  void writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const;
 
 private:
 

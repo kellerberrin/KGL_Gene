@@ -66,12 +66,12 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
 
   // Filter constants.
-  constexpr static const bool CODING_FILTER_ACTIVE_{true};
+  constexpr static const bool CODING_FILTER_ACTIVE_{true}; // restrict to coding areas only
   constexpr static const bool FILTER_QC_ACTIVE_{true};
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
   constexpr static const bool AF_FILTER_ACTIVE_{false};
-  constexpr static const bool SNP_FILTER_ACTIVE_{false};
+  constexpr static const bool SNP_FILTER_ACTIVE_{true};  // Only SNP variants
   constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
   void performPFEMP1UPGMA();

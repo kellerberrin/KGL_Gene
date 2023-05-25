@@ -83,17 +83,17 @@ void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::unique_ptr<Off
 
   if (offset_ptr->getVariantArray().size() == 1) {
 
-    ++analysis_record.single_variant_;
+    ++analysis_record.heterozygous_reference_minor_alleles_;
 
   } else if (offset_ptr->getVariantArray().size() == 2) {
 
     if (offset_ptr->getVariantArray().front()->HGVS() == offset_ptr->getVariantArray().back()->HGVS()) {
 
-      ++analysis_record.homozygous_count_;
+      ++analysis_record.homozygous_minor_alleles_;
 
     } else {
 
-      ++analysis_record.heterozygous_count_;
+      ++analysis_record.heterozygous_minor_alleles_;
 
     }
 
@@ -150,11 +150,13 @@ void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, 
                   << CSV_DELIMITER_
                   << "Variant Count"
                   << CSV_DELIMITER_
-                  << "Single Variant"
+                  << "Hom Ref (A;A)"
                   << CSV_DELIMITER_
-                  << "Homozygous"
+                  << "Het Ref Minor (A;a)"
                   << CSV_DELIMITER_
-                  << "Heterozygous"
+                  << "Hom Minor (a;a)"
+                  << CSV_DELIMITER_
+                  << "Het Diff Minor (a;b)"
                   << CSV_DELIMITER_
                   << "SNP"
                   << CSV_DELIMITER_
@@ -170,10 +172,10 @@ void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, 
     auto aggregated = aggregateResults(single_vector);
 
     double hom_het_ratio{0.0};
-    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
+    size_t total_heterozygous = aggregated.heterozygous_reference_minor_alleles_ + aggregated.heterozygous_minor_alleles_;
     if (total_heterozygous > 0) {
 
-      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
+      hom_het_ratio = static_cast<double>(aggregated.homozygous_minor_alleles_) / static_cast<double>(total_heterozygous);
 
     }
 
@@ -201,11 +203,13 @@ void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, 
                   << CSV_DELIMITER_
                   << aggregated.total_variants_
                   << CSV_DELIMITER_
-                  << aggregated.single_variant_
+                  << aggregated.homozygous_reference_alleles_
                   << CSV_DELIMITER_
-                  << aggregated.homozygous_count_
+                  << aggregated.heterozygous_reference_minor_alleles_
                   << CSV_DELIMITER_
-                  << aggregated.heterozygous_count_
+                  << aggregated.homozygous_minor_alleles_
+                  << CSV_DELIMITER_
+                  << aggregated.heterozygous_minor_alleles_
                   << CSV_DELIMITER_
                   << aggregated.snp_count_
                   << CSV_DELIMITER_
@@ -218,11 +222,13 @@ void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, 
                     << CSV_DELIMITER_
                     << variant_counts.total_variants_
                     << CSV_DELIMITER_
-                    << variant_counts.single_variant_
+                    << variant_counts.homozygous_reference_alleles_
                     << CSV_DELIMITER_
-                    << variant_counts.homozygous_count_
+                    << variant_counts.heterozygous_reference_minor_alleles_
                     << CSV_DELIMITER_
-                    << variant_counts.heterozygous_count_
+                    << variant_counts.homozygous_minor_alleles_
+                    << CSV_DELIMITER_
+                    << variant_counts.heterozygous_minor_alleles_
                     << CSV_DELIMITER_
                     << variant_counts.snp_count_
                     << CSV_DELIMITER_
@@ -251,11 +257,12 @@ kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vect
       for (auto const& [contig_id, het_hom_record] : analysis_obj.getConstMap()) {
 
         analysis_summary.total_variants_ += het_hom_record.total_variants_;
-        analysis_summary.single_variant_ += het_hom_record.single_variant_;
-        analysis_summary.homozygous_count_ += het_hom_record.homozygous_count_;
-        analysis_summary.heterozygous_count_ += het_hom_record.heterozygous_count_;
+        analysis_summary.heterozygous_reference_minor_alleles_ += het_hom_record.heterozygous_reference_minor_alleles_;
+        analysis_summary.homozygous_minor_alleles_ += het_hom_record.homozygous_minor_alleles_;
+        analysis_summary.heterozygous_minor_alleles_ += het_hom_record.heterozygous_minor_alleles_;
         analysis_summary.snp_count_ += het_hom_record.snp_count_;
         analysis_summary.indel_count_ += het_hom_record.indel_count_;
+        analysis_summary.homozygous_reference_alleles_ += het_hom_record.homozygous_reference_alleles_;
 
       }
 
@@ -311,10 +318,10 @@ kgl:: LocationSummaryMap kgl::HeteroHomoZygous::location_summary( const std::sha
     std::string type = location_type == LocationType::City ? "City" : "Country";
 
     double hom_het_ratio{0.0};
-    size_t total_heterozygous = aggregated.single_variant_ + aggregated.heterozygous_count_;
+    size_t total_heterozygous = aggregated.heterozygous_reference_minor_alleles_ + aggregated.heterozygous_minor_alleles_;
     if (total_heterozygous > 0) {
 
-      hom_het_ratio = static_cast<double>(aggregated.homozygous_count_) / static_cast<double>(total_heterozygous);
+      hom_het_ratio = static_cast<double>(aggregated.homozygous_minor_alleles_) / static_cast<double>(total_heterozygous);
 
     }
 
@@ -348,9 +355,10 @@ kgl:: LocationSummaryMap kgl::HeteroHomoZygous::location_summary( const std::sha
     location_summary.hom_het_ratio_ = hom_het_ratio;
     location_summary.total_variants_ = aggregated.total_variants_;
     location_summary.variant_rate_ = variant_rate;
-    location_summary.single_variant_ = aggregated.single_variant_;
-    location_summary.homozygous_count_ = aggregated.homozygous_count_;
-    location_summary.heterozygous_count_ = aggregated.heterozygous_count_;
+    location_summary.homozygous_reference_alleles_ = aggregated.homozygous_reference_alleles_;
+    location_summary.heterozygous_reference_minor_alleles_ = aggregated.heterozygous_reference_minor_alleles_;
+    location_summary.homozygous_minor_alleles_ = aggregated.homozygous_minor_alleles_;
+    location_summary.heterozygous_minor_alleles_ = aggregated.heterozygous_minor_alleles_;
     location_summary.snp_count_ = aggregated.snp_count_;
     location_summary.indel_count_ = aggregated.indel_count_;
 
@@ -404,8 +412,8 @@ void kgl::HeteroHomoZygous::UpdateSampleLocation(const LocationSummaryMap& locat
     double wrights_inbreeding{0.0};
     if (location_summary.total_variants_ > 0 and aggregated.total_variants_ > 0) {
 
-      double expected_heterozygosity = static_cast<double>(location_summary.heterozygous_count_ + location_summary.single_variant_) / static_cast<double>(location_summary.total_variants_);
-      double observed_heterozygosity = static_cast<double>(aggregated.heterozygous_count_ + aggregated.single_variant_) / static_cast<double>(aggregated.total_variants_);
+      double expected_heterozygosity = static_cast<double>(location_summary.heterozygous_minor_alleles_ + location_summary.heterozygous_reference_minor_alleles_) / static_cast<double>(location_summary.total_variants_);
+      double observed_heterozygosity = static_cast<double>(aggregated.heterozygous_minor_alleles_ + aggregated.heterozygous_reference_minor_alleles_) / static_cast<double>(aggregated.total_variants_);
 
       wrights_inbreeding = (expected_heterozygosity - observed_heterozygosity) / expected_heterozygosity;
 
@@ -456,11 +464,13 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
                 << CSV_DELIMITER_
                 << "Variant Rate"
                 << CSV_DELIMITER_
-                << "Single Variant"
+                << "Hom Ref (A;A)"
                 << CSV_DELIMITER_
-                << "Homozygous"
+                << "Het Ref Minor (A;a)"
                 << CSV_DELIMITER_
-                << "Heterozygous"
+                << "Hom Minor (a;a)"
+                << CSV_DELIMITER_
+                << "Het Diff Minor (a;b)"
                 << CSV_DELIMITER_
                 << "SNP"
                 << CSV_DELIMITER_
@@ -496,11 +506,13 @@ void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name,
                   << CSV_DELIMITER_
                   << summary.variant_rate_
                   << CSV_DELIMITER_
-                  << summary.single_variant_
+                  << summary.homozygous_reference_alleles_
                   << CSV_DELIMITER_
-                  << summary.homozygous_count_
+                  << summary.heterozygous_reference_minor_alleles_
                   << CSV_DELIMITER_
-                  << summary.heterozygous_count_
+                  << summary.homozygous_minor_alleles_
+                  << CSV_DELIMITER_
+                  << summary.heterozygous_minor_alleles_
                   << CSV_DELIMITER_
                   << summary.snp_count_
                   << CSV_DELIMITER_

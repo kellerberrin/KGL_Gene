@@ -4,7 +4,8 @@
 
 #include "kgl_analysis_PfEMP_FWS.h"
 #include "kgl_variant_filter.h"
-#include "kgl_analysis_PfEMP_filter.h"
+#include "kgl_variant_filter_Pf7.h"
+#include "kgl_variant_db_variant.h"
 #include <fstream>
 
 
@@ -14,6 +15,14 @@ namespace kgl = kellerberrin::genome;
 void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population) {
 
 // Filter the population variants into frequency bins.
+
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; total population variants: {}", population->variantCount());
+
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; begin variant re-indexing");
+
+  VariantDBVariant variant_db(population);
+
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; complete variant re-indexing");
 
   for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 
@@ -25,9 +34,16 @@ void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& 
 
     std::shared_ptr<const PopulationDB> freq_population = population->viewFilter(range_filter);
 
+    ExecEnv::log().info("CalcFWS::calcFwsStatistics; lower: {}, upper: {}, population variants: {}", lower_freq, upper_freq, freq_population->variantCount());
+
     updateGenomeFWSMap(freq_population, i);
 
   }
+
+  P7FrequencyFilter upper_filter(FreqInfoField::AF, 0.5);
+  auto filter_population = population->viewFilter(upper_filter);
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; freq >= 0.5, population variants: {}", filter_population->variantCount());
+
 
 }
 
@@ -117,7 +133,7 @@ std::pair<double, double> kgl::CalcFWS::getFrequency(AlleleFrequencyBins bin_typ
 
 }
 
-void kgl::CalcFWS::writeResults(const std::string& file_name) const {
+void kgl::CalcFWS::writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const {
 
   std::ofstream analysis_file(file_name);
 
@@ -130,20 +146,28 @@ void kgl::CalcFWS::writeResults(const std::string& file_name) const {
 
   // Write the header.
 
-  analysis_file << "Genome";
+  analysis_file << "Genome"
+                << CSV_DELIMITER_
+                << "FWS";
 
-  for (size_t i = 0; i <= FWS_FREQUENCY_ARRAY_SIZE; ++i) {
+  for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 
     analysis_file << CSV_DELIMITER_
+                  << "LowerFreq"
+                  << CSV_DELIMITER_
+                  << "UpperFreq"
+                  << CSV_DELIMITER_
                   << "Hom/Het"
                   << CSV_DELIMITER_
                   << "Variant Count"
                   << CSV_DELIMITER_
-                  << "Single Variant"
+                  << "Hom Ref (A;A)"
                   << CSV_DELIMITER_
-                  << "Homozygous"
+                  << "Het Ref Minor (A;a)"
                   << CSV_DELIMITER_
-                  << "Heterozygous"
+                  << "Hom Minor (a;a)"
+                  << CSV_DELIMITER_
+                  << "Het Diff Minor (a;b)"
                   << CSV_DELIMITER_
                   << "SNP"
                   << CSV_DELIMITER_
@@ -155,28 +179,38 @@ void kgl::CalcFWS::writeResults(const std::string& file_name) const {
 
   for (auto& [genome_id, freq_array] : genome_fws_map_) {
 
-    analysis_file << genome_id;
+    analysis_file << genome_id
+                  << CSV_DELIMITER_
+                  << Pf7_fws_ptr->getFWS(genome_id);
 
-    for (size_t i = 0; i <= FWS_FREQUENCY_ARRAY_SIZE; ++i) {
+    for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 
       double hom_het_ratio{0.0};
-      size_t het_count = freq_array[i].single_variant_ + freq_array[i].heterozygous_count_;
+      size_t het_count = freq_array[i].heterozygous_reference_minor_alleles_ + freq_array[i].heterozygous_minor_alleles_;
       if (het_count > 0) {
 
-        hom_het_ratio = static_cast<double>(freq_array[i].homozygous_count_) / static_cast<double>(het_count);
+        hom_het_ratio = static_cast<double>(freq_array[i].homozygous_minor_alleles_) / static_cast<double>(het_count);
 
       }
 
+      auto const& [lower_range, upper_range] = getFrequency(static_cast<AlleleFrequencyBins>(i));
+
       analysis_file << CSV_DELIMITER_
+                    << lower_range
+                    << CSV_DELIMITER_
+                    << upper_range
+                    << CSV_DELIMITER_
                     << hom_het_ratio
                     << CSV_DELIMITER_
                     << freq_array[i].total_variants_
                     << CSV_DELIMITER_
-                    << freq_array[i].single_variant_
+                    << freq_array[i].homozygous_reference_alleles_
                     << CSV_DELIMITER_
-                    << freq_array[i].homozygous_count_
+                    << freq_array[i].heterozygous_reference_minor_alleles_
                     << CSV_DELIMITER_
-                    << freq_array[i].heterozygous_count_
+                    << freq_array[i].homozygous_minor_alleles_
+                    << CSV_DELIMITER_
+                    << freq_array[i].heterozygous_minor_alleles_
                     << CSV_DELIMITER_
                     << freq_array[i].snp_count_
                     << CSV_DELIMITER_

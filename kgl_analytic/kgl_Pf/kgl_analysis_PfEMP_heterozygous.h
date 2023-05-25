@@ -23,9 +23,10 @@ struct VariantAnalysisType{
   size_t total_variants_{0};
   size_t snp_count_{0};
   size_t indel_count_{0};
-  size_t homozygous_count_{0};
-  size_t heterozygous_count_{0};
-  size_t single_variant_{0};
+  size_t homozygous_minor_alleles_{0};
+  size_t heterozygous_minor_alleles_{0};   // Two different non-reference alleles.
+  size_t heterozygous_reference_minor_alleles_{0};
+  size_t homozygous_reference_alleles_{0};
 
 };
 
@@ -68,23 +69,24 @@ private:
 struct LocationSummary {
 
   std::string location_;
-  LocationType location_type_;
+  LocationType location_type_{LocationType::City};
   std::string city_;
   std::string country_;
   std::string region_;
-  double  radius_km_;
-  size_t radii_samples_;
-  size_t radii_samples_OK_;
+  double  radius_km_{0.0};
+  size_t radii_samples_{0};
+  size_t radii_samples_OK_{0};
   std::map<std::string, size_t> studies_;
-  double monoclonal_Fst_;
-  double hom_het_ratio_;
-  size_t total_variants_;
-  double variant_rate_;
-  size_t single_variant_;    // Heterozygous (A,a)
-  size_t homozygous_count_;  // Homozygous (A,A)
-  size_t heterozygous_count_; // heterozygous (a, b)
-  size_t snp_count_;
-  size_t indel_count_;
+  double monoclonal_Fst_{0.0};
+  double hom_het_ratio_{0.0};
+  size_t total_variants_{0};
+  double variant_rate_{0.0};
+  size_t homozygous_reference_alleles_{0};    // Homozygous (A,A)
+  size_t heterozygous_reference_minor_alleles_{0};    // Heterozygous (A,a)
+  size_t homozygous_minor_alleles_{0};  // Homozygous (a,a)
+  size_t heterozygous_minor_alleles_{0}; // heterozygous (a, b)
+  size_t snp_count_{0};
+  size_t indel_count_{0};
 
 };
 
