@@ -18,7 +18,11 @@ void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& 
 
   ExecEnv::log().info("CalcFWS::calcFwsStatistics; total population variants: {}", population->variantCount());
 
-  ExecEnv::log().info("CalcFWS::calcFwsStatistics; unique population variants: {}", population->uniqueVariants().size());
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; begin VariantDBVariant");
+
+  VariantDBVariant variant_db_variant(population);
+
+  ExecEnv::log().info("CalcFWS::calcFwsStatistics; end VariantDBVariant");
 
   for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 

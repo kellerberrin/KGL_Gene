@@ -333,7 +333,7 @@ bool kgl::PopulationDB::processAll(const VariantProcessFunc& objFunc)  const {
 }
 
 
-bool kgl::PopulationDB::processAll_MT(const ProcessGenomeFunc& objFunc)  const {
+bool kgl::PopulationDB::processAll_MT(const GenomeProcessFunc& objFunc)  const {
 
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
@@ -345,7 +345,7 @@ bool kgl::PopulationDB::processAll_MT(const ProcessGenomeFunc& objFunc)  const {
   struct genomeClass {
 
     // All arguments are passed by value.
-    static std::pair<bool, GenomeId_t> processGenome(std::shared_ptr<const GenomeDB> genome_ptr, ProcessGenomeFunc objFunc) {
+    static std::pair<bool, GenomeId_t> processGenome(std::shared_ptr<const GenomeDB> genome_ptr, GenomeProcessFunc objFunc) {
 
       VariantProcessFunc callable = std::bind_front(objFunc, genome_ptr);
       bool result = genome_ptr->processAll(callable);
