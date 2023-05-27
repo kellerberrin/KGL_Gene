@@ -177,6 +177,12 @@ private:
 };
 
 
+// Used in the processAll()) templates.
+template<class ObjFunc>
+using MemberVariantFunc = bool (ObjFunc::*)(const std::shared_ptr<const Variant>&);
+using VariantProcessFunc = std::function<bool(const std::shared_ptr<const Variant>&)>;
+
+
 }   // end namespace
 
 

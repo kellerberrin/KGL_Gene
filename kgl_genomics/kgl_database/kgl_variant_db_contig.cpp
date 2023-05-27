@@ -354,6 +354,28 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
 }
 
+bool kgl::ContigDB::processAll(const VariantProcessFunc& objFunc)  const {
+
+  for (auto const& [offset, offset_ptr] : getMap()) {
+
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      if (not objFunc(variant_ptr)) {
+
+        ExecEnv::log().error("ContigDB::processAll; Problem executing general purpose function at offset: {}", offset);
+        return false;
+
+      }
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
 bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
                                       ContigOffset_t start,
                                       ContigOffset_t end,

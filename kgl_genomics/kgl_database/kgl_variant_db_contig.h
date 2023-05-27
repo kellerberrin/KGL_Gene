@@ -57,7 +57,10 @@ public:
   // Deletes any empty Offsets, returns number deleted.
   size_t trimEmpty();
   // Processes all variants in the contig with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
-  template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
+  template<class Obj> bool processAll(Obj& object, MemberVariantFunc<Obj> objFunc) const;
+  // Implementation
+  bool processAll(const VariantProcessFunc& objFunc) const;
+
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
@@ -112,9 +115,9 @@ private:
 
 
 // General purpose genome processing template.
-// Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
-template<class Obj, typename Func>
-bool ContigDB::processAll(Obj& object, Func objFunc)  const {
+// Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>&))
+template<class Obj>
+bool ContigDB::processAll(Obj& object, MemberVariantFunc<Obj> objFunc)  const {
 
   for (auto const& [offset, offset_ptr] : getMap()) {
 

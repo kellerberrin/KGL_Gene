@@ -128,6 +128,35 @@ size_t kgl::PopulationDB::variantCount() const {
 
 }
 
+std::map<std::string, std::shared_ptr<const kgl::Variant>> kgl::PopulationDB::uniqueVariants() const {
+
+  // Local class to process the unique variants.
+  class UniqueCount {
+
+  public:
+
+    bool uniqueCount(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      auto hgvs = variant_ptr->HGVS();
+      if (not unique_map_.contains(hgvs)) {
+
+        unique_map_[hgvs] = variant_ptr;
+
+      }
+
+      return true;
+
+    }
+    std::map<std::string, std::shared_ptr<const kgl::Variant>> unique_map_;
+
+  };
+
+  UniqueCount unique_count;
+  processAll(unique_count, &UniqueCount::uniqueCount);
+
+  return unique_count.unique_map_;
+
+}
 
 
 size_t kgl::PopulationDB::trimEmpty() {
@@ -286,6 +315,74 @@ std::pair<size_t, size_t> kgl::PopulationDB::validate(const std::shared_ptr<cons
 }
 
 
+bool kgl::PopulationDB::processAll(const VariantProcessFunc& objFunc)  const {
+
+  for (auto const& [genome, genome_ptr] : getMap()) {
+
+    if (not genome_ptr->processAll(objFunc)) {
+
+      ExecEnv::log().error("UnphasedPopulation::processAll<Obj>; error with genome: {}", genome);
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+bool kgl::PopulationDB::processAll_MT(const ProcessGenomeFunc& objFunc)  const {
+
+  // Calc how many threads required.
+  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
+  WorkflowThreads thread_pool(thread_count);
+  // A vector for thread futures.
+  std::vector<std::future<std::pair<bool, GenomeId_t>>> future_vector;
+
+  // Local structure in which to define an appropriate static routine.
+  struct genomeClass {
+
+    // All arguments are passed by value.
+    static std::pair<bool, GenomeId_t> processGenome(std::shared_ptr<const GenomeDB> genome_ptr, ProcessGenomeFunc objFunc) {
+
+      VariantProcessFunc callable = std::bind_front(objFunc, genome_ptr);
+      bool result = genome_ptr->processAll(callable);
+      GenomeId_t genome = genome_ptr->genomeId();
+      return {result, genome};
+
+    }
+
+  };
+
+  // Queue a thread for each genome.
+  for (const auto& [genome_id, genome_ptr] : getMap()) {
+
+    std::future<std::pair<bool, GenomeId_t>> future = thread_pool.enqueueFuture(&genomeClass::processGenome, genome_ptr, objFunc);
+    future_vector.push_back(std::move(future));
+
+  }
+
+  // Wait for the threads to finish.
+  bool process_result{true};
+  for (auto& future : future_vector) {
+
+    auto [result, genome] = future.get();
+    if (not result) {
+
+      ExecEnv::log().error("PopulationDB::processAll_MT<Obj>; error with genome: {}", genome);
+      process_result = false;
+
+    }
+
+  }
+
+  return process_result;
+
+}
+
+
 std::shared_ptr<kgl::GenomeDB> kgl::PopulationDB::compressPopulation() const {
 
   std::shared_ptr<GenomeDB> compressedGenome(std::make_shared<GenomeDB>("Compressed"));
@@ -324,7 +421,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() con
 
     }
 
-    bool addUniqueUnphasedVariant(std::shared_ptr<const Variant> variant_ptr) {
+    bool addUniqueUnphasedVariant(std::shared_ptr<const GenomeDB>, const std::shared_ptr<const Variant>& variant_ptr) {
 
       auto unphased_hash = variant_ptr->HGVS(); // Create a unique HGSV hash, phasing excluded.
       {
@@ -375,18 +472,17 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() con
 
   }; // End of local object definition.
 
-  // Create an instance of the local object.
-  std::shared_ptr<UniqueVariant> unique_variant_ptr(std::make_shared<UniqueVariant>(*this));
-
+  // Create an instance of the local object as a std::shared_ptr.
+  UniqueVariant unique_variant(*this);
   // Using the local object and multi-threading, process all variants held in the population
-  if (not processAll_MT(unique_variant_ptr, &UniqueVariant::addUniqueUnphasedVariant)) {
+  if (not processAll_MT(unique_variant, &UniqueVariant::addUniqueUnphasedVariant)) {
 
     ExecEnv::log().error("PopulationDB::UniqueUnphased(); problem creating unique unphased genome with population: {}", populationId());
 
   }
 
   // ReturnType the unique variant population.
-  return  unique_variant_ptr->compressed_population_ptr_;
+  return  unique_variant.compressed_population_ptr_;
 
 }
 

@@ -273,6 +273,25 @@ std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const Ge
 }
 
 
+bool kgl::GenomeDB::processAll(const VariantProcessFunc& procFunc) const {
+
+
+  for (auto const& [contig, contig_ptr] : getMap()) {
+
+    if (not contig_ptr->processAll(procFunc)) {
+
+      ExecEnv::log().error("GenomeDB::processAll; Problem executing general purpose function for contig: {}", contig);
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
 bool kgl::GenomeDB::getSortedVariants(ContigId_t contig_id,
                                       VariantPhase phase,
                                       ContigOffset_t start,

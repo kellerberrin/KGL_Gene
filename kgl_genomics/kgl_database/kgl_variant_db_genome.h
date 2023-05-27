@@ -66,7 +66,15 @@ public:
   // Returns nullopt if the contig does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<ContigDB>> getContig(const ContigId_t& contig_id);
   // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
-  template<class Obj, typename Func> bool processAll(Obj& object, Func objFunc) const;
+  template<class Obj> bool processAll(Obj& object, MemberVariantFunc<Obj> objFunc) const {
+
+    VariantProcessFunc callable = std::bind_front(objFunc, &object);
+    return processAll(callable);
+
+  }
+  // Implementation
+  bool processAll(const VariantProcessFunc& procFunc) const;
+
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
@@ -89,29 +97,6 @@ private:
   [[nodiscard]] bool addContig(std::shared_ptr<ContigDB> contig_ptr);
 
 };
-
-
-// General purpose genome processing template.
-// Processes all variants in the genome with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>))
-template<class Obj, typename Func>
-bool GenomeDB::processAll(Obj& object, Func objFunc)  const {
-
-    for (auto const& [contig, contig_ptr] : getMap()) {
-
-       if (not contig_ptr->processAll(object, objFunc)) {
-
-          ExecEnv::log().error("GenomeDB::processAll<Obj, Func>; Problem executing general purpose function for contig: {}", contig);
-          return false;
-
-        }
-
-    }
-
-  return true;
-
-}
-
-
 
 
 

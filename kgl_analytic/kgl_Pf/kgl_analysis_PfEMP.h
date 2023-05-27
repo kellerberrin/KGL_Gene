@@ -66,7 +66,7 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
 
   // Filter constants.
-  constexpr static const bool CODING_FILTER_ACTIVE_{true}; // restrict to coding areas only
+  constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.
   constexpr static const bool FILTER_QC_ACTIVE_{true};
   constexpr static const bool FILTER_FWS_ACTIVE_{false};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
