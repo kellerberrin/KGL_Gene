@@ -14,16 +14,12 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population) {
 
-// Filter the population variants into frequency bins.
-
   ExecEnv::log().info("CalcFWS::calcFwsStatistics; total population variants: {}", population->variantCount());
 
-  ExecEnv::log().info("CalcFWS::calcFwsStatistics; begin VariantDBVariant");
+// Calc variant statistics.
+  updateVariantFWSMap(population);
 
-  VariantDBVariant variant_db_variant(population);
-
-  ExecEnv::log().info("CalcFWS::calcFwsStatistics; end VariantDBVariant");
-
+// Filter the population variants into frequency bins.
   for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 
     auto const& [lower_freq, upper_freq] = getFrequency(static_cast<AlleleFrequencyBins>(i));
@@ -40,15 +36,42 @@ void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& 
 
   }
 
-  P7FrequencyFilter upper_filter(FreqInfoField::AF, 0.5);
-  auto filter_population = population->viewFilter(upper_filter);
-  ExecEnv::log().info("CalcFWS::calcFwsStatistics; freq >= 0.5, population variants: {}", filter_population->variantCount());
+}
 
+void kgl::CalcFWS::updateVariantFWSMap(const std::shared_ptr<const PopulationDB>& population) {
+
+  VariantDBVariant variant_db_variant(population);
+
+  for (auto const& [hgvs, variant_record] : variant_db_variant.variantMap()) {
+
+    auto find_iter = variant_fws_map_.find(hgvs);
+    if (find_iter == variant_fws_map_.end()) {
+
+      auto [insert_iter, result] = variant_fws_map_.try_emplace(hgvs, AlleleSummmary());
+      if (not result) {
+
+        ExecEnv::log().error("CalcFWS::updateVariantFWSMap; Unable to insert Variant: {} (duplicate)", hgvs);
+        continue;
+
+      }
+
+      find_iter = insert_iter;
+
+    }
+
+    auto const& [variant_ptr, variant_index] = variant_record;
+    auto variant_summary = variant_db_variant.summaryByVariant(variant_ptr);
+    auto& [map_hgvs, map_summary] = *find_iter;
+
+    map_summary += variant_summary;
+
+  }
 
 }
 
-
 void kgl::CalcFWS::updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>& freq_population, size_t freq_bin) {
+
+  VariantDBVariant variant_db_variant(freq_population);
 
   for (auto const& [genome_id, genome_ptr] : freq_population->getMap()) {
 
@@ -68,25 +91,10 @@ void kgl::CalcFWS::updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>&
     }
 
     auto& [id, freq_array] = *find_iter;
-
     auto& freq_record = freq_array[freq_bin];
 
-    updateFreqRecord(genome_ptr, freq_record);
-
-  }
-
-}
-
-
-void kgl::CalcFWS::updateFreqRecord(const std::shared_ptr<const GenomeDB>& genome_ptr, VariantAnalysisType& freq_record) {
-
-  for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
-
-    for (auto const& [offset, offset_ptr] : contig_ptr->getMap()) {
-
-      HeteroHomoZygous::updateVariantAnalysisType(offset_ptr, freq_record);
-
-    }
+    auto genome_summary = variant_db_variant.summaryByGenome(genome_id);
+    freq_record += genome_summary;
 
   }
 
@@ -127,19 +135,22 @@ std::pair<double, double> kgl::CalcFWS::getFrequency(AlleleFrequencyBins bin_typ
     case AlleleFrequencyBins::PERCENT_45_50:
       return {0.45, 0.5 };
 
+    case AlleleFrequencyBins::PERCENT_50_100:
+      return {0.5, 1.0 };
+
   }
 
   return {0.0 , 0.0}; // Never reached, just to keep the compiler happy
 
 }
 
-void kgl::CalcFWS::writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const {
+void kgl::CalcFWS::writeGenomeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const {
 
   std::ofstream analysis_file(file_name);
 
   if (not analysis_file.good()) {
 
-    ExecEnv::log().error("CalcFWS::writeResults; Unable to open results file: {}", file_name);
+    ExecEnv::log().error("CalcFWS::writeGenomeResults; Unable to open results file: {}", file_name);
     return;
 
   }
@@ -159,19 +170,15 @@ void kgl::CalcFWS::writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7
                   << CSV_DELIMITER_
                   << "Hom/Het"
                   << CSV_DELIMITER_
+                  << "Minor Hom/Het"
+                  << CSV_DELIMITER_
                   << "Variant Count"
                   << CSV_DELIMITER_
                   << "Hom Ref (A;A)"
                   << CSV_DELIMITER_
                   << "Het Ref Minor (A;a)"
                   << CSV_DELIMITER_
-                  << "Hom Minor (a;a)"
-                  << CSV_DELIMITER_
-                  << "Het Diff Minor (a;b)"
-                  << CSV_DELIMITER_
-                  << "SNP"
-                  << CSV_DELIMITER_
-                  << "Indel";
+                  << "Hom Minor (a;a)";
 
   }
 
@@ -186,12 +193,24 @@ void kgl::CalcFWS::writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7
     for (size_t i = 0; i < FWS_FREQUENCY_ARRAY_SIZE; ++i) {
 
       double hom_het_ratio{0.0};
-      size_t het_count = freq_array[i].heterozygous_reference_minor_alleles_ + freq_array[i].heterozygous_minor_alleles_;
+      size_t het_count = freq_array[i].minorHeterozygous_;
+      size_t hom_count = freq_array[i].minorHomozygous_ + freq_array[i].referenceHomozygous_;
       if (het_count > 0) {
 
-        hom_het_ratio = static_cast<double>(freq_array[i].homozygous_minor_alleles_) / static_cast<double>(het_count);
+        hom_het_ratio = static_cast<double>(hom_count) / static_cast<double>(het_count);
 
       }
+
+      double minor_hom_het_ratio{0.0};
+      size_t minor_het_count = freq_array[i].minorHeterozygous_;
+      size_t minor_hom_count = freq_array[i].minorHomozygous_;
+      if (minor_het_count > 0) {
+
+        minor_hom_het_ratio = static_cast<double>(minor_hom_count) / static_cast<double>(minor_het_count);
+
+      }
+
+      size_t total_variants = freq_array[i].minorHeterozygous_ + freq_array[i].minorHomozygous_;
 
       auto const& [lower_range, upper_range] = getFrequency(static_cast<AlleleFrequencyBins>(i));
 
@@ -202,23 +221,88 @@ void kgl::CalcFWS::writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7
                     << CSV_DELIMITER_
                     << hom_het_ratio
                     << CSV_DELIMITER_
-                    << freq_array[i].total_variants_
+                    << minor_hom_het_ratio
                     << CSV_DELIMITER_
-                    << freq_array[i].homozygous_reference_alleles_
+                    << total_variants
                     << CSV_DELIMITER_
-                    << freq_array[i].heterozygous_reference_minor_alleles_
+                    << freq_array[i].referenceHomozygous_
                     << CSV_DELIMITER_
-                    << freq_array[i].homozygous_minor_alleles_
+                    << freq_array[i].minorHeterozygous_
                     << CSV_DELIMITER_
-                    << freq_array[i].heterozygous_minor_alleles_
-                    << CSV_DELIMITER_
-                    << freq_array[i].snp_count_
-                    << CSV_DELIMITER_
-                    << freq_array[i].indel_count_;
+                    << freq_array[i].minorHomozygous_;
 
     }
 
     analysis_file << '\n';
+
+  }
+
+}
+
+
+void kgl::CalcFWS::writeVariantResults(const std::string& file_name) const {
+
+  std::ofstream analysis_file(file_name);
+
+  if (not analysis_file.good()) {
+
+    ExecEnv::log().error("CalcFWS::writeVariantResults; Unable to open results file: {}", file_name);
+    return;
+
+  }
+
+  // Write the header.
+   analysis_file << "Variant"
+                << CSV_DELIMITER_
+                << "Hom/Het"
+                << CSV_DELIMITER_
+                << "Minor Hom/Het"
+                << CSV_DELIMITER_
+                << "Genome Count"
+                << CSV_DELIMITER_
+                << "Hom Ref (A;A)"
+                << CSV_DELIMITER_
+                << "Het Ref Minor (A;a)"
+                << CSV_DELIMITER_
+                << "Hom Minor (a;a)"
+                << '\n';
+
+  for (auto& [hgvs, summary] : variant_fws_map_) {
+
+    double hom_het_ratio{0.0};
+    size_t het_count = summary.minorHeterozygous_;
+    size_t hom_count = summary.minorHomozygous_ + summary.referenceHomozygous_;
+    if (het_count > 0) {
+
+      hom_het_ratio = static_cast<double>(hom_count) / static_cast<double>(het_count);
+
+    }
+
+    double minor_hom_het_ratio{0.0};
+    size_t minor_het_count = summary.minorHeterozygous_;
+    size_t minor_hom_count = summary.minorHomozygous_;
+    if (minor_het_count > 0) {
+
+      minor_hom_het_ratio = static_cast<double>(minor_hom_count) / static_cast<double>(minor_het_count);
+
+    }
+
+    size_t total_genomes = summary.minorHeterozygous_ + summary.minorHomozygous_;
+
+    analysis_file << hgvs
+                  << CSV_DELIMITER_
+                  << hom_het_ratio
+                  << CSV_DELIMITER_
+                  << minor_hom_het_ratio
+                  << CSV_DELIMITER_
+                  << total_genomes
+                  << CSV_DELIMITER_
+                  << summary.referenceHomozygous_
+                  << CSV_DELIMITER_
+                  << summary.minorHeterozygous_
+                  << CSV_DELIMITER_
+                  << summary.minorHomozygous_
+                  << '\n';
 
   }
 

@@ -7,6 +7,7 @@
 
 
 #include "kgl_analysis_PfEMP_heterozygous.h"
+#include "kgl_variant_db_variant.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -20,11 +21,13 @@ enum class AlleleFrequencyBins: size_t { PERCENT_0_5 = 0,
                                 PERCENT_30_35 = 6,
                                 PERCENT_35_40 = 7,
                                 PERCENT_40_45 = 8,
-                                PERCENT_45_50 = 9 };
+                                PERCENT_45_50 = 9,
+                                PERCENT_50_100 = 10};
 
-constexpr static const size_t FWS_FREQUENCY_ARRAY_SIZE = 10;
-using FwsFrequencyArray = std::array<VariantAnalysisType, FWS_FREQUENCY_ARRAY_SIZE>;
+constexpr static const size_t FWS_FREQUENCY_ARRAY_SIZE = 11;
+using FwsFrequencyArray = std::array<AlleleSummmary, FWS_FREQUENCY_ARRAY_SIZE>;
 using GenomeFWSMap = std::map<GenomeId_t, FwsFrequencyArray>;
+using VariantFWSMap = std::map<std::string, AlleleSummmary>;
 
 class CalcFWS {
 
@@ -34,16 +37,19 @@ public:
   ~CalcFWS() = default;
 
   void calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population);
-  [[nodiscard]] const GenomeFWSMap& getMap() const { return genome_fws_map_; }
-  void writeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const;
+  [[nodiscard]] const GenomeFWSMap& getGenomeMap() const { return genome_fws_map_; }
+  [[nodiscard]] const VariantFWSMap& getVariantMap() const { return variant_fws_map_; }
+  void writeGenomeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const;
+  void writeVariantResults(const std::string& file_name) const;
 
 private:
 
   GenomeFWSMap genome_fws_map_;
+  VariantFWSMap variant_fws_map_;
 
   static std::pair<double, double> getFrequency(AlleleFrequencyBins bin_type);
   void updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>& freq_population, size_t freq_bin);
-  static void updateFreqRecord(const std::shared_ptr<const GenomeDB>& genome_ptr, VariantAnalysisType& freq_record);
+  void updateVariantFWSMap(const std::shared_ptr<const PopulationDB>& population);
 
   constexpr static const char CSV_DELIMITER_ = ',';
 

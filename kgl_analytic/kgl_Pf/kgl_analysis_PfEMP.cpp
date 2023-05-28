@@ -151,10 +151,13 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   hetero_homo_zygous_.write_location_results( variant_file_name, location_summary_map);
 
+  variant_file_name = std::string("GenomeFWS") + std::string(VARIANT_COUNT_EXT_);
+  variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
+  calc_fws_.writeGenomeResults(Pf7_fws_ptr_, variant_file_name);
+
   variant_file_name = std::string("VariantFWS") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
-
-  calc_fws_.writeResults(Pf7_fws_ptr_, variant_file_name);
+  calc_fws_.writeVariantResults(variant_file_name);
 
   return true;
 
