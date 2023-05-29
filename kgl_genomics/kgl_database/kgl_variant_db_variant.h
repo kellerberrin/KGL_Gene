@@ -76,6 +76,28 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Given a contig and offset address (or just a variant_ptr).
+// This object returns the feature record (gene feature) of the nearest coding sequence.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FindCodingInterval; // Pimpl implementation for determining variant membership of gene coding intervals.
+
+class FindFeature {
+
+public:
+
+  explicit FindFeature(const std::shared_ptr<const GenomeReference>& reference_ptr);
+  ~FindFeature();
+
+private:
+
+  std::unique_ptr<const FindCodingInterval> pimpl_coding_interval_ptr_;
+
+};
+
 
 
 } // end namespace

@@ -28,7 +28,7 @@ std::unique_ptr<kgl::PopulationDB> kgl::GenomeListFilter::applyFilter(const Popu
 
       if (not filtered_population_ptr->addGenome(genome_ptr)) {
 
-        ExecEnv::log().warn("GenomeListFilter::applyFilter; Unexpected duplicate genome: {} in population: {}", genome_id, population.populationId());
+        ExecEnv::log().warn("GenomeListFilter::contains; Unexpected duplicate genome: {} in population: {}", genome_id, population.populationId());
 
       }
 

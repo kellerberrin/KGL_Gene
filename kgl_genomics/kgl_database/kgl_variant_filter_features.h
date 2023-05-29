@@ -5,9 +5,8 @@
 #ifndef KGL_VARIANT_FILTER_FEATURES_H
 #define KGL_VARIANT_FILTER_FEATURES_H
 
-#include "kgl_variant_filter_type.h"
 #include "kgl_genome_genome.h"
-
+#include "kgl_genome_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -20,23 +19,21 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class GeneCodingInterval; // Pimpl implementation for determining variant membership of gene coding intervals.
-
 class FilterAllCodingVariants: public FilterVariants {
 
 public:
 
-  explicit FilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr);
-  ~FilterAllCodingVariants() override;
+  explicit FilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) : all_coding_variants_(reference_ptr) {}
+  ~FilterAllCodingVariants() override = default;
 
-  FilterAllCodingVariants(const FilterAllCodingVariants&);
+  FilterAllCodingVariants(const FilterAllCodingVariants&) = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return all_coding_variants_.contains(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterAllCodingVariants>(*this); }
 
 private:
 
-  std::shared_ptr<const GeneCodingInterval> pimpl_coding_interval_ptr_;
+  IntervalAllCodingVariants all_coding_variants_;
 
 };
 
@@ -49,22 +46,22 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using FilterGeneVector = std::vector<std::shared_ptr<const GeneFeature>>;
 class FilterCodingVariants: public FilterVariants {
 
 public:
 
-  explicit FilterCodingVariants(const FilterGeneVector& gene_vector);
-  ~FilterCodingVariants() override;
+  explicit FilterCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector)
+  : interval_coding_variants_(gene_vector) {}
+  ~FilterCodingVariants() override = default;
 
-  FilterCodingVariants(const FilterCodingVariants&);
+  FilterCodingVariants(const FilterCodingVariants&) = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_coding_variants_.contains(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterCodingVariants>(*this); }
 
 private:
 
-  std::shared_ptr<const GeneCodingInterval> pimpl_coding_interval_ptr_;
+  IntervalCodingVariants interval_coding_variants_;
 
 };
 
@@ -76,24 +73,22 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class FilterFeatureInterval; // Pimpl implementation for arbitrary feature intervals only.
-
-using FilterFeatureVector = std::vector<std::shared_ptr<const Feature>>;
 class FilterFeatures: public FilterVariants {
 
 public:
 
-  explicit FilterFeatures(const FilterFeatureVector& feature_vector);
-  ~FilterFeatures() override;
+  explicit FilterFeatures(const std::vector<std::shared_ptr<const Feature>>& feature_vector)
+  : interval_features_(feature_vector) {}
+  ~FilterFeatures() override = default;
 
-  FilterFeatures(const FilterFeatures&);
+  FilterFeatures(const FilterFeatures&) = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override;
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_features_.contains(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterFeatures>(*this); }
 
 private:
 
-  std::shared_ptr<const FilterFeatureInterval> pimpl_feature_interval_ptr_;
+  IntervalFeatures interval_features_;
 
 };
 

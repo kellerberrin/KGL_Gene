@@ -31,7 +31,7 @@ bool kgl::P7FrequencyFilter::applyFilter(const Variant &variant) const {
     std::vector<double> info_vector = std::move(info_opt.value());
     if (info_vector.size() != alt_count) {
 
-      ExecEnv::log().error("P7FrequencyFilter::applyFilter; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
+      ExecEnv::log().error("P7FrequencyFilter::contains; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
                            info_vector.size(), alt_count, info_field);
 
       return false;
@@ -39,7 +39,7 @@ bool kgl::P7FrequencyFilter::applyFilter(const Variant &variant) const {
     }
     if (info_vector.size() <= alt_index) {
 
-      ExecEnv::log().error("P7FrequencyFilter::applyFilter; alt variant index: {} out of range for vector size:{}, Info field: {}",
+      ExecEnv::log().error("P7FrequencyFilter::contains; alt variant index: {} out of range for vector size:{}, Info field: {}",
                            alt_index, info_vector.size(), info_field);
       return false;
 

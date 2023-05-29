@@ -122,10 +122,10 @@ bool VepSubStringFilter<Missing>::applyFilter(const Variant& variant) const {
 
     if (not vep_index_opt) {
 
-      ExecEnv::log().error("VepSubStringFilter::applyFilter; could not find VEP field: {} in VEP fields", vep_field_name_);
+      ExecEnv::log().error("VepSubStringFilter::contains; could not find VEP field: {} in VEP fields", vep_field_name_);
       for (auto const& sub_field : vep_fields.vepHeader()->subFieldHeaders()) {
 
-        ExecEnv::log().info("VepSubStringFilter::applyFilter; available VEP field: {} in VEP fields", sub_field);
+        ExecEnv::log().info("VepSubStringFilter::contains; available VEP field: {} in VEP fields", sub_field);
 
       }
       return Missing;
@@ -140,7 +140,7 @@ bool VepSubStringFilter<Missing>::applyFilter(const Variant& variant) const {
 
       if (sub_fields.size() != vep_fields.vepHeader()->subFieldHeaders().size()) {
 
-        ExecEnv::log().error("VepSubStringFilter::applyFilter; VEP sub-field count: {} not equal to VEP header size: {}",
+        ExecEnv::log().error("VepSubStringFilter::contains; VEP sub-field count: {} not equal to VEP header size: {}",
                              sub_fields.size(),vep_fields.vepHeader()->subFieldHeaders().size());
         return Missing;
 

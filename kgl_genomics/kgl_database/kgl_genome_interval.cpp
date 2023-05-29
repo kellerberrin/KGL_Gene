@@ -1,8 +1,9 @@
 //
-// Created by kellerberrin on 15/05/23.
+// Created by kellerberrin on 29/05/23.
 //
 
-#include "kgl_variant_filter_features.h"
+#include "kgl_genome_interval.h"
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,12 +31,12 @@ using ContigIntervalMap = std::map<kgl::ContigId_t, bil::interval_set<kgl::Conti
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class kgl::GeneCodingInterval {
+class kgl::ImplementCodingInterval {
 
 public:
 
-  explicit GeneCodingInterval(const FilterGeneVector& gene_vector);
-  ~GeneCodingInterval() = default;
+  explicit ImplementCodingInterval(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector);
+  ~ImplementCodingInterval() = default;
 
   [[nodiscard]] bool variantContained(const Variant &variant) const;
 
@@ -46,7 +47,7 @@ private:
 };
 
 
-kgl::GeneCodingInterval::GeneCodingInterval(const FilterGeneVector& gene_vector) {
+kgl::ImplementCodingInterval::ImplementCodingInterval(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) {
 
   for (auto const& gene_feature : gene_vector) {
 
@@ -88,7 +89,7 @@ kgl::GeneCodingInterval::GeneCodingInterval(const FilterGeneVector& gene_vector)
 
 }
 
-bool kgl::GeneCodingInterval::variantContained(const Variant &variant) const {
+bool kgl::ImplementCodingInterval::variantContained(const Variant &variant) const {
 
   // Check if the contig is defined.
   auto contig_iter = contig_interval_map_.find(variant.contigId());
@@ -107,7 +108,7 @@ bool kgl::GeneCodingInterval::variantContained(const Variant &variant) const {
     result = bil::contains(interval_set, variant.offset() + variant.alleleOffset());
 
   } else {
-  // A delete indel and we need to check any upstream effect on a coding interval.
+    // A delete indel and we need to check any upstream effect on a coding interval.
     ContigOffset_t delete_size = variant.reference().length() - variant.alternate().length();
     result = bil::contains(interval_set, variant.offset() + variant.alleleOffset() + delete_size);
 
@@ -125,12 +126,12 @@ bool kgl::GeneCodingInterval::variantContained(const Variant &variant) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class kgl::FilterFeatureInterval {
+class kgl::ImplementFeatureInterval {
 
 public:
 
-  explicit FilterFeatureInterval(const FilterFeatureVector& feature_vector);
-  ~FilterFeatureInterval() = default;
+  explicit ImplementFeatureInterval(const std::vector<std::shared_ptr<const Feature>>& feature_vector);
+  ~ImplementFeatureInterval() = default;
 
   [[nodiscard]] bool variantContained(const Variant &variant) const;
 
@@ -141,7 +142,7 @@ private:
 };
 
 
-kgl::FilterFeatureInterval::FilterFeatureInterval(const FilterFeatureVector& feature_vector) {
+kgl::ImplementFeatureInterval::ImplementFeatureInterval(const std::vector<std::shared_ptr<const Feature>>& feature_vector) {
 
 
   for (auto const& feature : feature_vector) {
@@ -173,7 +174,7 @@ kgl::FilterFeatureInterval::FilterFeatureInterval(const FilterFeatureVector& fea
 
 }
 
-bool kgl::FilterFeatureInterval::variantContained(const Variant &variant) const {
+bool kgl::ImplementFeatureInterval::variantContained(const Variant &variant) const {
 
   // Check if the contig is defined.
   auto contig_iter = contig_interval_map_.find(variant.contigId());
@@ -200,36 +201,34 @@ bool kgl::FilterFeatureInterval::variantContained(const Variant &variant) const 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::FilterAllCodingVariants::FilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) {
+kgl::IntervalAllCodingVariants::IntervalAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) {
 
-  filterName("Filter Coding Variants");
 
-  FilterGeneVector gene_vector;
+  std::vector<std::shared_ptr<const GeneFeature>> gene_vector;
   for (auto const& [contig_id, contig_ptr] : reference_ptr->getMap()) {
 
     for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
-        gene_vector.push_back(gene_ptr);
+      gene_vector.push_back(gene_ptr);
 
     }
 
   }
 
-  pimpl_coding_interval_ptr_ = std::make_shared<GeneCodingInterval>(gene_vector);
+  pimpl_coding_interval_ptr_ = std::make_shared<ImplementCodingInterval>(gene_vector);
 
 }
 
-kgl::FilterAllCodingVariants::FilterAllCodingVariants(const FilterAllCodingVariants& copy)  : FilterVariants(copy) {
+kgl::IntervalAllCodingVariants::IntervalAllCodingVariants(const IntervalAllCodingVariants& copy) {
 
-  filterName(copy.filterName());
   pimpl_coding_interval_ptr_ = copy.pimpl_coding_interval_ptr_;
 
 }
 
 // Required due to forward decl of pimpl class.
-kgl::FilterAllCodingVariants::~FilterAllCodingVariants() {}
+kgl::IntervalAllCodingVariants::~IntervalAllCodingVariants() {}
 
-bool kgl::FilterAllCodingVariants::applyFilter(const Variant& variant) const {
+bool kgl::IntervalAllCodingVariants::contains(const Variant& variant) const {
 
   return pimpl_coding_interval_ptr_->variantContained(variant);
 
@@ -242,24 +241,22 @@ bool kgl::FilterAllCodingVariants::applyFilter(const Variant& variant) const {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::FilterCodingVariants::FilterCodingVariants(const FilterGeneVector& gene_vector) {
+kgl::IntervalCodingVariants::IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) {
 
-  filterName("Filter Coding Variants");
-  pimpl_coding_interval_ptr_ = std::make_shared<GeneCodingInterval>(gene_vector);
+  pimpl_coding_interval_ptr_ = std::make_shared<ImplementCodingInterval>(gene_vector);
 
 }
 
-kgl::FilterCodingVariants::FilterCodingVariants(const FilterCodingVariants& copy)  : FilterVariants(copy) {
+kgl::IntervalCodingVariants::IntervalCodingVariants(const IntervalCodingVariants& copy) {
 
-  filterName(copy.filterName());
   pimpl_coding_interval_ptr_ = copy.pimpl_coding_interval_ptr_;
 
 }
 
 // Required due to forward decl of pimpl class.
-kgl::FilterCodingVariants::~FilterCodingVariants() {}
+kgl::IntervalCodingVariants::~IntervalCodingVariants() {}
 
-bool kgl::FilterCodingVariants::applyFilter(const Variant& variant) const {
+bool kgl::IntervalCodingVariants::contains(const Variant& variant) const {
 
   return pimpl_coding_interval_ptr_->variantContained(variant);
 
@@ -273,24 +270,22 @@ bool kgl::FilterCodingVariants::applyFilter(const Variant& variant) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::FilterFeatures::FilterFeatures(const FilterFeatureVector& feature_vector) {
+kgl::IntervalFeatures::IntervalFeatures(const std::vector<std::shared_ptr<const Feature>>& feature_vector) {
 
-  filterName("Filter Features");
-  pimpl_feature_interval_ptr_ = std::make_shared<FilterFeatureInterval>(feature_vector);
+  pimpl_feature_interval_ptr_ = std::make_shared<ImplementFeatureInterval>(feature_vector);
 
 }
 
-kgl::FilterFeatures::FilterFeatures(const FilterFeatures& copy)  : FilterVariants(copy) {
+kgl::IntervalFeatures::IntervalFeatures(const IntervalFeatures& copy) {
 
-  filterName(copy.filterName());
   pimpl_feature_interval_ptr_ = copy.pimpl_feature_interval_ptr_;
 
 }
 
 // Required due to forward decl of pimpl class.
-kgl::FilterFeatures::~FilterFeatures() {}
+kgl::IntervalFeatures::~IntervalFeatures() {}
 
-bool kgl::FilterFeatures::applyFilter(const Variant& variant) const {
+bool kgl::IntervalFeatures::contains(const Variant& variant) const {
 
   return pimpl_feature_interval_ptr_->variantContained(variant);
 
