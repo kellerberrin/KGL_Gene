@@ -178,7 +178,7 @@ std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_ind
 
   std::stringstream ss;
 
-  ss << reference().getSequenceAsString() << ">" << offsetOutput(referenceOffset(), output_index) << ">";
+  ss << reference().getSequenceAsString() << ">" << offsetOutput(offset(), output_index) << ">";
   ss << alternate().getSequenceAsString() << delimiter;
   ss << alternateCigar() << delimiter;
 
@@ -249,7 +249,7 @@ size_t kgl::Variant::alternateSize(size_t reference_size) const {
 std::string kgl::Variant::HGVS() const {
 
   // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(referenceOffset() + 1) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
+  return contigId() + ":g."  + std::to_string(offset() + 1) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
 
 }
 
@@ -257,7 +257,7 @@ std::string kgl::Variant::HGVS() const {
 std::string kgl::Variant::HGVS_Phase() const {
 
   // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(referenceOffset() + 1) + reference().getSequenceAsString() +
+  return contigId() + ":g."  + std::to_string(offset() + 1) + reference().getSequenceAsString() +
          ">" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
 
 }

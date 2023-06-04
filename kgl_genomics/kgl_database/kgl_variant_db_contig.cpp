@@ -333,7 +333,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
       }
 
-      if (contig_sequence_ptr->subSequence(variant_ptr->referenceOffset(), variant_ptr->reference().length()) == variant_ptr->reference()) {
+      if (contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()) == variant_ptr->reference()) {
 
         ++contig_count.second;
 

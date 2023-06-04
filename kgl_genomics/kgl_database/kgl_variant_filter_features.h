@@ -5,7 +5,7 @@
 #ifndef KGL_VARIANT_FILTER_FEATURES_H
 #define KGL_VARIANT_FILTER_FEATURES_H
 
-#include "kgl_genome_genome.h"
+#include "kgl_variant_filter_type.h"
 #include "kgl_genome_interval.h"
 
 
@@ -56,7 +56,7 @@ public:
 
   FilterCodingVariants(const FilterCodingVariants&) = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_coding_variants_.contains(variant); }
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_coding_variants_.codingRegionVariant(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterCodingVariants>(*this); }
 
 private:

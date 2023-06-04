@@ -111,17 +111,23 @@ public:
   [[nodiscard]] bool filterVariant(const BaseFilter& filter) const;
 
   // Location specific parameters.
+  // The identifier of contiguous region (chromosome or scaffold) where the variant is located.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
-  // The offset used for storing the allele in the database. Currently the same as the reference offset.
-  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
+  // The offset used for storing the allele in the database.
   // The zero based offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
-  [[nodiscard]] ContigOffset_t referenceOffset() const { return contig_reference_offset_; }
-  // Actual offset of the allele. For SNPs this will (generally) be zero. For indels this will (generally) be >= 1.
+  [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
+  // Actual offset of the allele. For SNPs this will (generally but not always) be zero. For indels this will (generally) be >= 1.
+  // The offset is the number of identical nucleotides at the beginning of both the reference and alternate.
+  // For example; if we have a variant cigars of ("5M4D", "5M6I" or "5M1X"), the allele offset will be 5 in all cases.
   [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
+
+
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
+  // An assigned variant reference such as (HSapien) "rs187084".
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
   // A string hash unique upto phase (not phase specific). In HGVS format.
+  // This string hash is extensively used as a map key for variants.
   [[nodiscard]] std::string HGVS() const;
   // Phase specific hash. In HGVS format plus the variant phase (if applicable - may be unphased) in the format ":B".
   [[nodiscard]] std::string HGVS_Phase() const;
