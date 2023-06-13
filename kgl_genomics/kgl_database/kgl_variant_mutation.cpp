@@ -64,8 +64,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     // Mutate the sequence
     if (not variant_ptr->mutateSequence(adjusted_offset, dna_sequence, sequence_size_modify)) {
 
-      ExecEnv::log().info("mutateDNA(), DNA mutation failed for variant: {}",
-                          variant_ptr->output(' ',VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().warn("mutateDNA(), DNA mutation failed for variant: {}", variant_ptr->HGVS_Phase());
 
       ExecEnv::log().info("mutateDNA(), Offset: {}, Sequence Length: {}, list of all sequence variants follows:",
                           contig_offset, dna_sequence.length());
@@ -73,7 +72,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
       for(auto const& map_variant : region_variant_map) {
 
         ExecEnv::log().info("mutateDNA(), variant: {}",
-                            map_variant.second->output(' ',VariantOutputIndex::START_0_BASED, true));
+                            map_variant.second->HGVS_Phase());
 
       }
 
@@ -83,7 +82,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
     if (not variant_mutation_offset_.updateIndelAccounting(variant_ptr, sequence_size_modify)) {
 
       ExecEnv::log().error( "Problem updating indel mutated sequence length by variant: {}",
-                            variant_ptr->output(' ',VariantOutputIndex::START_0_BASED, true));
+                            variant_ptr->HGVS_Phase());
 
     }
 
@@ -137,7 +136,7 @@ bool kgl::Variant::mutateSequence( SignedOffset_t offset_adjust,
   if (adjusted_offset >= static_cast<SignedOffset_t>(dna_sequence.length())) {
 
     ExecEnv::log().error("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
-                         adjusted_offset, dna_sequence.length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+                         adjusted_offset, dna_sequence.length(), HGVS_Phase());
     return false;
   }
 
@@ -156,8 +155,7 @@ bool kgl::Variant::mutateSequence( SignedOffset_t offset_adjust,
 
     if (not performMutation(sequence_offset, dna_sequence, reference(), alternate())) {
 
-      ExecEnv::log().info("mutateSequence(), problem mutating sequence; variant: {}",
-                          output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().info("mutateSequence(), problem mutating sequence; variant: {}", HGVS_Phase());
 
       return false;
 
@@ -176,8 +174,7 @@ bool kgl::Variant::mutateSequence( SignedOffset_t offset_adjust,
 
     if (not performMutation(sequence_offset, dna_sequence, adjusted_reference, adjusted_alternate)) {
 
-      ExecEnv::log().info("mutateSequence(), problem mutating sequence with overlapping variant: {}",
-                          output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().warn("mutateSequence(), problem mutating sequence with overlapping variant: {}", HGVS_Phase());
       ExecEnv::log().info("mutateSequence(), overlapping adj. reference: {} adj. alternate: {}",
                           adjusted_reference.getSequenceAsString(), adjusted_alternate.getSequenceAsString());
 
@@ -219,8 +216,7 @@ bool kgl::Variant::preceedingMutation( SignedOffset_t adjusted_offset,
 
     if (not performMutation(0, dna_sequence, adjusted_reference, adjusted_alternate)) {
 
-      ExecEnv::log().info("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}",
-                          output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().warn("mutateSequence(), problem mutating sequence with preceeding overlapping variant: {}", HGVS_Phase());
       ExecEnv::log().info("mutateSequence(), preceeding overlapping adj. reference: {} adj. alternate: {}",
                           adjusted_reference.getSequenceAsString(), adjusted_alternate.getSequenceAsString());
 
@@ -235,7 +231,7 @@ bool kgl::Variant::preceedingMutation( SignedOffset_t adjusted_offset,
   } else {
 
     ExecEnv::log().info("mutateSequence(), calculated sequence offset: {} is out of range for sequence size: {}, variant: {}",
-                        adjusted_offset, dna_sequence.length(), output(' ', VariantOutputIndex::START_0_BASED, true));
+                        adjusted_offset, dna_sequence.length(), HGVS_Phase());
     return false;
 
   }

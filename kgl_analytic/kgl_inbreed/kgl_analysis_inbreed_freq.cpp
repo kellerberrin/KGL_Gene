@@ -194,8 +194,7 @@ kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::unadjustedAlleleClassFrequen
 
     for (auto const& allele : allele_frequencies_) {
 
-      ExecEnv::log().error("AlleleFreqVector::alleleClassFrequencies; Frequency: {}, Minor Allele: {}",
-                           allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().error("AlleleFreqVector::alleleClassFrequencies; Frequency: {}, Minor Allele: {}", allele.frequency(), allele.allele()->HGVS());
 
     }
 
@@ -351,7 +350,7 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMajorHeterozyg
   for (auto const& allele : allele_frequencies_) {
 
     ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; allele frequency {}, allele: {}",
-                        allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+                        allele.frequency(), allele.allele()->HGVS());
 
   }
   return std::nullopt;
@@ -501,7 +500,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
 
               if (not found_second_minor) {
                 ExecEnv::log().warn("InbreedingCalculation::generateFrequencies; Genome: {}, Not Found Second Minor SNP: {}",
-                                    genome_id, diploid_offset.front()->output(',',VariantOutputIndex::START_0_BASED, false));
+                                    genome_id, diploid_offset.front()->HGVS());
 
               } else {
 

@@ -63,8 +63,7 @@ bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> o
 
     if (offset != variant_ptr->offset()) {
 
-      ExecEnv::log().error( "ContigDB::addOffset; mismatch offset: {}, variant: {}",
-                            offset, variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+      ExecEnv::log().error( "ContigDB::addOffset; mismatch offset: {}, variant: {}", offset, variant_ptr->HGVS());
       return false;
 
     }
@@ -288,8 +287,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<c
 
           if (not found_contig_ptr->addVariant(this_variant_ptr)) {
 
-            ExecEnv::log().error( "ContigDB::findContig; cannot add variant: {}",
-                                  this_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+            ExecEnv::log().error( "ContigDB::findContig; cannot add variant: {}", this_variant_ptr->HGVS());
 
           }
 

@@ -77,24 +77,6 @@ std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) con
 }
 
 
-std::string kgl::Variant::typeText() const {
-
-  switch(variantType()) {
-
-    case VariantType::INDEL_INSERT: return "INDEL_INSERT";
-
-    case VariantType::INDEL_DELETE: return "INDEL_DELETE";
-
-    case VariantType::TRANSVERSION: return "TRANSVERSION";
-
-    case VariantType::TRANSITION: return "TRANSITION";
-
-  }
-
-  return "NOT_IMPLEMENTED";  // Not reached, to keep the compiler happy.
-
-}
-
 bool kgl::Variant::filterVariant(const BaseFilter& filter) const {
 
   std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
@@ -132,59 +114,6 @@ kgl::VariantType kgl::Variant::variantType() const {
 
 }
 
-
-std::string kgl::Variant::genomeOutput(char delimiter, VariantOutputIndex output_index) const {
-
-  std:: stringstream ss;
-  // Contig.
-  ss << contigId() << delimiter;
-  if (phaseId() == VariantPhase::UNPHASED) {
-
-    ss << "Unphased" << delimiter;
-
-  } else {
-
-    ss << "Phase:" << static_cast<size_t>(phaseId()) << delimiter;
-
-  }
-  ss << offsetOutput(offset(), output_index)
-     << "(+" << alleleOffset() << ")" << delimiter ;
-
-  return ss.str();
-
-}
-
-
-std::string kgl::Variant::output(char delimiter, VariantOutputIndex output_index, bool detail) const
-{
-  std::stringstream ss;
-  ss << genomeOutput(delimiter, output_index);
-  ss << identifier() << delimiter << typeText() << delimiter << alternateSize() << delimiter;
-  ss << mutation(delimiter, output_index);
-
-  if (detail) {
-
-    ss << evidence().output(delimiter, output_index);
-
-  }
-
-  return ss.str();
-
-}
-
-
-std::string kgl::Variant::mutation(char delimiter, VariantOutputIndex output_index) const
-{
-
-  std::stringstream ss;
-
-  ss << reference().getSequenceAsString() << ">" << offsetOutput(offset(), output_index) << ">";
-  ss << alternate().getSequenceAsString() << delimiter;
-  ss << alternateCigar() << delimiter;
-
-  return ss.str();
-
-}
 
 // VCF files can specify SNPs as a cigar such as '4M1X8M'.
 // We extend the logic for this possibility.
@@ -229,6 +158,15 @@ bool kgl::Variant::isSNP() const {
 
 }
 
+// For a sequence on the interval [a, b), Given a start offset a and a size (b-a). Determine if the variant will
+// modify the sequence. Note that this is different to just translating the sequence offsets. Any upstream indel will
+// modify the sequence [a, b) offsets but may not actually modify any of the nucleotides in the sequence.
+bool kgl::Variant::sequenceModifier(ContigOffset_t sequence_start, ContigSize_t sequence_size) const {
+
+  auto [extent_offset, extent_size] = extentOffset();
+  return sequence_start < (extent_offset + extent_size) and extent_offset < (sequence_start + sequence_size);
+
+}
 
 std::string kgl::Variant::alternateCigar() const {
 

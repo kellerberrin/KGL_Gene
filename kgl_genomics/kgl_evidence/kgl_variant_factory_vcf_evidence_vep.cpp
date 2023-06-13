@@ -70,8 +70,7 @@ kgl::InfoEvidenceAnalysis::getVepSubFields(const Variant& variant) {
   // If the vector is empty then return nullopt.
   if (vep_field_vector.empty()) {
 
-    ExecEnv::log().warn( "InfoEvidenceAnalysis::getVepSubFields; mismatch, Variant: {} has 'vep' header but no vep data",
-                         variant.output(',', VariantOutputIndex::START_0_BASED, true));
+    ExecEnv::log().warn( "InfoEvidenceAnalysis::getVepSubFields; mismatch, Variant: {} has 'vep' header but no vep data", variant.HGVS());
     return std::nullopt;
 
   }

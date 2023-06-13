@@ -773,7 +773,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
         ss << gene_id << CSV_delimiter;
         ss << sequence_id << CSV_delimiter;
         ss << edit_item.reference_char << CSV_delimiter;
-        ss << offsetOutput(edit_item.reference_offset, VariantOutputIndex::START_1_BASED) << CSV_delimiter;
+        ss << edit_item.reference_offset << CSV_delimiter;
         ss << edit_item.mutant_char << '\n';
         out_file << ss.str();
 
@@ -877,7 +877,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
 
       for (auto const& [offset, variant_ptr] : variant_map) {
 
-        variant_file << variant_ptr->output(CSV_delimiter, VariantOutputIndex::START_1_BASED, false);
+        variant_file << variant_ptr->HGVS();
 
       }
 
@@ -956,13 +956,13 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
   for (auto DNA_Item : master_SNP_List) {
 
     out_file << DNA_Item.second.contig_id << " "
-             << offsetOutput(DNA_Item.second.contig_offset, VariantOutputIndex::START_1_BASED) << " "
+             << DNA_Item.second.contig_offset << " "
              << DNA_Item.second.DNA_mutation.reference_char
-             << offsetOutput(DNA_Item.second.DNA_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+             << DNA_Item.second.DNA_mutation.reference_offset
              << DNA_Item.second.DNA_mutation.mutant_char
              << " " << DNA_Item.second.reference_codon << "-" << DNA_Item.second.mutation_codon
              << " " << DNA_Item.second.amino_mutation.reference_char
-             << offsetOutput(DNA_Item.second.amino_mutation.reference_offset, VariantOutputIndex::START_1_BASED)
+             << DNA_Item.second.amino_mutation.reference_offset
              << DNA_Item.second.amino_mutation.mutant_char << CSV_delimiter;
 
   }

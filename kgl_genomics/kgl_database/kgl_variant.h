@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_amino.h"
 #include "kgl_runtime_resource.h"
@@ -95,10 +96,6 @@ public:
 
   [[nodiscard]] const VariantEvidence& evidence() const { return evidence_; }
 
-  [[nodiscard]] std::string output(char delimiter, VariantOutputIndex output_index, bool detail) const;
-
-  [[nodiscard]] std::string mutation(char delimiter, VariantOutputIndex output_index) const;
-
   [[nodiscard]] bool mutateSequence( SignedOffset_t offset_adjust,
                                      DNA5SequenceLinear& dna_sequence,
                                      SignedOffset_t& sequence_size_modify) const;
@@ -106,21 +103,30 @@ public:
   [[nodiscard]] bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
   [[nodiscard]] bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
 
-  [[nodiscard]] std::string typeText() const;
-
   [[nodiscard]] bool filterVariant(const BaseFilter& filter) const;
 
   // Location specific parameters.
   // The identifier of contiguous region (chromosome or scaffold) where the variant is located.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   // The offset used for storing the allele in the database.
-  // The zero based offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
+  // The ZERO BASED offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
   // Actual offset of the allele. For SNPs this will (generally but not always) be zero. For indels this will (generally) be >= 1.
   // The offset is the number of identical nucleotides at the beginning of both the reference and alternate.
   // For example; if we have a variant cigars of ("5M4D", "5M6I" or "5M1X"), the allele offset will be 5 in all cases.
   [[nodiscard]] AlleleOffset_t alleleOffset() const { return contig_allele_offset_; }
-
+  // For a sequence on the interval [a, b), Given a start offset a and a size (b-a). Determine if the variant will
+  // modify the sequence. Note that this is different to just translating the sequence offsets. Any upstream indel will
+  // modify the sequence [a, b) offsets but may not actually modify any of the nucleotides in the sequence.
+  [[nodiscard]] bool sequenceModifier(ContigOffset_t sequence_start, ContigSize_t sequence_size) const;
+  // The extentOffset() of the variant is used to assess if a variant modifies a particular region of a sequence in the interval [a, b).
+  // With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
+  // The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
+  // The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 3 (reference.lenth() - 5).
+  // The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 0 (reference.lenth() - 5).
+  // These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
+  // bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
+  [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const { return { offset()+alleleOffset(), referenceSize()-alleleOffset() }; }
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   // An assigned variant reference such as (HSapien) "rs187084".
@@ -163,7 +169,7 @@ private:
   const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier.
 
-  inline static std::atomic<size_t> object_count_{0};
+  inline static std::atomic<size_t> object_count_{0};  // Used to check memory usage and identify any memory leaks.
 
 
   [[nodiscard]] size_t alternateSize(size_t reference_size) const;
@@ -178,7 +184,7 @@ private:
                                          DNA5SequenceLinear& dna_sequence,
                                          SignedOffset_t& sequence_size_modify) const;
 
-  [[nodiscard]] std::string genomeOutput(char delimiter, VariantOutputIndex output_index) const;  // Genome information text.
+
 
 };
 

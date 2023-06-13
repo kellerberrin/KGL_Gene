@@ -92,7 +92,7 @@ public:
   VariantEvidence(const VariantEvidence& copy) = default;
   ~VariantEvidence() = default;
 
-  [[nodiscard]] std::string output(char delimiter, VariantOutputIndex output_index) const;
+  [[nodiscard]] std::string output(char delimiter = ',') const;
 
   [[nodiscard]] size_t vcfRecordCount() const { return vcf_record_count_; }
 

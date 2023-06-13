@@ -86,13 +86,13 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                  , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
+                  , genome_id, cloned_variant1->HGVS());
 
             } // add female_ hom variant
             if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                  , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
+                  , genome_id, cloned_variant2->HGVS());
 
             } // add male_ hom variant
 
@@ -125,7 +125,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
             if (not synthetic_pop_ptr->addVariant( cloned_variant, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                  , genome_id, cloned_variant->output(',', VariantOutputIndex::START_0_BASED, false));
+                  , genome_id, cloned_variant->HGVS());
 
             }
 
@@ -150,13 +150,13 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
             if (not synthetic_pop_ptr->addVariant( cloned_variant1, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                  , genome_id, cloned_variant1->output(',', VariantOutputIndex::START_0_BASED, false));
+                  , genome_id, cloned_variant1->HGVS());
 
             } // add female_ hom variant
             if (not synthetic_pop_ptr->addVariant( cloned_variant2, genome_vector)) {
 
               ExecEnv::log().error( "InbreedSampling::generateSyntheticPopulation, Genome: {} cannot add variant: {}"
-                  , genome_id, cloned_variant2->output(',', VariantOutputIndex::START_0_BASED, false));
+                  , genome_id, cloned_variant2->HGVS());
 
             } // add male_ hom variant
 
@@ -167,7 +167,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
             for (auto const& allele : freq_vector.alleleFrequencies()) {
 
               ExecEnv::log().warn("InbreedSampling::generateSyntheticPopulation; freq: {}, variant: {}",
-                                  allele.frequency(), allele.allele()->output(',', VariantOutputIndex::START_0_BASED, false));
+                                  allele.frequency(), allele.allele()->HGVS());
 
             }
 

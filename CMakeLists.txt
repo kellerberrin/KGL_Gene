@@ -191,7 +191,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_sequence_compare_impl.h
         kgl_genomics/kgl_sequence/kgl_sequence_compare_impl.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_distance.h
-        kgl_genomics/kgl_database/kgl_genome_types.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_distance_impl.h
         kgl_genomics/kgl_sequence/kgl_sequence_distance_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_pf_impl.h

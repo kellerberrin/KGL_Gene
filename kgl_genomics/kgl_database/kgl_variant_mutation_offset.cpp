@@ -42,7 +42,7 @@ bool kgl::VariantMutationOffset::updateIndelAccounting(std::shared_ptr<const Var
     if (not result.second) {
 
       ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}",
-                           variant_ptr->output(' ', VariantOutputIndex::START_0_BASED, true));
+                           variant_ptr->HGVS_Phase());
       return false;
 
     }

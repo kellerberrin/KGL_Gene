@@ -61,7 +61,7 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
     // List out the variants.
     for (auto const& variant : variant_map) {
 
-      ExecEnv::log().info("mutantProteins(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().info("mutantProteins(), variant map: {}", variant.second->HGVS_Phase());
 
     }
 
@@ -138,7 +138,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
     // List out the variants.
     for (auto const& variant : variant_map) {
 
-      ExecEnv::log().info("mutantCodingDNA(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().info("mutantCodingDNA(), variant map: {}", variant.second->HGVS_Phase());
 
     }
 
@@ -201,7 +201,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
     // List out the variants.
     for (auto const& variant : variant_map) {
 
-      ExecEnv::log().info("mutantRegion(), variant map: {}", variant.second->output(' ', VariantOutputIndex::START_0_BASED, true));
+      ExecEnv::log().info("mutantRegion(), variant map: {}", variant.second->HGVS_Phase());
 
     }
 

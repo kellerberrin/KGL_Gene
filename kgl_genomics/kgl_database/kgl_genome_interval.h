@@ -33,7 +33,6 @@ public:
 
   OpenRightInterval& operator=(const OpenRightInterval& copy) { lower_ = copy.lower_; upper_ = copy.upper_; return *this; }
 
-
   [[nodiscard]] ContigOffset_t lower() const { return lower_; }
   [[nodiscard]] ContigOffset_t upper() const { return upper_; }
 
@@ -48,6 +47,14 @@ private:
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Adapters for std::set and std::map to use OpenRightInterval.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Comparison operator used to order intervals within indexed containers std::set or std::map.
 struct CompareInterval {
 
   bool operator()(const OpenRightInterval& lhs, const OpenRightInterval& rhs) const
@@ -57,13 +64,7 @@ struct CompareInterval {
 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Adapters for std::set and std::map to use OpenRightInterval.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+// Interval adapter for std::set.
 class IntervalSet : public std::set<OpenRightInterval, CompareInterval> {
 
 public:
@@ -71,24 +72,48 @@ public:
   IntervalSet() = default;
   ~IntervalSet() = default;
 
+  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
+  [[nodiscard]] auto findUpperEqualIter(const OpenRightInterval& interval) const {
+
+    auto iter = this->lower_bound(interval);
+    // Return the previous map interval if it contains the argument interval.
+    auto prev_iter = std::prev(iter, 1);
+    if (prev_iter != this->end()) {
+
+      auto const& interval_key = *prev_iter;
+      if (interval_key.containsInterval(interval)) {
+
+        return prev_iter;
+
+      }
+
+    }
+
+    // Else just return the upper interval
+    return iter;
+
+  }
+
   [[nodiscard]] bool containsInterval(const OpenRightInterval& interval) const;
   [[nodiscard]] bool containsOffset(ContigOffset_t offset) const { return contains(OpenRightInterval(offset, offset+1)); }
 
 };
 
-
+// Interval adapter for std::map.
 template<typename ValueType>
-class IntervalMap : public std::map<OpenRightInterval, ValueType, CompareInterval> {
+using IntervalMapType = std::map<OpenRightInterval, ValueType, CompareInterval>;
+template<typename ValueType>
+class IntervalMap : public IntervalMapType<ValueType> {
 
 public:
 
   IntervalMap() = default;
   ~IntervalMap() = default;
 
-  [[nodiscard]] auto findInterval(const OpenRightInterval& interval) const {
+  // Returns any the map interval that contains the argument or end().
+  [[nodiscard]] auto findIntervalIter(const OpenRightInterval& interval) const {
 
     auto iter = this->lower_bound(interval);
-
     if (iter != this->end()) {
 
       // Do the lower bound of the intervals match.
@@ -129,8 +154,48 @@ public:
     return this->end();
 
   }
-  [[nodiscard]] bool containsInterval(const OpenRightInterval& interval) const { return findInterval(interval) != this->end(); }
-  [[nodiscard]] bool containsOffset(ContigOffset_t offset) const { return containsInterval(OpenRightInterval(offset, offset+1)); }
+
+  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
+  [[nodiscard]] auto findUpperEqualIter(const OpenRightInterval& interval) const {
+
+    auto iter = this->lower_bound(interval);
+    // Return the previous map interval if it contains the argument interval.
+    auto prev_iter = std::prev(iter, 1);
+    if (prev_iter != this->end()) {
+
+      auto const& [interval_key, value] = *prev_iter;
+      if (interval_key.containsInterval(interval)) {
+
+        return prev_iter;
+
+      }
+
+    }
+
+    // Else just return the upper interval
+    return iter;
+
+  }
+
+  [[nodiscard]] std::optional<ValueType> findUpperInterval(const OpenRightInterval& interval) const {
+
+    auto iter = findUpperEqualIter(interval);
+    if (iter != this->end()) {
+
+      auto const& [interval_key, value] = *iter;
+      return value;
+
+    }
+
+    return std::nullopt;
+
+  }
+
+  [[nodiscard]] auto findUpperOffsetIter(ContigOffset_t offset) const { return findUpperEqualIter(OpenRightInterval(offset, offset + 1)); }
+  [[nodiscard]] std::optional<ValueType> findUpperOffset(ContigOffset_t offset) const { return findUpperInterval(OpenRightInterval(offset, offset + 1)); }
+
+  [[nodiscard]] bool containsInterval(const OpenRightInterval& interval) const { return findIntervalIter(interval) != this->end(); }
+  [[nodiscard]] bool containsOffset(ContigOffset_t offset) const { return containsInterval(OpenRightInterval(offset, offset + 1)); }
 
 };
 
@@ -158,12 +223,19 @@ public:
 
   }
 
+  // Object access
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& getGene() const { return gene_feature_; }
   [[nodiscard]] const GeneCodingTranscriptMap& codingTranscripts() const { return gene_coding_transcripts_; }
   [[nodiscard]] const OpenRightInterval& geneInterval() const { return gene_interval_; }
 
+  // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
   [[nodiscard]] bool isMemberGene(ContigOffset_t offset) const { return gene_interval_.containsOffset(offset); }
+  // Given an offset, does the offset fall within a gene interval coding region.
   [[nodiscard]] bool isMemberCoding(ContigOffset_t offset) const;
+  // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.
+  [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig()->contigId()); }
+  // Test if a variant modifies any of the coding transcripts of this gene structure.
+  [[nodiscard]] bool codingModifier(const Variant& variant) const;
 
 private:
 
@@ -178,7 +250,10 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+// GeneIntervalStructure objects are stored in an IntervalMap by their gene intervals.,
+// The IntervalMaps are further indexed by contig in the ContigIntervalMap container.
+// This enables the entire gene set in a genome to be stored as GeneIntervalStructure objects.
+// Thus, we can test if a variant is within a gene coding region, and if so, return the gene feature that it belongs to.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -188,120 +263,20 @@ class IntervalCodingVariants {
 
 public:
 
-  explicit IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector);
+  explicit IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) { InitializeGeneVector(gene_vector); }
+  explicit IntervalCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr);
   ~IntervalCodingVariants() = default;
 
   // Returns true if the variant is within a gene coding region.
-  [[nodiscard]] bool codingRegionVariant(const Variant &variant) const;
+  [[nodiscard]] bool codingRegionVariant(const Variant& variant) const;
   // Returns std::nullopt if the variant is not within a gene coding region.
   [[nodiscard]] std::optional<std::shared_ptr<const GeneFeature>> getGeneCoding(const Variant &variant) const;
-  // Returns std::nullopt if the variant is not within a gene interval (5 prime, intron, coding, 3 prime).
-  [[nodiscard]] std::optional<std::shared_ptr<const GeneFeature>> getGeneInterval(const Variant &variant) const;
 
 private:
 
   ContigIntervalMap contig_interval_map_;
 
-};
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class FeatureInterval {
-
-public:
-
-  explicit FeatureInterval(const std::vector<std::shared_ptr<const Feature>>& feature_vector);
-  ~FeatureInterval() = default;
-
-  [[nodiscard]] bool variantContained(const Variant &variant) const;
-
-private:
-
-  ContigIntervalMap contig_interval_map_;
-
-};
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A gene interval node.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class IntervalAllCodingVariants {
-
-public:
-
-  explicit IntervalAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr);
-  ~IntervalAllCodingVariants();
-
-  IntervalAllCodingVariants(const IntervalAllCodingVariants&);
-
-  [[nodiscard]] bool contains(const Variant& variant) const;
-
-private:
-
-
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter variants that are (possibly partially if an indel) within the coding sequence of gene.
-// The vector specifies which genes are filtered.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-class IntervalCodingVariants {
-
-public:
-
-  explicit IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector);
-  ~IntervalCodingVariants();
-
-  IntervalCodingVariants(const IntervalCodingVariants&);
-
-  [[nodiscard]] bool contains(const Variant& variant) const;
-
-private:
-
-
-};
-*/
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter a vector of arbitrary features.
-// If, for example, a feature is a gene, this can (and mostly does) include 5 prime, 3 prime and intron non-coding regions.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class ImplementFeatureInterval; // Pimpl implementation for arbitrary feature intervals only.
-
-class IntervalFeatures {
-
-public:
-
-  explicit IntervalFeatures(const std::vector<std::shared_ptr<const Feature>>& feature_vector);
-  ~IntervalFeatures();
-
-  IntervalFeatures(const IntervalFeatures&);
-
-  [[nodiscard]] bool contains(const Variant& variant) const;
-
-private:
-
-  std::shared_ptr<const ImplementFeatureInterval> pimpl_feature_interval_ptr_;
+  void InitializeGeneVector(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector);
 
 };
 

@@ -221,7 +221,7 @@ void kgl::NullAnalysis::ensemblIdIndex(const std::shared_ptr<const PopulationDB>
     auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
     auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
     auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
-    std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
+    std::string variant_text = variant_ptr->HGVS();
     ExecEnv::log().info("Ensembl: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
                         ensembl_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
 
@@ -262,7 +262,7 @@ void kgl::NullAnalysis::genomeIdIndex(const std::shared_ptr<const PopulationDB>&
         auto AC_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_ALL_);
         auto AN_afr_opt = FrequencyDatabaseRead::superPopTotalAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
         auto AC_afr_opt = FrequencyDatabaseRead::superPopAltAlleles(*variant_ptr, FrequencyDatabaseRead::SUPER_POP_AFR_);
-        std::string variant_text = variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false);
+        std::string variant_text = variant_ptr->HGVS();
         ExecEnv::log().info("Genome: {}, AN: {}, AC:{}, AN_Afr: {}, AC_Afr: {}, variant: {}",
                             genome_id, AN_opt.value(), AC_opt.value(), AN_afr_opt.value(), AC_afr_opt.value(), variant_text);
 

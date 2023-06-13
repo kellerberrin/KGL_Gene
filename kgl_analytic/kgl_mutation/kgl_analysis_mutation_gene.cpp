@@ -374,8 +374,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
             // So it's either vep or phase information but not both.
             if (not gene_contig->addVariant(variant_ptr)) {
 
-              ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
-                                    variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+              ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}", variant_ptr->HGVS());
 
             }
 
@@ -475,8 +474,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblAlt( con
         auto const& [hash, ensembl_variant_ptr] = *result;
         if (not gene_contig->addVariant(ensembl_variant_ptr)) {
 
-          ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}",
-                                ensembl_variant_ptr->output(',', VariantOutputIndex::START_0_BASED, false));
+          ExecEnv::log().error( "GenomeMutation::getGeneEnsembl, unable to add variant: {}", ensembl_variant_ptr->HGVS());
 
         }
 

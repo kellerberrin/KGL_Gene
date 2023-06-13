@@ -107,15 +107,14 @@ std::optional<double> kgl::FrequencyDatabaseRead::infoFloatField(const Variant& 
                           variant.evidence().altVariantIndex(),
                           field_vec.size(),
                           vector_str,
-                          variant.output(',', VariantOutputIndex::START_0_BASED, true));
+                          variant.HGVS_Phase());
       return std::nullopt;
 
     }
 
   } else {
 
-    ExecEnv::log().warn("FrequencyDatabaseRead::infoFloatField; Field: {} Not found for variant: {}",
-                        database_field, variant.output(',', VariantOutputIndex::START_0_BASED, true));
+    ExecEnv::log().warn("FrequencyDatabaseRead::infoFloatField; Field: {} Not found for variant: {}", database_field, variant.HGVS_Phase());
     return std::nullopt;
 
   }
@@ -162,7 +161,7 @@ std::optional<int64_t> kgl::FrequencyDatabaseRead::infoIntegerField(const Varian
                           variant.evidence().altVariantIndex(),
                           field_vec.size(),
                           vector_str,
-                          variant.output(',', VariantOutputIndex::START_0_BASED, true));
+                          variant.HGVS_Phase());
       return std::nullopt;
 
     }
@@ -170,7 +169,7 @@ std::optional<int64_t> kgl::FrequencyDatabaseRead::infoIntegerField(const Varian
   } else {
 
     ExecEnv::log().warn("FrequencyDatabaseRead::infoIntegerField; Field: {} Not found for variant: {}",
-                        database_field, variant.output(',', VariantOutputIndex::START_0_BASED, true));
+                        database_field, variant.HGVS_Phase());
     return std::nullopt;
 
   }

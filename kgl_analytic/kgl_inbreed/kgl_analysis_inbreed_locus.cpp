@@ -291,8 +291,7 @@ kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::s
 
             if (not locus_list->addVariant(variant)) {
 
-              ExecEnv::log().error("InbreedingAnalysis::getLocusList, Could not add variant: {}",
-                                   variant->output(',', VariantOutputIndex::START_0_BASED, false));
+              ExecEnv::log().error("InbreedingAnalysis::getLocusList, Could not add variant: {}", variant->HGVS());
 
             }
 

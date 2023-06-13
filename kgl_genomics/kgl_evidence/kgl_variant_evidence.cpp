@@ -9,7 +9,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) const {
+std::string kgl::VariantEvidence::output(char delimiter) const {
 
   std::stringstream ss;
 
@@ -25,7 +25,8 @@ std::string kgl::VariantEvidence::output(char delimiter, VariantOutputIndex) con
 
   if (formatData()) {
 
-    ss << formatData().value()->output(delimiter);
+    auto format_ptr = formatData().value();
+    ss << format_ptr->output(delimiter);
 
   } else {
 

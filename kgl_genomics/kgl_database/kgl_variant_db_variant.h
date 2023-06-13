@@ -26,7 +26,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 struct AlleleSummmary {
 
   size_t referenceHomozygous_{0};    // (A,A)
-  size_t minorHeterozygous_{0};      // (a, A) [or rarely can be (a, b)]
+  size_t minorHeterozygous_{0};      // (a, A) [or rarely, can be (a, b)]
   size_t minorHomozygous_{0};        // (a, a)
 
   // Convenience operator
@@ -75,28 +75,6 @@ private:
 
 };
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Given a contig and offset address (or just a variant_ptr).
-// This object returns the feature record (gene feature) of the nearest coding sequence.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class FindCodingInterval; // Pimpl implementation for determining variant membership of gene coding intervals.
-
-class FindFeature {
-
-public:
-
-  explicit FindFeature(const std::shared_ptr<const GenomeReference>& reference_ptr);
-  ~FindFeature();
-
-private:
-
-  std::unique_ptr<const FindCodingInterval> pimpl_coding_interval_ptr_;
-
-};
 
 
 

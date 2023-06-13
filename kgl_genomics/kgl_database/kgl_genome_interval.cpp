@@ -48,6 +48,7 @@ kgl::OpenRightInterval::OpenRightInterval(ContigOffset_t lower, ContigOffset_t u
 }
 
 
+// Returns true if the interval argument is contained within one of the intervals held in the set.
 bool kgl::IntervalSet::containsInterval(const OpenRightInterval& interval) const {
 
   auto iter = this->lower_bound(interval);
@@ -61,6 +62,7 @@ bool kgl::IntervalSet::containsInterval(const OpenRightInterval& interval) const
 
   }
 
+  // Check if contained by the previous interval (if it exists).
   iter = std::prev(iter, 1);
   if (iter != end()) {
 
@@ -93,15 +95,17 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
   // Get the gene transciptions.
   auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_feature);
 
+  // Process all the gene transcriptions.
   for (auto const& [sequence_name, coding_sequence] : coding_sequence_array->getMap()) {
 
+    // Process all the CDS intervals within a transcript.
     IntervalSet sequence_intervals;
     for (auto const& [feature_offset, coding_feature] : coding_sequence->getFeatureMap()) {
 
       auto const& sequence = coding_feature->sequence();
       OpenRightInterval sequence_interval(sequence.begin(), sequence.end());
 
-      // Add to the boost interval set.
+      // Add to the interval set.
       auto [insert_iter, result] = sequence_intervals.insert(sequence_interval);
       if (not result) {
 
@@ -110,8 +114,9 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 
       }
 
-    } // For each coding feature.
+    } // For each coding CDS feature within a transcript.
 
+    // Insert the transcript interval set and identifier into the transcripts map.
     auto [insert_iter, result] = gene_coding_transcripts_.try_emplace(sequence_name, sequence_intervals);
     if (not result) {
 
@@ -142,17 +147,79 @@ bool kgl::GeneIntervalStructure::isMemberCoding(ContigOffset_t offset) const {
 }
 
 
+bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
+
+  // Check the contig id.
+  if (not isSameContig(variant.contigId())) {
+
+    return false;
+
+  }
+
+  // Check if the variant modifies the gene interval.
+ if (not variant.sequenceModifier(gene_interval_.lower(), gene_interval_.size())) {
+
+   return false;
+
+ }
+
+ // For all transcripts check if the variant modifies any of the coding sequences.
+ for (auto const& [transcript_id, interval_set] : gene_coding_transcripts_) {
+
+   auto [variant_offset, variant_size] = variant.extentOffset();
+   auto interval_iter = interval_set.findUpperEqualIter(OpenRightInterval(variant_offset, variant_offset + variant_size));
+   if (interval_iter == interval_set.end()) {
+
+     return false;
+
+   }
+
+   auto const& coding_interval = *interval_iter;
+   if (variant.sequenceModifier(coding_interval.lower(), coding_interval.size())) {
+
+     return true;
+
+   }
+
+ }
+
+  return false;
+
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+// GeneIntervalStructure objects are stored in an IntervalMap by their gene intervals.,
+// The IntervalMaps are further indexed by contig in the ContigIntervalMap container.
+// This enables the entire gene set in a genome to be stored as GeneIntervalStructure objects.
+// Thus, we can test if a variant is within a gene coding region, and if so, return the gene feature that it belongs to.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kgl::IntervalCodingVariants::IntervalCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) {
 
-kgl::IntervalCodingVariants::IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) {
+
+  std::vector<std::shared_ptr<const GeneFeature>> gene_vector;
+  for (auto const& [contig_id, contig_ptr] : reference_ptr->getMap()) {
+
+    for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
+
+      gene_vector.push_back(gene_ptr);
+
+    }
+
+  }
+
+  InitializeGeneVector(gene_vector);
+
+}
+
+void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) {
 
   for (auto const& gene_feature : gene_vector) {
 
+    // Find the gene contig, insert if not present.
     auto contig_iter = contig_interval_map_.find(gene_feature->contig()->contigId());
     if (contig_iter == contig_interval_map_.end()) {
 
@@ -168,6 +235,7 @@ kgl::IntervalCodingVariants::IntervalCodingVariants(const std::vector<std::share
 
     }
 
+    // We have a valid contig IntervalMap so insert the GeneIntervalStructure object by the gene interval.
     auto& [contig_id, interval_map] = *contig_iter;
 
     GeneIntervalStructure gene_coding_intervals(gene_feature);
@@ -184,6 +252,7 @@ kgl::IntervalCodingVariants::IntervalCodingVariants(const std::vector<std::share
 
 }
 
+// Returns true if the variant is within a gene coding region.
 bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) const {
 
   // Check if the contig is defined.
@@ -196,34 +265,20 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
 
   auto const& [contig_id, interval_map] = *contig_iter;
 
-  bool result{false};
-  for (auto const& [gene_interval, interval_structure] : interval_map) {
+  // Lookup the IntervalMap to see if there is a candidate gene for this variant.
+  auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
+  if (candidate_gene_iter != interval_map.end()) {
 
-    for (auto const& [transcript_id, coding_set] : interval_structure.codingTranscripts()) {
+    auto const& [interval_key, gene_interval_struct] = *candidate_gene_iter;
+    if (gene_interval_struct.codingModifier(variant)) {
 
-      // If the variant is not an delete indel then just check if it within a coding interval
-      if (variant.variantType() != VariantType::INDEL_DELETE) {
-
-        result = coding_set.containsOffset(variant.offset() + variant.alleleOffset());
-
-      } else {
-        // A delete indel and we need to check any upstream effect on a coding interval.
-        ContigOffset_t delete_size = variant.reference().length() - variant.alternate().length();
-        result = coding_set.containsOffset(variant.offset() + variant.alleleOffset() + delete_size);
-
-      }
-
-      if (result) {
-
-        return true;
-
-      }
+      return true;
 
     }
 
   }
 
-  return result;
+  return false;
 
 }
 
@@ -231,50 +286,6 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
 std::optional<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants::getGeneCoding(const Variant &variant) const {
 
 
-  // Check if the contig is defined.
-  auto contig_iter = contig_interval_map_.find(variant.contigId());
-  if (contig_iter == contig_interval_map_.end()) {
-
-    return std::nullopt;
-
-  }
-
-  auto const& [contig_id, interval_map] = *contig_iter;
-
-  bool result{false};
-  for (auto const& [gene_interval, interval_structure] : interval_map) {
-
-    for (auto const& [transcript_id, coding_set] : interval_structure.codingTranscripts()) {
-
-      // If the variant is not an delete indel then just check if it within a coding interval
-      if (variant.variantType() != VariantType::INDEL_DELETE) {
-
-        result = coding_set.containsOffset(variant.offset() + variant.alleleOffset());
-
-      } else {
-        // A delete indel and we need to check any upstream effect on a coding interval.
-        ContigOffset_t delete_size = variant.reference().length() - variant.alternate().length();
-        result = coding_set.containsOffset(variant.offset() + variant.alleleOffset() + delete_size);
-
-      }
-
-      if (result) {
-
-        return interval_structure.getGene();
-
-      }
-
-    }
-
-  }
-
-  return std::nullopt;
-
-}
-
-
-std::optional<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants::getGeneInterval(const Variant &variant) const {
-
 
   // Check if the contig is defined.
   auto contig_iter = contig_interval_map_.find(variant.contigId());
@@ -286,22 +297,16 @@ std::optional<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVarian
 
   auto const& [contig_id, interval_map] = *contig_iter;
 
-  // If the variant is not an delete indel then just check if it within a coding interval
-  bool result{false};
-  if (variant.variantType() != VariantType::INDEL_DELETE) {
+  // Lookup the IntervalMap to see if there is a candidate gene for this variant.
+  auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
+  if (candidate_gene_iter != interval_map.end()) {
 
-    result = interval_map.containsOffset(variant.offset() + variant.alleleOffset());
+    auto const& [interval_key, gene_interval_struct] = *candidate_gene_iter;
+    if (gene_interval_struct.codingModifier(variant)) {
 
-  } else {
-    // A delete indel and we need to check any upstream effect on a coding interval.
-    ContigOffset_t delete_size = variant.reference().length() - variant.alternate().length();
-    result = interval_map.containsOffset(variant.offset() + variant.alleleOffset() + delete_size);
+      return gene_interval_struct.getGene();
 
-  }
-
-  if (result) {
-
-
+    }
 
   }
 
@@ -309,159 +314,3 @@ std::optional<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVarian
 
 }
 
-/*
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// The Pimpl implementation for filtering variants to arbitrary features.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-kgl::ImplementFeatureInterval::ImplementFeatureInterval(const std::vector<std::shared_ptr<const Feature>>& feature_vector) {
-
-
-  for (auto const& feature : feature_vector) {
-
-    auto contig_iter = contig_interval_map_.find(feature->contig()->contigId());
-    if (contig_iter == contig_interval_map_.end()) {
-
-      auto [inserted_iter, result] = contig_interval_map_.try_emplace(feature->contig()->contigId(), bil::interval_set<ContigOffset_t>());
-      if (not result) {
-
-        ExecEnv::log().error("FilterFeatureInterval::FilterFeatureInterval; cannot insert contig: {} (duplicate)", feature->contig()->contigId());
-        continue;
-
-      }
-
-      contig_iter = inserted_iter;
-
-    }
-
-    auto& [contig_id, interval_set] = *contig_iter;
-
-    auto const& sequence = feature->sequence();
-    auto const sequence_interval{bil::discrete_interval<ContigOffset_t>::right_open(sequence.begin(), sequence.end())};
-
-    // Add to the boost interval set.
-    interval_set += sequence_interval;
-
-  } // For each feature.
-
-}
-
-bool kgl::ImplementFeatureInterval::variantContained(const Variant &variant) const {
-
-  // Check if the contig is defined.
-  auto contig_iter = contig_interval_map_.find(variant.contigId());
-  if (contig_iter == contig_interval_map_.end()) {
-
-    return false;
-
-  }
-
-  auto const& [contig_id, interval_set] = *contig_iter;
-
-  // For now just see if the variant is within the feature interval.
-  bool result = bil::contains(interval_set, variant.offset() + variant.alleleOffset());
-
-  return result;
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Public facade classes.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::IntervalAllCodingVariants::IntervalAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) {
-
-
-  std::vector<std::shared_ptr<const GeneFeature>> gene_vector;
-  for (auto const& [contig_id, contig_ptr] : reference_ptr->getMap()) {
-
-    for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
-
-      gene_vector.push_back(gene_ptr);
-
-    }
-
-  }
-
-  pimpl_coding_interval_ptr_ = std::make_shared<ImplementCodingInterval>(gene_vector);
-
-}
-
-kgl::IntervalAllCodingVariants::IntervalAllCodingVariants(const IntervalAllCodingVariants& copy) {
-
-  pimpl_coding_interval_ptr_ = copy.pimpl_coding_interval_ptr_;
-
-}
-
-// Required due to forward decl of pimpl class.
-kgl::IntervalAllCodingVariants::~IntervalAllCodingVariants() {}
-
-bool kgl::IntervalAllCodingVariants::contains(const Variant& variant) const {
-
-  return pimpl_coding_interval_ptr_->variantContained(variant);
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-kgl::IntervalCodingVariants::IntervalCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) {
-
-  pimpl_coding_interval_ptr_ = std::make_shared<ImplementCodingInterval>(gene_vector);
-
-}
-
-kgl::IntervalCodingVariants::IntervalCodingVariants(const IntervalCodingVariants& copy) {
-
-  pimpl_coding_interval_ptr_ = copy.pimpl_coding_interval_ptr_;
-
-}
-
-// Required due to forward decl of pimpl class.
-kgl::IntervalCodingVariants::~IntervalCodingVariants() {}
-
-bool kgl::IntervalCodingVariants::contains(const Variant& variant) const {
-
-  return pimpl_coding_interval_ptr_->variantContained(variant);
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::IntervalFeatures::IntervalFeatures(const std::vector<std::shared_ptr<const Feature>>& feature_vector) {
-
-  pimpl_feature_interval_ptr_ = std::make_shared<ImplementFeatureInterval>(feature_vector);
-
-}
-
-kgl::IntervalFeatures::IntervalFeatures(const IntervalFeatures& copy) {
-
-  pimpl_feature_interval_ptr_ = copy.pimpl_feature_interval_ptr_;
-
-}
-
-// Required due to forward decl of pimpl class.
-kgl::IntervalFeatures::~IntervalFeatures() {}
-
-bool kgl::IntervalFeatures::contains(const Variant& variant) const {
-
-  return pimpl_feature_interval_ptr_->variantContained(variant);
-
-}
-*/

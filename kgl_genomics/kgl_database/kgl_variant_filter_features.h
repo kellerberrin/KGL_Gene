@@ -28,12 +28,12 @@ public:
 
   FilterAllCodingVariants(const FilterAllCodingVariants&) = default;
 
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return all_coding_variants_.contains(variant); }
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return all_coding_variants_.codingRegionVariant(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterAllCodingVariants>(*this); }
 
 private:
 
-  IntervalAllCodingVariants all_coding_variants_;
+  IntervalCodingVariants all_coding_variants_;
 
 };
 
@@ -62,33 +62,6 @@ public:
 private:
 
   IntervalCodingVariants interval_coding_variants_;
-
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter a vector of arbitrary features.
-// If, for example, a feature is a gene, this can (and mostly does) include 5 prime, 3 prime and intron non-coding regions.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class FilterFeatures: public FilterVariants {
-
-public:
-
-  explicit FilterFeatures(const std::vector<std::shared_ptr<const Feature>>& feature_vector)
-  : interval_features_(feature_vector) {}
-  ~FilterFeatures() override = default;
-
-  FilterFeatures(const FilterFeatures&) = default;
-
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_features_.contains(variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterFeatures>(*this); }
-
-private:
-
-  IntervalFeatures interval_features_;
 
 };
 
