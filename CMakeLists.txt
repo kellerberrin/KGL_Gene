@@ -319,7 +319,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_database/kgl_variant_filter_features.h kgl_genomics/kgl_database/kgl_variant_filter_Pf7.cpp kgl_genomics/kgl_database/kgl_variant_filter_Pf7.h kgl_genomics/kgl_database/kgl_variant_db_variant.cpp kgl_genomics/kgl_database/kgl_variant_db_variant.h kgl_genomics/kgl_database/kgl_genome_interval.cpp kgl_genomics/kgl_database/kgl_genome_interval.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp )
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_interval.cpp kel_utility/kel_interval.h)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES

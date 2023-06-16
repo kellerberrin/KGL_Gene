@@ -14,26 +14,28 @@ namespace kgl = kellerberrin::genome;
 std::unique_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filter) const {
 
 
-  std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
-  if (offset_filter) {
+  if (filter.filterType() == FilterBaseType::OFFSET_FILTER) {
 
+    std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
     return offset_filter->applyFilter(*this);
 
   }
 
-  // Only variant filters should be at this level, so we check for this.
-  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
-  if (not variant_filter) {
-
-    ExecEnv::log().error("OffsetDB::copyFilter; Filter: {} is not a variant_filter.", filter.filterName());
-
-  }
 
   // Filter the variants.
   std::unique_ptr<OffsetDB> filtered_offset_ptr(std::make_unique<OffsetDB>());
+
+  // Only variant filters should be at this level, so we check for this.
+  if (filter.filterType() != FilterBaseType::VARIANT_FILTER) {
+
+    ExecEnv::log().error("OffsetDB::copyFilter; Filter: {} is not a variant_filter.", filter.filterName());
+    return filtered_offset_ptr;
+
+  }
+
   for (const auto& variant_ptr : variant_vector_) {
 
-    if (variant_filter->applyFilter(*variant_ptr)) {
+    if (static_cast<const FilterVariants&>(filter).applyFilter(*variant_ptr)) {
 
       filtered_offset_ptr->addVariant(variant_ptr);
 
@@ -48,11 +50,11 @@ std::unique_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filte
 
 std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
 
-  std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
-  if (offset_filter) {
+  if (filter.filterType() == FilterBaseType::OFFSET_FILTER) {
 
     size_t prior_count = variant_vector_.size();
 
+    std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
     auto filtered_offset_ptr = offset_filter->applyFilter(*this);
     variant_vector_ = std::move(filtered_offset_ptr->variant_vector_);
 
@@ -64,9 +66,8 @@ std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
 
   std::pair<size_t, size_t> filter_count{0, 0};
   // Only variant filters should be at this level, so we check for this.
-  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
   filter_count.first = variant_vector_.size();
-  if (not variant_filter) {
+  if (filter.filterType() != FilterBaseType::VARIANT_FILTER) {
 
     ExecEnv::log().error("OffsetDB::selfFilter; Filter: {} is not a variant_filter.", filter.filterName());
     filter_count.second = filter_count.first;
@@ -77,7 +78,7 @@ std::pair<size_t, size_t> kgl::OffsetDB::selfFilter(const BaseFilter &filter) {
   OffsetDBArray filtered_variants;
   for (const auto& variant_ptr : variant_vector_) {
 
-    if (variant_filter->applyFilter(*variant_ptr)) {
+    if (static_cast<const FilterVariants&>(filter).applyFilter(*variant_ptr)) {
 
       filtered_variants.push_back(variant_ptr);
 

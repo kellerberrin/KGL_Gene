@@ -155,9 +155,9 @@ size_t kgl::GenomeDB::variantCount() const {
 std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::viewFilter(const BaseFilter& filter) const {
 
   // Only genome filter is implemented at this level.
-  std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
-  if (genome_filter) {
+  if (filter.filterType() == FilterBaseType::GENOME_FILTER) {
 
+    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
     return genome_filter->applyFilter(*this);
 
   }
@@ -184,11 +184,11 @@ std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::viewFilter(const BaseFilter& filte
 std::pair<size_t, size_t> kgl::GenomeDB::selfFilter(const BaseFilter& filter) {
 
   // Only genome filter is implemented at this level.
-  std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
-  if (genome_filter) {
+  if (filter.filterType() == FilterBaseType::GENOME_FILTER) {
 
     size_t prior_count = variantCount();
 
+    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
     auto genome_ptr = genome_filter->applyFilter(*this);
     contig_map_ = std::move(genome_ptr->contig_map_);
 

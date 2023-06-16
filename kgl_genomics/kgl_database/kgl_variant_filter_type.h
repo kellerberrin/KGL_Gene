@@ -22,12 +22,12 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Base class for a filter at the PopulationDB level. Filters genomes within a population.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 class FilterPopulations : public BaseFilter {
@@ -38,6 +38,7 @@ public:
   ~FilterPopulations() override = default;
 
   [[nodiscard]] virtual std::unique_ptr<PopulationDB> applyFilter(const PopulationDB& genome) const = 0;
+  [[nodiscard]] FilterBaseType filterType() const override { return FilterBaseType::POPULATION_FILTER; }
 
 private:
 
@@ -59,6 +60,7 @@ public:
   ~FilterGenomes() override = default;
 
   [[nodiscard]] virtual std::unique_ptr<GenomeDB> applyFilter(const GenomeDB& genome) const = 0;
+  [[nodiscard]] FilterBaseType filterType() const override { return FilterBaseType::GENOME_FILTER; }
 
 private:
 
@@ -80,6 +82,7 @@ public:
   ~FilterContigs() override = default;
 
   [[nodiscard]] virtual std::unique_ptr<ContigDB> applyFilter(const ContigDB& contig) const = 0;
+  [[nodiscard]] FilterBaseType filterType() const override { return FilterBaseType::CONTIG_FILTER; }
 
 private:
 
@@ -102,6 +105,7 @@ public:
   ~FilterOffsets() override = default;
 
   [[nodiscard]] virtual std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& variant) const = 0;
+  [[nodiscard]] FilterBaseType filterType() const override { return FilterBaseType::OFFSET_FILTER; }
 
 private:
 
@@ -123,6 +127,7 @@ public:
   ~FilterVariants() override = default;
 
   [[nodiscard]] virtual bool applyFilter(const Variant& variant) const = 0;
+  [[nodiscard]] FilterBaseType filterType() const override { return FilterBaseType::VARIANT_FILTER; }
 
 private:
 

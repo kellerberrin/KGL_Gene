@@ -25,8 +25,7 @@ public:
 
   explicit FilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) : all_coding_variants_(reference_ptr) {}
   ~FilterAllCodingVariants() override = default;
-
-  FilterAllCodingVariants(const FilterAllCodingVariants&) = default;
+  FilterAllCodingVariants(const FilterAllCodingVariants& copy) = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return all_coding_variants_.codingRegionVariant(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterAllCodingVariants>(*this); }
@@ -50,10 +49,8 @@ class FilterCodingVariants: public FilterVariants {
 
 public:
 
-  explicit FilterCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector)
-  : interval_coding_variants_(gene_vector) {}
+  explicit FilterCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) : interval_coding_variants_(gene_vector) {}
   ~FilterCodingVariants() override = default;
-
   FilterCodingVariants(const FilterCodingVariants&) = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_coding_variants_.codingRegionVariant(variant); }

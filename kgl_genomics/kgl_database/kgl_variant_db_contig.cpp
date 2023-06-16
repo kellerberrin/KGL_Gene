@@ -122,9 +122,9 @@ size_t kgl::ContigDB::variantCount() const {
 std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filter) const {
 
   // Only contig filter is implemented at this level.
-  std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
-  if (contig_filter) {
+  if (filter.filterType() == FilterBaseType::CONTIG_FILTER) {
 
+    std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
     auto filtered_contig_ptr = contig_filter->applyFilter(*this);
     filtered_contig_ptr->trimEmpty();  // Remove any empty offsets.
     return filtered_contig_ptr;
@@ -156,11 +156,11 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filte
 std::pair<size_t, size_t> kgl::ContigDB::selfFilter(const BaseFilter &filter) {
 
   // Only genome filter is implemented at this level.
-  std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
-  if (contig_filter) {
+   if (filter.filterType() == FilterBaseType::CONTIG_FILTER) {
 
     size_t prior_count = variantCount();
 
+    std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
     auto filtered_contig_ptr = contig_filter->applyFilter(*this);
     contig_offset_map_ = std::move(filtered_contig_ptr->contig_offset_map_);
     trimEmpty();  // Remove any empty offsets.

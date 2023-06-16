@@ -24,33 +24,32 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::viewFilter(const BaseFilte
 
   }
 
-  // Only a population filter is implemented at this level.
-  std::shared_ptr<const FilterPopulations> population_filter = std::dynamic_pointer_cast<const FilterPopulations>(filter.clone());
-  if (population_filter) {
 
-    return population_filter->applyFilter(*this);
+  // Only a population filter is implemented at this level.
+  if (filter.filterType() == FilterBaseType::POPULATION_FILTER) {
+
+    return static_cast<const FilterPopulations&>(filter).applyFilter(*this);
 
   }
 
   // All other filters are multi-threaded for each genome.
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
+  size_t thread_count = WorkflowThreads::defaultThreads(getMap().size());
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
-  // Required by the thread pool.
+  // The thread lambda.
   auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
-                          std::shared_ptr<const BaseFilter> filter_ptr)-> std::shared_ptr<GenomeDB> {
+                          const BaseFilter& filter)-> std::shared_ptr<GenomeDB> {
 
-    return genome_ptr->viewFilter(*filter_ptr);
+    return genome_ptr->viewFilter(filter);
 
   };
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
-    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
+    std::future<std::shared_ptr<GenomeDB>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, std::ref(filter));
     future_vector.push_back(std::move(future));
 
   }
@@ -89,12 +88,11 @@ std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter
   }
 
   // Only a population filter is implemented at this level.
-  std::shared_ptr<const FilterPopulations> population_filter = std::dynamic_pointer_cast<const FilterPopulations>(filter.clone());
-  if (population_filter) {
+  if (filter.filterType() == FilterBaseType::POPULATION_FILTER) {
 
     size_t prior_count = variantCount();
 
-    auto population_ptr = population_filter->applyFilter(*this);
+    auto population_ptr = static_cast<const FilterPopulations&>(filter).applyFilter(*this);
     genome_map_ = std::move(population_ptr->genome_map_);
 
     size_t post_count = variantCount();
@@ -112,17 +110,16 @@ std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter
   // Required by the thread pool.
 
   auto filter_lambda = [](std::shared_ptr<GenomeDB> genome_ptr,
-                          std::shared_ptr<const BaseFilter> filter_ptr) -> std::pair<size_t, size_t> {
+                          const BaseFilter& filter) -> std::pair<size_t, size_t> {
 
-    return genome_ptr->selfFilter(*filter_ptr);
+    return genome_ptr->selfFilter(filter);
 
   };
 
   // Queue a thread for each genome.
   for (auto& [genome_id, genome_ptr] : getMap()) {
 
-    std::shared_ptr<const BaseFilter> filter_ptr = filter.clone();
-    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, filter_ptr);
+    std::future<std::pair<size_t, size_t>> future = thread_pool.enqueueFuture(filter_lambda, genome_ptr, std::ref(filter));
     future_vector.push_back(std::move(future));
 
   }

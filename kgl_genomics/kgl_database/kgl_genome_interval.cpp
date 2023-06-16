@@ -17,80 +17,16 @@
 namespace kgl = kellerberrin::genome;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::OpenRightInterval::OpenRightInterval(ContigOffset_t lower, ContigOffset_t upper)  {
-
-  if (upper <= lower) {
-
-    ExecEnv::log().warn("OpenRightInterval::OpenRightInterval, Incorrect Initialization, Upper Offset: {} <= Lower Offset: {}", upper, lower);
-    if (upper == lower) {
-
-      ++upper;
-
-    } else {
-
-      std::swap(lower, upper);
-
-    }
-
-
-  }
-
-  lower_ = lower;
-  upper_ = upper;
-
-}
-
-
-// Returns true if the interval argument is contained within one of the intervals held in the set.
-bool kgl::IntervalSet::containsInterval(const OpenRightInterval& interval) const {
-
-  auto iter = this->lower_bound(interval);
-  if (iter != this->end()) {
-
-    if (iter->lower() == interval.lower()) {
-
-      return iter->containsInterval(interval);
-
-    }
-
-  }
-
-  // Check if contained by the previous interval (if it exists).
-  iter = std::prev(iter, 1);
-  if (iter != end()) {
-
-    return iter->containsInterval(interval);
-
-  }
-
-  return false;
-
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::GeneIntervalStructure::GeneIntervalStructure(const std::shared_ptr<const GeneFeature> &gene_feature) {
-
-  gene_feature_ = gene_feature;
-  gene_interval_ = OpenRightInterval(gene_feature->sequence().begin(), gene_feature->sequence().end());
-  codingInterval(gene_feature);
-
-}
 
 void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const GeneFeature>& gene_feature) {
+
+  gene_feature_ = gene_feature;
 
   // Get the gene transciptions.
   auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_feature);
@@ -104,13 +40,12 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 
       auto const& sequence = coding_feature->sequence();
       OpenRightInterval sequence_interval(sequence.begin(), sequence.end());
-
       // Add to the interval set.
       auto [insert_iter, result] = sequence_intervals.insert(sequence_interval);
       if (not result) {
 
-        ExecEnv::log().warn("GeneIntervalStructure::codingInterval; Gene: {}, Transcript: {} has duplicate coding regions at offset: {}",
-                            gene_feature->id(), sequence_name, sequence_interval.lower());
+        ExecEnv::log().warn("GeneIntervalStructure::codingInterval; Gene: {}, Transcript: {} has duplicate coding regions: [{}, {})",
+                            gene_feature->id(), sequence_name, sequence_interval.lower(), sequence_interval.upper());
 
       }
 
@@ -226,7 +161,7 @@ void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::sh
       auto [inserted_iter, result] = contig_interval_map_.try_emplace(gene_feature->contig()->contigId(), IntervalMap<GeneIntervalStructure>());
       if (not result) {
 
-        ExecEnv::log().error("IntervalCodingVariants::IntervalCodingVariants; cannot insert contig: {} (duplicate)", gene_feature->contig()->contigId());
+        ExecEnv::log().error("IntervalCodingVariants::InitializeGeneVector; cannot insert contig: {} (duplicate)", gene_feature->contig()->contigId());
         continue;
 
       }
@@ -243,8 +178,17 @@ void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::sh
     auto [insert_iter, result] = interval_map.try_emplace(gene_interval, gene_coding_intervals);
     if (not result) {
 
-      ExecEnv::log().error("IntervalCodingVariants::IntervalCodingVariants; cannot insert Gene : {}, Interval[{}, {}) (duplicate)"
-                           , gene_feature->contig()->contigId(), gene_interval.lower(), gene_interval.upper());
+      ExecEnv::log().warn("IntervalCodingVariants::IntervalCodingVariants; cannot insert Gene: {}, Contig: {}, Interval: [{}, {}) (duplicate interval)"
+                           , gene_feature->id(), contig_id, gene_interval.lower(), gene_interval.upper());
+      auto iter = interval_map.find(gene_interval);
+      if (iter != interval_map.end()) {
+
+        const auto& [duplicate_interval, gene_coding] = *iter;
+        const auto& sequence = gene_coding.getGene()->sequence();
+        ExecEnv::log().warn("IntervalCodingVariants::IntervalCodingVariants; Previously inserted gene: {}, Contig: {}, Interval: [{}, {})"
+                             , gene_coding.getGene()->id(), gene_coding.getGene()->contig()->contigId(), sequence.begin(), sequence.end());
+
+      }
 
     }
 

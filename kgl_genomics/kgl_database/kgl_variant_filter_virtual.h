@@ -13,6 +13,9 @@
 // Concrete variant filters are defined in kgl_filter.h
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Runtime Filter Type Enum. Filters are processed differently according to type.
+enum class FilterBaseType { POPULATION_FILTER, GENOME_FILTER, CONTIG_FILTER, OFFSET_FILTER, VARIANT_FILTER };
+
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -27,6 +30,7 @@ public:
   [[nodiscard]] std::string filterName() const { return filter_name_; }
   void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
 
+  [[nodiscard]] virtual FilterBaseType filterType() const = 0;
   [[nodiscard]] virtual std::shared_ptr<BaseFilter> clone() const = 0;
 
 private:
