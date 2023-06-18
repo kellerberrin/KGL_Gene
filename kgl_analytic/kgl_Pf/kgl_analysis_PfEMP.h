@@ -27,17 +27,19 @@ class PfEMPAnalysis : public VirtualAnalysis {
 public:
 
   PfEMPAnalysis() = default;
+
   ~PfEMPAnalysis() override = default;
 
   // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
   [[nodiscard]] std::string ident() const override { return PFEMPANALYSIS_IDENT_; }
+
   [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<PfEMPAnalysis>(); }
 
   // Setup the analytics to process VCF data.
-  [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,
-                                         const ActiveParameterList& named_parameters,
-                                         const std::shared_ptr<const AnalysisResources>& resource_ptr) override;
+  [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
+                                        const ActiveParameterList &named_parameters,
+                                        const std::shared_ptr<const AnalysisResources> &resource_ptr) override;
 
 
   // Perform the genetic analysis per VCF file
@@ -77,24 +79,24 @@ private:
   void performPFEMP1UPGMA();
 
   // Available Parameters
-  constexpr static const char* NEWICK_FILE_ = "NewickFile";
-  constexpr static const char* INTRON_FILE_ = "IntronFile";
+  constexpr static const char *NEWICK_FILE_ = "NewickFile";
+  constexpr static const char *INTRON_FILE_ = "IntronFile";
 
   // Intron promoter sequences.
-  constexpr static const char* I_PROMOTER_ = "TGTATGTG";
-  constexpr static const char* I_COMPLEMENT_PROMOTER_ = "ACATACAC";
-  constexpr static const char* I_5_PROMOTER_ = "TCATA";
+  constexpr static const char *I_PROMOTER_ = "TGTATGTG";
+  constexpr static const char *I_COMPLEMENT_PROMOTER_ = "ACATACAC";
+  constexpr static const char *I_5_PROMOTER_ = "TCATA";
 
   // Min seq size for UPGMA analysis.
   constexpr static const size_t MIN_SEQUENCE_LENGTH_ = 10;
   // Gene family ident.
-  constexpr static const char* PFEMP1_FAMILY_ = "PFEMP1";
-  constexpr static const char* RUF6_FAMILY_ = "RUF6";
-  constexpr static const char* RIFIN_FAMILY_ = "RIFIN";
-  constexpr static const char* STEVOR_FAMILY_ = "STEVOR";
-  constexpr static const char* SURFIN_FAMILY_ = "SURFIN";
-  constexpr static const char* TRNA_FAMILY_ = "TRNA";
-  constexpr static const char* RIBOSOME_FAMILY_ = "RIBOSOM";
+  constexpr static const char *PFEMP1_FAMILY_ = "PFEMP1";
+  constexpr static const char *RUF6_FAMILY_ = "RUF6";
+  constexpr static const char *RIFIN_FAMILY_ = "RIFIN";
+  constexpr static const char *STEVOR_FAMILY_ = "STEVOR";
+  constexpr static const char *SURFIN_FAMILY_ = "SURFIN";
+  constexpr static const char *TRNA_FAMILY_ = "TRNA";
+  constexpr static const char *RIBOSOME_FAMILY_ = "RIBOSOM";
 
 
   // The genes we are interested in.
@@ -107,47 +109,52 @@ private:
   CalcFWS calc_fws_;
 
   // File name constants.
-  constexpr static const char* NEWICK_{"newick_"};
-  constexpr static const char* NEWICK_EXT_{".txt"};
-  constexpr static const char* INTRON_{"intron_"};
-  constexpr static const char* INTRON_EXT_{".csv"};
-  constexpr static const char* VARIANT_COUNT_{"gene_variant_"};
-  constexpr static const char* VARIANT_COUNT_EXT_{".csv"};
+  constexpr static const char *NEWICK_{"newick_"};
+  constexpr static const char *NEWICK_EXT_{".txt"};
+  constexpr static const char *INTRON_{"intron_"};
+  constexpr static const char *INTRON_EXT_{".csv"};
+  constexpr static const char *VARIANT_COUNT_{"gene_variant_"};
+  constexpr static const char *VARIANT_COUNT_EXT_{".csv"};
   constexpr static const char CSV_DELIMITER_ = ',';
 
   // Return a vector of genes that have a particular text fragment in the description.
-  [[nodiscard]] GeneVector getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
-                                        , const std::string& description_text) const;
+  [[nodiscard]] GeneVector getGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr, const std::string &description_text) const;
 
-  [[nodiscard]] GeneVector getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                               const std::string& desc_uc_text = "",
-                                               size_t max_size = 0) const;
+  [[nodiscard]] GeneVector getncRNAGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr,
+                                              const std::string &desc_uc_text = "",
+                                              size_t max_size = 0) const;
 
   [[nodiscard]] GeneVector proximityGenes(size_t radius,
-                                          const std::shared_ptr<const GeneFeature>& target_ptr,
-                                          const GeneVector& gene_vector) const;
+                                          const std::shared_ptr<const GeneFeature> &target_ptr,
+                                          const GeneVector &gene_vector) const;
 
   // Analyze the introns of Var family genes.
-  void varIntron( const GeneVector& gene_vector, const std::string& intron_file) const;
+  void varIntron(const GeneVector &gene_vector, const std::string &intron_file) const;
 
-  void geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                        const GeneVector& gene_vector,
-                        const std::string& upgma_file_name,
-                        const std::string& family_text) const;
+  void geneFamilyUPGMA(const std::shared_ptr<const GenomeReference> &genome_ptr,
+                       const GeneVector &gene_vector,
+                       const std::string &upgma_file_name,
+                       const std::string &family_text) const;
 
-  void checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
-                            const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const;
+  void checkDistanceMatrix(const std::shared_ptr<const PopulationDB> &all_population_ptr,
+                           const std::shared_ptr<const PopulationDB> &filtered_population_ptr) const;
 
   void testPhysicalDistances();
 
-  [[nodiscard]] GeneVector getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
-  [[nodiscard]] GeneVector getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
-  [[nodiscard]] GeneVector getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr);
+  [[nodiscard]] GeneVector getAntiGenicGenes(const std::shared_ptr<const GenomeReference> &genome_ptr);
+
+  [[nodiscard]] GeneVector getAllGenes(const std::shared_ptr<const GenomeReference> &genome_ptr);
+
+  [[nodiscard]] GeneVector getTranslationGenes(const std::shared_ptr<const GenomeReference> &genome_ptr);
 
   // Quality filter the variants using read depth, VQSLOD and other statistics
-  std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population);
+  std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
+
+  // Temporary test function.
+  void countGenes(const std::shared_ptr<const PopulationDB>& population_ptr);
 
 };
+
 
 
 } // namespace

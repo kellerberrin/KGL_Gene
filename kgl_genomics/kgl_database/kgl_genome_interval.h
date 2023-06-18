@@ -9,9 +9,9 @@
 #include "kgl_genome_genome.h"
 #include "kgl_variant.h"
 #include "kel_interval.h"
+#include "kel_interval_set.h"
+#include "kel_interval_map.h"
 
-#include <set>
-#include <map>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -41,6 +41,7 @@ public:
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& getGene() const { return gene_feature_; }
   [[nodiscard]] const GeneCodingTranscriptMap& codingTranscripts() const { return gene_coding_transcripts_; }
   [[nodiscard]] const OpenRightInterval& geneInterval() const { return gene_interval_; }
+  [[nodiscard]] const IntervalSet& transcriptUnion() const { return transcript_union_; }
 
   // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
   [[nodiscard]] bool isMemberGene(ContigOffset_t offset) const { return gene_interval_.containsOffset(offset); }
@@ -55,6 +56,7 @@ private:
 
   std::shared_ptr<const GeneFeature> gene_feature_;
   GeneCodingTranscriptMap gene_coding_transcripts_;
+  IntervalSet transcript_union_;
   OpenRightInterval gene_interval_;
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
@@ -62,17 +64,14 @@ private:
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// GeneIntervalStructure objects are stored in an IntervalMap by their gene intervals.,
-// The IntervalMaps are further indexed by contig in the ContigIntervalMap container.
-// This enables the entire gene set in a genome to be stored as GeneIntervalStructure objects.
-// Thus, we can test if a variant is within a gene coding region, and if so, return the gene feature that it belongs to.
+// Implemented using the interval multimap as gene intervals can (and do) overlap.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using ContigIntervalMap = std::map<ContigId_t, IntervalMap<GeneIntervalStructure>>;
+using ContigIntervalMap = std::map<ContigId_t, IntervalMultiMap <std::shared_ptr<const GeneIntervalStructure>>>;
 class IntervalCodingVariants {
 
 public:
@@ -81,12 +80,12 @@ public:
   explicit IntervalCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr);
   ~IntervalCodingVariants() = default;
 
-  IntervalCodingVariants& operator=(const IntervalCodingVariants& copy) = default;
-
   // Returns true if the variant is within a gene coding region.
   [[nodiscard]] bool codingRegionVariant(const Variant& variant) const;
   // Returns std::nullopt if the variant is not within a gene coding region.
-  [[nodiscard]] std::optional<std::shared_ptr<const GeneFeature>> getGeneCoding(const Variant &variant) const;
+  [[nodiscard]] std::vector<std::shared_ptr<const GeneFeature>> getGeneCoding(const Variant &variant) const;
+
+  [[nodiscard]] const ContigIntervalMap& getCodingMap() const { return contig_interval_map_; }
 
 private:
 

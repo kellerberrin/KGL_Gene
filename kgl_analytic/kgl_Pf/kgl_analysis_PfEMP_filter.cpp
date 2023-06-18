@@ -5,11 +5,75 @@
 #include "kgl_variant_filter.h"
 #include "kgl_variant_filter_Pf7.h"
 #include "kgl_analysis_PfEMP.h"
+#include "kgl_genome_interval.h"
 
 
 
 namespace kgl = kellerberrin::genome;
 
+
+void kgl::PfEMPAnalysis::countGenes(const std::shared_ptr<const PopulationDB>& population_ptr) {
+
+  struct CountGenes{
+
+    CountGenes(const std::shared_ptr<const GenomeReference>& genome_3D7_ptr) {
+
+      coding_variants_ptr_ = std::make_unique<IntervalCodingVariants>(genome_3D7_ptr);
+
+    }
+
+    bool countGeneFunc(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      auto gene_vector = coding_variants_ptr_->getGeneCoding(*variant_ptr);
+
+      gene_count_[gene_vector.size()]++;
+
+      return true;
+
+    }
+
+    void printIntervalStats() {
+
+      size_t shared_coding_intervals{0};
+      for (auto const& [contig, interval_map] : coding_variants_ptr_->getCodingMap()) {
+
+        std::vector<std::tuple<OpenRightInterval, std::shared_ptr<const GeneIntervalStructure>, std::shared_ptr<const GeneIntervalStructure>>> intersect_tuple_vector = interval_map.intersect();
+        for (auto const& [interval, gene_a_ptr, gene_b_ptr] : intersect_tuple_vector) {
+
+          auto intersect_set = gene_a_ptr->transcriptUnion().intervalSetIntersection(gene_b_ptr->transcriptUnion());
+          shared_coding_intervals += intersect_set.size();
+
+        }
+
+        ExecEnv::log().info("PfEMPAnalysis::countGenes::CountGenes; Contig: {}, Intervals (Genes): {}, Overlapping Genes: {}, Shared coding intervals: {}",
+                            contig, interval_map.size(), interval_map.intersect().size(), shared_coding_intervals);
+
+      }
+
+    }
+
+    void printResults() {
+
+      printIntervalStats();
+      for (auto const& [gene_count, variant_count] : gene_count_ ) {
+
+        ExecEnv::log().info("PfEMPAnalysis::countGenes::CountGenes; GeneCount: {}, Variant Count: {}", gene_count, variant_count);
+
+      }
+
+    }
+
+
+    std::unique_ptr<IntervalCodingVariants> coding_variants_ptr_;
+    std::map<size_t, size_t> gene_count_;
+
+  };
+
+  CountGenes GeneCountObj(genome_3D7_ptr_);
+  population_ptr->processAll(GeneCountObj, &CountGenes::countGeneFunc);
+  GeneCountObj.printResults();
+
+}
 
 
 // Quality filter the variants using read depth, VQSLOD and other statistics
@@ -93,13 +157,20 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   if constexpr(CODING_FILTER_ACTIVE_) {
 
-    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
+    std::shared_ptr<const PopulationDB> multimap_filtered_population_ptr = filtered_population_ptr->viewFilter(MultiFilterAllCodingVariants(genome_3D7_ptr_));
+    ExecEnv::log().info("std::multimap Population Final Filtered Size Genome count: {}, Variant Count: {}",
+                        multimap_filtered_population_ptr->getMap().size(),
+                        multimap_filtered_population_ptr->variantCount());
+
+    countGenes(multimap_filtered_population_ptr);
 
   }
 
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.
   auto deepcopy_population_ptr = filtered_population_ptr->deepCopy();
+
+  countGenes(deepcopy_population_ptr);
 
   // Filtered population should contain all contigs for all genomes.
   deepcopy_population_ptr->squareContigs();

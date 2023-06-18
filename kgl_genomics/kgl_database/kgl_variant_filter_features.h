@@ -12,23 +12,24 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Filter variants that are (possibly partially if an indel) within the coding sequence of a GENE.
-// All genes within the reference genome are filtered.
+// Implemented using multimap.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class FilterAllCodingVariants: public FilterVariants {
+
+class MultiFilterAllCodingVariants: public FilterVariants {
 
 public:
 
-  explicit FilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) : all_coding_variants_(reference_ptr) {}
-  ~FilterAllCodingVariants() override = default;
-  FilterAllCodingVariants(const FilterAllCodingVariants& copy) = default;
+  explicit MultiFilterAllCodingVariants(const std::shared_ptr<const GenomeReference>& reference_ptr) : all_coding_variants_(reference_ptr) {}
+  ~MultiFilterAllCodingVariants() override = default;
+  MultiFilterAllCodingVariants(const MultiFilterAllCodingVariants& copy) = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return all_coding_variants_.codingRegionVariant(variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterAllCodingVariants>(*this); }
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<MultiFilterAllCodingVariants>(*this); }
 
 private:
 
@@ -36,32 +37,22 @@ private:
 
 };
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter variants that are (possibly partially if an indel) within the coding sequence of gene.
-// The vector specifies which genes are filtered.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class FilterCodingVariants: public FilterVariants {
+class MultiFilterCodingVariants: public FilterVariants {
 
 public:
 
-  explicit FilterCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) : interval_coding_variants_(gene_vector) {}
-  ~FilterCodingVariants() override = default;
-  FilterCodingVariants(const FilterCodingVariants&) = default;
+  explicit MultiFilterCodingVariants(const std::vector<std::shared_ptr<const GeneFeature>>& gene_vector) : interval_coding_variants_(gene_vector) {}
+  ~MultiFilterCodingVariants() override = default;
+  MultiFilterCodingVariants(const MultiFilterCodingVariants&) = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return interval_coding_variants_.codingRegionVariant(variant); }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FilterCodingVariants>(*this); }
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<MultiFilterCodingVariants>(*this); }
 
 private:
 
   IntervalCodingVariants interval_coding_variants_;
 
 };
-
 
 
 } // Namespace

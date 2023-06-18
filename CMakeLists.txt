@@ -109,7 +109,9 @@ set(UTILITY_SOURCE_FILES
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_date_time.cpp
-        kel_utility/kel_date_time.h)
+        kel_utility/kel_date_time.h
+        kel_utility/kel_interval.cpp
+        kel_utility/kel_interval.h)
 
 # Multi-threading library
 set(THREAD_SOURCE_FILES
@@ -316,10 +318,16 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.cpp
         kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.h
         kgl_genomics/kgl_database/kgl_variant_db_population_filter.cpp
-        kgl_genomics/kgl_database/kgl_variant_filter_features.h kgl_genomics/kgl_database/kgl_variant_filter_Pf7.cpp kgl_genomics/kgl_database/kgl_variant_filter_Pf7.h kgl_genomics/kgl_database/kgl_variant_db_variant.cpp kgl_genomics/kgl_database/kgl_variant_db_variant.h kgl_genomics/kgl_database/kgl_genome_interval.cpp kgl_genomics/kgl_database/kgl_genome_interval.h)
+        kgl_genomics/kgl_database/kgl_variant_filter_features.h
+        kgl_genomics/kgl_database/kgl_variant_filter_Pf7.cpp
+        kgl_genomics/kgl_database/kgl_variant_filter_Pf7.h
+        kgl_genomics/kgl_database/kgl_variant_db_variant.cpp
+        kgl_genomics/kgl_database/kgl_variant_db_variant.h
+        kgl_genomics/kgl_database/kgl_genome_interval.cpp
+        kgl_genomics/kgl_database/kgl_genome_interval.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp kel_utility/kel_interval.cpp kel_utility/kel_interval.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -545,7 +553,10 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES
@@ -574,13 +585,15 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package_resource.cpp
         kgl_app/kgl_runtime_resource.h
         kgl_app/kgl_runtime_resource.cpp
-        kgl_app/kgl_properties_resource.cpp kgl_app/kgl_properties_resource.h kgl_app/kgl_properties_resource_items.cpp kgl_app/kgl_properties_resource_pf.cpp kgl_app/kgl_package_resource_pf.cpp)
+        kgl_app/kgl_properties_resource.cpp
+        kgl_app/kgl_properties_resource.h
+        kgl_app/kgl_properties_resource_items.cpp
+        kgl_app/kgl_properties_resource_pf.cpp
+        kgl_app/kgl_package_resource_pf.cpp)
 
 
 
-
-
-add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES} ${MATHEMATICAL_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES} ${MATHEMATICAL_SOURCE_FILES} ${EDLIB_SOURCE_FILES} kel_utility/kel_interval_map.h kel_utility/kel_interval_set.h kel_utility/kel_interval_set.cpp)
 
 add_library(kel_app STATIC ${RUNTIME_SOURCE_FILES})
 

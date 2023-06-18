@@ -62,6 +62,13 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 
   } // For each coding sequence.
 
+  // Create a union of all the coding transcripts
+  for (auto const& [transcript_name, transcript_set] : gene_coding_transcripts_) {
+
+    transcript_union_ = transcript_union_.intervalSetUnion(transcript_set);
+
+  }
+
 }
 
 
@@ -125,10 +132,7 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// GeneIntervalStructure objects are stored in an IntervalMap by their gene intervals.,
-// The IntervalMaps are further indexed by contig in the ContigIntervalMap container.
-// This enables the entire gene set in a genome to be stored as GeneIntervalStructure objects.
-// Thus, we can test if a variant is within a gene coding region, and if so, return the gene feature that it belongs to.
+// std::multimap implementation
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -158,7 +162,7 @@ void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::sh
     auto contig_iter = contig_interval_map_.find(gene_feature->contig()->contigId());
     if (contig_iter == contig_interval_map_.end()) {
 
-      auto [inserted_iter, result] = contig_interval_map_.try_emplace(gene_feature->contig()->contigId(), IntervalMap<GeneIntervalStructure>());
+      auto [inserted_iter, result] = contig_interval_map_.try_emplace(gene_feature->contig()->contigId(), IntervalMultiMap<std::shared_ptr<const GeneIntervalStructure>>());
       if (not result) {
 
         ExecEnv::log().error("IntervalCodingVariants::InitializeGeneVector; cannot insert contig: {} (duplicate)", gene_feature->contig()->contigId());
@@ -173,24 +177,9 @@ void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::sh
     // We have a valid contig IntervalMap so insert the GeneIntervalStructure object by the gene interval.
     auto& [contig_id, interval_map] = *contig_iter;
 
-    GeneIntervalStructure gene_coding_intervals(gene_feature);
-    auto gene_interval = gene_coding_intervals.geneInterval();
-    auto [insert_iter, result] = interval_map.try_emplace(gene_interval, gene_coding_intervals);
-    if (not result) {
-
-      ExecEnv::log().warn("IntervalCodingVariants::IntervalCodingVariants; cannot insert Gene: {}, Contig: {}, Interval: [{}, {}) (duplicate interval)"
-                           , gene_feature->id(), contig_id, gene_interval.lower(), gene_interval.upper());
-      auto iter = interval_map.find(gene_interval);
-      if (iter != interval_map.end()) {
-
-        const auto& [duplicate_interval, gene_coding] = *iter;
-        const auto& sequence = gene_coding.getGene()->sequence();
-        ExecEnv::log().warn("IntervalCodingVariants::IntervalCodingVariants; Previously inserted gene: {}, Contig: {}, Interval: [{}, {})"
-                             , gene_coding.getGene()->id(), gene_coding.getGene()->contig()->contigId(), sequence.begin(), sequence.end());
-
-      }
-
-    }
+    auto gene_struct_ptr = std::make_shared<const GeneIntervalStructure>(gene_feature);
+    auto gene_interval = gene_struct_ptr->geneInterval();
+    interval_map.emplace(gene_interval, gene_struct_ptr);
 
   } // For each gene.
 
@@ -213,8 +202,8 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
   auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
   if (candidate_gene_iter != interval_map.end()) {
 
-    auto const& [interval_key, gene_interval_struct] = *candidate_gene_iter;
-    if (gene_interval_struct.codingModifier(variant)) {
+    auto const& [interval_key, gene_struct_ptr] = *candidate_gene_iter;
+    if (gene_struct_ptr->codingModifier(variant)) {
 
       return true;
 
@@ -227,34 +216,42 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
 }
 
 
-std::optional<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants::getGeneCoding(const Variant &variant) const {
+std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants::getGeneCoding(const Variant &variant) const {
 
 
-
+  std::vector<std::shared_ptr<const kgl::GeneFeature>> gene_vector;
   // Check if the contig is defined.
   auto contig_iter = contig_interval_map_.find(variant.contigId());
   if (contig_iter == contig_interval_map_.end()) {
 
-    return std::nullopt;
+    return gene_vector;
 
   }
 
   auto const& [contig_id, interval_map] = *contig_iter;
 
-  // Lookup the IntervalMap to see if there is a candidate gene for this variant.
+  // Lookup the IntervalMap to see if there are candidate genes for this variant.
+  // Variants may (and do) map to more than one gene.
   auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
-  if (candidate_gene_iter != interval_map.end()) {
+  while (candidate_gene_iter != interval_map.end()) {
 
-    auto const& [interval_key, gene_interval_struct] = *candidate_gene_iter;
-    if (gene_interval_struct.codingModifier(variant)) {
+    auto const& [interval_key, gene_struct_ptr] = *candidate_gene_iter;
+    if (gene_struct_ptr->codingModifier(variant)) {
 
-      return gene_interval_struct.getGene();
+      gene_vector.push_back(gene_struct_ptr->getGene());
+
+    } else {
+
+      break;
 
     }
 
+    ++candidate_gene_iter;
+
   }
 
-  return std::nullopt;
+  return gene_vector;
 
 }
+
 

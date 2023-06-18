@@ -38,29 +38,15 @@ kel::OpenRightInterval::OpenRightInterval(size_t lower, size_t upper)  {
 }
 
 
-// Returns true if the interval argument is contained within one of the intervals held in the set.
-bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const {
+std::pair<size_t, size_t> kel::OpenRightInterval::intersection(const OpenRightInterval &interval) const {
 
-  auto iter = this->lower_bound(interval);
-  if (iter != this->end()) {
+  if (lower_ >= interval.upper_ or interval.lower_ >= upper_) {
 
-    if (iter->lower() == interval.lower()) {
-
-      return iter->containsInterval(interval);
-
-    }
+    return {0, 0};
 
   }
 
-  // Check if contained by the previous interval (if it exists).
-  iter = std::prev(iter, 1);
-  if (iter != end()) {
-
-    return iter->containsInterval(interval);
-
-  }
-
-  return false;
+  return { std::max(lower_, interval.lower_), std::min(upper_, interval.upper_ ) };
 
 }
 
