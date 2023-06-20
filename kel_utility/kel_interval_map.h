@@ -29,77 +29,14 @@ public:
   IntervalMap() = default;
   ~IntervalMap() = default;
 
-  // Returns any the map interval that contains the argument or end().
-  [[nodiscard]] auto findIntervalIter(const OpenRightInterval &interval) const {
-
-    auto iter = this->lower_bound(interval);
-    if (iter != this->end()) {
-
-      // Do the lower bound of the intervals match.
-      auto const &[interval_key, value] = *iter;
-      if (interval_key.lower() == interval.lower()) {
-
-        if (interval_key.containsInterval(interval)) {
-
-          return iter;
-
-        } else {
-
-          return this->end();
-
-        }
-
-      }
-
-    }
-
-    // Look at the previous interval.
-    iter = std::prev(iter, 1);
-    if (iter != this->end()) {
-
-      auto const &[interval_key, value] = *iter;
-      if (interval_key.containsInterval(interval)) {
-
-        return iter;
-
-      } else {
-
-        return this->end();
-
-      }
-
-    }
-
-    return this->end();
-
-  }
-
-  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
-  [[nodiscard]] auto findUpperEqualIter(const OpenRightInterval &interval) const {
-
-    auto iter = this->lower_bound(interval);
-    // Return the previous map interval if it contains the argument interval.
-    auto prev_iter = std::prev(iter, 1);
-    if (prev_iter != this->end()) {
-
-      auto const &[interval_key, value] = *prev_iter;
-      if (interval_key.containsInterval(interval)) {
-
-        return prev_iter;
-
-      }
-
-    }
-
-    // Else just return the upper interval
-    return iter;
-
-  }
-
-  [[nodiscard]] auto findUpperOffsetIter(size_t offset) const { return findUpperEqualIter(OpenRightInterval(offset, offset + 1)); }
-  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return findIntervalIter(interval) != this->end(); }
-
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Interval adapter for std::multimap.
@@ -114,23 +51,89 @@ public:
   IntervalMultiMap() = default;
   ~IntervalMultiMap() = default;
 
-  // Returns any the map interval that contains the argument or end().
-  [[nodiscard]] auto findIntervalIter(const OpenRightInterval &interval) const {
+  // Returns vector the value for all map intervals that contain the argument
+  [[nodiscard]] std::vector<ValueType> findIntervalContains(const OpenRightInterval &interval) const {
+
+    std::vector<ValueType> value_vector;
+
+    if (this->empty()) {
+
+      return value_vector;
+
+    }
 
     auto iter = this->lower_bound(interval);
+
     if (iter != this->end()) {
 
-      // Do the lower bound of the intervals match.
       auto const &[interval_key, value] = *iter;
-      if (interval_key.lower() == interval.lower()) {
+      if (interval_key.containsInterval(interval)) {
 
+        value_vector.push_back(value);
+
+      }
+
+    }
+
+    // Look at previous intervals.
+    auto prev_iter = std::ranges::prev(iter, 1, this->begin());
+    // Check that iter was not at this->begin()
+    if (prev_iter != iter) {
+
+      while(interval.lower() < prev_iter->first.upper()) {
+
+        auto const &[interval_key, value] = *prev_iter;
         if (interval_key.containsInterval(interval)) {
 
-          return iter;
+          value_vector.push_back(value);
 
-        } else {
+        }
 
-          return this->end();
+        if (prev_iter == this->begin()) {
+
+          break;
+
+        }
+        prev_iter = std::ranges::prev(prev_iter, 1, this->begin());
+
+      }
+
+    }
+
+    return value_vector;
+
+  }
+
+  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
+  [[nodiscard]] std::vector<ValueType> findIntersectsIntervals(const OpenRightInterval &interval) const {
+
+    std::vector<ValueType> value_vector;
+
+    if (this->empty()) {
+
+      return value_vector;
+
+    }
+
+    auto const bound_iter = this->lower_bound(interval); // iter->first.lower() >= arg.lower()
+
+    // Scroll forward to check intervals that intersect
+    auto next_iter = bound_iter;
+    if (next_iter != this->end()) {
+
+      while (next_iter->first.lower() < interval.upper()) {
+
+        auto const [lower, upper] = next_iter->first.intersection(interval);
+        if (lower < upper) {
+
+          value_vector.push_back(next_iter->second);
+
+        }
+
+        next_iter = std::ranges::next(next_iter, 1, this->end());
+        if (next_iter == this->end()) {
+
+          break;
 
         }
 
@@ -138,46 +141,35 @@ public:
 
     }
 
-    // Look at the previous interval.
-    iter = std::prev(iter, 1);
-    if (iter != this->end()) {
+    // Scroll backwards to find intervals that intersect.
+    auto prev_iter = std::ranges::prev(bound_iter, 1, this->begin());
+    // Check that bound_iter was not this->begin()
+    if (prev_iter != bound_iter) {
 
-      auto const &[interval_key, value] = *iter;
-      if (interval_key.containsInterval(interval)) {
+      while (interval.lower() < prev_iter->first.upper()) {
 
-        return iter;
+        // Is there an intersection between then argument interval and the previous interval.
+        auto const [lower, upper] = prev_iter->first.intersection(interval);
+        // If so, then return the previous interval.
+        if (lower < upper) {
 
-      } else {
+          value_vector.push_back(prev_iter->second);
 
-        return this->end();
+        }
 
-      }
+        if (prev_iter == this->begin()) {
 
-    }
+          break;
 
-    return this->end();
+        }
+        prev_iter = std::ranges::prev(prev_iter, 1 , this->begin());
 
-  }
+      } // while
 
-  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
-  [[nodiscard]] auto findUpperEqualIter(const OpenRightInterval &interval) const {
+    } // Not end()
 
-    auto iter = this->lower_bound(interval);
-    // Return the previous map interval if it contains the argument interval.
-    auto prev_iter = std::prev(iter, 1);
-    if (prev_iter != this->end()) {
-
-      auto const &[interval_key, value] = *prev_iter;
-      if (interval_key.containsInterval(interval)) {
-
-        return prev_iter;
-
-      }
-
-    }
-
-    // Else just return the upper interval
-    return iter;
+    // Else just return the upper interval (which may be end())
+    return value_vector;
 
   }
 
@@ -185,16 +177,22 @@ public:
 
     std::vector<std::tuple<OpenRightInterval, ValueType, ValueType>> intersect_vec;
 
+    if (this->empty()) {
+
+      return intersect_vec;
+
+    }
+
     auto iter = this->begin();
     while (iter != this->end()) {
 
-      auto next_iter = std::next(iter, 1);
+      auto next_iter = std::ranges::next(iter, 1, this->end());
       while (next_iter != this->end()) {
 
         auto const& [interval, value] = *iter;
         auto const& [next_interval, next_value] = *next_iter;
         auto const [lower, upper] = interval.intersection(next_interval);
-        if (lower != upper) {
+        if (lower < upper) {
 
           intersect_vec.push_back({OpenRightInterval(lower, upper), value, next_value});
 
@@ -204,11 +202,11 @@ public:
 
         }
 
-        ++next_iter;
+        next_iter = std::ranges::next(next_iter, 1, this->end());
 
       }
 
-      ++iter;
+      iter = std::ranges::next(iter, 1, this->end());
 
     }
 
@@ -216,9 +214,7 @@ public:
 
   }
 
-
-  [[nodiscard]] auto findUpperOffsetIter(size_t offset) const { return findUpperEqualIter(OpenRightInterval(offset, offset + 1)); }
-  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return findIntervalIter(interval) != this->end(); }
+  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return not findIntervalContains(interval).empty(); }
 
 };
 

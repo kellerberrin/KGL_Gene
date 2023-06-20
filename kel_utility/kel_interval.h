@@ -59,9 +59,7 @@ private:
 // Comparison operator used to order intervals within indexed containers std::set or std::map.
 struct CompareInterval {
 
-  bool operator()(const OpenRightInterval &lhs, const OpenRightInterval &rhs) const {
-    return lhs.lower() < rhs.lower();
-  }
+  bool operator()(const OpenRightInterval &lhs, const OpenRightInterval &rhs) const { return lhs.lower() < rhs.lower(); }
 
 };
 

@@ -26,17 +26,20 @@ public:
   IntervalSet() = default;
   ~IntervalSet() = default;
 
-  // Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
-  [[nodiscard]] const_iterator findUpperEqualIter(const OpenRightInterval &interval) const;
   [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const;
   [[nodiscard]] bool containsOffset(size_t offset) const { return contains(OpenRightInterval(offset, offset + 1)); }
   // Returns the interval intersection between this set and the argument set returned as an interval set (possibly empty).
   [[nodiscard]] IntervalSet intervalSetIntersection(const IntervalSet& interval_set) const;
+  // Returns a vector (possibly empty) of set intervals that intersect the argument interval.
+  [[nodiscard]] std::vector<OpenRightInterval> findIntersectsInterval(const OpenRightInterval &interval) const;
+  // Returns a bool the interval and set intersect.
+  [[nodiscard]] bool intersectsInterval(const OpenRightInterval &interval) const { return not findIntersectsInterval(interval).empty(); }
   // Returns the interval unions between this set and the argument set.
   // Intervals are modified/extended as necessary for a disjoint interval minimal union.
   [[nodiscard]] IntervalSet intervalSetUnion(const IntervalSet& interval_set) const;
   // Set with simplified intervals which are modified/extended as necessary for disjoint representation.
   [[nodiscard]] IntervalSet simplifyDisjoint() const { return intervalSetUnion(IntervalSet()); }
+
 
 };
 

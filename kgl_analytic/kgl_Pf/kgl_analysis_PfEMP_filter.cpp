@@ -12,13 +12,42 @@
 namespace kgl = kellerberrin::genome;
 
 
+
 void kgl::PfEMPAnalysis::countGenes(const std::shared_ptr<const PopulationDB>& population_ptr) {
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  struct OverlappingGenes {
+
+    OverlappingGenes() = default;
+    ~OverlappingGenes() = default;
+    OverlappingGenes(const OverlappingGenes&) = default;
+
+    IntervalSet coding_interection_;
+    std::shared_ptr<const GeneIntervalStructure> gene_struct_ptr_a_;
+    std::shared_ptr<const GeneIntervalStructure> gene_struct_ptr_b_;
+    std::vector<std::shared_ptr<const Variant>> intersection_variants_;
+
+  };
+  using GeneIntersectMap = IntervalMultiMap<std::shared_ptr<OverlappingGenes>>;
+  using ContigIntersectMap = std::map<ContigId_t, GeneIntersectMap>;
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   struct CountGenes{
 
     CountGenes(const std::shared_ptr<const GenomeReference>& genome_3D7_ptr) {
 
       coding_variants_ptr_ = std::make_unique<IntervalCodingVariants>(genome_3D7_ptr);
+      createIntersectMap();
 
     }
 
@@ -27,26 +56,109 @@ void kgl::PfEMPAnalysis::countGenes(const std::shared_ptr<const PopulationDB>& p
       auto gene_vector = coding_variants_ptr_->getGeneCoding(*variant_ptr);
 
       gene_count_[gene_vector.size()]++;
+      countIntersection(variant_ptr);
 
       return true;
 
     }
 
-    void printIntervalStats() {
+    void countIntersection(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      // Check if the contig is defined.
+      auto contig_iter = gene_intersect_map_.find(variant_ptr->contigId());
+      if (contig_iter == gene_intersect_map_.end()) {
+
+        return;
+
+      }
+
+      auto const& [contig_id, interval_map] = *contig_iter;
+      auto const [offset, extent] = variant_ptr->extentOffset();
+      OpenRightInterval variant_interval(offset, offset + extent);
+
+      auto overlap_vector = interval_map.findIntersectsIntervals(variant_interval);
+      for (auto& overlap_struct_ptr : overlap_vector) {
+        if (overlap_struct_ptr->coding_interection_.intersectsInterval(variant_interval)) {
+
+          ++gene_overlap_;
+           overlap_struct_ptr->intersection_variants_.push_back(variant_ptr);
+
+        }
+
+      }
+
+    }
+
+    void createIntersectMap() {
 
       size_t shared_coding_intervals{0};
       for (auto const& [contig, interval_map] : coding_variants_ptr_->getCodingMap()) {
+
+        auto contig_iter =  gene_intersect_map_.find(contig);
+        if (contig_iter == gene_intersect_map_.end()) {
+
+          auto [insert_iter, result] = gene_intersect_map_.try_emplace(contig, GeneIntersectMap());
+          if (not result) {
+
+            ExecEnv::log().error("PfEMPAnalysis::CountGenes::createIntersectMap; unable to insert contig: {}", contig);
+            return;
+
+          }
+
+          contig_iter = insert_iter;
+
+        }
+        // We have a contig map.
+        auto& [map_contig, gene_intersect_map] = *contig_iter;
 
         std::vector<std::tuple<OpenRightInterval, std::shared_ptr<const GeneIntervalStructure>, std::shared_ptr<const GeneIntervalStructure>>> intersect_tuple_vector = interval_map.intersect();
         for (auto const& [interval, gene_a_ptr, gene_b_ptr] : intersect_tuple_vector) {
 
           auto intersect_set = gene_a_ptr->transcriptUnion().intervalSetIntersection(gene_b_ptr->transcriptUnion());
-          shared_coding_intervals += intersect_set.size();
+          if (not intersect_set.empty()) {
+
+            shared_coding_intervals += intersect_set.size();
+            OverlappingGenes overlapping_genes;
+            overlapping_genes.coding_interection_ = intersect_set;
+            overlapping_genes.gene_struct_ptr_a_ = gene_a_ptr;
+            overlapping_genes.gene_struct_ptr_b_ = gene_b_ptr;
+            gene_intersect_map.insert({interval, std::make_shared<OverlappingGenes>(overlapping_genes)});
+
+          }
 
         }
 
-        ExecEnv::log().info("PfEMPAnalysis::countGenes::CountGenes; Contig: {}, Intervals (Genes): {}, Overlapping Genes: {}, Shared coding intervals: {}",
-                            contig, interval_map.size(), interval_map.intersect().size(), shared_coding_intervals);
+      }
+
+    }
+
+    void printIntersects() {
+
+      for (auto const& [contig, intersect_map] :  gene_intersect_map_) {
+
+        for (auto const& [interval, overlapping_ptr] : intersect_map) {
+
+          size_t intersect_size{0};
+          for (auto const& intersect_interval : overlapping_ptr->coding_interection_) {
+
+            intersect_size += intersect_interval.size();
+
+          }
+
+          ExecEnv::log().info("PfEMPAnalysis::CountGenes::createIntersectMap; Intersect Gene A: {}, Gene B: {}, Intersect Intervals: {} Intersect Size:{}, Shared Variants: {}",
+                              overlapping_ptr->gene_struct_ptr_a_->getGene()->id(),
+                              overlapping_ptr->gene_struct_ptr_b_->getGene()->id(),
+                              overlapping_ptr->coding_interection_.size(),
+                              intersect_size,
+                              overlapping_ptr->intersection_variants_.size());
+          for (auto const& intersect_interval : overlapping_ptr->coding_interection_) {
+
+            ExecEnv::log().info("PfEMPAnalysis::CountGenes::createIntersectMap; Intersect interval: [{}, {}), interval size: {}",
+                                intersect_interval.lower(), intersect_interval.upper(), intersect_interval.size());
+
+          }
+
+        }
 
       }
 
@@ -54,16 +166,19 @@ void kgl::PfEMPAnalysis::countGenes(const std::shared_ptr<const PopulationDB>& p
 
     void printResults() {
 
-      printIntervalStats();
       for (auto const& [gene_count, variant_count] : gene_count_ ) {
 
         ExecEnv::log().info("PfEMPAnalysis::countGenes::CountGenes; GeneCount: {}, Variant Count: {}", gene_count, variant_count);
 
       }
+      printIntersects();
+      ExecEnv::log().info("countgene::CountGenes::countIntersection; Gene Overlap: {}", gene_overlap_);
+
 
     }
 
-
+    size_t gene_overlap_{0};
+    ContigIntersectMap gene_intersect_map_;
     std::unique_ptr<IntervalCodingVariants> coding_variants_ptr_;
     std::map<size_t, size_t> gene_count_;
 
@@ -155,22 +270,20 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   }
 
+
   if constexpr(CODING_FILTER_ACTIVE_) {
 
-    std::shared_ptr<const PopulationDB> multimap_filtered_population_ptr = filtered_population_ptr->viewFilter(MultiFilterAllCodingVariants(genome_3D7_ptr_));
-    ExecEnv::log().info("std::multimap Population Final Filtered Size Genome count: {}, Variant Count: {}",
-                        multimap_filtered_population_ptr->getMap().size(),
-                        multimap_filtered_population_ptr->variantCount());
+    filtered_population_ptr = filtered_population_ptr->viewFilter(MultiFilterAllCodingVariants(genome_3D7_ptr_));
+    ExecEnv::log().info("Coding Population Final Filtered Size Genome count: {}, Variant Count: {}",
+                        filtered_population_ptr->getMap().size(),
+                        filtered_population_ptr->variantCount());
 
-    countGenes(multimap_filtered_population_ptr);
 
   }
 
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.
   auto deepcopy_population_ptr = filtered_population_ptr->deepCopy();
-
-  countGenes(deepcopy_population_ptr);
 
   // Filtered population should contain all contigs for all genomes.
   deepcopy_population_ptr->squareContigs();

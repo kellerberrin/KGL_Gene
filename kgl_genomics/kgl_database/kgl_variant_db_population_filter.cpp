@@ -103,7 +103,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter
 
   // All other filters are multi-threaded for each genome.
   // Calc how many threads required.
-  size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
+  size_t thread_count = WorkflowThreads::defaultThreads(getMap().size());
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;

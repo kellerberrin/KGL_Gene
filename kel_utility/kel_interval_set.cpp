@@ -19,7 +19,13 @@ namespace kel = kellerberrin;
 // Returns true if the interval argument is contained within one of the intervals held in the set.
 bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const {
 
-  auto iter = this->lower_bound(interval);
+  if (this->empty()) {
+
+    return false;
+
+  }
+
+  auto const iter = this->lower_bound(interval);
   if (iter != this->end()) {
 
     if (iter->lower() == interval.lower()) {
@@ -30,11 +36,27 @@ bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const
 
   }
 
-  // Check if contained by the previous interval (if it exists).
-  iter = std::prev(iter, 1);
-  if (iter != end()) {
+  // Look at previous intervals.
+  auto prev_iter = std::ranges::prev(iter, 1, this->begin());
+  // Check that iter was not at this->begin()
+  if (prev_iter != iter) {
 
-    return iter->containsInterval(interval);
+    while(interval.lower() < prev_iter->upper()) {
+
+      if (prev_iter->containsInterval(interval)) {
+
+        return true;
+
+      }
+
+      if (prev_iter == this->begin()) {
+
+        break;
+
+      }
+      prev_iter = std::ranges::prev(prev_iter, 1, this->begin());
+
+    }
 
   }
 
@@ -43,31 +65,15 @@ bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const
 }
 
 
-// Find the interval that contains the argument OR the interval immediately greater (lower > arg.lower) than the argument interval.
-kel::IntervalSet::const_iterator kel::IntervalSet::findUpperEqualIter(const OpenRightInterval &interval) const {
-
-  auto iter = this->lower_bound(interval);
-  // Return the previous map interval if it contains the argument interval.
-  auto prev_iter = std::prev(iter, 1);
-  if (prev_iter != this->end()) {
-
-    auto const &interval_key = *prev_iter;
-    if (interval_key.containsInterval(interval)) {
-
-      return prev_iter;
-
-    }
-
-  }
-
-  // Just return the upper interval
-  return iter;
-
-}
-
 kel::IntervalSet kel::IntervalSet::intervalSetIntersection(const IntervalSet& second_set) const {
 
   IntervalSet set_intersection;
+
+  if (this->empty() or second_set.empty()) {
+
+    return set_intersection;
+
+  }
 
   auto iter = this->begin();
   auto second_iter = second_set.begin();
@@ -88,11 +94,11 @@ kel::IntervalSet kel::IntervalSet::intervalSetIntersection(const IntervalSet& se
 
     if (iter->upper() < second_iter->upper()) {
 
-      ++iter;
+      iter = std::ranges::next(iter, 1, this->end());
 
     } else {
 
-      ++second_iter;
+      second_iter = std::ranges::next(second_iter, 1, this->end());
 
     }
 
@@ -102,16 +108,23 @@ kel::IntervalSet kel::IntervalSet::intervalSetIntersection(const IntervalSet& se
 
 }
 
-
+// Returns the interval unions between this set and the argument set.
+// Intervals are modified/extended as necessary for a disjoint interval minimal union.
 kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_set) const {
 
   IntervalSet set_union;
   IntervalMultiSet sorted_intervals;
 
+  if (this->empty() and interval_set.empty()) {
+
+    return set_union;
+
+  }
+
   // Place all intervals into a multiset to sort them.
   for (auto const& interval : *this) {
 
-      sorted_intervals.insert(interval);
+    sorted_intervals.insert(interval);
 
   }
 
@@ -127,7 +140,7 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
 
     OpenRightInterval active_interval = *iter;
     // Loop through the multiset and aggregate any overlapping intervals.
-    ++iter;
+    iter = std::ranges::next(iter, 1, sorted_intervals.end());
     while (iter != sorted_intervals.end()) {
 
       // Have three possibilities 1. contained within active, 2. extends active, 3. is disjoint with active.
@@ -144,26 +157,6 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
 
             ExecEnv::log().warn("IntervalSet::intervalSetUnion; Cannot add duplicate interval: [{}, {})",
                                 active_interval.lower(), active_interval.upper());
-            auto find_iter = set_union.find(active_interval);
-            if (find_iter != set_union.end()) {
-
-              auto const& found_interval = *find_iter;
-              ExecEnv::log().warn("IntervalSet::intervalSetUnion; Previously inserted interval: [{}, {})",
-                                  found_interval.lower(), found_interval.upper());
-
-              for (auto const& interval : sorted_intervals) {
-
-                ExecEnv::log().info("IntervalSet::intervalSetUnion; Sorted interval multiset: [{}, {})", interval.lower(), interval.upper());
-
-              }
-
-              for (auto const& interval : set_union) {
-
-                ExecEnv::log().info("IntervalSet::intervalSetUnion; Union interval set: [{}, {})", interval.lower(), interval.upper());
-
-              }
-
-            }
 
           }
 
@@ -173,7 +166,7 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
 
       }
 
-      ++iter;
+      iter = std::ranges::next(iter, 1, sorted_intervals.end());
 
     } // Loop through sorted intervals.
 
@@ -188,6 +181,76 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
   } // Empty condition.
 
   return set_union;
+
+}
+
+
+// Find the set intervals that intersect the argument interval.
+[[nodiscard]] std::vector<kel::OpenRightInterval> kel::IntervalSet::findIntersectsInterval(const OpenRightInterval &interval) const {
+
+  std::vector<OpenRightInterval> value_vector;
+
+  if (this->empty()) {
+
+    return value_vector;
+
+  }
+
+  auto const bound_iter = this->lower_bound(interval); // iter->first.lower() >= arg.lower()
+
+  // Scroll forward to check intervals that intersect
+  auto next_iter = bound_iter;
+  if (next_iter != this->end()) {
+
+    while (next_iter->lower() < interval.upper()) {
+
+      auto const [lower, upper] = next_iter->intersection(interval);
+      if (lower < upper) {
+
+        value_vector.push_back(*next_iter);
+
+      }
+
+      next_iter = std::ranges::next(next_iter, 1, this->end());
+      if (next_iter == this->end()) {
+
+        break;
+
+      }
+
+    }
+
+  }
+
+  // Scroll backwards to find intervals that intersect.
+  auto prev_iter = std::ranges::prev(bound_iter, 1, this->begin());
+  // Check that bound_iter was not this->begin()
+  if (prev_iter != bound_iter) {
+
+    while (interval.lower() < prev_iter->upper()) {
+
+      // Is there an intersection between then argument interval and the previous interval.
+      auto const [lower, upper] = prev_iter->intersection(interval);
+      // If so, then return the previous interval.
+      if (lower < upper) {
+
+        value_vector.push_back(*prev_iter);
+
+      }
+
+      if (prev_iter == this->begin()) {
+
+        break;
+
+      }
+      prev_iter = std::ranges::prev(prev_iter, 1 , this->begin());
+
+    } // while
+
+  } // Not end()
+
+  // Else just return the upper interval (which may be end())
+  return value_vector;
 
 }
 

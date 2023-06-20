@@ -105,27 +105,8 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
 
  }
 
- // For all transcripts check if the variant modifies any of the coding sequences.
- for (auto const& [transcript_id, interval_set] : gene_coding_transcripts_) {
-
-   auto [variant_offset, variant_size] = variant.extentOffset();
-   auto interval_iter = interval_set.findUpperEqualIter(OpenRightInterval(variant_offset, variant_offset + variant_size));
-   if (interval_iter == interval_set.end()) {
-
-     return false;
-
-   }
-
-   auto const& coding_interval = *interval_iter;
-   if (variant.sequenceModifier(coding_interval.lower(), coding_interval.size())) {
-
-     return true;
-
-   }
-
- }
-
-  return false;
+  auto [variant_offset, variant_size] = variant.extentOffset();
+  return transcript_union_.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + variant_size));
 
 }
 
@@ -199,10 +180,10 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
   auto const& [contig_id, interval_map] = *contig_iter;
 
   // Lookup the IntervalMap to see if there is a candidate gene for this variant.
-  auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
-  if (candidate_gene_iter != interval_map.end()) {
+  auto const [offset, extent] = variant.extentOffset();
+  auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
+  for (auto gene_struct_ptr : gene_ptr_vector) {
 
-    auto const& [interval_key, gene_struct_ptr] = *candidate_gene_iter;
     if (gene_struct_ptr->codingModifier(variant)) {
 
       return true;
@@ -232,21 +213,15 @@ std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants
 
   // Lookup the IntervalMap to see if there are candidate genes for this variant.
   // Variants may (and do) map to more than one gene.
-  auto candidate_gene_iter = interval_map.findUpperOffsetIter(variant.offset());
-  while (candidate_gene_iter != interval_map.end()) {
+  auto const [offset, extent] = variant.extentOffset();
+  auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
+  for (auto gene_struct_ptr : gene_ptr_vector) {
 
-    auto const& [interval_key, gene_struct_ptr] = *candidate_gene_iter;
     if (gene_struct_ptr->codingModifier(variant)) {
 
       gene_vector.push_back(gene_struct_ptr->getGene());
 
-    } else {
-
-      break;
-
     }
-
-    ++candidate_gene_iter;
 
   }
 
