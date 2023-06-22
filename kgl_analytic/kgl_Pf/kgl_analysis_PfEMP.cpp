@@ -56,6 +56,9 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   }
   genome_3D7_ptr_ = pf3d7_opt.value();
 
+  // Initialize the overlap analysis.
+  overlap_ptr_ = std::make_shared<OverlapGenes>(genome_3D7_ptr_);
+
 //  performPFEMP1UPGMA();
 
   // Select the genes we are interested in analyzing for genome variants.
@@ -158,6 +161,9 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   variant_file_name = std::string("VariantFWS") + std::string(VARIANT_COUNT_EXT_);
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   calc_fws_.writeVariantResults(variant_file_name);
+
+  // Overlap to log file.
+  overlap_ptr_->printResults();
 
   return true;
 

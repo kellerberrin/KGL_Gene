@@ -556,7 +556,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_overlap.cpp kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_overlap.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES

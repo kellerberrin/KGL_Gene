@@ -158,6 +158,43 @@ bool kgl::Variant::isSNP() const {
 
 }
 
+
+// The extentOffset() of the variant is used to assess if a variant modifies a particular region of a sequence in the interval [a, b).
+// With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
+// The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
+// The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 3 (reference.lenth() - 5).
+// The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 0 (reference.lenth() - 5).
+// These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
+// bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
+std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
+
+  if (isSNP()) {
+
+    return { offset()+alleleOffset(), 1 };
+
+  } else {
+
+    if (referenceSize() < alternateSize()) {
+      // An insert
+      return {offset()+alleleOffset(), 1 };
+
+    } else if (referenceSize() > alternateSize()) {
+      // A delete
+      return { offset()+alleleOffset(), referenceSize()-alleleOffset() };
+
+    } else {
+
+      ExecEnv::log().warn("Variant::extentOffset; Unexpected variant: {}, cigar:{}", HGVS(), alternateCigar());
+
+    }
+
+  }
+
+  return {offset()+alleleOffset(), 1 };
+
+}
+
+
 // For a sequence on the interval [a, b), Given a start offset a and a size (b-a). Determine if the variant will
 // modify the sequence. Note that this is different to just translating the sequence offsets. Any upstream indel will
 // modify the sequence [a, b) offsets but may not actually modify any of the nucleotides in the sequence.

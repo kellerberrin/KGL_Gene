@@ -16,6 +16,7 @@
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_analysis_PfEMP_FWS.h"
 #include "kgl_variant_filter_features.h"
+#include "kgl_analysis_PfEMP_overlap.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -108,6 +109,9 @@ private:
   HeteroHomoZygous hetero_homo_zygous_;
   CalcFWS calc_fws_;
 
+  // Check overlapping genes.
+  std::shared_ptr<OverlapGenes> overlap_ptr_;
+
   // File name constants.
   constexpr static const char *NEWICK_{"newick_"};
   constexpr static const char *NEWICK_EXT_{".txt"};
@@ -150,8 +154,6 @@ private:
   // Quality filter the variants using read depth, VQSLOD and other statistics
   std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
 
-  // Temporary test function.
-  void countGenes(const std::shared_ptr<const PopulationDB>& population_ptr);
 
 };
 

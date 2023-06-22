@@ -126,7 +126,7 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                << CSV_DELIMITER_
                << "HRel"
                << CSV_DELIMITER_
-               << "IQV"
+               << "2-IQV"
                << CSV_DELIMITER_
                << "Top1 Genotype"
                << CSV_DELIMITER_
@@ -213,7 +213,7 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
                  << CSV_DELIMITER_
                  << genotype_analysis.HRel()
                  << CSV_DELIMITER_
-                 << genotype_analysis.IQV()
+                 << genotype_analysis.IQVAdj()
                  << CSV_DELIMITER_
                  << top_count_genotypes[0]
                  << CSV_DELIMITER_
@@ -558,8 +558,14 @@ double kgl::GenotypeAnalysis::HRel() const {
 
   }
   // Generate the frequencies.
-  double proportion = static_cast<double>(zero_variants_.size()) / static_cast<double>(total_genomes);
-  double sum = std::log2(proportion) * proportion;
+  double sum{0.0};
+  if (not zero_variants_.empty()) {
+
+    double proportion = static_cast<double>(zero_variants_.size()) / static_cast<double>(total_genomes);
+    sum = std::log2(proportion) * proportion;
+
+  }
+
   for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
 
     if (genotype_ptr->genomes_.empty()) {
@@ -568,7 +574,8 @@ double kgl::GenotypeAnalysis::HRel() const {
       continue;
 
     }
-    proportion = static_cast<double>(genotype_ptr->genomes_.size()) / static_cast<double>(total_genomes);
+
+    double proportion = static_cast<double>(genotype_ptr->genomes_.size()) / static_cast<double>(total_genomes);
     sum += std::log2(proportion) * proportion;
 
   }

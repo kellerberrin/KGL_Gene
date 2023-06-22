@@ -126,7 +126,7 @@ public:
   // The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 0 (reference.lenth() - 5).
   // These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
   // bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
-  [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const { return { offset()+alleleOffset(), referenceSize()-alleleOffset() }; }
+  [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const;
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   // An assigned variant reference such as (HSapien) "rs187084".

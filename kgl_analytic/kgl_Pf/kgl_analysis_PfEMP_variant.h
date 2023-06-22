@@ -176,6 +176,8 @@ public:
   [[nodiscard]] double Gini() const;   // The Gini coefficient.
   [[nodiscard]] double HRel() const;   // A modified Shannon entropy measure for different category (genotype) counts.
   [[nodiscard]] double IQV() const;    // Index of qualitative variation.
+  [[nodiscard]] double IQVAdj() const { return (2.0-IQV()); }    // Adjusted Index of qualitative variation.
+
 
 private:
 
