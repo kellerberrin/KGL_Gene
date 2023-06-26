@@ -123,7 +123,7 @@ public:
   // With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
   // The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
   // The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 3 (reference.lenth() - 5).
-  // The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 0 (reference.lenth() - 5).
+  // The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 1.
   // These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
   // bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
   [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const;

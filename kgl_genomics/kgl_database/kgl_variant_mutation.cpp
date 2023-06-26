@@ -44,8 +44,8 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
 // Mutate DNA region.
 bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
                                      const std::shared_ptr<const ContigReference>& contig_ptr,
-                                     const ContigOffset_t contig_offset,
-                                     const ContigSize_t sequence_size,
+                                     ContigOffset_t contig_offset,
+                                     ContigSize_t sequence_size,
                                      DNA5SequenceLinear& dna_sequence) {
 
   dna_sequence = contig_ptr->sequence().subSequence(contig_offset, sequence_size);

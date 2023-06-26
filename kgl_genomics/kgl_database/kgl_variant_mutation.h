@@ -43,8 +43,8 @@ public:
 
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &insert_variant_map,
                                 const std::shared_ptr<const ContigReference>& contig_ptr,
-                                const ContigOffset_t contig_offset,
-                                const ContigSize_t sequence_size,
+                                ContigOffset_t contig_offset,
+                                ContigSize_t sequence_size,
                                 DNA5SequenceLinear& dna_sequence_ptr);
 
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,

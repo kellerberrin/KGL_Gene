@@ -19,9 +19,10 @@ kgl::SignedOffset_t kgl::VariantMutationOffset::adjustIndelOffsets(ContigOffset_
   // Lookup all indel offsets that are smaller or the same for the variant offset.
   auto upper_bound = indel_accounting_map_.upper_bound(contig_offset);
 
-  for (auto it = indel_accounting_map_.begin(); it != upper_bound; ++it) {
+  for (auto iter = indel_accounting_map_.begin(); iter != upper_bound; ++iter) {
 
-    indel_offset_adjust += it->second;
+    auto [offset, adjust] = *iter;
+    indel_offset_adjust += adjust;
 
   }
 
@@ -36,13 +37,10 @@ bool kgl::VariantMutationOffset::updateIndelAccounting(std::shared_ptr<const Var
 
   if (sequence_size_modify != 0) {
 
-    std::pair<ContigOffset_t, SignedOffset_t> insert_pair(variant_ptr->offset(), sequence_size_modify);
-    auto result = indel_accounting_map_.insert(insert_pair);
+    auto [iter, result] = indel_accounting_map_.try_emplace(variant_ptr->offset(), sequence_size_modify);
+    if (not result) {
 
-    if (not result.second) {
-
-      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}",
-                           variant_ptr->HGVS_Phase());
+      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}", variant_ptr->HGVS_Phase());
       return false;
 
     }
@@ -58,9 +56,9 @@ kgl::SignedOffset_t kgl::VariantMutationOffset::totalIndelOffset() const {
 
   SignedOffset_t indel_offset_adjust = 0;
 
-  for (auto it = indel_accounting_map_.begin(); it != indel_accounting_map_.end(); ++it) {
+  for (auto const& [offset, adjust] : indel_accounting_map_) {
 
-    indel_offset_adjust += it->second;
+    indel_offset_adjust += adjust;
 
   }
 
