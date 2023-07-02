@@ -119,9 +119,22 @@ kgl::VariantType kgl::Variant::variantType() const {
 // We extend the logic for this possibility.
 bool kgl::Variant::isSNP() const {
 
-  // Obvious SNP.
+  // Check using suffix and prefix
+  size_t suffix_size = commonSuffix();
+  size_t prefix_size = commonPrefix();
+  int64_t diff_size = referenceSize() - (suffix_size + prefix_size);
+
+
+    // Obvious SNP.
   if (reference_.length() == 1 and alternate_.length() == 1) {
 
+
+    if (diff_size != 1) {
+
+      ExecEnv::log().warn("Variant::isSNP; Variant: {}, Cigar: {}, prefix size: {}, suffix_size: {}, diff_size: {} not equal 1"
+          , HGVS(), alternateCigar(), prefix_size, suffix_size, diff_size);
+
+    }
     return true;
 
   }
@@ -154,17 +167,42 @@ bool kgl::Variant::isSNP() const {
 // Check longer reference and alternate for effective SNP if a cigar of 1'X' and n'M'.
 //  return ParseVCFCigar::isSNP(reference().getSequenceAsString(), alternate().getSequenceAsString());
 
+  if (diff_size != 1) {
+
+    ExecEnv::log().warn("Variant::isSNP; Variant: {}, Cigar: {}, prefix size: {}, suffix_size: {}, diff_size: {} not equal 1"
+                        , HGVS(), alternateCigar(), prefix_size, suffix_size, diff_size);
+
+  }
+
   return true;
 
 }
 
+// Remove common prefix and suffix nucleotides from the reference and alternate.
+// .first is the trimmed reference, .second is the trimmed alternate.
+std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear> kgl::Variant::trimmedSequences() const {
+
+  size_t prefix_size = commonPrefix();
+  size_t suffix_size = commonSuffix();
+
+  auto trimmed_reference = reference().midSequence(prefix_size, suffix_size);
+  auto trimmed_alternate = alternate().midSequence(prefix_size, suffix_size);
+
+  return { DNA5SequenceLinear(std::move(trimmed_reference)), DNA5SequenceLinear(std::move(trimmed_alternate)) };
+
+}
+
+
 // The extentOffset() of the variant is used to assess if a variant modifies a particular region of a sequence in the interval [a, b).
 // With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
 // The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
-// The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 3 (reference.lenth() - 5).
-// The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 1.
+// The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 4 (reference.length() - 5).
+// Thus the delete variant "5M4D" can modify the sequence [a, b) for example, (offset() + alleleOffset()) = a-2.
+// The deleted nucleotides will be {a-2. a-1, a,  a+1}, the delete variant need not be contained within [a, b).
+// The insert variant "5M6I", the same as an SNP, will have an extentOffset() of 5 and an extent size of 1.
+// The insert variant will only modify [a, b) if (offset() + alleleOffset()) is in [a, b).
 // These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
-// bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
+// bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first < b);
 std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
 
   if (isSNP()) {

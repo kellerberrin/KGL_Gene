@@ -41,8 +41,8 @@ class  AlphabetSequence : public VirtualSequence {
 
 public:
 
-  AlphabetSequence(AlphabetSequence&& sequence) noexcept : alphabet_string_(sequence.alphabet_string_) {}
-  explicit AlphabetSequence(AlphabetString<Alphabet>&& sequence) noexcept : alphabet_string_(sequence) {}
+  AlphabetSequence(AlphabetSequence&& sequence) noexcept : alphabet_string_(std::move(sequence.alphabet_string_)) {}
+  explicit AlphabetSequence(AlphabetString<Alphabet>&& sequence) noexcept : alphabet_string_(std::move(sequence)) {}
   AlphabetSequence() = default;
   AlphabetSequence(const AlphabetSequence&) = delete; // For Performance reasons, don't allow copy constructors
   ~AlphabetSequence() override = default;
@@ -80,7 +80,13 @@ public:
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const { return alphabet_string_.countTwoSymbols(first_symbol, second_symbol); }
 
   // find the longest common prefix.
-  [[nodiscard]] size_t commonPrefix(const AlphabetSequence& cmp_sequence) const;
+  [[nodiscard]] size_t commonPrefix(const AlphabetSequence& cmp_sequence) const { return alphabet_string_.commonPrefix(cmp_sequence.alphabet_string_); }
+  // find the longest common suffix.
+  [[nodiscard]] size_t commonSuffix(const AlphabetSequence& cmp_sequence) const { return alphabet_string_.commonSuffix(cmp_sequence.alphabet_string_); }
+  // Extract the sequence prefix, suffix and mid-section. Generally used with commonPrefix() and commonSuffix() above.
+  [[nodiscard]] AlphabetSequence prefix(size_t prefix_size) const { return AlphabetSequence(alphabet_string_.prefix(prefix_size)); }
+  [[nodiscard]] AlphabetSequence suffix(size_t suffix_size) const { return AlphabetSequence(alphabet_string_.suffix(suffix_size)); }
+  [[nodiscard]] AlphabetSequence midSequence(size_t prefix_size, size_t suffix_size) const { return AlphabetSequence(alphabet_string_.midString(prefix_size, suffix_size)); }
 
 protected:
 
@@ -207,31 +213,6 @@ bool AlphabetSequence<Alphabet>::getSubsequence(ContigOffset_t substring_offset,
   return true;
 
 }
-
-
-template<typename Alphabet>
-size_t AlphabetSequence<Alphabet>::commonPrefix(const AlphabetSequence& cmp_sequence) const {
-
-  const size_t common_size = std::min(alphabet_string_.length(), cmp_sequence.alphabet_string_.length());
-
-  size_t common_prefix{0};
-  for (size_t index = 0; index < common_size; ++index) {
-
-    if (alphabet_string_[index] != cmp_sequence.alphabet_string_[index]) {
-
-      return common_prefix;
-
-    }
-
-    ++common_prefix;
-
-  }
-
-  return common_prefix;
-
-
-}
-
 
 
 

@@ -47,8 +47,6 @@ public:
   [[nodiscard]] bool isMemberGene(ContigOffset_t offset) const { return gene_interval_.containsOffset(offset); }
   // Given an offset, does the offset fall within a gene interval coding region.
   [[nodiscard]] bool isMemberCoding(ContigOffset_t offset) const;
-  // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.
-  [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig()->contigId()); }
   // Test if a variant modifies any of the coding transcripts of this gene structure.
   [[nodiscard]] bool codingModifier(const Variant& variant) const;
 
@@ -60,6 +58,8 @@ private:
   OpenRightInterval gene_interval_;
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
+  // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.
+  [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig()->contigId()); }
 
 };
 

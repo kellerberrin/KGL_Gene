@@ -105,8 +105,8 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
 
  }
 
-  auto [variant_offset, variant_size] = variant.extentOffset();
-  return transcript_union_.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + variant_size));
+  auto [variant_offset, extent] = variant.extentOffset();
+  return transcript_union_.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + extent));
 
 }
 

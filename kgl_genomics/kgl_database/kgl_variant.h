@@ -96,7 +96,8 @@ public:
 
   [[nodiscard]] const VariantEvidence& evidence() const { return evidence_; }
 
-  [[nodiscard]] bool mutateSequence( SignedOffset_t offset_adjust,
+  [[nodiscard]] bool mutateSequence( ContigOffset_t allele_offset,
+                                     SignedOffset_t offset_adjust,
                                      DNA5SequenceLinear& dna_sequence,
                                      SignedOffset_t& sequence_size_modify) const;
 
@@ -122,11 +123,16 @@ public:
   // The extentOffset() of the variant is used to assess if a variant modifies a particular region of a sequence in the interval [a, b).
   // With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
   // The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
-  // The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 3 (reference.lenth() - 5).
-  // The insert variant "5M6I" will have an extentOffset() of 5 and an extent size of 1.
-  // These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
-  // bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first + extentOffset.second) < b);
+  // The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 4 (reference.length() - 5).
+  // Thus the delete variant "5M4D" can modify the sequence [a, b) if it is outside (before) the interval, if for example, (offset() + alleleOffset()) = a-2.
+  // The deleted nucleotides will be {a-2. a-1, a,  a+1}. The delete variant can preceed the interval [a, b).
+  // The insert variant "5M6I", the same as an SNP, will have an extentOffset() of 5 and an extent size of 1.
+  // Unlike a delete variant, the insert variant will only modify [a, b) if (offset() + alleleOffset()) is in [a, b).
+  // All variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
+  // bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first < b);
   [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const;
+  // The actual start of the allele modification of the underlying contig sequence, is >= 0.
+  [[nodiscard]] ContigOffset_t alleleMutateOffset() const { return offset()  + alleleOffset(); }
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   // An assigned variant reference such as (HSapien) "rs187084".
@@ -154,6 +160,12 @@ public:
 
   // Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string alternateCigar() const;
+  // Prefix and Suffix size
+  [[nodiscard]] size_t commonPrefix() const { return reference().commonPrefix(alternate()); }
+  [[nodiscard]] size_t commonSuffix() const { return reference().commonSuffix(alternate()); }
+  // Remove common prefix and suffix nucleotides from the reference and alternate.
+  // .first is the trimmed reference, .second is the trimmed alternate.
+  [[nodiscard]] std::pair<DNA5SequenceLinear, DNA5SequenceLinear> trimmedSequences() const;
 
   // Used to check memory usage and identify any memory leaks.
   [[nodiscard]] static size_t objectCount() { return object_count_; }
@@ -174,11 +186,13 @@ private:
 
   [[nodiscard]] size_t alternateSize(size_t reference_size) const;
 
+
   // Mutate a sequence by adding and subtracting subsequences at the designated offset
   [[nodiscard]] static bool performMutation( ContigOffset_t offset,
                                              DNA5SequenceLinear& mutated_sequence,
                                              const DNA5SequenceLinear& delete_subsequence,
-                                             const DNA5SequenceLinear& add_subsequence);
+                                             const DNA5SequenceLinear& add_subsequence,
+                                             SignedOffset_t& sequence_size_modify);
 
   [[nodiscard]] bool preceedingMutation( SignedOffset_t adjusted_offset,
                                          DNA5SequenceLinear& dna_sequence,

@@ -86,6 +86,7 @@ public:
 
   DNA5SequenceLinear(DNA5SequenceLinear&& sequence) noexcept : AlphabetSequence<DNA5>(std::move(sequence)) {}
   explicit DNA5SequenceLinear(StringDNA5&& sequence_string) :  AlphabetSequence<DNA5>(std::move(sequence_string)) {}
+  explicit DNA5SequenceLinear(AlphabetSequence<DNA5>&& sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
   DNA5SequenceLinear() = default; // Empty sequences permitted.
   DNA5SequenceLinear(const DNA5SequenceLinear&) = delete; // For Performance reasons, no copy constructor.
   ~DNA5SequenceLinear() override = default;

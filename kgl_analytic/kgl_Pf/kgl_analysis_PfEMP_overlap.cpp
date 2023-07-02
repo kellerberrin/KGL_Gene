@@ -135,9 +135,11 @@ void kgl::OverlapGenes::printIntersects() {
       }
       for (auto const &[variant_hash, variant_ptr]: overlapping_ptr->intersection_variants_) {
 
+        auto const [trimmed_reference, trimmed_alternate] = variant_ptr->trimmedSequences();
         auto [offset, extent] = variant_ptr->extentOffset();
-        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::createIntersectMap; Interval Variant: {}, Cigar: {}, Offset: {}, Extent: {}",
-                            variant_hash, variant_ptr->alternateCigar(), offset, extent);
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::createIntersectMap; Interval Variant: {}, Cigar: {}, Offset: {}, Extent: {}, trimmed Ref: {}, trimmed Alt: {}",
+                            variant_hash, variant_ptr->alternateCigar(), offset, extent,
+                            trimmed_reference.getSequenceAsString(), trimmed_alternate.getSequenceAsString());
 
       }
 

@@ -102,12 +102,12 @@ public:
   void prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   [[nodiscard]] ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
   void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
-  [[nodiscard]] ContigOffset_t start() const; // Offset of the start of the sequence - not strand adjusted.
-  [[nodiscard]] ContigOffset_t end() const; // Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted.
+  [[nodiscard]] ContigOffset_t start() const; // Zero-based offset [start, end) of the start of the sequence - not strand adjusted.
+  [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
   [[nodiscard]] TranscriptionSequenceType codingType() const;
   [[nodiscard]] static ProteinSequenceValidity checkValidProtein( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                  bool verbose = false); // ncRNA are trivially valid.
+                                                                  bool verbose = false); // ncRNA sequences are trivially valid.
 
 private:
 

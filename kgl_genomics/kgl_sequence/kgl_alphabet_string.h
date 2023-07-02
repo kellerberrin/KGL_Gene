@@ -30,9 +30,10 @@ class AlphabetString {
 public:
 
   AlphabetString() = default;
-  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(alphabet_string.base_string_) {}
-  AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
+  explicit AlphabetString(std::basic_string<typename Alphabet::Alphabet>&& base_string) noexcept : base_string_(std::move(base_string)) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
+  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
+  AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
   ~AlphabetString() = default;
 
   // Assignment operators
@@ -160,6 +161,13 @@ public:
 
   }
 
+  [[nodiscard]] size_t commonPrefix(const AlphabetString& cmp_string) const;
+  [[nodiscard]] size_t commonSuffix(const AlphabetString& cmp_string) const;
+  [[nodiscard]] AlphabetString prefix(size_t prefix_size) const;
+  [[nodiscard]] AlphabetString suffix(size_t suffix_size) const;
+  [[nodiscard]] AlphabetString midString(size_t prefix_size, size_t suffix_size) const;
+
+
   [[nodiscard]] bool verifyString() const;
 
   [[nodiscard]] size_t hashString() const;
@@ -173,6 +181,76 @@ private:
 
 
 };
+
+
+
+template<typename Alphabet>
+size_t AlphabetString<Alphabet>::commonSuffix(const AlphabetString& cmp_string) const {
+
+  const size_t common_size = std::min(length(), cmp_string.length());
+
+  auto const [this_rev_iter, cmp_rev_iter] = std::mismatch( rbegin(), rbegin() + common_size, cmp_string.rbegin());
+
+  return std::distance(this_rev_iter.base(), end());
+
+}
+
+
+template<typename Alphabet>
+size_t AlphabetString<Alphabet>::commonPrefix(const AlphabetString& cmp_string) const {
+
+  const size_t common_size = std::min(length(), cmp_string.length());
+
+  size_t common_prefix{0};
+  for (size_t index = 0; index < common_size; ++index) {
+
+    if (base_string_[index] != cmp_string.base_string_[index]) {
+
+      return common_prefix;
+
+    }
+
+    ++common_prefix;
+
+  }
+
+  return common_prefix;
+
+
+}
+
+template<typename Alphabet>
+AlphabetString<Alphabet> AlphabetString<Alphabet>::prefix(size_t prefix_size) const {
+
+  auto iter = std::ranges::next(base_string_.begin(), prefix_size, base_string_.end());
+  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(base_string_.begin(), iter));
+
+}
+
+template<typename Alphabet>
+AlphabetString<Alphabet> AlphabetString<Alphabet>::suffix(size_t suffix_size) const {
+
+  auto iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());
+  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(iter, base_string_.end()));
+
+}
+
+template<typename Alphabet>
+AlphabetString<Alphabet> AlphabetString<Alphabet>::midString(size_t prefix_size, size_t suffix_size) const {
+
+  auto from_iter = std::ranges::next(base_string_.begin(), prefix_size, base_string_.end());
+  auto to_iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());
+
+  if (std::distance(from_iter, to_iter) > 0) {
+
+    return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(from_iter, to_iter));
+
+  }
+
+  return AlphabetString();
+
+}
+
 
 
 template<typename Alphabet>

@@ -14,14 +14,14 @@ namespace kgl = kellerberrin::genome;
 // Important - calculate indel offset adjustment with (this routine) adjustIndelOffsets() BEFORE calling updateIndelAccounting().
 kgl::SignedOffset_t kgl::VariantMutationOffset::adjustIndelOffsets(ContigOffset_t contig_offset) const {
 
-  SignedOffset_t indel_offset_adjust = 0;
+  SignedOffset_t indel_offset_adjust{0};
 
   // Lookup all indel offsets that are smaller or the same for the variant offset.
   auto upper_bound = indel_accounting_map_.upper_bound(contig_offset);
 
   for (auto iter = indel_accounting_map_.begin(); iter != upper_bound; ++iter) {
 
-    auto [offset, adjust] = *iter;
+    auto const& [offset, adjust] = *iter;
     indel_offset_adjust += adjust;
 
   }
@@ -32,18 +32,12 @@ kgl::SignedOffset_t kgl::VariantMutationOffset::adjustIndelOffsets(ContigOffset_
 
 // Important - This routine is paired with adjustIndelOffsets(), which should be called BEFORE calling (this routine) updateIndelAccounting()
 // Important - update the indel offset accounting structure AFTER the actual indel offset has been calculated with adjustIndelOffsets().
-bool kgl::VariantMutationOffset::updateIndelAccounting(std::shared_ptr<const Variant> variant_ptr,
-                                                       SignedOffset_t sequence_size_modify) {
+bool kgl::VariantMutationOffset::updateIndelAccounting(ContigOffset_t allele_offset, SignedOffset_t sequence_size_modify) {
 
   if (sequence_size_modify != 0) {
 
-    auto [iter, result] = indel_accounting_map_.try_emplace(variant_ptr->offset(), sequence_size_modify);
-    if (not result) {
-
-      ExecEnv::log().error("updateIndelAccounting(), Unable to update indel accounting, duplicate offset variant: {}", variant_ptr->HGVS_Phase());
-      return false;
-
-    }
+    auto const [iter, result] = indel_accounting_map_.try_emplace(allele_offset, sequence_size_modify);
+    return result;
 
   }
 
