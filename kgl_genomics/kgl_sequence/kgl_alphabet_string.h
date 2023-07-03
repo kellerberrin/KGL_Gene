@@ -163,9 +163,9 @@ public:
 
   [[nodiscard]] size_t commonPrefix(const AlphabetString& cmp_string) const;
   [[nodiscard]] size_t commonSuffix(const AlphabetString& cmp_string) const;
-  [[nodiscard]] AlphabetString prefix(size_t prefix_size) const;
-  [[nodiscard]] AlphabetString suffix(size_t suffix_size) const;
-  [[nodiscard]] AlphabetString midString(size_t prefix_size, size_t suffix_size) const;
+  [[nodiscard]] AlphabetString removePrefix(size_t prefix_size) const;
+  [[nodiscard]] AlphabetString removeSuffix(size_t suffix_size) const;
+  [[nodiscard]] AlphabetString removePrefixSuffix(size_t prefix_size, size_t suffix_size) const;
 
 
   [[nodiscard]] bool verifyString() const;
@@ -220,23 +220,23 @@ size_t AlphabetString<Alphabet>::commonPrefix(const AlphabetString& cmp_string) 
 }
 
 template<typename Alphabet>
-AlphabetString<Alphabet> AlphabetString<Alphabet>::prefix(size_t prefix_size) const {
+AlphabetString<Alphabet> AlphabetString<Alphabet>::removePrefix(size_t prefix_size) const {
 
   auto iter = std::ranges::next(base_string_.begin(), prefix_size, base_string_.end());
-  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(base_string_.begin(), iter));
-
-}
-
-template<typename Alphabet>
-AlphabetString<Alphabet> AlphabetString<Alphabet>::suffix(size_t suffix_size) const {
-
-  auto iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());
   return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(iter, base_string_.end()));
 
 }
 
 template<typename Alphabet>
-AlphabetString<Alphabet> AlphabetString<Alphabet>::midString(size_t prefix_size, size_t suffix_size) const {
+AlphabetString<Alphabet> AlphabetString<Alphabet>::removeSuffix(size_t suffix_size) const {
+
+  auto iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());
+  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(base_string_.begin(), iter));
+
+}
+
+template<typename Alphabet>
+AlphabetString<Alphabet> AlphabetString<Alphabet>::removePrefixSuffix(size_t prefix_size, size_t suffix_size) const {
 
   auto from_iter = std::ranges::next(base_string_.begin(), prefix_size, base_string_.end());
   auto to_iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());

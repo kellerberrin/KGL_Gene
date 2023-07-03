@@ -84,9 +84,9 @@ public:
   // find the longest common suffix.
   [[nodiscard]] size_t commonSuffix(const AlphabetSequence& cmp_sequence) const { return alphabet_string_.commonSuffix(cmp_sequence.alphabet_string_); }
   // Extract the sequence prefix, suffix and mid-section. Generally used with commonPrefix() and commonSuffix() above.
-  [[nodiscard]] AlphabetSequence prefix(size_t prefix_size) const { return AlphabetSequence(alphabet_string_.prefix(prefix_size)); }
-  [[nodiscard]] AlphabetSequence suffix(size_t suffix_size) const { return AlphabetSequence(alphabet_string_.suffix(suffix_size)); }
-  [[nodiscard]] AlphabetSequence midSequence(size_t prefix_size, size_t suffix_size) const { return AlphabetSequence(alphabet_string_.midString(prefix_size, suffix_size)); }
+  [[nodiscard]] AlphabetSequence removePrefix(size_t prefix_size) const { return AlphabetSequence(alphabet_string_.removePrefix(prefix_size)); }
+  [[nodiscard]] AlphabetSequence removeSuffix(size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removeSuffix(suffix_size)); }
+  [[nodiscard]] AlphabetSequence removePrefixSuffix(size_t prefix_size, size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removePrefixSuffix(prefix_size, suffix_size)); }
 
 protected:
 

@@ -54,7 +54,23 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 
 }
 
+std::unique_ptr<kgl::Variant> kgl::Variant::cloneCanonical() const {
 
+  auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
+  StringDNA5 reference_str(canonical_ref.getAlphabetString());
+  StringDNA5 alternate_str(canonical_alt.getAlphabetString());
+
+  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
+                                                                  canonical_offset,
+                                                                  phaseId(),
+                                                                  identifier(),
+                                                                  std::move(reference_str),
+                                                                  std::move(alternate_str),
+                                                                  evidence()));
+
+  return variant_ptr;
+
+}
 
 
 // Clone with modified phase.
@@ -119,22 +135,10 @@ kgl::VariantType kgl::Variant::variantType() const {
 // We extend the logic for this possibility.
 bool kgl::Variant::isSNP() const {
 
-  // Check using suffix and prefix
-  size_t suffix_size = commonSuffix();
-  size_t prefix_size = commonPrefix();
-  int64_t diff_size = referenceSize() - (suffix_size + prefix_size);
-
 
     // Obvious SNP.
   if (reference_.length() == 1 and alternate_.length() == 1) {
 
-
-    if (diff_size != 1) {
-
-      ExecEnv::log().warn("Variant::isSNP; Variant: {}, Cigar: {}, prefix size: {}, suffix_size: {}, diff_size: {} not equal 1"
-          , HGVS(), alternateCigar(), prefix_size, suffix_size, diff_size);
-
-    }
     return true;
 
   }
@@ -164,70 +168,63 @@ bool kgl::Variant::isSNP() const {
 
   }
 
-// Check longer reference and alternate for effective SNP if a cigar of 1'X' and n'M'.
-//  return ParseVCFCigar::isSNP(reference().getSequenceAsString(), alternate().getSequenceAsString());
-
-  if (diff_size != 1) {
-
-    ExecEnv::log().warn("Variant::isSNP; Variant: {}, Cigar: {}, prefix size: {}, suffix_size: {}, diff_size: {} not equal 1"
-                        , HGVS(), alternateCigar(), prefix_size, suffix_size, diff_size);
-
-  }
-
   return true;
 
 }
 
-// Remove common prefix and suffix nucleotides from the reference and alternate.
-// .first is the trimmed reference, .second is the trimmed alternate.
-std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear> kgl::Variant::trimmedSequences() const {
+// Reduces the variant to a canonical reference and alternate format.
+// SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+// The first argument is the adjusted reference, the second is the adjusted alternate,
+// the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
+// at which the first nucleotide of the canonical reference and canonical alternate is found.
+std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t> kgl::Variant::canonicalSequences() const {
 
   size_t prefix_size = commonPrefix();
+  prefix_size = prefix_size > 0 ? (prefix_size - 1) : 0;  // Adjust for '1MnD' and '1MnI'.
   size_t suffix_size = commonSuffix();
+  size_t min_size = std::min(referenceSize(), alternateSize());
+  int64_t adj_suffix_size = std::min(min_size - prefix_size - 1, suffix_size); // Adjust for '1MnD' and '1MnI'.
+  adj_suffix_size = adj_suffix_size < 0 ? 0 : adj_suffix_size;
 
-  auto trimmed_reference = reference().midSequence(prefix_size, suffix_size);
-  auto trimmed_alternate = alternate().midSequence(prefix_size, suffix_size);
+  auto canonical_reference = reference().removePrefixSuffix(prefix_size, adj_suffix_size);
+  auto canonical_alternate = alternate().removePrefixSuffix(prefix_size, adj_suffix_size);
+  ContigOffset_t canonical_offset = offset() + prefix_size;
 
-  return { DNA5SequenceLinear(std::move(trimmed_reference)), DNA5SequenceLinear(std::move(trimmed_alternate)) };
+  return { DNA5SequenceLinear(std::move(canonical_reference)), DNA5SequenceLinear(std::move(canonical_alternate)), canonical_offset };
 
 }
 
 
-// The extentOffset() of the variant is used to assess if a variant modifies a particular region of a sequence in the interval [a, b).
-// With SNP variants the extentOffset().first is c = (offset() + alleleOffset()) so for "5M1X" the extent offset will be c = (offset() + 5).
-// The extent size (extentOffset().second) will be 1. Thus extentOffset() will return the pair [offset()+5,1].
-// The delete variant "5M4D" will have an extentOffset().first of (offset() + 5) and an extent size of 4 (reference.length() - 5).
-// Thus the delete variant "5M4D" can modify the sequence [a, b) for example, (offset() + alleleOffset()) = a-2.
-// The deleted nucleotides will be {a-2. a-1, a,  a+1}, the delete variant need not be contained within [a, b).
-// The insert variant "5M6I", the same as an SNP, will have an extentOffset() of 5 and an extent size of 1.
-// The insert variant will only modify [a, b) if (offset() + alleleOffset()) is in [a, b).
-// These variants will modify a sequence [a, b) (not just translate it's offsets) if the following condition is met:
-// bool modified = (extentOffset().first + extentOffset.second) > a or (extentOffset().first < b);
+// The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
+// of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
+// is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides, ref.length().
 std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
 
+  auto const [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
   if (isSNP()) {
 
-    return { offset()+alleleOffset(), 1 };
+    return { canonical_offset, 1 };
 
   } else {
 
-    if (referenceSize() < alternateSize()) {
+    if (canonical_ref.length() < canonical_alt.length()) {
       // An insert
-      return {offset()+alleleOffset(), 1 };
+      return { canonical_offset, 1 };
 
-    } else if (referenceSize() > alternateSize()) {
+    } else if (canonical_ref.length() > canonical_alt.length()) {
       // A delete
-      return { offset()+alleleOffset(), referenceSize()-alleleOffset() };
+      return { canonical_offset, canonical_ref.length()};
 
     } else {
 
-      ExecEnv::log().warn("Variant::extentOffset; Unexpected variant: {}, cigar:{}", HGVS(), alternateCigar());
+      ExecEnv::log().warn("Variant::extentOffset; Unexpected variant: {}, cigar:{}, canonical ref: {}, canonical alt: {}, canonical offset: {}"
+                          , HGVS(), cigar(), canonical_ref.getSequenceAsString(), canonical_alt.getSequenceAsString(), canonical_offset);
 
     }
 
   }
 
-  return {offset()+alleleOffset(), 1 };
+  return {canonical_offset, 1 };
 
 }
 
@@ -242,7 +239,7 @@ bool kgl::Variant::sequenceModifier(ContigOffset_t sequence_start, ContigSize_t 
 
 }
 
-std::string kgl::Variant::alternateCigar() const {
+std::string kgl::Variant::cigar() const {
 
   return ParseVCFCigar::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
 

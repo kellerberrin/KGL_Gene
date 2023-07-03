@@ -106,7 +106,7 @@ void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::unique_ptr<Off
 
       ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; Variant: {}, Cigar: {}, Format: {}",
                           variant_ptr->HGVS(),
-                          variant_ptr->alternateCigar(),
+                          variant_ptr->cigar(),
                           variant_ptr->evidence().output(','));
 
 

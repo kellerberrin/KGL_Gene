@@ -58,9 +58,12 @@ private:
   ContigIntersectMap gene_intersect_map_;
   std::unique_ptr<IntervalCodingVariants> coding_variants_ptr_;
   std::map<size_t, size_t> gene_count_;
+  size_t non_canonical_variants_{0};
+  size_t canonical_variants_{0};
 
   bool countGeneFunc(const std::shared_ptr<const Variant> &variant_ptr);
   void countIntersection(const std::shared_ptr<const Variant> &variant_ptr);
+  void checkCanonical(const std::shared_ptr<const Variant> &variant_ptr);
   void createIntersectMap();
   void printIntersects();
 

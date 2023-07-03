@@ -21,6 +21,7 @@ bool kgl::OverlapGenes::countGeneFunc(const std::shared_ptr<const Variant> &vari
   auto gene_vector = coding_variants_ptr_->getGeneCoding(*variant_ptr);
   gene_count_[gene_vector.size()]++;
   countIntersection(variant_ptr);
+  checkCanonical(variant_ptr);
 
   return true;
 
@@ -41,12 +42,12 @@ void kgl::OverlapGenes::countIntersection(const std::shared_ptr<const Variant> &
   if (extent == 0) {
 
     ExecEnv::log().warn("PfEMPAnalysis::OverlapGenes::createIntersectMap; Bad Extent for variant: {}, Cigar: {}, Offset:{}, Extent: {}",
-                         variant_ptr->HGVS(), variant_ptr->alternateCigar(), offset, extent);
+                        variant_ptr->HGVS(), variant_ptr->cigar(), offset, extent);
     return;
 
   }
 
-  OpenRightInterval variant_interval(offset, offset + extent);
+  OpenRightInterval variant_interval(offset, offset+extent);
 
   auto overlap_vector = interval_map.findIntersectsIntervals(variant_interval);
   for (auto &overlap_struct_ptr: overlap_vector) {
@@ -133,13 +134,15 @@ void kgl::OverlapGenes::printIntersects() {
                             intersect_interval.lower(), intersect_interval.upper(), intersect_interval.size());
 
       }
+
       for (auto const &[variant_hash, variant_ptr]: overlapping_ptr->intersection_variants_) {
 
-        auto const [trimmed_reference, trimmed_alternate] = variant_ptr->trimmedSequences();
-        auto [offset, extent] = variant_ptr->extentOffset();
-        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::createIntersectMap; Interval Variant: {}, Cigar: {}, Offset: {}, Extent: {}, trimmed Ref: {}, trimmed Alt: {}",
-                            variant_hash, variant_ptr->alternateCigar(), offset, extent,
-                            trimmed_reference.getSequenceAsString(), trimmed_alternate.getSequenceAsString());
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::createIntersectMap; Interval Variant: {}, Cigar: {}",
+                            variant_hash, variant_ptr->cigar());
+
+        auto const [canonical_reference, canonical_alternate, canonical_offset] = variant_ptr->canonicalSequences();
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::createIntersectMap; Canonical Ref: {}, Canonical Alt: {}, Canonical Offset: {}",
+                            canonical_reference.getSequenceAsString(), canonical_alternate.getSequenceAsString(), canonical_offset);
 
       }
 
@@ -149,6 +152,73 @@ void kgl::OverlapGenes::printIntersects() {
 
 }
 
+void kgl::OverlapGenes::checkCanonical(const std::shared_ptr<const Variant> &variant_ptr) {
+
+  auto const [canonical_ref, canonical_alt, canonical_offset] = variant_ptr->canonicalSequences();
+
+  if (canonical_ref != variant_ptr->reference() or canonical_alt != variant_ptr->alternate()) {
+
+    ++non_canonical_variants_;
+
+  } else {
+
+    ++canonical_variants_;
+
+  }
+
+  switch(variant_ptr->variantType()) {
+
+    case VariantType::TRANSVERSION:
+    case VariantType::TRANSITION:
+    {
+
+      if (canonical_ref.length() != 1 or canonical_alt.length() != 1) {
+
+        ExecEnv::log().warn("PfEMPAnalysis::OverlapGenes::checkCanonical; Invalid Canonical SNP, Variant: {}, Cigar: {}",
+                            variant_ptr->HGVS(), variant_ptr->cigar());
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::checkCanonical; Canonical Ref: {}, Canonical Alt: {}, Canonical Offset: {}",
+                            canonical_ref.getSequenceAsString(), canonical_alt.getSequenceAsString(), canonical_offset);
+
+      }
+
+    }
+    break;
+
+    case VariantType::INDEL_DELETE:
+    {
+
+      if (canonical_alt.length() != 1 or canonical_ref.length() != (variant_ptr->reference().length() - variant_ptr->alternate().length()) + 1) {
+
+        ExecEnv::log().warn("PfEMPAnalysis::OverlapGenes::checkCanonical; Invalid Canonical Delete, Variant: {}, Cigar: {}",
+                            variant_ptr->HGVS(), variant_ptr->cigar());
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::checkCanonical; Canonical Ref: {}, Canonical Alt: {}, Canonical Offset: {}",
+                            canonical_ref.getSequenceAsString(), canonical_alt.getSequenceAsString(), canonical_offset);
+
+      }
+
+    }
+    break;
+
+    case VariantType::INDEL_INSERT:
+    {
+
+      if (canonical_ref.length() != 1 or canonical_alt.length() != (variant_ptr->alternate().length() - variant_ptr->reference().length()) + 1) {
+
+        ExecEnv::log().warn("PfEMPAnalysis::OverlapGenes::checkCanonical; Invalid Canonical Insert, Variant: {}, Cigar: {}",
+                            variant_ptr->HGVS(), variant_ptr->cigar());
+        ExecEnv::log().info("PfEMPAnalysis::OverlapGenes::checkCanonical; Canonical Ref: {}, Canonical Alt: {}, Canonical Offset: {}",
+                            canonical_ref.getSequenceAsString(), canonical_alt.getSequenceAsString(), canonical_offset);
+
+      }
+
+    }
+    break;
+
+  }
+
+}
+
+
 void kgl::OverlapGenes::printResults() {
 
   for (auto const &[gene_count, variant_count]: gene_count_) {
@@ -157,6 +227,9 @@ void kgl::OverlapGenes::printResults() {
 
   }
   printIntersects();
+
+  ExecEnv::log().info("PfEMPAnalysis::countGenes::OverlapGenes; Variants Checked: {}, Canonical: {}, Non Canonical: {}"
+                      , non_canonical_variants_ + canonical_variants_, canonical_variants_, non_canonical_variants_);
 
 }
 

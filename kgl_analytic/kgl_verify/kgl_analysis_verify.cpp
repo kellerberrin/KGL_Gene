@@ -80,16 +80,16 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_pt
 
               for (auto const& variant : offsetVariants) {
 
-                auto result = allele_offset_map.find(variant->alleleOffset());
-                if (result != allele_offset_map.end()) {
+                auto const find_iter = allele_offset_map.find(variant->offset());
+                if (find_iter != allele_offset_map.end()) {
 
-                  auto& [allele_offset, count] = *result;
+                  auto& [variant_offset, count] = *find_iter;
                   ++count;
 
                 } else {
 
-                  auto const& [iter, bool_result] = allele_offset_map.try_emplace(variant->alleleOffset(), 1);
-                  if (not bool_result) {
+                  auto const& [insert_iter, result] = allele_offset_map.try_emplace(variant->offset(), 1);
+                  if (not result) {
 
                     ExecEnv::log().error("Could not insert into allele count map");
 

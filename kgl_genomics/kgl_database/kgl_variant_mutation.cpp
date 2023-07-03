@@ -56,15 +56,15 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
   for (auto const& [variant_offset, variant_ptr] : region_variant_map) {
 
     // Adjust the mutation offset for indels.
-    auto const allele_offset= variant_ptr->alleleMutateOffset();
-    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(allele_offset);
+    auto const [canonical_offset, extent] = variant_ptr->extentOffset();
+    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(canonical_offset);
 
     // Adjust the offset for the sequence offset
     adjusted_offset = adjusted_offset - contig_offset;
 
     // Mutate the sequence
     SignedOffset_t sequence_size_modify{0};
-    if (not variant_ptr->mutateSequence(allele_offset, adjusted_offset, dna_sequence, sequence_size_modify)) {
+    if (not variant_ptr->mutateSequence(canonical_offset, adjusted_offset, dna_sequence, sequence_size_modify)) {
 
       ExecEnv::log().warn("mutateDNA(), DNA mutation failed for variant: {}", variant_ptr->HGVS_Phase());
 
@@ -73,17 +73,17 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
 
       for(auto const& [map_offset, map_variant_ptr] : region_variant_map) {
 
-        ExecEnv::log().info("mutateDNA(), variant: {}, allele offset: {}", map_variant_ptr->HGVS_Phase(), allele_offset);
+        ExecEnv::log().info("mutateDNA(), variant: {}, allele offset: {}", map_variant_ptr->HGVS_Phase(), canonical_offset);
 
       }
 
     }
 
     // Update the mutation offset for indels.
-    if (not variant_mutation_offset_.updateIndelAccounting(allele_offset, sequence_size_modify)) {
+    if (not variant_mutation_offset_.updateIndelAccounting(canonical_offset, sequence_size_modify)) {
 
-      ExecEnv::log().error( "Problem updating indel mutated sequence length by variant: {}; duplicate allele offset: {}",
-                            variant_ptr->HGVS_Phase(), allele_offset);
+      ExecEnv::log().error("Problem updating indel mutated sequence length by variant: {}; duplicate allele offset: {}",
+                           variant_ptr->HGVS_Phase(), canonical_offset);
 
     }
 
