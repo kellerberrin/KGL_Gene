@@ -84,15 +84,12 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_rec
                              variant_count);
     VariantEvidence evidence1(evidence);
     // Add the variant.
-    StringDNA5 reference_str(vcf_record_ptr->ref);
-    StringDNA5 alternate_str(vcf_record_ptr->alt);
-
     std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
                                                                                 vcf_record_ptr->offset,
                                                                                 VariantPhase::UNPHASED,
                                                                                 vcf_record_ptr->id,
-                                                                                std::move(reference_str),
-                                                                                std::move(alternate_str),
+                                                                                DNA5SequenceLinear(StringDNA5(vcf_record_ptr->ref)),
+                                                                                DNA5SequenceLinear(StringDNA5(vcf_record_ptr->alt)),
                                                                                 evidence));
 
     if (not addThreadSafeVariant(variant_ptr, genome_db_ptr_->genomeId())) {
@@ -117,7 +114,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_rec
 
     uint32_t variant_count = alt_vector.size();
     uint32_t variant_index = 0;
-    for (auto const& alt : alt_vector) {
+    for (auto const& alternate : alt_vector) {
 
       // We have no format data and multiple alternate alleles.
       // Setup the evidence object.
@@ -130,15 +127,12 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_rec
                                variant_count);
       VariantEvidence evidence1(evidence);
       // Add the variant.
-      StringDNA5 reference_str(vcf_record_ptr->ref);
-      StringDNA5 alternate_str(alt);
-
       std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
                                                                                   vcf_record_ptr->offset,
                                                                                   VariantPhase::UNPHASED,
                                                                                   vcf_record_ptr->id,
-                                                                                  std::move(reference_str),
-                                                                                  std::move(alternate_str),
+                                                                                  DNA5SequenceLinear(StringDNA5(vcf_record_ptr->ref)),
+                                                                                  DNA5SequenceLinear(StringDNA5(alternate)),
                                                                                   evidence));
 
       if (not addThreadSafeVariant(variant_ptr, genome_db_ptr_->genomeId())) {

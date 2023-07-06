@@ -59,6 +59,9 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   // Initialize the overlap analysis.
   overlap_ptr_ = std::make_shared<OverlapGenes>(genome_3D7_ptr_);
 
+  // Initialize the mutate object.
+  mutate_genes_ptr_ = std::make_shared<const MutateGenes>(genome_3D7_ptr_);
+
 //  performPFEMP1UPGMA();
 
   // Select the genes we are interested in analyzing for genome variants.
@@ -103,6 +106,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
   // Calculate the FWS statistics.
   calc_fws_.calcFwsStatistics(filtered_population_ptr);
+
+  // Mutate all the relevant genes in the relevant contigs.
+  performMutation(filtered_population_ptr);
 
   return true;
 
@@ -254,5 +260,40 @@ void kgl::PfEMPAnalysis::testPhysicalDistances() {
   }
 
 
+
+}
+
+void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationDB> &filtered_population) {
+
+  ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
+
+  // Get the active contigs in this population.
+  auto contig_map = filtered_population->contigCount();
+
+  for (auto const& [contig_id, variant_count] : contig_map) {
+
+    if (variant_count > 0) {
+
+      auto gene_vector = mutate_genes_ptr_->contigGenes(contig_id);
+      ExecEnv::log().info("PfEMPAnalysis::performMutation; Mutating contig: {}, gene count: {}", contig_id, gene_vector.size());
+
+      for (auto const& gene_ptr : gene_vector) {
+
+        auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
+        for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
+
+          auto gene_population_ptr = filtered_population->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
+          ExecEnv::log().info("PfEMPAnalysis::performMutation; Filtered Gene: {}, Transcript: {}, Variants: {}",
+                              gene_ptr->id(), transcript_id, gene_population_ptr->variantCount());
+
+        }
+
+      }
+
+    }
+
+  }
+
+  ExecEnv::log().info("PfEMPAnalysis::performMutation; End gene mutation");
 
 }

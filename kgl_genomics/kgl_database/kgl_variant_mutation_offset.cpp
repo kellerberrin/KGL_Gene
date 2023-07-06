@@ -48,7 +48,7 @@ bool kgl::VariantMutationOffset::updateIndelAccounting(ContigOffset_t allele_off
 
 kgl::SignedOffset_t kgl::VariantMutationOffset::totalIndelOffset() const {
 
-  SignedOffset_t indel_offset_adjust = 0;
+  SignedOffset_t indel_offset_adjust{0};
 
   for (auto const& [offset, adjust] : indel_accounting_map_) {
 

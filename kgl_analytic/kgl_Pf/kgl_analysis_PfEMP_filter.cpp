@@ -97,7 +97,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   if constexpr(CODING_FILTER_ACTIVE_) {
 
-    shared_population_ptr = shared_population_ptr->viewFilter(MultiFilterAllCodingVariants(genome_3D7_ptr_));
+    shared_population_ptr = shared_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
     ExecEnv::log().info("Coding Population Final Filtered Size Genome count: {}, Variant Count: {}",
                         shared_population_ptr->getMap().size(),
                         shared_population_ptr->variantCount());

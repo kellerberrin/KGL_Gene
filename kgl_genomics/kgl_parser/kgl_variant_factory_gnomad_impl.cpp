@@ -256,16 +256,14 @@ void kgl::GenomeGnomadVCFImpl::addVariants( const std::map<size_t, std::vector<G
                              nullptr,
                              alt_allele,
                              alt_vector.size());
-    // Add the variant.
-    StringDNA5 reference_str(reference);
-    StringDNA5 alternate_str(alt_vector[alt_allele]);
 
+    // Add the variant.
     std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig,
                                                                                 offset,
                                                                                 phase,
                                                                                 identifier,
-                                                                                std::move(reference_str),
-                                                                                std::move(alternate_str),
+                                                                                DNA5SequenceLinear(StringDNA5(reference)),
+                                                                                DNA5SequenceLinear(StringDNA5(alt_vector[alt_allele])),
                                                                                 evidence));
 
     if (addThreadSafeVariant(variant_ptr, genome_vector)) {

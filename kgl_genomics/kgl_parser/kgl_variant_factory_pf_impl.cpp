@@ -432,15 +432,12 @@ bool kgl::PfVCFImpl::createAddVariant(const std::string& genome_name,
                                       const std::string& alternate_text,
                                       const VariantEvidence& evidence)  {
 
-  StringDNA5 reference_str(reference_text);
-  StringDNA5 alternate_str(alternate_text);
-
   std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig_ptr->contigId(),
                                                                               contig_offset,
                                                                               VariantPhase::UNPHASED,
                                                                               identifier,
-                                                                              std::move(reference_str),
-                                                                              std::move(alternate_str),
+                                                                              DNA5SequenceLinear(StringDNA5(reference_text)),
+                                                                              DNA5SequenceLinear(StringDNA5(alternate_text)),
                                                                               evidence));
 
   return addThreadSafeVariant(variant_ptr, genome_name);

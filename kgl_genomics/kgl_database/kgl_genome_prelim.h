@@ -112,7 +112,7 @@ public:
 private:
 
   std::shared_ptr<const GeneFeature> gene_ptr_;
-  std::shared_ptr<const Feature> parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS superFeature().
+  std::shared_ptr<const Feature> parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS array superFeature().
   TranscriptionFeatureMap transcription_feature_map_;
 
 };

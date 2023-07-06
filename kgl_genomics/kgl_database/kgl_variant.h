@@ -56,16 +56,16 @@ public:
              ContigOffset_t contig_reference_offset,
              VariantPhase phase_id,
              std::string identifier,
-             StringDNA5&& reference,
-             StringDNA5&& alternate,
+             DNA5SequenceLinear&& reference,
+             DNA5SequenceLinear&& alternate,
              const VariantEvidence& evidence) :
-      reference_(std::move(reference)),
-      alternate_(std::move(alternate)),
-      evidence_(evidence),
       contig_id_(std::move(contig_id)),
       contig_reference_offset_(contig_reference_offset),
       phase_id_(phase_id),
-      identifier_(std::move(identifier)) { ++object_count_; }
+      identifier_(std::move(identifier)),
+      reference_(std::move(reference)),
+      alternate_(std::move(alternate)),
+      evidence_(evidence) { ++object_count_; }
 
   ~Variant() { --object_count_; }
 
@@ -99,10 +99,6 @@ public:
 
   [[nodiscard]] const VariantEvidence& evidence() const { return evidence_; }
 
-  [[nodiscard]] bool mutateSequence( ContigOffset_t allele_offset,
-                                     SignedOffset_t offset_adjust,
-                                     DNA5SequenceLinear& dna_sequence,
-                                     SignedOffset_t& sequence_size_modify) const;
 
   [[nodiscard]] bool operator<(const Variant& cmp_var) const { return lessThan(cmp_var); };
   [[nodiscard]] bool operator==(const Variant& cmp_var) const { return equivalent(cmp_var); };
@@ -162,28 +158,16 @@ public:
 
 private:
 
-  const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
-  const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
-  const VariantEvidence evidence_;                      // VCF File based information payload about this variant
   const ContigId_t contig_id_;                          // The contig of this variant
   const ContigOffset_t contig_reference_offset_;        // Physical Location of the start of the reference sequence the contig.
   const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
   const std::string identifier_;                        // The VCF supplied variant identifier such as (HSapien) "rs187084".
+  const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
+  const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)
+  const VariantEvidence evidence_;                      // VCF File based information payload about this variant
 
   inline static std::atomic<size_t> object_count_{0};  // Used to check memory usage and identify any memory leaks.
 
-  [[nodiscard]] size_t alternateSize(size_t reference_size) const;
-
-  // Mutate a sequence by adding and subtracting subsequences at the designated offset
-  [[nodiscard]] static bool performMutation( ContigOffset_t offset,
-                                             DNA5SequenceLinear& mutated_sequence,
-                                             const DNA5SequenceLinear& delete_subsequence,
-                                             const DNA5SequenceLinear& add_subsequence,
-                                             SignedOffset_t& sequence_size_modify);
-
-  [[nodiscard]] bool preceedingMutation( SignedOffset_t adjusted_offset,
-                                         DNA5SequenceLinear& dna_sequence,
-                                         SignedOffset_t& sequence_size_modify) const;
 
   // Common (same nucleotide) Prefix and Suffix size for refernce and alternate.
   [[nodiscard]] size_t commonPrefix() const { return reference().commonPrefix(alternate()); }

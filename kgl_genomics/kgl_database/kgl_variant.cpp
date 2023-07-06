@@ -19,16 +19,12 @@ namespace kgl = kellerberrin::genome;
 
 std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
 
-  StringDNA5 reference_str(reference().getAlphabetString());
-  StringDNA5 alternate_str(alternate().getAlphabetString());
-  std::string variant_ident = identifier();
-
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
                                                                   offset(),
                                                                   phaseId(),
-                                                                  std::move(variant_ident),
-                                                                  std::move(reference_str),
-                                                                  std::move(alternate_str),
+                                                                  identifier(),
+                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
+                                                                  DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
                                                                   evidence()));
 
   return variant_ptr;
@@ -38,16 +34,14 @@ std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
 
 std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 
-  StringDNA5 reference1_str(reference().getAlphabetString());
-  StringDNA5 reference2_str(reference().getAlphabetString());
   VariantEvidence null_evidence; // no evidence is passed through.
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
                                                                   offset(),
                                                                   phaseId(),
                                                                   identifier(),
-                                                                  std::move(reference1_str),
-                                                                  std::move(reference2_str),
+                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
+                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
                                                                   null_evidence));
 
   return variant_ptr;
@@ -57,35 +51,28 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 std::unique_ptr<kgl::Variant> kgl::Variant::cloneCanonical() const {
 
   auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
-  StringDNA5 reference_str(canonical_ref.getAlphabetString());
-  StringDNA5 alternate_str(canonical_alt.getAlphabetString());
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
                                                                   canonical_offset,
                                                                   phaseId(),
                                                                   identifier(),
-                                                                  std::move(reference_str),
-                                                                  std::move(alternate_str),
+                                                                  std::move(canonical_ref),
+                                                                  std::move(canonical_alt),
                                                                   evidence()));
 
   return variant_ptr;
 
 }
 
-
 // Clone with modified phase.
 std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) const {
-
-  StringDNA5 reference_str(reference().getAlphabetString());
-  StringDNA5 alternate_str(alternate().getAlphabetString());
-  std::string variant_ident = identifier();
 
   std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
                                                                   offset(),
                                                                   phaseId,
-                                                                  std::move(variant_ident),
-                                                                  std::move(reference_str),
-                                                                  std::move(alternate_str),
+                                                                  identifier(),
+                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
+                                                                  DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
                                                                   evidence()));
 
   return variant_ptr;
@@ -245,13 +232,6 @@ std::string kgl::Variant::cigar() const {
 
 }
 
-
-size_t kgl::Variant::alternateSize(size_t reference_size) const {
-
-  CigarVector cigar_vector = ParseVCFCigar::generateEditVector(reference().getSequenceAsString(), alternate().getSequenceAsString());
-  return ParseVCFCigar::alternateCount(reference_size, cigar_vector);
-
-}
 
 
 // Unique upto phase.

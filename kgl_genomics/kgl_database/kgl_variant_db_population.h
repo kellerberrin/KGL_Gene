@@ -66,6 +66,10 @@ public:
   // Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
   [[nodiscard]] std::map<std::string, std::shared_ptr<const Variant>> uniqueVariants() const;
 
+  // Returns a list of contigs in the population and a sum of all variants in each contig.
+  // Useful for processing contig based VCF files (could be multi-threaded for speed).
+  [[nodiscard]] std::map<ContigId_t , size_t> contigCount() const;
+
   // Creates a filtered copy of the population database.
   // This is multi-threaded across genomes to be time efficient for large databases.
   // Important, CPU and memory efficient, but returns a shallow copy of the population.

@@ -44,11 +44,11 @@ public:
   [[nodiscard]] const IntervalSet& transcriptUnion() const { return transcript_union_; }
 
   // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
-  [[nodiscard]] bool isMemberGene(ContigOffset_t offset) const { return gene_interval_.containsOffset(offset); }
-  // Given an offset, does the offset fall within a gene interval coding region.
-  [[nodiscard]] bool isMemberCoding(ContigOffset_t offset) const;
-  // Test if a variant modifies any of the coding transcripts of this gene structure.
+  [[nodiscard]] bool isWithinGene(const Variant& variant) const { return gene_interval_.containsOffset(variant.offset()); }
+  // Test if a variant modifies any of the CODING transcripts of this gene structure.
   [[nodiscard]] bool codingModifier(const Variant& variant) const;
+  // Test if a variant modifies the specified transcript.
+  [[nodiscard]] bool transcriptModifier(const Variant& variant, const FeatureIdent_t& Transcript) const;
 
 private:
 
@@ -82,7 +82,7 @@ public:
 
   // Returns true if the variant is within a gene coding region.
   [[nodiscard]] bool codingRegionVariant(const Variant& variant) const;
-  // Returns std::nullopt if the variant is not within a gene coding region.
+  // Returns the empty vector if the variant is not within a gene coding region.
   [[nodiscard]] std::vector<std::shared_ptr<const GeneFeature>> getGeneCoding(const Variant &variant) const;
 
   [[nodiscard]] const ContigIntervalMap& getCodingMap() const { return contig_interval_map_; }

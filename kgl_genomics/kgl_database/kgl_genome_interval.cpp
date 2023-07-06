@@ -10,9 +10,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
-
 
 namespace kgl = kellerberrin::genome;
 
@@ -72,23 +69,6 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 }
 
 
-bool kgl::GeneIntervalStructure::isMemberCoding(ContigOffset_t offset) const {
-
-  for (auto const& [transcript_id, interval_set] : gene_coding_transcripts_) {
-
-    if (interval_set.containsOffset(offset)) {
-
-      return true;
-
-    }
-
-  }
-
-  return false;
-
-}
-
-
 bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
 
   // Check the contig id.
@@ -107,6 +87,37 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
 
   auto [variant_offset, extent] = variant.extentOffset();
   return transcript_union_.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + extent));
+
+}
+
+
+bool kgl::GeneIntervalStructure::transcriptModifier(const Variant& variant, const FeatureIdent_t& transcript) const {
+
+  // Check the contig id.
+  if (not isSameContig(variant.contigId())) {
+
+    return false;
+
+  }
+
+  // Check if the variant modifies the gene interval.
+  if (not variant.sequenceModifier(gene_interval_.lower(), gene_interval_.size())) {
+
+    return false;
+
+  }
+
+  // Finally check if the variant modifies the transcript.
+  auto find_iter = gene_coding_transcripts_.find(transcript);
+  if (find_iter == gene_coding_transcripts_.end()) {
+
+    return false;
+
+  }
+
+  auto const& [found_transcipt, transcript_intervals] = *find_iter;
+  auto [variant_offset, extent] = variant.extentOffset();
+  return transcript_intervals.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + extent));
 
 }
 
@@ -205,7 +216,7 @@ std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants
   auto contig_iter = contig_interval_map_.find(variant.contigId());
   if (contig_iter == contig_interval_map_.end()) {
 
-    return gene_vector;
+    return gene_vector; // Return the empty vector.
 
   }
 

@@ -183,6 +183,41 @@ size_t kgl::PopulationDB::trimEmpty() {
 
 }
 
+
+std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCount() const {
+
+  std::map<ContigId_t, size_t> contig_map;
+
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+
+      auto find_iter = contig_map.find(contig_id);
+      if (find_iter == contig_map.end()) {
+
+        auto [insert_iter, result] = contig_map.try_emplace(contig_id, 0);
+        if (not result) {
+
+          ExecEnv::log().error("PopulationDB::contigCount; expected error inserting contig: {}", contig_id);
+          continue;
+
+        }
+        find_iter = insert_iter;
+
+      }
+
+      auto& [map_map, contig_count] = *find_iter;
+      contig_count += contig_ptr->variantCount();
+
+    }
+
+  }
+
+  return contig_map;
+
+}
+
+
 size_t kgl::PopulationDB::squareContigs() {
 
 

@@ -17,6 +17,7 @@
 #include "kgl_analysis_PfEMP_FWS.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_analysis_PfEMP_overlap.h"
+#include "kgl_analysis_PfEMP_mutation.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -67,6 +68,7 @@ private:
   constexpr static const char PF3D7_IDENT_[]{"Pf3D7_62"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
+  std::shared_ptr<const MutateGenes> mutate_genes_ptr_;
 
   // Filter constants.
   constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.
@@ -154,6 +156,8 @@ private:
   // Quality filter the variants using read depth, VQSLOD and other statistics
   std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
 
+  // Perform mutation analysis of ncRNA and Protein genes.
+  void performMutation(const std::shared_ptr<const PopulationDB> &filtered_population);
 
 };
 
