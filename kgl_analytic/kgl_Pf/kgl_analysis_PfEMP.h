@@ -157,7 +157,7 @@ private:
   std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
 
   // Perform mutation analysis of ncRNA and Protein genes.
-  void performMutation(const std::shared_ptr<const PopulationDB> &filtered_population);
+  void performMutation(const std::shared_ptr<const PopulationDB> &filtered_population_ptr);
 
 };
 

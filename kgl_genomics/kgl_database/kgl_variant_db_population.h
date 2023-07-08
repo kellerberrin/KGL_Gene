@@ -27,6 +27,9 @@ namespace kellerberrin::genome {   //  organization::project
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using GenomeDBMap = std::map<GenomeId_t, std::shared_ptr<GenomeDB>>;
+// This map is indexed by the Variant HGVS string, the value pair contains a pointer to the variant and a vector of genomes containing the variant.
+// The genomes are non-unique in the case of a homozygous variant.
+using VariantGenomeVector = std::map<std::string, std::pair<std::shared_ptr<const Variant>, std::vector<GenomeId_t>>>;
 
 
 // Used in the processAll_MT()) templates.
@@ -66,6 +69,18 @@ public:
   // Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
   [[nodiscard]] std::map<std::string, std::shared_ptr<const Variant>> uniqueVariants() const;
 
+  // Create an equivalent  population that is has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  // and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
+  [[nodiscard]] std::unique_ptr<PopulationDB> canonicalPopulation() const;
+
+  // Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
+  // A vector of genomes is also returned.
+  // Note that a genome id occurs twice (homozygous) in the genome vector it indicates
+  // the presence of a homozygous variant in the genome.
+  // This function can be used together with addVariant(.) below to recreate a population with modified
+  // (canonical) variants.
+  [[nodiscard]] VariantGenomeVector variantGenomes() const;
+
   // Returns a list of contigs in the population and a sum of all variants in each contig.
   // Useful for processing contig based VCF files (could be multi-threaded for speed).
   [[nodiscard]] std::map<ContigId_t , size_t> contigCount() const;
@@ -76,6 +91,7 @@ public:
   // If the filtered view needs to be used in another program scope then use
   // deepCopy() or selfFilter() to create a permanent view.
   [[nodiscard]] std::unique_ptr<PopulationDB> viewFilter(const BaseFilter& filter) const;
+
 
   // Filters the actual (this) population database, multi-threaded to be efficient for large databases.
   // selfFilter returns a pair<size_t, size_t>. The first integer is the number of variants examined.
@@ -96,6 +112,8 @@ public:
   // Unconditionally add a variant to the population.
   // This function is thread safe for concurrent updates.
   // The population structure cannot be 'read' while it is being updated.
+  // Note that if a genome id occurs twice (homozygous) in the genome vector it will be
+  // added twice to the relevant genome indicating the presence of a homozygous variant.
   [[nodiscard]] bool addVariant( const std::shared_ptr<const Variant>& variant_ptr,
                                  const std::vector<GenomeId_t>& genome_vector);
 

@@ -124,7 +124,16 @@ class FilterGeneTranscriptVariants: public FilterVariants {
 public:
 
   explicit FilterGeneTranscriptVariants(const std::shared_ptr<const GeneFeature>& gene_ptr, FeatureIdent_t transcript_id)
-  : gene_intervals_(gene_ptr), transcript_id_(std::move(transcript_id)) {}
+  : gene_intervals_(gene_ptr), transcript_id_(std::move(transcript_id)) {
+
+    if (not gene_intervals_.codingTranscripts().contains(transcript_id_)) {
+
+      ExecEnv::log().warn("FilterGeneTranscriptVariants::FilterGeneTranscriptVariants; Gene: {} does not contain transcript: {}",
+                          gene_ptr->id(), transcript_id_);
+
+    }
+
+  }
   ~FilterGeneTranscriptVariants() override = default;
   FilterGeneTranscriptVariants(const FilterGeneTranscriptVariants&) = default;
 

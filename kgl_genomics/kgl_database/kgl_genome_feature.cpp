@@ -122,12 +122,12 @@ bool kgl::Feature::equivalent(const Feature& lhs) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<const kgl::TranscriptionSequenceArray>
-kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene) {
+kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
   std::unique_ptr<TranscriptionSequenceArray> sequence_array_ptr(std::make_unique<TranscriptionSequenceArray>());
-  if (not getCodingSequences(gene, gene, *sequence_array_ptr)) {
+  if (not getCodingSequences(gene_ptr, gene_ptr, *sequence_array_ptr)) {
 
-    ExecEnv::log().error("GeneFeature::getTranscriptionSequences; Unable to retrieve coding sequences for Gene: {}, type: {}", gene->id(), gene->type());
+    ExecEnv::log().error("GeneFeature::getTranscriptionSequences; Unable to retrieve coding sequences for Gene: {}, type: {}", gene_ptr->id(), gene_ptr->type());
 
   }
 

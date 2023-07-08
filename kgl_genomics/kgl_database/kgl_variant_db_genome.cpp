@@ -292,6 +292,7 @@ bool kgl::GenomeDB::processAll(const VariantProcessFunc& procFunc) const {
 }
 
 
+
 bool kgl::GenomeDB::getSortedVariants(ContigId_t contig_id,
                                       VariantPhase phase,
                                       ContigOffset_t start,

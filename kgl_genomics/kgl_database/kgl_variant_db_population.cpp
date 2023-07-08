@@ -158,6 +158,93 @@ std::map<std::string, std::shared_ptr<const kgl::Variant>> kgl::PopulationDB::un
 
 }
 
+// Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
+// A vector of genomes is also returned.
+kgl::VariantGenomeVector kgl::PopulationDB::variantGenomes() const {
+
+  class VariantGenomes {
+
+  public:
+
+    VariantGenomes() = default;
+    ~VariantGenomes() = default;
+
+    bool processVariantGenomes( std::shared_ptr<const GenomeDB> genome_ptr,
+                                const std::shared_ptr<const Variant>& variant_ptr) {
+
+      std::string hgvs = variant_ptr->HGVS();
+      auto find_iter = variant_genome_vector_.find(hgvs);
+      if (find_iter == variant_genome_vector_.end()) {
+        // Add the variant.
+        std::pair<std::shared_ptr<const Variant>, std::vector<GenomeId_t>> map_value{variant_ptr, std::vector<GenomeId_t>()};
+        auto [insert_iter, result] = variant_genome_vector_.try_emplace(hgvs, map_value);
+        if (not result) {
+
+          ExecEnv::log().error("PopulationDB::variantGenomes; Unexpected map error");
+          return false;
+
+        }
+        find_iter = insert_iter;
+
+      }
+
+      auto& [map_hgvs, map_value_pair] = *find_iter;
+      auto& [map_variant_ptr, map_genome_vector] = map_value_pair;
+      map_genome_vector.push_back(genome_ptr->genomeId());
+
+      return true;
+
+    }
+
+    VariantGenomeVector variant_genome_vector_;
+
+  };
+
+  // Process each genome using the local object defined above.
+  VariantGenomes variant_genomes;
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
+
+    VariantProcessFunc bind_callable = std::bind_front(&VariantGenomes::processVariantGenomes, &variant_genomes, genome_ptr);
+    genome_ptr->processAll(bind_callable);
+
+  }
+
+  return variant_genomes.variant_genome_vector_;
+
+}
+
+
+std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::canonicalPopulation() const {
+
+  // Create the new population.
+  std::unique_ptr<PopulationDB> canonical_population_ptr(std::make_unique<PopulationDB>(populationId(), dataSource()));
+  // Edge Condition, if no genomes then simply exit.
+  if (getMap().empty()) {
+
+    return canonical_population_ptr;
+
+  }
+
+  // Get the variant genome map.
+  auto variant_genome_map = variantGenomes();
+
+  for (auto const& [hgvs, variant_genomes] : variant_genome_map) {
+
+    auto const& [variant_ptr, genome_vector] = variant_genomes;
+    std::shared_ptr<const Variant> canonical_variant_ptr = variant_ptr->cloneCanonical();
+
+    if (not canonical_population_ptr->addVariant(canonical_variant_ptr, genome_vector)) {
+
+      ExecEnv::log().error("PopulationDB::canonicalPopulation; Could NOT add canonical variant: {}, for genomes count: {}",
+                           canonical_variant_ptr->HGVS(), genome_vector.size());
+
+    }
+
+  }
+
+  return canonical_population_ptr;
+
+}
 
 size_t kgl::PopulationDB::trimEmpty() {
 

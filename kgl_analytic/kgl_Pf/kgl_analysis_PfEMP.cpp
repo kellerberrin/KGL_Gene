@@ -263,12 +263,12 @@ void kgl::PfEMPAnalysis::testPhysicalDistances() {
 
 }
 
-void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationDB> &filtered_population) {
+void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationDB> &filtered_population_ptr) {
 
   ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
 
   // Get the active contigs in this population.
-  auto contig_map = filtered_population->contigCount();
+  auto contig_map = filtered_population_ptr->contigCount();
 
   for (auto const& [contig_id, variant_count] : contig_map) {
 
@@ -282,9 +282,7 @@ void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationD
         auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
         for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
 
-          auto gene_population_ptr = filtered_population->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
-          ExecEnv::log().info("PfEMPAnalysis::performMutation; Filtered Gene: {}, Transcript: {}, Variants: {}",
-                              gene_ptr->id(), transcript_id, gene_population_ptr->variantCount());
+          mutate_genes_ptr_->mutateTranscript(gene_ptr, transcript_id, filtered_population_ptr, genome_3D7_ptr_);
 
         }
 
@@ -297,3 +295,4 @@ void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationD
   ExecEnv::log().info("PfEMPAnalysis::performMutation; End gene mutation");
 
 }
+
