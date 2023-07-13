@@ -68,15 +68,17 @@ private:
   constexpr static const char PF3D7_IDENT_[]{"Pf3D7_62"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
-  std::shared_ptr<const MutateGenes> mutate_genes_ptr_;
+  std::shared_ptr<const MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
+  MutateAnalysis mutate_analysis_; // Print out detailed mutation statistics.
 
   // Filter constants.
   constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.
   constexpr static const bool FILTER_QC_ACTIVE_{true};
-  constexpr static const bool FILTER_FWS_ACTIVE_{false};
+  constexpr static const bool FILTER_FWS_ACTIVE_{true};
+  constexpr static const double FWS_MONOCLONAL_THRESHOLD{0.95};
   constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
   constexpr static const bool AF_FILTER_ACTIVE_{false};
-  constexpr static const bool SNP_FILTER_ACTIVE_{true};  // Only SNP variants
+  constexpr static const bool SNP_FILTER_ACTIVE_{false};  // Only SNP variants
   constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
   void performPFEMP1UPGMA();

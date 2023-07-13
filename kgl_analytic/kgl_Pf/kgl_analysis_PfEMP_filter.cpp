@@ -46,12 +46,12 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
   if constexpr (FILTER_FWS_ACTIVE_) {
 
     // Shallow filter only.
-    monoclonal_population_ptr = Pf7_fws_ptr_->viewFilterFWS(FwsFilterType::GREATER_EQUAL, Pf7FwsResource::MONOCLONAL_FWS_THRESHOLD, filtered_qc_population_ptr);
+    monoclonal_population_ptr = Pf7_fws_ptr_->viewFilterFWS(FwsFilterType::GREATER_EQUAL, FWS_MONOCLONAL_THRESHOLD, filtered_qc_population_ptr);
 
     size_t monoclonal_count = monoclonal_population_ptr->variantCount();
     double mono_filtered = 100.0 * (static_cast<double>(qc_count - monoclonal_count) / static_cast<double>(qc_count));
     ExecEnv::log().info("Filter MonoClonal FWS: {}, Genome Count: {},Variant Count: {}, filtered: {:.2f}%",
-                        Pf7FwsResource::MONOCLONAL_FWS_THRESHOLD,
+                        FWS_MONOCLONAL_THRESHOLD,
                         monoclonal_population_ptr->getMap().size(),
                         monoclonal_count,
                         mono_filtered);

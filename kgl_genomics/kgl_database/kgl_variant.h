@@ -81,6 +81,12 @@ public:
   // the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
   // at which the first nucleotide of the canonical reference and canonical alternate is found.
   [[nodiscard]] std::unique_ptr<Variant> cloneCanonical() const;
+  // Check if the variants reference() and alternate() are in canonical form.
+  // The variant is canonical if SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+  // A canonical SNP will have referenceSize() == alternateSize() == 1.
+  // A canonical delete will have referenceSize() > alternateSize() == 1.
+  // A canonical insert will have 1 == referenceSize() < alternateSize().
+  [[nodiscard]] bool isCanonical() const;
   // Clone the variant with a different phase.
   [[nodiscard]] std::unique_ptr<Variant> clonePhase(VariantPhase phase_id) const;
 

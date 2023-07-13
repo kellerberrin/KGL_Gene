@@ -5,6 +5,8 @@
 #include "kgl_analysis_PfEMP.h"
 #include "kgl_variant_filter_features.h"
 
+#include <ranges>
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -168,6 +170,10 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   variant_file_name = Utility::filePath(variant_file_name, ident_work_directory_);
   calc_fws_.writeVariantResults(variant_file_name);
 
+  std::string mutation_file_name = std::string("MutationAnalysis") + std::string(VARIANT_COUNT_EXT_);
+  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
+  mutate_analysis_.printMutationAnalysis(mutation_file_name);
+
   // Overlap to log file.
   overlap_ptr_->printResults();
 
@@ -267,6 +273,13 @@ void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationD
 
   ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
 
+  std::string genome_file_name = std::string("MultipleVariant") + std::string(VARIANT_COUNT_EXT_);
+  genome_file_name = Utility::filePath(genome_file_name, ident_work_directory_);
+  MutateGenes::printMultipleAllele(filtered_population_ptr, genome_file_name);
+
+  std::string transcript_file_name = std::string("MultipleVariant") + std::string(VARIANT_COUNT_EXT_);
+  transcript_file_name = Utility::filePath(transcript_file_name, ident_work_directory_);
+
   // Get the active contigs in this population.
   auto contig_map = filtered_population_ptr->contigCount();
 
@@ -282,7 +295,12 @@ void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationD
         auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
         for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
 
-          mutate_genes_ptr_->mutateTranscript(gene_ptr, transcript_id, filtered_population_ptr, genome_3D7_ptr_);
+          auto const [total_variants, duplicate_variants] = mutate_genes_ptr_->mutateTranscript( gene_ptr,
+                                                                                                                                   transcript_id,
+                                                                                                                                   filtered_population_ptr,
+                                                                                                                                   genome_3D7_ptr_);
+
+          mutate_analysis_.addTranscriptRecord(TranscriptMutateRecord(gene_ptr, transcript_ptr, total_variants, duplicate_variants));
 
         }
 

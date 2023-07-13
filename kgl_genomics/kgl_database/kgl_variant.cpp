@@ -181,6 +181,33 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
 
 }
 
+// Check if the variants reference() and alternate() are in canonical form.
+// The variant is canonical if SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+// A canonical SNP will have referenceSize() == alternateSize() == 1.
+// A canonical delete will have referenceSize() > alternateSize() == 1.
+// A canonical insert will have 1 == referenceSize() < alternateSize().
+bool kgl::Variant::isCanonical() const {
+
+  if (referenceSize() == 1 and referenceSize() == alternateSize()) {
+    // Canonical SNP
+    return true;
+
+  } else if (alternateSize() == 1 and referenceSize() > alternateSize()) {
+    // Canonical Delete
+    return true;
+
+  } else if (referenceSize() == 1 and referenceSize() < alternateSize()) {
+    // Canonical Insert
+    return true;
+
+  }
+
+  return false;
+
+}
+
+
+
 
 // The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
 // of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
