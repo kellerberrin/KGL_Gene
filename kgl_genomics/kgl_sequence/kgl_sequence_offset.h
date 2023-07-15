@@ -6,7 +6,7 @@
 #define KGL_SEQUENCE_OFFSET_H
 
 #include "kgl_sequence_base.h"
-#include "kgl_variant_mutation_offset.h"
+#include "kgl_mutation_variant_offset.h"
 
 
 

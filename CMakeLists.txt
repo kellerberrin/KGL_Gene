@@ -27,7 +27,8 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_genome_io
                     kgl_genomics/kgl_variant_db
                     kgl_genomics/kgl_variant_filter
-                    kgl_genomics/kgl_variant_misc
+        kgl_genomics/kgl_variant_analysis
+                    kgl_genomics/kgl_mutation
                     kgl_genomics/kgl_literature
                     kgl_mixture                  # Deconvolution and mixture library
                     kgl_analytic                  # Genetic analysis library (top level)
@@ -185,13 +186,13 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.h
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_mutation.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_mutation.h
+        kgl_genomics/kgl_mutation/kgl_mutation_variant.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_variant.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_mutation.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_offset.h
         kgl_genomics/kgl_sequence/kgl_sequence_offset.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_mutation_offset.h
-        kgl_genomics/kgl_variant_misc/kgl_variant_mutation_offset.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_variant_offset.h
+        kgl_genomics/kgl_mutation/kgl_mutation_variant_offset.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
@@ -271,14 +272,14 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_ensembl_id_parser.h
         kgl_genomics/kgl_genome/kgl_genome_collection.h
         kgl_genomics/kgl_genome/kgl_genome_collection.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_sort.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_sort.h
+        kgl_genomics/kgl_variant_analysis/kgl_variant_sort.cpp
+        kgl_genomics/kgl_variant_analysis/kgl_variant_sort.h
         kgl_genomics/kgl_parser/kgl_hsgenome_aux.cpp
         kgl_genomics/kgl_parser/kgl_hsgenome_aux.h
         kgl_genomics/kgl_parser/kgl_uniprot_parser.cpp
         kgl_genomics/kgl_parser/kgl_uniprot_parser.h
-        kgl_genomics/kgl_variant_misc/kgl_variant_sort_analysis.cpp
-        kgl_genomics/kgl_variant_misc/kgl_variant_sort_analysis.h
+        kgl_genomics/kgl_variant_analysis/kgl_variant_sort_analysis.cpp
+        kgl_genomics/kgl_variant_analysis/kgl_variant_sort_analysis.h
         kgl_genomics/kgl_parser/kgl_json_parser.cpp
         kgl_genomics/kgl_parser/kgl_json_parser.h
         kgl_genomics/kgl_parser/kgl_citation_parser.cpp
@@ -332,7 +333,11 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.h
         kgl_genomics/kgl_genome/kgl_genome_interval.cpp
-        kgl_genomics/kgl_genome/kgl_genome_interval.h)
+        kgl_genomics/kgl_genome/kgl_genome_interval.h
+        kgl_genomics/kgl_mutation/kgl_mutation_db.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_db.h
+        kgl_genomics/kgl_mutation/kgl_mutation_analysis.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_analysis.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
@@ -566,9 +571,7 @@ set(ANALYTIC_SOURCE_FILES
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h
         kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_overlap.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_overlap.h
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_mutation.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_mutation.h)
+        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_overlap.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES

@@ -5,19 +5,19 @@
 #ifndef KGL_ANALYSIS_PFEMP_H
 #define KGL_ANALYSIS_PFEMP_H
 
-
 #include "kgl_analysis_virtual.h"
 #include "kgl_genome_collection.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
+#include "kgl_variant_filter_features.h"
+#include "kgl_mutation_db.h"
+
 #include "kgl_analysis_PfEMP_variant.h"
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_analysis_PfEMP_FWS.h"
-#include "kgl_variant_filter_features.h"
 #include "kgl_analysis_PfEMP_overlap.h"
-#include "kgl_analysis_PfEMP_mutation.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -5,7 +5,7 @@
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_uniprot_parser.h"
 #include "kgl_analysis_mutation_gene.h"
-#include "kgl_variant_mutation.h"
+#include "kgl_mutation_variant.h"
 #include "kgl_variant_sort.h"
 
 

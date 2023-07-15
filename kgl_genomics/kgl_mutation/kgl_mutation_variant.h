@@ -9,12 +9,13 @@
 // Created by kellerberrin on 31/10/17.
 //
 
+#include "kgl_variant_db.h"
+#include "kgl_mutation_variant_offset.h"
+
 #include <map>
 #include <memory>
 #include <vector>
 #include <sstream>
-#include "kgl_variant_db.h"
-#include "kgl_variant_mutation_offset.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
