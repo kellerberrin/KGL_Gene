@@ -4,7 +4,7 @@
 
 #include "kgl_variant_factory_vcf_parse_info.h"
 #include "kgl_variant_factory_grch_impl.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 #include "kel_mem_alloc.h"
 

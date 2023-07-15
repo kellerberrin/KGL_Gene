@@ -6,7 +6,6 @@
 #include "kel_utility.h"
 #include "kel_exec_env.h"
 
-#include <algorithm>
 
 namespace kgl = kellerberrin::genome;
 

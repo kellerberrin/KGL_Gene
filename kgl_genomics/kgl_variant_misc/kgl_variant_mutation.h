@@ -13,7 +13,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kgl_variant_mutation_offset.h"
 
 

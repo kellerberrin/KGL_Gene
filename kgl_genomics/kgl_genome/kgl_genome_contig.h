@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <kgl_properties.h>
+#include "kgl_properties.h"
 #include "kgl_genome_types.h"
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"

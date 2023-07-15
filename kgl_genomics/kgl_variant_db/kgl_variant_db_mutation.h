@@ -10,7 +10,7 @@
 #include <vector>
 #include <sstream>
 #include "kgl_genome_attributes.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kgl_variant_db_population.h"
 
 

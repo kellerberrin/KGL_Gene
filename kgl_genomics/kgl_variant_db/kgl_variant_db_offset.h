@@ -6,7 +6,7 @@
 #define KGL_VARIANT_DB_OFFSET_H
 
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 #include <vector>
 #include <list>

@@ -172,7 +172,7 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
   std::string mutation_file_name = std::string("MutationAnalysis") + std::string(VARIANT_COUNT_EXT_);
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_analysis_.printMutationAnalysis(mutation_file_name);
+  mutate_analysis_.printMutationTranscript(mutation_file_name);
 
   // Overlap to log file.
   overlap_ptr_->printResults();
@@ -272,13 +272,6 @@ void kgl::PfEMPAnalysis::testPhysicalDistances() {
 void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationDB> &filtered_population_ptr) {
 
   ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
-
-  std::string genome_file_name = std::string("MultipleVariant") + std::string(VARIANT_COUNT_EXT_);
-  genome_file_name = Utility::filePath(genome_file_name, ident_work_directory_);
-  MutateGenes::printMultipleAllele(filtered_population_ptr, genome_file_name);
-
-  std::string transcript_file_name = std::string("MultipleVariant") + std::string(VARIANT_COUNT_EXT_);
-  transcript_file_name = Utility::filePath(transcript_file_name, ident_work_directory_);
 
   // Get the active contigs in this population.
   auto contig_map = filtered_population_ptr->contigCount();

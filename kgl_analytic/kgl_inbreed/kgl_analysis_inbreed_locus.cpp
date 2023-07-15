@@ -3,7 +3,7 @@
 //
 
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kgl_analysis_inbreed_locus.h"
 
 

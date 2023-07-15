@@ -5,7 +5,7 @@
 #ifndef KGL_AGE_ANALYSIS_H
 #define KGL_AGE_ANALYSIS_H
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -4,7 +4,7 @@
 
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_sort.h"
-#include "../../kel_thread/kel_workflow_threads.h"
+#include "kel_workflow_threads.h"
 
 
 namespace kgl = kellerberrin::genome;

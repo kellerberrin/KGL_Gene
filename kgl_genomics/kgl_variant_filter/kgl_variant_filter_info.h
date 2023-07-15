@@ -7,7 +7,7 @@
 
 
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kel_utility.h"
 #include "kgl_variant_filter.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"

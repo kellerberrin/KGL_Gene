@@ -7,7 +7,7 @@
 
 #include <map>
 #include <memory>
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -6,7 +6,7 @@
 #include "kgl_variant_factory_vcf_parse_header.h"
 #include "kgl_variant_factory_readvcf_impl.h"
 #include "kgl_variant_factory_pf_impl.h"
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 
 
 namespace kgl = kellerberrin::genome;

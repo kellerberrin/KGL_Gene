@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FILTER_Pf7_H
 
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kgl_variant_db_population.h"
 #include "kel_utility.h"
 #include "kgl_variant_filter_type.h"

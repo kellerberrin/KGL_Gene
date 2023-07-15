@@ -5,7 +5,7 @@
 #ifndef KGL_FILTER_H
 #define KGL_FILTER_H
 
-#include "kgl_variant.h"
+#include "kgl_variant_db.h"
 #include "kel_utility.h"
 #include "kgl_variant_filter.h"
 #include "kgl_variant_filter_type.h"
