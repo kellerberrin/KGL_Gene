@@ -103,15 +103,7 @@ kgl::VariantType kgl::Variant::variantType() const {
 
   } else {
 
-    if (DNA5::isTransition(reference().at(0), alternate().at(0))) {
-
-      return VariantType::TRANSITION;
-
-    } else {
-
-     return VariantType::TRANSVERSION;
-
-    }
+    return VariantType::SNP;
 
   }
 
@@ -160,12 +152,27 @@ bool kgl::Variant::isSNP() const {
 }
 
 // Reduces the variant to a canonical reference and alternate format.
-// SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
-// The first argument is the adjusted reference, the second is the adjusted alternate,
-// the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
+// Canonical SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+// The first argument is the adjusted reference.
+// The second is the adjusted alternate.
+// The third is the adjusted variant offset.
+// The adjusted variant offset always indicates the offset
 // at which the first nucleotide of the canonical reference and canonical alternate is found.
 std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t> kgl::Variant::canonicalSequences() const {
 
+  // Variant may already be in canonical form.
+  if (isCanonical()) {
+
+    StringDNA5 ref_string(reference().getAlphabetString());
+    StringDNA5 alt_string(alternate().getAlphabetString());
+
+    return { DNA5SequenceLinear(std::move(ref_string)),
+             DNA5SequenceLinear(std::move(alt_string)),
+             offset() };
+
+  }
+
+  // Else modify prefix and suffix subsequences to canonical form.
   size_t prefix_size = commonPrefix();
   prefix_size = prefix_size > 0 ? (prefix_size - 1) : 0;  // Adjust for '1MnD' and '1MnI'.
   size_t suffix_size = commonSuffix();
@@ -177,7 +184,9 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
   auto canonical_alternate = alternate().removePrefixSuffix(prefix_size, adj_suffix_size);
   ContigOffset_t canonical_offset = offset() + prefix_size;
 
-  return { DNA5SequenceLinear(std::move(canonical_reference)), DNA5SequenceLinear(std::move(canonical_alternate)), canonical_offset };
+  return { DNA5SequenceLinear(std::move(canonical_reference)),
+           DNA5SequenceLinear(std::move(canonical_alternate)),
+           canonical_offset };
 
 }
 

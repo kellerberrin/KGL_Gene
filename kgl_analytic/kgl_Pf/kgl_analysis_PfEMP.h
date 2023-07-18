@@ -65,11 +65,10 @@ private:
   std::shared_ptr<const Pf7GeneticDistanceResource> Pf7_genetic_distance_ptr_;
   constexpr static const double SAMPLE_LOCATION_RADIUS_{0.0};
   std::shared_ptr<const Pf7SampleLocation> Pf7_physical_distance_ptr_;
-  constexpr static const char PF3D7_IDENT_[]{"Pf3D7_62"};
+  constexpr static const char PF3D7_IDENT_[]{"Pf3D7_64"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
-  std::shared_ptr<const MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
-  MutateAnalysis mutate_analysis_; // Print out detailed mutation statistics.
+  std::shared_ptr<MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
   // Filter constants.
   constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.
@@ -157,9 +156,6 @@ private:
 
   // Quality filter the variants using read depth, VQSLOD and other statistics
   std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
-
-  // Perform mutation analysis of ncRNA and Protein genes.
-  void performMutation(const std::shared_ptr<const PopulationDB> &filtered_population_ptr);
 
 };
 

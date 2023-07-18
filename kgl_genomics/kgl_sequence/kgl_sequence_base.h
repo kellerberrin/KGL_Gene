@@ -142,7 +142,7 @@ public:
 
 
   // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-  // Important - Strand Conversion of a reverse complement is performed for a -ve strand
+  // Important - Strand Conversion of reverse complement is performed for a -ve strand
   [[nodiscard]] static DNA5SequenceLinear strandedDownConvert(const DNA5SequenceCoding& stranded_sequence);
 
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).

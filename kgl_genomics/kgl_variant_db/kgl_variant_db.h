@@ -43,7 +43,7 @@ enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defined Variant Types.
-enum class VariantType { INDEL_DELETE, INDEL_INSERT, TRANSITION, TRANSVERSION };
+enum class VariantType { INDEL_DELETE, INDEL_INSERT, SNP};
 
 // Type of variant equality, phased also checks the variant phase.
 enum class VariantEquality { PHASED, UNPHASED };

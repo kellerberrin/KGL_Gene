@@ -168,8 +168,7 @@ void kgl::OverlapGenes::checkCanonical(const std::shared_ptr<const Variant> &var
 
   switch(variant_ptr->variantType()) {
 
-    case VariantType::TRANSVERSION:
-    case VariantType::TRANSITION:
+    case VariantType::SNP:
     {
 
       if (canonical_ref.length() != 1 or canonical_alt.length() != 1) {

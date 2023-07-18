@@ -36,30 +36,34 @@ public:
   ~MutateGenes() = default;
   // Return the id of all genes from a particular contig.
   std::vector<std::shared_ptr<const GeneFeature>> contigGenes(const ContigId_t& contig_id) const;
-  // Process a gene and transcript.
-  // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-  std::pair<size_t, size_t> mutateTranscript(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                             const FeatureIdent_t& transcript,
-                                             const std::shared_ptr<const PopulationDB>& population,
-                                             const std::shared_ptr<const GenomeReference>& reference_genome) const;
-
-
+  // Mutate the population.
+  void mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr);
+  // Access the mutation analysis object.
+  const MutateAnalysis& mutateAnalysis() const { return mutate_analysis_; }
 
 private:
 
   std::shared_ptr<const GenomeReference> genome_ptr_;
   GeneContigMap gene_contig_map_;
+  mutable MutateAnalysis mutate_analysis_;
 
   void initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
 
+  // Process a gene and transcript.
+  void mutateTranscript(const std::shared_ptr<const GeneFeature>& gene_ptr,
+                        const FeatureIdent_t& transcript_id,
+                        const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
+                        const std::shared_ptr<const PopulationDB>& population,
+                        const std::shared_ptr<const GenomeReference>& reference_genome) const;
+
   // .first total variants, .second multiple (duplicate) variants per offset.
-  static std::pair<size_t, size_t> threadMutation(std::shared_ptr<const GenomeDB> genome_ptr,
-                                           const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                           const FeatureIdent_t& transcript_id);
+  static std::tuple<std::string, size_t, size_t> threadMutation(std::shared_ptr<const GenomeDB> genome_ptr,
+                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                                const FeatureIdent_t& transcript_id);
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-  std::pair<size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                           const FeatureIdent_t& transcript_id,
-                                           const std::shared_ptr<const PopulationDB>& gene_population_ptr) const;
+  std::tuple<size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                    const FeatureIdent_t& transcript_id,
+                                                    const std::shared_ptr<const PopulationDB>& gene_population_ptr) const;
 
 };
 

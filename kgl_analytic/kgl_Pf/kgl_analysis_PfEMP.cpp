@@ -59,7 +59,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   overlap_ptr_ = std::make_shared<OverlapGenes>(genome_3D7_ptr_);
 
   // Initialize the mutate object.
-  mutate_genes_ptr_ = std::make_shared<const MutateGenes>(genome_3D7_ptr_);
+  mutate_genes_ptr_ = std::make_shared<MutateGenes>(genome_3D7_ptr_);
 
 //  performPFEMP1UPGMA();
 
@@ -107,7 +107,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   calc_fws_.calcFwsStatistics(filtered_population_ptr);
 
   // Mutate all the relevant genes in the relevant contigs.
-  performMutation(filtered_population_ptr);
+  ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
+  mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
+  ExecEnv::log().info("PfEMPAnalysis::performMutation; End gene mutation");
 
   return true;
 
@@ -170,10 +172,10 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   // Output the mutation statistics.
   std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_analysis_.printMutationTranscript(mutation_file_name);
+  mutate_genes_ptr_->mutateAnalysis().printMutationTranscript(mutation_file_name);
   mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_analysis_.printGenomeContig(mutation_file_name);
+  mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);
 
   // Overlap to log file.
   overlap_ptr_->printResults();
@@ -269,42 +271,3 @@ void kgl::PfEMPAnalysis::testPhysicalDistances() {
 
 
 }
-
-void kgl::PfEMPAnalysis::performMutation(const std::shared_ptr<const PopulationDB> &filtered_population_ptr) {
-
-  ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
-
-  // Get the active contigs in this population.
-  auto contig_map = filtered_population_ptr->contigCount();
-
-  for (auto const& [contig_id, variant_count] : contig_map) {
-
-    if (variant_count > 0) {
-
-      auto gene_vector = mutate_genes_ptr_->contigGenes(contig_id);
-      ExecEnv::log().info("PfEMPAnalysis::performMutation; Mutating contig: {}, gene count: {}", contig_id, gene_vector.size());
-
-      for (auto const& gene_ptr : gene_vector) {
-
-        auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
-        for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
-
-          auto const [total_variants, duplicate_variants] = mutate_genes_ptr_->mutateTranscript( gene_ptr,
-                                                                                                 transcript_id,
-                                                                                                 filtered_population_ptr,
-                                                                                                 genome_3D7_ptr_);
-
-          mutate_analysis_.addTranscriptRecord(TranscriptMutateRecord(gene_ptr, transcript_ptr, total_variants, duplicate_variants));
-
-        }
-
-      }
-
-    }
-
-  }
-
-  ExecEnv::log().info("PfEMPAnalysis::performMutation; End gene mutation");
-
-}
-
