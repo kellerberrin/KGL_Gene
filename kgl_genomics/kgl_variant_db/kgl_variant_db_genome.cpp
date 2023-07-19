@@ -157,8 +157,8 @@ std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::viewFilter(const BaseFilter& filte
   // Only genome filter is implemented at this level.
   if (filter.filterType() == FilterBaseType::GENOME_FILTER) {
 
-    std::shared_ptr<const FilterGenomes> genome_filter = std::dynamic_pointer_cast<const FilterGenomes>(filter.clone());
-    return genome_filter->applyFilter(*this);
+    const FilterGenomes& genome_filter = static_cast<const FilterGenomes&>(filter);
+    return genome_filter.applyFilter(*this);
 
   }
   // All other filters.

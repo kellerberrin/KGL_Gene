@@ -5,6 +5,7 @@
 #include "kgl_mutation_db.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_unique.h"
 
 #include <ranges>
 
@@ -102,10 +103,11 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
   // Only variants for the gene and transcript.
   std::shared_ptr<const PopulationDB> gene_population_ptr = unique_population_ptr->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
   // Convert to a population with canonical variants.
-  std::shared_ptr<const PopulationDB> mut_population_ptr = gene_population_ptr->canonicalPopulation();
+  std::shared_ptr<const PopulationDB> canonical_population_ptr = gene_population_ptr->canonicalPopulation();
+  // Remove any multiple variants.
+  std::shared_ptr<const PopulationDB> mut_population_ptr = canonical_population_ptr->viewFilter(FrequencyUniqueFilter());
 
-
-  // Checked the structure of the canonical gene population.
+  // Check the structure of the canonical gene population.
   auto const [variant_count, validated_variants] = mut_population_ptr->validate(reference_genome);
   if (variant_count != validated_variants) {
 
@@ -149,8 +151,6 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
                                             population_ptr->getMap().size());
 
   mutate_analysis_.addTranscriptRecord(transcript_record);
-  // Population statistics for multiple variants at single offsets.
-//  mutate_analysis_.addGenomeRecords(population_ptr);
 
 }
 

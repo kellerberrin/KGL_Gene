@@ -124,8 +124,8 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filte
   // Only contig filter is implemented at this level.
   if (filter.filterType() == FilterBaseType::CONTIG_FILTER) {
 
-    std::shared_ptr<const FilterContigs> contig_filter = std::dynamic_pointer_cast<const FilterContigs>(filter.clone());
-    auto filtered_contig_ptr = contig_filter->applyFilter(*this);
+    const FilterContigs& contig_filter = static_cast<const FilterContigs&>(filter);
+    auto filtered_contig_ptr = contig_filter.applyFilter(*this);
     filtered_contig_ptr->trimEmpty();  // Remove any empty offsets.
     return filtered_contig_ptr;
 

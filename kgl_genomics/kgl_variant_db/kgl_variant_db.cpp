@@ -163,11 +163,10 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
   // Variant may already be in canonical form.
   if (isCanonical()) {
 
-    StringDNA5 ref_string(reference().getAlphabetString());
-    StringDNA5 alt_string(alternate().getAlphabetString());
 
-    return { DNA5SequenceLinear(std::move(ref_string)),
-             DNA5SequenceLinear(std::move(alt_string)),
+
+    return { DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
+             DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
              offset() };
 
   }

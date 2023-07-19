@@ -5,6 +5,9 @@
 #ifndef KGL_VARIANT_FILTER_UNIQUE_H
 #define KGL_VARIANT_FILTER_UNIQUE_H
 
+
+#include "kgl_variant_filter_db.h"
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // For a haploid organism, such as the blood stage of P.Falciparum, only one variant can occur at a particular offset.
@@ -17,6 +20,68 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+namespace kellerberrin::genome {   //  organization level namespace
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Unique variants for each offset.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Selection logic is somewhat involved because canonical INDEL variants actually operate on the NEXT (offset+1) offset.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class RandomUniqueFilter : public FilterContigs {
+
+public:
+
+  RandomUniqueFilter() { filterName("RandomUniqueFilter"); }
+
+  ~RandomUniqueFilter() override = default;
+
+  [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<RandomUniqueFilter>(*this); }
+
+protected:
+
+  // Selects a random unique variant by default.
+  [[nodiscard]] virtual std::shared_ptr<const Variant> selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  [[nodiscard]] std::unique_ptr<ContigDB> filterUnique(const ContigDB &contig) const;
+
+
+};
+
+
+class FrequencyUniqueFilter : public RandomUniqueFilter {
+
+public:
+
+  FrequencyUniqueFilter() { filterName("FrequencyUniqueFilter"); }
+  ~FrequencyUniqueFilter() override = default;
+
+  [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<FrequencyUniqueFilter>(*this); }
+
+
+private:
+
+  // Selects a random unique variant by default.
+  [[nodiscard]] std::shared_ptr<const Variant> selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const override;
+  [[nodiscard]] double getFrequency(const std::shared_ptr<const Variant>& variant_vector) const;
+
+
+  constexpr static const char* AF_FIELD_{"AF"};
+  constexpr static const char* MLEAF_FIELD_{"MLEAF"};
+
+};
+
+
+
+} // Namespace.
 
 
 #endif //KGL_VARIANT_FILTER_UNIQUE_H

@@ -16,8 +16,8 @@ std::unique_ptr<kgl::OffsetDB> kgl::OffsetDB::copyFilter(const BaseFilter &filte
 
   if (filter.filterType() == FilterBaseType::OFFSET_FILTER) {
 
-    std::shared_ptr<const FilterOffsets> offset_filter = std::dynamic_pointer_cast<const FilterOffsets>(filter.clone());
-    return offset_filter->applyFilter(*this);
+    const FilterOffsets& offset_filter = static_cast<const FilterOffsets&>(filter);
+    return offset_filter.applyFilter(*this);
 
   }
 
