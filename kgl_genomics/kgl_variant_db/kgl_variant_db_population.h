@@ -69,17 +69,9 @@ public:
   // Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
   [[nodiscard]] std::map<std::string, std::shared_ptr<const Variant>> uniqueVariants() const;
 
-  // Create an equivalent  population that is has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  // Create an equivalent population that is canonical variants, SNP are represented by '1X', Deletes by '1MnD'
   // and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
   [[nodiscard]] std::unique_ptr<PopulationDB> canonicalPopulation() const;
-
-  // Returns all the unique variants in the population using the variant HGVS signature to determine uniqueness.
-  // A vector of genomes is also returned.
-  // Note that a genome id occurs twice (homozygous) in the genome vector it indicates
-  // the presence of a homozygous variant in the genome.
-  // This function can be used together with addVariant(.) below to recreate a population with modified
-  // (canonical) variants.
-  [[nodiscard]] VariantGenomeVector variantGenomes() const;
 
   // Returns a list of contigs in the population and a sum of all variants in each contig.
   // Useful for processing contig based VCF files (could be multi-threaded for speed).
@@ -117,8 +109,6 @@ public:
   [[nodiscard]] bool addVariant( const std::shared_ptr<const Variant>& variant_ptr,
                                  const std::vector<GenomeId_t>& genome_vector);
 
-  // unconditionally merge (retains duplicates) genomes and variants into this population.
-  [[nodiscard]] size_t mergePopulation(const std::shared_ptr<const PopulationDB>& merge_population);
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the reference genome.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db) const;

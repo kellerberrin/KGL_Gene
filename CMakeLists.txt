@@ -188,7 +188,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_variant.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_variant.h
-        kgl_genomics/kgl_variant_db/kgl_variant_db_mutation.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_variant_db.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_offset.h
         kgl_genomics/kgl_sequence/kgl_sequence_offset.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_variant_offset.h
@@ -246,7 +246,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_population.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_offset.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_contig.h
-        kgl_genomics/kgl_variant_db/kgl_variant_db_mutation.h
+        kgl_genomics/kgl_mutation/kgl_mutation_variant_db.h
         kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.h
         kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h

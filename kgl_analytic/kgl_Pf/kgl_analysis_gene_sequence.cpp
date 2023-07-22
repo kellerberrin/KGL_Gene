@@ -6,7 +6,7 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_variant_db_mutation.h"
+#include "kgl_mutation_variant_db.h"
 #include "kgl_gff_fasta.h"
 
 #include <memory>

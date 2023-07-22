@@ -22,9 +22,10 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
   std::unique_ptr<ContigDB> filtered_contig_ptr = std::make_unique<ContigDB>(contig.contigId());
 
   // Examine all offsets
-  auto contig_iter = contig.getMap().begin();
   std::vector<std::shared_ptr<const Variant>> current_offset_vector;
   std::vector<std::shared_ptr<const Variant>> next_offset_vector;
+
+  auto contig_iter = contig.getMap().begin();
   while (contig_iter != contig.getMap().end()) {
 
     current_offset_vector = next_offset_vector;

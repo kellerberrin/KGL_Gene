@@ -61,6 +61,10 @@ public:
   // Implementation
   bool processAll(const VariantProcessFunc& objFunc) const;
 
+  // Create an equivalent contig that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  // and Inserts by '1MnI'. The contig structure is re-created and is not a shallow copy.
+  [[nodiscard]] std::unique_ptr<ContigDB> canonicalContig() const;
+
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;

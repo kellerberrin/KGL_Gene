@@ -57,7 +57,7 @@ private:
                         const std::shared_ptr<const GenomeReference>& reference_genome) const;
 
   // .first total variants, .second multiple (duplicate) variants per offset.
-  static std::tuple<std::string, size_t, size_t> threadMutation(std::shared_ptr<const GenomeDB> genome_ptr,
+  static std::tuple<std::string, size_t, size_t> genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
                                                                 const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                 const FeatureIdent_t& transcript_id);
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.

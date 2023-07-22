@@ -57,6 +57,11 @@ public:
   // Deletes any empty Contigs, returns number deleted.
   size_t trimEmpty();
 
+  // Create an equivalent genome that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  // and Inserts by '1MnI'. The genome structure is re-created and is not a shallow copy.
+  [[nodiscard]] std::unique_ptr<GenomeDB> canonicalGenome() const;
+
+  // Get the underlying contig map.
   [[nodiscard]] const ContigDBMap& getMap() const { return contig_map_; }
 
   // Creates the contig if it does not exist.

@@ -352,6 +352,44 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
 }
 
+
+// Create an equivalent contig that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+// and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
+std::unique_ptr<kgl::ContigDB> kgl::ContigDB::canonicalContig() const {
+
+  class CanonicalContig {
+
+  public:
+
+    explicit CanonicalContig(ContigId_t contig_id) { canonical_contig_ptr_ = std::make_unique<ContigDB>(contig_id); }
+    ~CanonicalContig() = default;
+
+    bool createCanonical(const std::shared_ptr<const Variant>& variant_ptr) {
+
+      std::shared_ptr<const Variant> canonical_variant_ptr = variant_ptr->cloneCanonical();
+
+      if (not canonical_contig_ptr_->addVariant(canonical_variant_ptr)) {
+
+        ExecEnv::log().error("ContigDB::canonicalContig; Could NOT add canonical variant: {}", canonical_variant_ptr->HGVS());
+
+      }
+
+      return true;
+
+    }
+
+    std::unique_ptr<ContigDB> canonical_contig_ptr_;
+
+  };
+
+  CanonicalContig canonical_contig(contigId());
+  processAll(canonical_contig, &CanonicalContig::createCanonical);
+
+  return std::move(canonical_contig.canonical_contig_ptr_);
+
+}
+
+
 bool kgl::ContigDB::processAll(const VariantProcessFunc& objFunc)  const {
 
   for (auto const& [offset, offset_ptr] : getMap()) {

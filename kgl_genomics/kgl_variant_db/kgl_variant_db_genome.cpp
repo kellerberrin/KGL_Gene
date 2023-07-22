@@ -273,6 +273,29 @@ std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const Ge
 }
 
 
+// Create an equivalent genome that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+// and Inserts by '1MnI'. The genome structure is re-created and is not a shallow copy.
+std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::canonicalGenome() const {
+
+  // Create the new genome.
+  std::unique_ptr<GenomeDB> canonical_genome_ptr(std::make_unique<GenomeDB>(genomeId()));
+  // Populate with canonical contigs.
+  for (auto const& [contig_id, contig_ptr] : getMap()) {
+
+    std::shared_ptr<ContigDB> canonical_contig_ptr = contig_ptr->canonicalContig();
+    if (not canonical_genome_ptr->addContig(canonical_contig_ptr)) {
+
+      ExecEnv::log().error("GenomeDB::canonicalGenome; cannot add contig: {} to genome: {}", contig_id, genomeId());
+
+    }
+
+  }
+
+  return canonical_genome_ptr;
+
+}
+
+
 bool kgl::GenomeDB::processAll(const VariantProcessFunc& procFunc) const {
 
 

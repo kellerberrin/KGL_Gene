@@ -6,7 +6,7 @@
 #include <iomanip>
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_upgma_node.h"
-#include "kgl_variant_db_mutation.h"
+#include "kgl_mutation_variant_db.h"
 
 
 namespace kgl = kellerberrin::genome;
