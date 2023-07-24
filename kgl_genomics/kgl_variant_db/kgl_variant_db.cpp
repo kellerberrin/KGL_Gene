@@ -161,7 +161,6 @@ bool kgl::Variant::isSNP() const {
 std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t> kgl::Variant::canonicalSequences() const {
 
   // Variant may already be in canonical form.
-/*
   if (isCanonical()) {
 
     return { DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
@@ -169,7 +168,7 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
              offset() };
 
   }
-*/
+
   // Else modify prefix and suffix subsequences to canonical form.
   size_t prefix_size = commonPrefix();
   prefix_size = prefix_size > 0 ? (prefix_size - 1) : 0;  // Adjust for '1MnD' and '1MnI'.

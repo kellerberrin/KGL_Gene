@@ -6,6 +6,8 @@
 #include "kgl_variant_db_contig.h"
 #include "kgl_variant_filter.h"
 
+#include <ranges>
+
 namespace kgl = kellerberrin::genome;
 
 // Use this to copy the object.
@@ -424,7 +426,7 @@ bool kgl::ContigDB::getSortedVariants(VariantPhase phase,
   // If there is a prior variant that overlaps the start address, then push this onto the variant map.
   if (lower_bound != contig_offset_map_.end() and lower_bound != contig_offset_map_.begin()) {
 
-    auto previous_offset_ptr = std::prev(lower_bound);
+    auto previous_offset_ptr = std::ranges::prev(lower_bound, 1, contig_offset_map_.begin());
 
     auto const& [offset, offset_db_ptr] = *previous_offset_ptr;
 
@@ -482,7 +484,7 @@ void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 
     }
 
-    auto const& [previous_offset, previous_variant_ptr] = *std::prev(iter);
+    auto const& [previous_offset, previous_variant_ptr] = *std::ranges::prev(iter, 1, variant_map.begin());
     auto const& [offset, variant_ptr] = *iter;
 
     int64_t delete_size = previous_variant_ptr->referenceSize() - previous_variant_ptr->alternateSize();
@@ -498,7 +500,7 @@ void kgl::ContigDB::checkUpstreamDeletion(OffsetVariantMap& variant_map) const {
 
       iter = variant_map.erase(iter);
 
-      iter = std::prev(iter); // reset back to the previous iterator.
+      iter = std::ranges::prev(iter, 1, variant_map.begin()); // reset back to the previous iterator.
 
     }
 

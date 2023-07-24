@@ -137,7 +137,7 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
                                             duplicate_genomes,
                                             population_ptr->getMap().size());
 
-//  mutate_analysis_.addTranscriptRecord(transcript_record);
+  mutate_analysis_.addTranscriptRecord(transcript_record);
 
 }
 
@@ -172,7 +172,7 @@ std::tuple<size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::s
 
     auto const [genome_id, genome_total, genome_duplicate] = future.get();
 
-//    mutate_analysis_.addGenomeRecords(GenomeContigMutate(genome_id, genome_total, genome_duplicate));
+    mutate_analysis_.addGenomeRecords(GenomeContigMutate(genome_id, genome_total, genome_duplicate));
 
     total_variants += genome_total;
     if (genome_duplicate > 0) {
@@ -257,10 +257,12 @@ std::tuple<std::string, size_t, size_t>
   // Remove any multiple mutating variants.
   std::shared_ptr<const ContigDB> unique_contig_ptr = canonical_contig_ptr->viewFilter(FrequencyUniqueFilter());
 
+  size_t duplicate_variants = canonical_contig_ptr->variantCount() - unique_contig_ptr->variantCount();
+
   ProcessVariants process_object(gene_ptr);
   unique_contig_ptr->processAll(process_object, &ProcessVariants::processVariants);
 
-  return {genome_ptr->genomeId(), unique_contig_ptr->variantCount(), process_object.multipleVariants() };
+  return {genome_ptr->genomeId(), unique_contig_ptr->variantCount(), duplicate_variants };
 
 }
 

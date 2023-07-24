@@ -42,9 +42,10 @@ void kgl::MutateAnalysis::addGenomeRecords(const GenomeContigMutate& genome_muta
     if (not result) {
 
       ExecEnv::log().error("MutateAnalysis::addGenomeRecords; cannot add genome: {} (duplicate)", genome_mutate.genomeId());
+      return;
 
     }
-
+    find_iter = insert_iter;
 
   }
 
@@ -61,7 +62,7 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
 
   if (not out_file.good()) {
 
-    ExecEnv::log().error("utateAnalysis::printMutationTranscript; unable to open output file: {}", file_name);
+    ExecEnv::log().error("MutateAnalysis::printMutationTranscript; unable to open output file: {}", file_name);
     return;
 
   }
