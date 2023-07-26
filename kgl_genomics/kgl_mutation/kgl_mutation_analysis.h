@@ -7,7 +7,6 @@
 
 
 #include "kgl_genome_genome.h"
-#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

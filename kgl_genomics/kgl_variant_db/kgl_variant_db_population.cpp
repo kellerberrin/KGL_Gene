@@ -4,6 +4,8 @@
 
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter.h"
+#include "kel_workflow_threads.h"
+
 
 namespace kgl = kellerberrin::genome;
 

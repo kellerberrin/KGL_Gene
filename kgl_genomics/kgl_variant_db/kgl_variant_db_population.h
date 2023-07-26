@@ -8,12 +8,9 @@
 
 #include "kgl_variant_db_genome.h"
 #include "kgl_data_file_type.h"
-#include "kel_workflow_threads.h"
-
 
 #include <map>
 #include <mutex>
-#include <functional>
 
 
 namespace kellerberrin::genome {   //  organization::project
@@ -27,10 +24,6 @@ namespace kellerberrin::genome {   //  organization::project
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using GenomeDBMap = std::map<GenomeId_t, std::shared_ptr<GenomeDB>>;
-// This map is indexed by the Variant HGVS string, the value pair contains a pointer to the variant and a vector of genomes containing the variant.
-// The genomes are non-unique in the case of a homozygous variant.
-using VariantGenomeVector = std::map<std::string, std::pair<std::shared_ptr<const Variant>, std::vector<GenomeId_t>>>;
-
 
 // Used in the processAll_MT()) templates.
 template<class ObjFunc>

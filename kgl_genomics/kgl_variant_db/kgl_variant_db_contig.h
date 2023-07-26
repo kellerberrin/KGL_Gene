@@ -2,14 +2,11 @@
 // Created by kellerberrin on 1/7/20.
 //
 
-#ifndef KGL_VARIANT_DB_UNPHASED_CONTIG_H
-#define KGL_VARIANT_DB_UNPHASED_CONTIG_H
+#ifndef KGL_VARIANT_DB_CONTIG_H
+#define KGL_VARIANT_DB_CONTIG_H
 
 
-#include "kel_utility.h"
-#include "kgl_variant_db.h"
 #include "kgl_variant_db_offset.h"
-#include "kgl_mutation_variant.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -78,13 +75,6 @@ public:
   // Returns a variant offset array (if it exists) at a specified offset within the contig.
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
-  bool getSortedVariants( VariantPhase phase,
-                          ContigOffset_t start,
-                          ContigOffset_t end,
-                          OffsetVariantMap& variant_map) const;
-
-  // Find the [lower, upper] offsets of a contig, {0,0} is returned if empty.
-  [[nodiscard]] std::pair<ContigOffset_t, ContigOffset_t> offsetBounds() const;
   // Retrieves a contig subset in the offset range [begin, end)
   [[nodiscard]] std::shared_ptr<ContigDB> subset(ContigOffset_t start, ContigOffset_t end) const;
 
@@ -95,11 +85,6 @@ public:
   // setIntersection returns a contig that contains variants present in both contigs.
   // The VariantEquality flag determines whether variant phase is used in the equality.
   [[nodiscard]] std::unique_ptr<ContigDB> setIntersection(const ContigDB& intersection_contig, VariantEquality variant_equality) const;
-  // setComplement returns a contig that contains variants present in this contig but not present in the complement_contig.
-  [[nodiscard]] std::unique_ptr<ContigDB> setComplement(const ContigDB& complement_contig, VariantEquality variant_equality) const;
-  // setUnion returns a contig that contains the set union of variants present in this contig and the union_contig.
-  // Specifically, identical variants, defined by the VariantEquality flag as including phase or not, are ignored.
-  [[nodiscard]] std::unique_ptr<ContigDB> setUnion(const ContigDB& union_contig, VariantEquality variant_equality) const;
 
 private:
 
@@ -109,8 +94,6 @@ private:
 
   // mutex to lock the structure for multiple thread access by parsers.
   mutable std::mutex lock_contig_mutex_;
-
-  void checkUpstreamDeletion(OffsetVariantMap& variant_map) const;
 
   // Unconditionally adds an offset
   [[nodiscard]]  bool addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> offset_db);
@@ -151,4 +134,4 @@ bool ContigDB::processAll(Obj& object, MemberVariantFunc<Obj> objFunc)  const {
 
 
 
-#endif //KGL_VARIANT_DB_UNPHASED_CONTIG_H
+#endif //KGL_VARIANT_DB_CONTIG_H

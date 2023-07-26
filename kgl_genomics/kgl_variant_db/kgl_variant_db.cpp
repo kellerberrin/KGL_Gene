@@ -5,7 +5,6 @@
 #include <ostream>
 #include "kgl_variant_db.h"
 #include "kgl_variant_filter_type.h"
-#include "kel_patterns.h"
 
 
 namespace kgl = kellerberrin::genome;

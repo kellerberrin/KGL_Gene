@@ -5,19 +5,12 @@
 #ifndef KGL_VARIANT_H
 #define KGL_VARIANT_H
 
-#include <map>
-#include <memory>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include "kgl_genome_types.h"
-#include "kgl_alphabet_amino.h"
-#include "kgl_runtime_resource.h"
 #include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_variant_filter_virtual.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
+#include <memory>
 
 namespace kellerberrin::genome {   //  organization level namespace
 

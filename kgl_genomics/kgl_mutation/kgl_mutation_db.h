@@ -12,6 +12,15 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Map holds unique canonical variants for a specified region or transcript.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -21,6 +30,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // or an issue with the generation of the VCF file.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 using GeneContigMap = std::map<std::shared_ptr<const GeneFeature>, ContigId_t>;
@@ -61,7 +71,7 @@ private:
                                                                 const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                 const FeatureIdent_t& transcript_id);
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-  std::tuple<size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+  std::tuple<size_t, size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                     const FeatureIdent_t& transcript_id,
                                                     const std::shared_ptr<const PopulationDB>& gene_population_ptr) const;
 

@@ -9,9 +9,6 @@
 #include "kgl_variant_db.h"
 
 #include <vector>
-#include <list>
-#include <forward_list>
-#include <memory>
 
 
 namespace kellerberrin::genome {   //  organization level namespace

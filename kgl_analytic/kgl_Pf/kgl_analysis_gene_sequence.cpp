@@ -7,6 +7,7 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_mutation_variant_db.h"
+#include "kgl_mutation_offset.h"
 #include "kgl_gff_fasta.h"
 
 #include <memory>
@@ -483,11 +484,12 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not genome_variant_ptr->getSortedVariants( contig_opt.value()->contigId(),
-                                                 VariantPhase::HAPLOID_PHASED,
-                                                 offset,
-                                                 offset+region_size,
-                                                 variant_map)) {
+  if (not MutationOffset::getSortedVariants( genome_variant_ptr,
+                                             contig_opt.value()->contigId(),
+                                             VariantPhase::HAPLOID_PHASED,
+                                             offset,
+                                             offset+region_size,
+                                             variant_map)) {
 
     ExecEnv::log().warn("GenomicSequence::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
@@ -569,11 +571,12 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not genome_variant_ptr->getSortedVariants( contig,
-                                                 VariantPhase::HAPLOID_PHASED,
-                                                 offset,
-                                                 offset+region_size,
-                                                 variant_map)) {
+  if (not MutationOffset::getSortedVariants( genome_variant_ptr,
+                                             contig,
+                                             VariantPhase::HAPLOID_PHASED,
+                                             offset,
+                                             offset+region_size,
+                                             variant_map)) {
 
     ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig);

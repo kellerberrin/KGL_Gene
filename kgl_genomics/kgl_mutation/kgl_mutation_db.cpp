@@ -3,10 +3,10 @@
 //
 
 #include "kgl_mutation_db.h"
-#include "kgl_mutation_variant_db.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db.h"
 #include "kgl_variant_filter_unique.h"
+#include "kel_workflow_threads.h"
 
 
 #include <ranges>
@@ -104,18 +104,9 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
                                          const std::shared_ptr<const GenomeReference>& reference_genome) const {
 
 
-  size_t mut_active_genome{0};
-//  for (auto const& [genome_id, genome_ptr] : unique_population_ptr->getMap()) {
-//
-//    if (genome_ptr->variantCount() > 0) {
-//
-//      ++mut_active_genome;
-//
-//    }
-//
-//  }
 
   auto const [ total_variants,
+               mut_active_genome,
               duplicate_variants,
               duplicate_genomes] = mutateGenomes(gene_ptr, transcript_id, population_ptr);
 
@@ -144,7 +135,7 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-std::tuple<size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                     const FeatureIdent_t& transcript_id,
                                                                     const std::shared_ptr<const PopulationDB>& gene_population_ptr) const {
 
@@ -167,6 +158,7 @@ std::tuple<size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::s
   size_t total_variants{0};
   size_t duplicate_variants{0};
   size_t duplicate_genomes{0};
+  size_t mutant_genomes{0};
   // Wait for all the threads to return.
   for (auto& future : future_vector) {
 
@@ -181,10 +173,15 @@ std::tuple<size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::s
       ++duplicate_genomes;
 
     }
+    if (genome_total > 0) {
+
+      ++mutant_genomes;
+
+    }
 
   }
 
-  return {total_variants, duplicate_variants, duplicate_genomes};
+  return {total_variants, mutant_genomes, duplicate_variants, duplicate_genomes};
 
 }
 
@@ -221,6 +218,7 @@ std::tuple<std::string, size_t, size_t>
       if (not result) {
 
         // Duplicate variant at offset.
+        ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; duplicate variant: {}", variant_ptr->HGVS());
         ++multiple_variants_;
 
       }
@@ -252,17 +250,18 @@ std::tuple<std::string, size_t, size_t>
 
   // Only variants for the gene and transcript.
   std::shared_ptr<const ContigDB> gene_contig_ptr = contig_opt.value()->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
-  // Convert to a population with canonical variants.
+  // Convert to a contig with canonical variants.
   std::shared_ptr<const ContigDB> canonical_contig_ptr = gene_contig_ptr->canonicalContig();
   // Remove any multiple mutating variants.
   std::shared_ptr<const ContigDB> unique_contig_ptr = canonical_contig_ptr->viewFilter(FrequencyUniqueFilter());
 
-  size_t duplicate_variants = canonical_contig_ptr->variantCount() - unique_contig_ptr->variantCount();
+  size_t canonical_count = canonical_contig_ptr->variantCount();
+  size_t duplicate_variants = canonical_count - unique_contig_ptr->variantCount();
 
   ProcessVariants process_object(gene_ptr);
   unique_contig_ptr->processAll(process_object, &ProcessVariants::processVariants);
 
-  return {genome_ptr->genomeId(), unique_contig_ptr->variantCount(), duplicate_variants };
+  return {genome_ptr->genomeId(), canonical_count, duplicate_variants };
 
 }
 

@@ -315,27 +315,3 @@ bool kgl::GenomeDB::processAll(const VariantProcessFunc& procFunc) const {
 }
 
 
-
-bool kgl::GenomeDB::getSortedVariants(ContigId_t contig_id,
-                                      VariantPhase phase,
-                                      ContigOffset_t start,
-                                      ContigOffset_t end,
-                                      OffsetVariantMap &variant_map) const {
-
-
-  auto result = contig_map_.find(contig_id);
-
-  if (result == contig_map_.end()) {
-
-    ExecEnv::log().error("GenomeDB::getSortedVariants; Contig Id: {} not found in Genome Variant: {}", contig_id, genomeId());
-    return false;
-
-  }
-
-  std::shared_ptr<ContigDB> contig_ptr = result->second;
-
-  return contig_ptr->getSortedVariants(phase, start, end, variant_map);
-
-}
-
-

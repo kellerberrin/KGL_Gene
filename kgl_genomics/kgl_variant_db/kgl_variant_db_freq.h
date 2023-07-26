@@ -5,7 +5,6 @@
 #ifndef KGL_VARIANT_DB_FREQ_H
 #define KGL_VARIANT_DB_FREQ_H
 
-#include "kgl_variant_db.h"
 #include "kgl_variant_db_population.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -7,6 +7,7 @@
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_upgma_node.h"
 #include "kgl_mutation_variant_db.h"
+#include "kgl_mutation_offset.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -90,11 +91,11 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     AminoSequence reference_sequence;
     OffsetVariantMap variant_map;
 
-    if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                    VariantPhase::HAPLOID_PHASED,
-                                                    sequence.second->start(),
-                                                    sequence.second->end(),
-                                                    variant_map)) {
+    if (not MutationOffset::getSortedVariants( genome_variant_ptr_, contig_ptr->contigId(),
+                                               VariantPhase::HAPLOID_PHASED,
+                                               sequence.second->start(),
+                                               sequence.second->end(),
+                                               variant_map)) {
 
       ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                           genome_variant_ptr_->genomeId(), gene_id, sequence_id);
@@ -160,11 +161,12 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                  VariantPhase::HAPLOID_PHASED,
-                                                  sequence->start(),
-                                                  sequence->end(),
-                                                  variant_map)) {
+  if (not MutationOffset::getSortedVariants( genome_variant_ptr_,
+                                             contig_ptr->contigId(),
+                                             VariantPhase::HAPLOID_PHASED,
+                                             sequence->start(),
+                                             sequence->end(),
+                                             variant_map)) {
 
     ExecEnv::log().warn("UPGMAGeneDistance::mutateProtein; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_id, sequence_id);
@@ -253,11 +255,12 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   AminoSequence reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not genome_variant_ptr_->getSortedVariants( contig_ptr->contigId(),
-                                                  VariantPhase::HAPLOID_PHASED,
-                                                  sequence->start(),
-                                                  sequence->end(),
-                                                  variant_map)) {
+  if (not MutationOffset::getSortedVariants( genome_variant_ptr_,
+                                             contig_ptr->contigId(),
+                                             VariantPhase::HAPLOID_PHASED,
+                                             sequence->start(),
+                                             sequence->end(),
+                                             variant_map)) {
 
     ExecEnv::log().warn("UPGMAATP4Distance::writeNode; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant_ptr_->genomeId(), gene_id, sequence_id);

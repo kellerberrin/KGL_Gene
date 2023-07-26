@@ -6,10 +6,6 @@
 #define KGL_VARIANT_DB_GENOME_H
 
 
-
-#include "kel_utility.h"
-#include "kgl_variant_db.h"
-#include "kgl_variant_db_offset.h"
 #include "kgl_variant_db_contig.h"
 
 
@@ -83,13 +79,6 @@ public:
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
-
-  [[nodiscard]] bool getSortedVariants( ContigId_t contig_id,
-                                        VariantPhase phase,
-                                        ContigOffset_t start,
-                                        ContigOffset_t end,
-                                        OffsetVariantMap &variant_map) const;
-
 
 private:
 

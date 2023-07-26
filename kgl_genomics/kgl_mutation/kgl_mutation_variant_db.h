@@ -12,6 +12,7 @@
 #include "kgl_genome_attributes.h"
 #include "kgl_variant_db.h"
 #include "kgl_variant_db_population.h"
+#include "kgl_mutation_db.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace

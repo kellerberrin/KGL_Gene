@@ -15,6 +15,7 @@
 #include "kgl_variant_filter.h"
 #include "kgl_gff_fasta.h"
 #include "kgl_genome_collection.h"
+#include "kgl_mutation_db.h"
 
 
 
