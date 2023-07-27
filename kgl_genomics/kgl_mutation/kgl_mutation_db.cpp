@@ -6,6 +6,7 @@
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db.h"
 #include "kgl_variant_filter_unique.h"
+#include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
 
 
@@ -145,12 +146,12 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   // the tuple is bool, genome_id, genome_id, transcript_id,
-  std::vector<std::future<std::tuple<std::string, size_t, size_t>>> future_vector;
+  std::vector<std::future<std::tuple<UniqueMutationTranscript, size_t, size_t>>> future_vector;
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    std::future<std::tuple<std::string, size_t, size_t>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation, genome_ptr, gene_ptr, transcript_id);
+    std::future<std::tuple<UniqueMutationTranscript, size_t, size_t>> future = thread_pool.enqueueFuture(&MutateGenes::altGenomeTranscriptMutation, genome_ptr, gene_ptr, transcript_id);
     future_vector.push_back(std::move(future));
 
   }
@@ -162,9 +163,9 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
   // Wait for all the threads to return.
   for (auto& future : future_vector) {
 
-    auto const [genome_id, genome_total, genome_duplicate] = future.get();
+    auto const [unique_transcript, genome_total, genome_duplicate] = future.get();
 
-    mutate_analysis_.addGenomeRecords(GenomeContigMutate(genome_id, genome_total, genome_duplicate));
+    mutate_analysis_.addGenomeRecords(GenomeContigMutate(unique_transcript.genomeId(), genome_total, genome_duplicate));
 
     total_variants += genome_total;
     if (genome_duplicate > 0) {
@@ -186,7 +187,7 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
 }
 
 // .first total variants, .second multiple (duplicate) variants per offset.
-std::tuple<std::string, size_t, size_t>
+std::tuple<kgl::UniqueMutationTranscript, size_t, size_t>
     kgl::MutateGenes::genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
                                                 const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                 const FeatureIdent_t& transcript_id) {
@@ -243,13 +244,19 @@ std::tuple<std::string, size_t, size_t>
 
     ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Genome: {} does not contain contig: {} for gene: {}",
                         genome_ptr->genomeId(), gene_contig, gene_ptr->id());
-    return { genome_ptr->genomeId(), 0, 0 };
+
+    UniqueMutationTranscript unique_transcript( genome_ptr->genomeId(),
+                                                "",
+                                                gene_ptr->id(),
+                                                transcript_id,
+                                                OffsetVariantMap());
+    return { unique_transcript, 0, 0 };
 
   }
 
-
+  auto contig_ptr = contig_opt.value();
   // Only variants for the gene and transcript.
-  std::shared_ptr<const ContigDB> gene_contig_ptr = contig_opt.value()->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
+  std::shared_ptr<const ContigDB> gene_contig_ptr = contig_ptr->viewFilter(FilterGeneTranscriptVariants(gene_ptr, transcript_id));
   // Convert to a contig with canonical variants.
   std::shared_ptr<const ContigDB> canonical_contig_ptr = gene_contig_ptr->canonicalContig();
   // Remove any multiple mutating variants.
@@ -261,7 +268,54 @@ std::tuple<std::string, size_t, size_t>
   ProcessVariants process_object(gene_ptr);
   unique_contig_ptr->processAll(process_object, &ProcessVariants::processVariants);
 
-  return {genome_ptr->genomeId(), canonical_count, duplicate_variants };
+  UniqueMutationTranscript unique_transcript( genome_ptr->genomeId(),
+                                              contig_ptr->contigId(),
+                                              gene_ptr->id(),
+                                              transcript_id,
+                                              std::move(process_object.ordered_variant_map_));
+
+  return {unique_transcript, canonical_count, duplicate_variants };
 
 }
+
+std::tuple<kgl::UniqueMutationTranscript, size_t, size_t>
+kgl::MutateGenes::altGenomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
+                                            const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                            const FeatureIdent_t& transcript_id) {
+
+  ContigId_t gene_contig = gene_ptr->contig()->contigId();
+  auto contig_opt = genome_ptr->getContig(gene_contig);
+  if (not contig_opt) {
+
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Genome: {} does not contain contig: {} for gene: {}",
+                        genome_ptr->genomeId(), gene_contig, gene_ptr->id());
+
+    UniqueMutationTranscript unique_transcript( genome_ptr->genomeId(),
+                                                "",
+                                                gene_ptr->id(),
+                                                transcript_id,
+                                                OffsetVariantMap());
+    return { unique_transcript, 0, 0 };
+
+  }
+  auto contig_ptr = contig_opt.value();
+
+  GeneIntervalStructure gene_interval(gene_ptr);
+
+  auto interval = gene_interval.geneInterval();
+
+  auto [interval_map, result] = MutationOffset::getCanonicalVariants(contig_ptr, interval.lower(), interval.upper());
+
+  size_t map_size = interval_map.size();
+
+  UniqueMutationTranscript unique_transcript( genome_ptr->genomeId(),
+                                              contig_ptr->contigId(),
+                                              gene_ptr->id(),
+                                              transcript_id,
+                                              std::move(interval_map));
+
+  return {unique_transcript, map_size, 0 };
+
+}
+
 

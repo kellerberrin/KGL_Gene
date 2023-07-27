@@ -219,30 +219,20 @@ bool kgl::Variant::isCanonical() const {
 // is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides, ref.length().
 std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
 
-  auto const [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
-  if (isSNP()) {
+  auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
 
-    return { canonical_offset, 1 };
+  switch(variantType()) {
 
-  } else {
+    case VariantType::SNP:
+    case VariantType::INDEL_INSERT:
+      return {canonical_offset, 1};
 
-    if (canonical_ref.length() < canonical_alt.length()) {
-      // An insert
-      return { canonical_offset, 1 };
-
-    } else if (canonical_ref.length() > canonical_alt.length()) {
-      // A delete
-      return { canonical_offset, canonical_ref.length()};
-
-    } else {
-
-      ExecEnv::log().warn("Variant::extentOffset; Unexpected variant: {}, cigar:{}, canonical ref: {}, canonical alt: {}, canonical offset: {}"
-                          , HGVS(), cigar(), canonical_ref.getSequenceAsString(), canonical_alt.getSequenceAsString(), canonical_offset);
-
-    }
+    case VariantType::INDEL_DELETE:
+      return {canonical_offset, canonical_ref.length()};
 
   }
 
+  // Should not be executed.
   return {canonical_offset, 1 };
 
 }

@@ -91,7 +91,8 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     AminoSequence reference_sequence;
     OffsetVariantMap variant_map;
 
-    if (not MutationOffset::getSortedVariants( genome_variant_ptr_, contig_ptr->contigId(),
+    if (not MutationOffset::getSortedVariants( genome_variant_ptr_,
+                                               contig_ptr->contigId(),
                                                VariantPhase::HAPLOID_PHASED,
                                                sequence.second->start(),
                                                sequence.second->end(),

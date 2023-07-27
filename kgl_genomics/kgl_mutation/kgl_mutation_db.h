@@ -20,6 +20,38 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
+// This object contains a map of unique canonical variants ready to mutate the specified transcript.
+class UniqueMutationTranscript {
+
+public:
+
+  UniqueMutationTranscript(GenomeId_t genome_id,
+                           ContigId_t contig_id,
+                           FeatureIdent_t gene_id,
+                           FeatureIdent_t transcript_id,
+                           OffsetVariantMap unique_mutation_map) : genome_id_(std::move(genome_id)),
+                                                                   contig_id_(std::move(contig_id)),
+                                                                   gene_id_(std::move(gene_id)),
+                                                                   transcript_id_(std::move(transcript_id)),
+                                                                   unique_mutation_map_(std::move(unique_mutation_map)) {}
+  UniqueMutationTranscript(const UniqueMutationTranscript&) = default;
+  ~UniqueMutationTranscript() = default;
+
+  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
+  [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
+  [[nodiscard]] const FeatureIdent_t& geneId() const { return gene_id_; }
+  [[nodiscard]] const FeatureIdent_t& transcriptId() const { return transcript_id_; }
+  [[nodiscard]] const OffsetVariantMap& uniqueMutationMap() const { return unique_mutation_map_; }
+
+private:
+
+  GenomeId_t genome_id_;
+  ContigId_t contig_id_;
+  FeatureIdent_t gene_id_;
+  FeatureIdent_t transcript_id_;
+  OffsetVariantMap unique_mutation_map_;
+
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,9 +99,17 @@ private:
                         const std::shared_ptr<const GenomeReference>& reference_genome) const;
 
   // .first total variants, .second multiple (duplicate) variants per offset.
-  static std::tuple<std::string, size_t, size_t> genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
-                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                                const FeatureIdent_t& transcript_id);
+  static std::tuple<UniqueMutationTranscript, size_t, size_t>
+  genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
+                            const std::shared_ptr<const GeneFeature>& gene_ptr,
+                            const FeatureIdent_t& transcript_id);
+
+  // .first total variants, .second multiple (duplicate) variants per offset.
+  static std::tuple<UniqueMutationTranscript, size_t, size_t>
+  altGenomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
+                            const std::shared_ptr<const GeneFeature>& gene_ptr,
+                            const FeatureIdent_t& transcript_id);
+
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
   std::tuple<size_t, size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                     const FeatureIdent_t& transcript_id,

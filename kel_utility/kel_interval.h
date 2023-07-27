@@ -40,6 +40,7 @@ public:
   [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return interval.lower_ >= lower_ and (interval.lower_ + interval.size()) <= upper_; }
   // Returns the {lower, upper} bounds of the intersection interval or {0, 0} indicating no intersection.
   [[nodiscard]] std::pair<size_t, size_t> intersection(const OpenRightInterval &interval) const;
+  [[nodiscard]] bool intersects(const OpenRightInterval &interval) const { auto const [lower, upper] = intersection(interval); return upper != 0; }
 
 
 private:

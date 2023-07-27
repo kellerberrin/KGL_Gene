@@ -4,6 +4,8 @@
 
 #include "kgl_variant_filter_db.h"
 
+#include <ranges>
+
 namespace kgl = kellerberrin::genome;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,6 +39,42 @@ std::unique_ptr<kgl::PopulationDB> kgl::GenomeListFilter::applyFilter(const Popu
   }
 
   return filtered_population_ptr;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Contig Region filter - Uses the half open interval convention [Begin, End).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const ContigDB& contig) const {
+
+  std::unique_ptr<ContigDB> contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
+
+  auto const lower_bound = contig.getMap().lower_bound(start_);
+  auto const upper_bound = contig.getMap().upper_bound(end_-1); //  [start, end)
+
+  auto iter = lower_bound;
+  while (iter != contig.getMap().end() and iter != upper_bound) {
+
+    auto const& [offset, offset_ptr] = *iter;
+
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      if (not contig_ptr->addVariant(variant_ptr)) {
+
+        ExecEnv::log().error("ontigRegionFilter::applyFilter; unable to add variant: {} to contig: {}",
+                             variant_ptr->HGVS(), contig_ptr->contigId());
+
+      }
+
+    }
+
+    iter = std::ranges::next(iter, 1, contig.getMap().end());
+
+  }
+
+  return contig_ptr;
 
 }
 

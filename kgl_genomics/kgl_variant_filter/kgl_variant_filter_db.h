@@ -41,6 +41,36 @@ private:
 
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Contig Region filter - Uses the half open interval convention [Begin, End).
+// Note all contig offsets begin at 0 (not 1 as is the practice in VCG, GFF3 etc).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ContigRegionFilter : public FilterContigs {
+
+public:
+
+  explicit ContigRegionFilter(ContigOffset_t start, ContigOffset_t end) : start_(start), end_(end) {
+
+    std::stringstream ss;
+    ss << "Contig filter with variants in the half-interval [" << start_ << ", " << end_ << ")";
+    filterName(ss.str());
+
+  }
+  ~ContigRegionFilter() override = default;
+
+  [[nodiscard]] std::unique_ptr<ContigDB> applyFilter(const ContigDB& contig) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<ContigRegionFilter>(*this); }
+
+private:
+
+  ContigOffset_t start_;
+  ContigOffset_t end_;
+
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // ReturnType both variants if and only there are 2 variants at the location that are identical disregarding phase.
@@ -55,7 +85,7 @@ public:
   HomozygousFilter() { filterName("Homozygous"); }
   ~HomozygousFilter() override = default;
 
-  // Dummy implementation. Implemented at offset level
+  // Implemented at offset level
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HomozygousFilter>(); }
 
@@ -87,7 +117,7 @@ private:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Unique variants disregarding phase.
+// Unique variants disregarding phase. For example, if homozygous then filter to a single variant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UniqueUnphasedFilter: public FilterOffsets {

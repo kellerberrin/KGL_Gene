@@ -140,34 +140,6 @@ private:
 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Region filter - generally used as AndFilter(ContigFilter("ContigName"), RegionFilter(Start, End))
-// Uses the half open interval convention [Begin, End) with zero offset (the first contig element has zero offset).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class RegionFilter : public FilterVariants {
-
-public:
-
-  explicit RegionFilter(ContigOffset_t start, ContigOffset_t end) : start_(start), end_(end) {
-
-    std::stringstream ss;
-    ss << "Variant in the half-interval [" << start_ << ", " << end_ << ")";
-    filterName(ss.str());
-
-  }
-  ~RegionFilter() override = default;
-
-  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.offset() >= start_ and variant.offset() < end_; }
-  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<RegionFilter>(*this); }
-
-private:
-
-  ContigOffset_t start_;
-  ContigOffset_t end_;
-
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // True Filter - performs no filtering. If combined with the NotFilter below, would filter every variant.

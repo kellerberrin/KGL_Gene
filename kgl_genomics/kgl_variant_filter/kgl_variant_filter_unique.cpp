@@ -63,7 +63,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
     } // for offset variants.
 
-    // Just select the first variant for now.
+    // Select the candidate variants by allele frequency.
     if (not current_offset_vector.empty()) {
 
       auto selected_variant = selectUnique(current_offset_vector);
