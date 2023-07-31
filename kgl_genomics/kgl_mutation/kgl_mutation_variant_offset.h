@@ -21,7 +21,7 @@ class VariantMutationOffset {
 
 public:
 
-  explicit VariantMutationOffset() = default;
+  VariantMutationOffset() { clearIndelOffset(); }
   ~VariantMutationOffset() = default;
 
   // Important - Call this routine before mutation.

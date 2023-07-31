@@ -33,7 +33,7 @@ public:
   [[nodiscard]] static bool mutantProteins( const ContigId_t &contig_id,
                                             const FeatureIdent_t &gene_id,
                                             const FeatureIdent_t &sequence_id,
-                                            const std::shared_ptr<const GenomeReference> &genome_db,
+                                            const std::shared_ptr<const GenomeReference> &genome_ref_ptr,
                                             const OffsetVariantMap &variant_map,
                                             AminoSequence &reference_sequence,
                                             AminoSequence &sequence_vector);
@@ -42,7 +42,7 @@ public:
   [[nodiscard]] static bool mutantCodingDNA(const ContigId_t &contig_id,
                                             const FeatureIdent_t &gene_id,
                                             const FeatureIdent_t &sequence_id,
-                                            const std::shared_ptr<const GenomeReference> &genome_db,
+                                            const std::shared_ptr<const GenomeReference> &genome_ref_ptr,
                                             const OffsetVariantMap &variant_map,
                                             DNA5SequenceCoding &reference_sequence,
                                             DNA5SequenceCoding &mutant_sequence);
@@ -51,17 +51,10 @@ public:
   [[nodiscard]] static bool mutantRegion(const ContigId_t &contig_id,
                                          ContigOffset_t region_offset,
                                          ContigSize_t region_size,
-                                         const std::shared_ptr<const GenomeReference> &genome_db,
+                                         const std::shared_ptr<const GenomeReference> &genome_ref_ptr,
                                          const OffsetVariantMap &variant_map,
                                          DNA5SequenceLinear &reference_sequence,
                                          DNA5SequenceLinear &mutant_sequence);
-
-  // Returns pointer reference to the contig and mutant unstranded contig.
-  [[nodiscard]] static bool mutantContig(const ContigId_t &contig_id,
-                                         const std::shared_ptr<const GenomeReference> &genome_db,
-                                         std::shared_ptr<const DNA5SequenceContig> &reference_contig_ptr,
-                                         const OffsetVariantMap& variant_map,
-                                         DNA5SequenceContig &mutant_contig_ptr);
 
 
 };

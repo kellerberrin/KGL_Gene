@@ -23,7 +23,7 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
   DNA5SequenceLinear mutated_unstranded_sequence;
   if (not mutateDNA(variant_map, contig_ptr, coding_sequence_ptr->start(), sequence_size, mutated_unstranded_sequence)) {
 
-    ExecEnv::log().error("mutateDNA(), DNA mutation failed for contig: {}", contig_ptr->contigId());
+    ExecEnv::log().error("VariantMutation::mutateDNA; DNA mutation failed for contig: {}", contig_ptr->contigId());
 
     return false;
 
@@ -53,41 +53,39 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
   variant_mutation_offset_.clearIndelOffset();
 
   // For all variants modifying the sequence.
-  for (auto const& [variant_offset, variant_ptr] : region_variant_map) {
+  for (auto const& [_offset, variant_ptr] : region_variant_map) {
+
+    if (not variant_ptr->isCanonical()) {
+
+      ExecEnv::log().error("VariantMutation::mutateDNA; DNA mutation attempted for non-canonical variant: {}", variant_ptr->HGVS_Phase());
+      return false;
+
+    }
 
     // Adjust the mutation offset for indels.
-    auto [canonical_reference, canonical_alternate, canonical_offset] = variant_ptr->canonicalSequences();
-    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(canonical_offset);
+    SignedOffset_t adjusted_offset = variant_mutation_offset_.adjustIndelOffsets(variant_ptr->offset());
 
     // Adjust the offset for the sequence offset
-    adjusted_offset = adjusted_offset - contig_offset;
+    adjusted_offset = adjusted_offset - static_cast<SignedOffset_t>(contig_offset);
 
     // Mutate the sequence
     SignedOffset_t sequence_size_modify{0};
-    if (not mutateSequence( canonical_reference,
-                            canonical_alternate,
-                            canonical_offset,
+    if (not mutateSequence( variant_ptr->reference(),
+                            variant_ptr->alternate(),
+                            variant_ptr->offset(),
                             adjusted_offset,
                             dna_sequence,
                             sequence_size_modify)) {
 
       ExecEnv::log().warn("VariantMutation::mutateDNA; DNA mutation failed for variant: {}", variant_ptr->HGVS_Phase());
-      ExecEnv::log().info("VariantMutation::mutateDNA; Offset: {}, Sequence Length: {}, list of all sequence variants follows:",
-                          contig_offset, dna_sequence.length());
-
-      for(auto const& [map_offset, map_variant_ptr] : region_variant_map) {
-
-        ExecEnv::log().info("VariantMutation::mutateDNA; variant: {}, allele offset: {}", map_variant_ptr->HGVS_Phase(), canonical_offset);
-
-      }
+      ExecEnv::log().info("VariantMutation::mutateDNA; Offset: {}, Sequence Length: {}", contig_offset, dna_sequence.length());
 
     }
 
     // Update the mutation offset for indels.
-    if (not variant_mutation_offset_.updateIndelAccounting(canonical_offset, sequence_size_modify)) {
+    if (not variant_mutation_offset_.updateIndelAccounting(variant_ptr->offset(), sequence_size_modify)) {
 
-      ExecEnv::log().error("VariantMutation::mutateDNA; Problem updating indel mutated sequence length by variant: {}; duplicate allele offset: {}",
-                           variant_ptr->HGVS_Phase(), canonical_offset);
+      ExecEnv::log().error("VariantMutation::mutateDNA; Problem updating indel mutated sequence length by variant: {}", variant_ptr->HGVS_Phase());
 
     }
 
@@ -108,42 +106,27 @@ bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& region_variant_map,
 }
 
 
-bool kgl::VariantMutation::mutateDNA(const OffsetVariantMap& variant_map,
-                                     const std::shared_ptr<const ContigReference>& contig_ptr,
-                                     DNA5SequenceContig& contig_sequence) {
-
-  if (not mutateDNA(variant_map, contig_ptr, 0, contig_ptr->sequence().length(), contig_sequence)) {
-
-    ExecEnv::log().error("mutateDNA(), problem to mutating contig: {}", contig_ptr->contigId());
-    return false;
-
-  }
-
-  return true;
-
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool kgl::VariantMutation::mutateSequence( const DNA5SequenceLinear& reference,
                                            const DNA5SequenceLinear& alternate,
-                                           ContigOffset_t canonical_offset,
+                                           ContigOffset_t variant_offset,
                                            SignedOffset_t offset_adjust,
                                            DNA5SequenceLinear& dna_sequence,
                                            SignedOffset_t& sequence_size_modify) {
 
   sequence_size_modify = 0;
 
-  SignedOffset_t adjusted_offset = canonical_offset + offset_adjust;
+  SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(variant_offset) + offset_adjust;
 
   // Check the adjusted offset
   if (adjusted_offset >= static_cast<SignedOffset_t>(dna_sequence.length())) {
 
     ExecEnv::log().error("VariantMutation::mutateSequence; calculated sequence offset: {} is out of range for sequence size: {}",adjusted_offset, dna_sequence.length());
     return false;
+
   }
 
   // Check the offset to see if variant preceded the start of the sequence.
@@ -242,7 +225,7 @@ bool kgl::VariantMutation::preceedingMutation( const DNA5SequenceLinear& referen
 }
 
 
-bool kgl::VariantMutation::performMutation( ContigOffset_t canonical_offset,
+bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
                                             DNA5SequenceLinear& mutated_sequence,
                                             const DNA5SequenceLinear& delete_subsequence,
                                             const DNA5SequenceLinear& add_subsequence,
@@ -250,14 +233,14 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t canonical_offset,
 
 
   const size_t suffix_prefix{10};
-  auto reference_offset{canonical_offset};
+  auto reference_offset{variant_offset};
   bool reference_check{true};
 
   // Check the canonical_offset
-  if (canonical_offset + delete_subsequence.length() > mutated_sequence.length()) {
+  if (variant_offset + delete_subsequence.length() > mutated_sequence.length()) {
 
-    ExecEnv::log().error("performMutation(), sequence canonical_offset: {} + delete sequence size: {} is out of range for mutate sequence size: {}",
-                         canonical_offset, delete_subsequence.length(), mutated_sequence.length());
+    ExecEnv::log().error("VariantMutation::performMutation; sequence canonical_offset: {} + delete sequence size: {} is out of range for mutate sequence size: {}",
+                         variant_offset, delete_subsequence.length(), mutated_sequence.length());
     return false;
   }
 
@@ -266,18 +249,18 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t canonical_offset,
     // Check the reference.
     if (delete_subsequence[idx] != mutated_sequence.at(reference_offset)) {
 
-      ExecEnv::log().info("performMutation(), reference base: {} does not match sequence base: {} at (size: {}) canonical_offset: {}, delete (reference) canonical_offset: {}",
+      ExecEnv::log().info("VariantMutation::performMutation; reference base: {} does not match sequence base: {} at (size: {}) canonical_offset: {}, delete (reference) canonical_offset: {}",
                           DNA5::convertToChar(delete_subsequence[idx]),
                           DNA5::convertToChar(mutated_sequence.at(reference_offset)),
                           mutated_sequence.length(),
-                          canonical_offset, idx);
+                          variant_offset, idx);
 
-      SignedOffset_t prefix_offset = canonical_offset - suffix_prefix;
+      SignedOffset_t prefix_offset = variant_offset - suffix_prefix;
       ContigOffset_t p_offset = prefix_offset < 0 ? 0 : static_cast<ContigOffset_t>(prefix_offset);
       std::string prefix_string = mutated_sequence.subSequence(p_offset,
                                                                ((2 * suffix_prefix) + delete_subsequence.length())).getSequenceAsString();
-      std::string sequence_string = mutated_sequence.subSequence(canonical_offset, delete_subsequence.length()).getSequenceAsString();
-      ExecEnv::log().info("performMutation(), seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
+      std::string sequence_string = mutated_sequence.subSequence(variant_offset, delete_subsequence.length()).getSequenceAsString();
+      ExecEnv::log().info("VariantMutation::performMutation; seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
                           prefix_string, sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
 
       reference_check =false;
@@ -295,9 +278,9 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t canonical_offset,
     // Mutate the sequence
     // SNPs do not modify the sequence size.
     sequence_size_modify = 0;
-    if (not mutated_sequence.modifyBase(canonical_offset, add_subsequence[0])) {
+    if (not mutated_sequence.modifyBase(variant_offset, add_subsequence[0])) {
 
-      ExecEnv::log().error("performMutation(), could not modify base (SNP) at canonical_offset: {}", canonical_offset);
+      ExecEnv::log().error("VariantMutation::performMutation; could not modify base (SNP) at canonical_offset: {}", variant_offset);
       return false;
 
     }
@@ -307,20 +290,20 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t canonical_offset,
     // Mutate the sequence
     // Delete the reference
     sequence_size_modify = sequence_size_modify - delete_subsequence.length();
-    if (not mutated_sequence.deleteSubSequence(canonical_offset, delete_subsequence.length())) {
+    if (not mutated_sequence.deleteSubSequence(variant_offset, delete_subsequence.length())) {
 
-      ExecEnv::log().error("performMutation(), could not delete at canonical_offset: {}, delete size: {}, sequence length: {} , variant: {}",
-                           canonical_offset, delete_subsequence.length(), mutated_sequence.length());
+      ExecEnv::log().error("VariantMutation::performMutation; could not delete at canonical_offset: {}, delete size: {}, sequence length: {} , variant: {}",
+                           variant_offset, delete_subsequence.length(), mutated_sequence.length());
       return false;
 
     }
 
     // Insert the alternate
     sequence_size_modify = sequence_size_modify + add_subsequence.length();
-    if (not mutated_sequence.insertSubSequence(canonical_offset, add_subsequence)) {
+    if (not mutated_sequence.insertSubSequence(variant_offset, add_subsequence)) {
 
-      ExecEnv::log().error("performMutation(), could not insert at canonical_offset: {}, insert size: {}, sequence length: {}",
-                           canonical_offset, add_subsequence.length(), mutated_sequence.length());
+      ExecEnv::log().error("VariantMutation::performMutation; could not insert at canonical_offset: {}, insert size: {}, sequence length: {}",
+                           variant_offset, add_subsequence.length(), mutated_sequence.length());
       return false;
     }
 

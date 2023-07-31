@@ -83,31 +83,26 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   }
 
-  // Check overlap.
-  std::shared_ptr<const PopulationDB> shared_population_ptr = std::move(filtered_population_ptr);
-  overlap_ptr_->processPopulation(shared_population_ptr);
-
-
   // Filter for snp only.
   if constexpr (SNP_FILTER_ACTIVE_) {
 
-    shared_population_ptr = shared_population_ptr->viewFilter(SNPFilter());
+    filtered_population_ptr = filtered_population_ptr->viewFilter(SNPFilter());
 
   }
 
   if constexpr(CODING_FILTER_ACTIVE_) {
 
-    shared_population_ptr = shared_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
+    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
     ExecEnv::log().info("Coding Population Final Filtered Size Genome count: {}, Variant Count: {}",
-                        shared_population_ptr->getMap().size(),
-                        shared_population_ptr->variantCount());
+                        filtered_population_ptr->getMap().size(),
+                        filtered_population_ptr->variantCount());
 
 
   }
 
   // We need to do a deep copy of the filtered population here since the pass QC and FWS P7 filters only do a shallow copy.
   // And when the resultant population pointers go out of scope they will take the shared population structure with them.
-  auto deepcopy_population_ptr = shared_population_ptr->deepCopy();
+  auto deepcopy_population_ptr = filtered_population_ptr->deepCopy();
 
   // Filtered population should contain all contigs for all genomes.
   deepcopy_population_ptr->squareContigs();

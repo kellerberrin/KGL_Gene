@@ -45,10 +45,6 @@ public:
                                 ContigSize_t sequence_size,
                                 DNA5SequenceLinear& dna_sequence_ptr);
 
-  [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,
-                                const std::shared_ptr<const ContigReference>& contig_ptr,
-                                DNA5SequenceContig& contig_sequence_ptr);
-
 private:
 
   VariantMutationOffset variant_mutation_offset_;

@@ -17,7 +17,6 @@
 #include "kgl_analysis_PfEMP_variant.h"
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_analysis_PfEMP_FWS.h"
-#include "kgl_analysis_PfEMP_overlap.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -111,9 +110,6 @@ private:
   // General variant statistics.
   HeteroHomoZygous hetero_homo_zygous_;
   CalcFWS calc_fws_;
-
-  // Check overlapping genes.
-  std::shared_ptr<OverlapGenes> overlap_ptr_;
 
   // File name constants.
   constexpr static const char *NEWICK_{"newick_"};

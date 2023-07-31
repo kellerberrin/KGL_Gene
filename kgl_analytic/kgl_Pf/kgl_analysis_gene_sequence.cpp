@@ -20,74 +20,61 @@ namespace kgl = kellerberrin::genome;
 
 bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
                                            const ContigId_t& contig_id,
-                                           const std::shared_ptr<const GenomeCollection>& genomes,
+                                           const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
                                            const std::string& fasta_file_name) {
   // Get the genome object
-  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genome_collection_ptr->getOptionalGenome(genome_id);
   if (not genome_opt) {
 
-    ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
+    ExecEnv::log().warn("GenomicSequence::translateContig; Could not find Genome: {} in genome collection", genome_id);
     return false;
     
   }
-  std::shared_ptr<const GenomeReference> genome_db_ptr = genome_opt.value();
+  std::shared_ptr<const GenomeReference> genome_ref_ptr = genome_opt.value();
 
-  // Look through the contigs for the contig.
-  bool found = false;
-  std::shared_ptr<const ContigReference> contig_ptr;
-  for (const auto& contig : genome_db_ptr->getMap() ) {
+  auto contig_opt = genome_ref_ptr->getContigSequence(contig_id);
+  if (not contig_opt) {
 
-    contig_ptr = contig.second;
-    if (contig_ptr->contigId() == contig_id) {
-
-      found = true;
-      break;   
-
-    }
-
-  }
-
-  if (not found or not contig_ptr) {
-
-    ExecEnv::log().warn("Did not find Contig: {} in Genome: {}", contig_id, genome_id);
+    ExecEnv::log().warn("GenomicSequence::translateContig; Did not find Contig: {} in Genome: {}", contig_id, genome_id);
     return false;
 
   }
+  auto contig_ref_ptr = contig_opt.value();
 
   std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;  
-  for (const auto& gene : contig_ptr->getGeneMap()) {
+  for (const auto& [gene_id, gene_ptr] : contig_ref_ptr->getGeneMap()) {
     
-    auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene.second);
+    auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
     size_t coding_count = 0;
-    for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
+    for (const auto& [sequence_id, sequence_ptr] : coding_sequence_array_ptr->getMap()) {
 
-      ExecEnv::log().info("Sequence Id", coding_sequence.first);
+      ExecEnv::log().info("GenomicSequence::translateContig; Sequence Id: {}", sequence_id);
 
-      for (const auto& cds : coding_sequence.second->getFeatureMap()) {
+      for (const auto& [cds_offset, cds_ptr] : sequence_ptr->getFeatureMap()) {
 
-      ExecEnv::log().info("CDS Id", cds.first);
+        ExecEnv::log().info("GenomicSequence::translateContig; CDS Id: {}, Offset: {}", cds_ptr->id(), cds_offset);
 
-        for (const auto& attribute : cds.second->getAttributes().getMap()) {
+        for (const auto& [attribute_key, attribute_value] : cds_ptr->getAttributes().getMap()) {
 
-          ExecEnv::log().info("CDS Attribute Key: {} Value: {}", attribute.first, attribute.second);
+          ExecEnv::log().info("GenomicSequence::translateContig; CDS Attribute Key: {} Value: {}", attribute_key, attribute_value);
 
         }
 
       }
     
       DNA5SequenceCoding coding_dna;
-      if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna)) {
+      if (contig_ref_ptr->getDNA5SequenceCoding(sequence_ptr, coding_dna)) {
 
         std::stringstream ss;
-        ss << gene.second->id() << "_" << ++coding_count;
-        AminoSequence peptide = coding_sequence.second->contig()->getAminoSequence(coding_dna);
+        ss << gene_ptr->id() << "_" << ++coding_count;
+        AminoSequence peptide = sequence_ptr->contig()->getAminoSequence(coding_dna);
         std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide)));
         amino_fasta_vector.push_back(fasta_entry);
 
       } else {
 
-        ExecEnv::log().error("Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene.second->id(), genome_id);
+        ExecEnv::log().error("GenomicSequence::translateContig; Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_ptr->id(), genome_id);
         return false;
 
       } // Coding DNA 
@@ -99,7 +86,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
 
-    ExecEnv::log().warn("Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
+    ExecEnv::log().warn("GenomicSequence::translateContig; Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
     return false;
 
   }
@@ -111,24 +98,25 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
 
 bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
                                          const FeatureIdent_t& gene_id,
-                                         const std::shared_ptr<const GenomeCollection>& genomes,
+                                         const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
                                          const std::string& fasta_file_name) {
 
   // Get the genome object
-  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genomes->getOptionalGenome(genome_id);
+  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genome_collection_ptr->getOptionalGenome(genome_id);
   if (not genome_opt) {
 
-    ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
+    ExecEnv::log().warn("GenomicSequence::translateGene; Could not find Genome: {} in genome collection", genome_id);
     return false;
     
   }
-  std::shared_ptr<const GenomeReference> genome_db_ptr = genome_opt.value();
+  std::shared_ptr<const GenomeReference> genome_ref_ptr = genome_opt.value();
+
 
   // Look through the contigs for the gene.
   bool found = false;
   std::shared_ptr<const ContigReference> contig_ptr;
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
-  for (const auto& contig : genome_db_ptr->getMap() ) {
+  for (const auto& contig : genome_ref_ptr->getMap() ) {
 
     contig_ptr = contig.second;
     if (contig_ptr->findFeatureId(gene_id, feature_ptr_vec)) {
@@ -142,7 +130,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
 
   if (not found or feature_ptr_vec.empty() or not contig_ptr) {
 
-    ExecEnv::log().warn("Did not find Gene: {} in Genome: {}", gene_id, genome_id);
+    ExecEnv::log().warn("GenomicSequence::translateGene; Did not find Gene: {} in Genome: {}", gene_id, genome_id);
     return false;
 
   }
@@ -169,7 +157,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
 
         } else {
 
-          ExecEnv::log().error("Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_id, genome_id);
+          ExecEnv::log().error("GenomicSequence::translateGene; Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_id, genome_id);
           return false;
 
         }
@@ -183,7 +171,7 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
 
-    ExecEnv::log().warn("Problem writing peptide fasta for Gene: {} in file: {}", gene_id, fasta_file_name);
+    ExecEnv::log().warn("GenomicSequence::translateGene; Problem writing peptide fasta for Gene: {} in file: {}", gene_id, fasta_file_name);
     return false;
 
   }
@@ -219,7 +207,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("mutantProtein(), Could not find contig: {} in genome database", contig);
+    ExecEnv::log().warn("GenomicSequence::mutateGene; Could not find contig: {} in genome database", contig);
     return false;
 
   }
@@ -228,12 +216,12 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
 
     if (contig_opt.value()->verifyProteinSequence(*summary.second.sequence_mutant)) {
 
-      ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+      ExecEnv::log().info("GenomicSequence::mutateGene; Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
 
     } else {
 
-      ExecEnv::log().info("Frame shift mutation Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+      ExecEnv::log().info("GenomicSequence::mutateGene; Frame shift mutation Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
 
 
@@ -262,7 +250,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   if (not GenomicMutation::writeMutantProteins(fasta_filename, amino_fasta_vector)) {
 
-    ExecEnv::log().warn("mutantProtein(), Problem writing protein fasta file: {}", fasta_filename);
+    ExecEnv::log().warn("GenomicSequence::mutateGene; Problem writing protein fasta file: {}", fasta_filename);
 
   }
 

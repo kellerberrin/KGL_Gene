@@ -193,7 +193,7 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
   // Lookup the IntervalMap to see if there is a candidate gene for this variant.
   auto const [offset, extent] = variant.extentOffset();
   auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
-  for (auto gene_struct_ptr : gene_ptr_vector) {
+  for (auto const& gene_struct_ptr : gene_ptr_vector) {
 
     if (gene_struct_ptr->codingModifier(variant)) {
 
@@ -226,7 +226,7 @@ std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants
   // Variants may (and do) map to more than one gene.
   auto const [offset, extent] = variant.extentOffset();
   auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
-  for (auto gene_struct_ptr : gene_ptr_vector) {
+  for (auto const& gene_struct_ptr : gene_ptr_vector) {
 
     if (gene_struct_ptr->codingModifier(variant)) {
 

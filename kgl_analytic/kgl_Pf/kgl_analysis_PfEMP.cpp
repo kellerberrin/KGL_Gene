@@ -55,9 +55,6 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   }
   genome_3D7_ptr_ = pf3d7_opt.value();
 
-  // Initialize the overlap analysis.
-  overlap_ptr_ = std::make_shared<OverlapGenes>(genome_3D7_ptr_);
-
   // Initialize the mutate object.
   mutate_genes_ptr_ = std::make_shared<MutateGenes>(genome_3D7_ptr_);
 
@@ -177,8 +174,6 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
   mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);
 
-  // Overlap to log file.
-  overlap_ptr_->printResults();
 
   return true;
 

@@ -19,7 +19,7 @@ kgl::DNA5SequenceCoding kgl::SequenceOffset::refCodingSubSequence( const std::sh
   ExonOffsetMap exon_offset_map;
   if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
 
-    ExecEnv::log().error("refCodingSubSequence(), DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
+    ExecEnv::log().error("SequenceOffset::refCodingSubSequence; DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
                          sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
     exon_offset_map.clear();
 
@@ -43,7 +43,7 @@ kgl::DNA5SequenceCoding kgl::SequenceOffset::refCodingSubSequence( const std::sh
 
   if (not exonOffsetAdapter(coding_seq_ptr, strand, exon_offset_map)) {
 
-    ExecEnv::log().error("refExonArraySequence(), DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
+    ExecEnv::log().error("SequenceOffset::refExonArraySequence; DNA Sequence length: {} cannot generate EXON map for subsequence offset: {}, length: {}",
                          sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
     exon_offset_map.clear();
 
@@ -104,7 +104,7 @@ std::vector<kgl::DNA5SequenceCoding> kgl::SequenceOffset::refIntronArraySequence
   IntronOffsetMap intron_offset_map;
   if (not intronOffsetAdapter(coding_seq_ptr, strand, intron_offset_map)) {
 
-    ExecEnv::log().error("refIntronArraySequence(), DNA Sequence length: {} cannot generate INTRON map for subsequence offset: {}, length: {}",
+    ExecEnv::log().error("SequenceOffset::refIntronArraySequence; DNA Sequence length: {} cannot generate INTRON map for subsequence offset: {}, length: {}",
                          sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
     intron_offset_map.clear();
 
@@ -139,7 +139,7 @@ kgl::DNA5SequenceCoding kgl::SequenceOffset::mutantCodingSubSequence( const std:
   ExonOffsetMap exon_offset_map;
   if (not exonMutantOffset(coding_seq_ptr, indel_adjust, strand, exon_offset_map)) {
 
-    ExecEnv::log().error("mutantCodingSubSequence(), DNA Sequence length: {} cannot generate EXON map for INDEL adjusted subsequence offset: {}, length: {}",
+    ExecEnv::log().error("SequenceOffset::mutantCodingSubSequence; DNA Sequence length: {} cannot generate EXON map for INDEL adjusted subsequence offset: {}, length: {}",
                          sequence_ptr.length(), sub_sequence_offset, sub_sequence_length);
     exon_offset_map.clear();
 
@@ -174,7 +174,7 @@ bool kgl::SequenceOffset::exonOffsetAdapter( const std::shared_ptr<const Transcr
 
     if (not result) {
 
-      ExecEnv::log().error("exonOffsetAdapter(), Duplicate exon offset: {} for coding sequence id:",
+      ExecEnv::log().error("SequenceOffset::exonOffsetAdapter; Duplicate exon offset: {} for coding sequence id:",
                            exon_offsets.first, coding_seq_ptr->getParent()->id());
       return_result = false;
 
@@ -201,10 +201,6 @@ bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const Trans
   bool return_result = true;
 
   strand = coding_seq_ptr->strand();
-
- // ExecEnv::log().info("intronOffsetAdapter(), Sequence: {}, Exons: {}",
- //                     coding_seq_ptr->getParent()->id(),
- //                     coding_seq_ptr->getFeatureMap().size());
 
   intron_offset_map.clear();
 
@@ -238,19 +234,19 @@ bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const Trans
 
     if (not result.second) {
 
-      ExecEnv::log().error("intronOffsetAdapter(), Duplicate intron offset: {} for coding sequence id:",
+      ExecEnv::log().error("SequenceOffset::intronOffsetAdapter; Duplicate intron offset: {} for coding sequence id:",
                            intron_offsets.first, coding_seq_ptr->getParent()->id());
       return_result = false;
 
     }
 
-    ExecEnv::log().info("intronOffsetAdapter(), Intron: {} [{}, {}) ({})",
+    ExecEnv::log().info("SequenceOffset::intronOffsetAdapter; Intron: {} [{}, {}) ({})",
                         coding_seq_ptr->getParent()->id(), intron_offsets.first, intron_offsets.second,
                         intron_offsets.second - intron_offsets.first);
 
   }
 
-  ExecEnv::log().info("intronOffsetAdapter(), Introns: {}", intron_offset_map.size());
+  ExecEnv::log().info("SequenceOffset::intronOffsetAdapter; Introns: {}", intron_offset_map.size());
 
   return return_result;
 

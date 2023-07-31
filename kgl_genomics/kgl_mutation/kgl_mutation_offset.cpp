@@ -50,7 +50,7 @@ std::pair<kgl::OffsetVariantMap, bool> kgl::MutationOffset::getCanonicalVariants
   // Filter the variants plus a margin of 200 nucleotides at the beginning of the specified region.
   // To allow for any offset() change when the variants are converted to canonical.
   size_t lower = std::max<int64_t>(0, static_cast<int64_t>(start)-NUCLEOTIDE_CANONICAL_MARGIN);
-  // Filter to variants in the region plus offset margins.
+  // Filter to just variants in the region plus offset margins.
   auto region_contig_ptr = contig_ptr->viewFilter(ContigRegionFilter(lower, end));
   // Remove any duplicate (homozygous) identical variants.
   auto no_homo_contig_ptr = region_contig_ptr->viewFilter(UniqueUnphasedFilter());
@@ -60,7 +60,7 @@ std::pair<kgl::OffsetVariantMap, bool> kgl::MutationOffset::getCanonicalVariants
   // Note that if an indel occurs at the same offset as an SNP, this is not a problem, since in canonical form ('1MnI' or '1MnD'),
   // the indel actually modifies the next (+1) offset.
   std::shared_ptr<const ContigDB> unique_contig_ptr = canonical_contig_ptr->viewFilter(FrequencyUniqueFilter());
-  // Finally remove any excess variants that do not intersect with [start, end) this is simple for SNP and inserts
+  // Finally remove any excess variants that do not intersect with [start, end). This is simple for SNP and inserts.
   // However deletes can extend from before the start of the interval.
   OpenRightInterval variant_region(start, end);
   for (auto const& [offset, offset_ptr] : unique_contig_ptr->getMap()) {
@@ -91,11 +91,11 @@ std::pair<kgl::OffsetVariantMap, bool> kgl::MutationOffset::getCanonicalVariants
 
         }
 
-      }
+      } // Variant intersects [start, end)
 
-    }
+    } // For all variants at each offset.
 
-  }
+  } // for all offsets.
 
   return { offset_variant_map, true };
 
