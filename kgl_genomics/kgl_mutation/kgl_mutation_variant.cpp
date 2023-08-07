@@ -239,7 +239,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
   // Check the canonical_offset
   if (variant_offset + delete_subsequence.length() > mutated_sequence.length()) {
 
-    ExecEnv::log().error("VariantMutation::performMutation; sequence canonical_offset: {} + delete sequence size: {} is out of range for mutate sequence size: {}",
+    ExecEnv::log().error("VariantMutation::performModification; sequence canonical_offset: {} + delete sequence size: {} is out of range for mutate sequence size: {}",
                          variant_offset, delete_subsequence.length(), mutated_sequence.length());
     return false;
   }
@@ -249,7 +249,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
     // Check the reference.
     if (delete_subsequence[idx] != mutated_sequence.at(reference_offset)) {
 
-      ExecEnv::log().info("VariantMutation::performMutation; reference base: {} does not match sequence base: {} at (size: {}) canonical_offset: {}, delete (reference) canonical_offset: {}",
+      ExecEnv::log().info("VariantMutation::performModification; reference base: {} does not match sequence base: {} at (size: {}) canonical_offset: {}, delete (reference) canonical_offset: {}",
                           DNA5::convertToChar(delete_subsequence[idx]),
                           DNA5::convertToChar(mutated_sequence.at(reference_offset)),
                           mutated_sequence.length(),
@@ -260,7 +260,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
       std::string prefix_string = mutated_sequence.subSequence(p_offset,
                                                                ((2 * suffix_prefix) + delete_subsequence.length())).getSequenceAsString();
       std::string sequence_string = mutated_sequence.subSequence(variant_offset, delete_subsequence.length()).getSequenceAsString();
-      ExecEnv::log().info("VariantMutation::performMutation; seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
+      ExecEnv::log().info("VariantMutation::performModification; seq (-10/ref/+10) section: {}, seq: {}, reference: {}, alternate: {}",
                           prefix_string, sequence_string, delete_subsequence.getSequenceAsString(), add_subsequence.getSequenceAsString());
 
       reference_check =false;
@@ -280,7 +280,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
     sequence_size_modify = 0;
     if (not mutated_sequence.modifyBase(variant_offset, add_subsequence[0])) {
 
-      ExecEnv::log().error("VariantMutation::performMutation; could not modify base (SNP) at canonical_offset: {}", variant_offset);
+      ExecEnv::log().error("VariantMutation::performModification; could not modify base (SNP) at canonical_offset: {}", variant_offset);
       return false;
 
     }
@@ -292,7 +292,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
     sequence_size_modify = sequence_size_modify - delete_subsequence.length();
     if (not mutated_sequence.deleteSubSequence(variant_offset, delete_subsequence.length())) {
 
-      ExecEnv::log().error("VariantMutation::performMutation; could not delete at canonical_offset: {}, delete size: {}, sequence length: {} , variant: {}",
+      ExecEnv::log().error("VariantMutation::performModification; could not delete at canonical_offset: {}, delete size: {}, sequence length: {} , variant: {}",
                            variant_offset, delete_subsequence.length(), mutated_sequence.length());
       return false;
 
@@ -302,7 +302,7 @@ bool kgl::VariantMutation::performMutation( ContigOffset_t variant_offset,
     sequence_size_modify = sequence_size_modify + add_subsequence.length();
     if (not mutated_sequence.insertSubSequence(variant_offset, add_subsequence)) {
 
-      ExecEnv::log().error("VariantMutation::performMutation; could not insert at canonical_offset: {}, insert size: {}, sequence length: {}",
+      ExecEnv::log().error("VariantMutation::performModification; could not insert at canonical_offset: {}, insert size: {}, sequence length: {}",
                            variant_offset, add_subsequence.length(), mutated_sequence.length());
       return false;
     }

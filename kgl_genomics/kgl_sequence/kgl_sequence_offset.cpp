@@ -359,7 +359,7 @@ kgl::DNA5SequenceCoding kgl::SequenceOffset::codingSubSequence(const DNA5Sequenc
       auto convert_base = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
 
       // Convert to an absolute sequence based offset
-      for (auto exon : exon_offset_map) {
+      for (const auto& exon : exon_offset_map) {
 
         ContigSize_t cds_size = exon.second - exon.first;
 

@@ -36,9 +36,11 @@ public:
                                                ContigOffset_t end,
                                                OffsetVariantMap &variant_map);
 
-  [[nodiscard]] static std::pair<OffsetVariantMap, bool> getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                               ContigOffset_t start,
-                                                                               ContigOffset_t end);
+  // Returns a map of unique canonical variants
+  // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
+  [[nodiscard]] static std::pair<OffsetVariantMap, size_t> getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                                 ContigOffset_t start,
+                                                                                 ContigOffset_t end);
 
 private:
 

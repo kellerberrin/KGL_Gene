@@ -13,7 +13,7 @@ namespace kgl = kellerberrin::genome;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Selection logic is somewhat involved because canonical INDEL variants actually operate on the NEXT (offset+1) offset.
+// Selection logic is somewhat convoluted because canonical INDEL variants actually operate on the NEXT (offset+1) offset.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,22 +25,10 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
   std::vector<std::shared_ptr<const Variant>> current_offset_vector;
   std::vector<std::shared_ptr<const Variant>> next_offset_vector;
 
-  auto contig_iter = contig.getMap().begin();
-  while (contig_iter != contig.getMap().end()) {
+  for (auto const& [current_offset, current_offset_ptr] : contig.getMap()) {
 
     current_offset_vector = next_offset_vector;
     next_offset_vector.clear();
-
-    auto const& [current_offset, current_offset_ptr] = *contig_iter;
-
-    bool next_offset_active{false};
-    auto next_iter = std::ranges::next(contig_iter, 1, contig.getMap().end());
-    if (next_iter != contig.getMap().end()) {
-
-      auto const& [next_offset, next_offset_ptr] = *next_iter;
-      next_offset_active = (current_offset + 1) == next_offset;
-
-    }
 
     for (auto const& variant_ptr : current_offset_ptr->getVariantArray()) {
 
@@ -55,19 +43,48 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
         current_offset_vector.push_back(variant_ptr);
 
-      } else if (next_offset_active) {
+      } else { //indel
 
         next_offset_vector.push_back(variant_ptr);
 
       }
 
-    } // for offset variants.
+    } // For all offset variants.
 
-    // Select the candidate variants by allele frequency.
-    if (not current_offset_vector.empty()) {
+    contigVector(filtered_contig_ptr, current_offset_vector);
 
-      auto selected_variant = selectUnique(current_offset_vector);
+  } // For all offsets.
 
+  contigVector(filtered_contig_ptr, next_offset_vector);
+
+  return filtered_contig_ptr;
+
+}
+
+void kgl::RandomUniqueFilter::contigVector( std::unique_ptr<ContigDB>& filtered_contig_ptr,
+                                            std::vector<std::shared_ptr<const Variant>>& offset_vector) const {
+
+
+  // Select the candidate variants by allele frequency.
+  if (not offset_vector.empty()) {
+
+    if (offset_vector.size() == 1) {
+
+      // Don't need to select a single variant.
+      auto selected_variant = offset_vector.front();
+      // Add to the filtered contig object.
+      if (not filtered_contig_ptr->addVariant(selected_variant)) {
+
+        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig: {}",
+                             selected_variant->HGVS(), filtered_contig_ptr->contigId());
+
+      }
+
+    } else {
+
+      // Else select by frequency.
+      auto selected_variant = selectUnique(offset_vector);
+      // Add to the filtered contig object.
       if (not filtered_contig_ptr->addVariant(selected_variant)) {
 
         ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig: {}",
@@ -77,12 +94,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
     }
 
-    // Increment to next offset.
-    contig_iter = std::ranges::next(contig_iter, 1, contig.getMap().end());
-
   }
-
-  return filtered_contig_ptr;
 
 }
 

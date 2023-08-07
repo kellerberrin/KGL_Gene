@@ -104,9 +104,9 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   calc_fws_.calcFwsStatistics(filtered_population_ptr);
 
   // Mutate all the relevant genes in the relevant contigs.
-  ExecEnv::log().info("PfEMPAnalysis::performMutation; Begin gene mutation");
+  ExecEnv::log().info("PfEMPAnalysis::performModification; Begin gene mutation");
   mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
-  ExecEnv::log().info("PfEMPAnalysis::performMutation; End gene mutation");
+  ExecEnv::log().info("PfEMPAnalysis::performModification; End gene mutation");
 
   return true;
 

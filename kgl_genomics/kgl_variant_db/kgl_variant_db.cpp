@@ -217,6 +217,7 @@ bool kgl::Variant::isCanonical() const {
 // The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
 // of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
 // is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides, ref.length().
+// Returns .first = offset, .second = extend_size.
 std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
 
   auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();

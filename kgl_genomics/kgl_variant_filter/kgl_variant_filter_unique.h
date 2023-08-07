@@ -46,12 +46,13 @@ public:
   [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
   [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<RandomUniqueFilter>(*this); }
 
+
 protected:
 
   // Selects a random unique variant by default.
   [[nodiscard]] virtual std::shared_ptr<const Variant> selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
   [[nodiscard]] std::unique_ptr<ContigDB> filterUnique(const ContigDB &contig) const;
-
+  void contigVector(std::unique_ptr<ContigDB>& contig_ptr, std::vector<std::shared_ptr<const Variant>>& offset_vector) const;
 
 };
 
@@ -75,7 +76,6 @@ private:
 
 
   constexpr static const char* AF_FIELD_{"AF"};
-  constexpr static const char* MLEAF_FIELD_{"MLEAF"};
 
 };
 
