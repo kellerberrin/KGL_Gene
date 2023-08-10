@@ -74,7 +74,9 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
             for (const auto &[feature_id, feature_ptr]: sequence_ptr->getFeatureMap()) {
 
               // Retrieve a gene contig containing all variants within the gene coding sequence.
-              gene_contig_ptr->merge(contig_ptr->subset(feature_ptr->sequence().begin(), feature_ptr->sequence().end()));
+              std::shared_ptr<const ContigDB> feature_contig_ptr = contig_ptr->viewFilter(ContigModifyFilter( feature_ptr->sequence().begin(),
+                                                                                                              feature_ptr->sequence().end()));
+              gene_contig_ptr->merge(feature_contig_ptr);
 
             } // For all cds
 

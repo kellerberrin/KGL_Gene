@@ -7,6 +7,7 @@
 #include "kgl_analysis_mutation_gene.h"
 #include "kgl_mutation_variant.h"
 #include "kgl_variant_sort.h"
+#include "kgl_variant_filter_db.h"
 
 
 
@@ -265,7 +266,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
           default:
           case VariantGeneMembership::BY_ENSEMBL: {
 
-            auto contig_ptr = all_contig_ptr->subset(lower_bound, upper_bound);
+            std::shared_ptr<const ContigDB> contig_ptr = all_contig_ptr->viewFilter(ContigModifyFilter(lower_bound, upper_bound));
             gene_variant_ptr = getGeneEnsemblAlt(contig_ptr, ensembl_hash_map, gene_mutation.gene_characteristic);
 
           }
@@ -312,7 +313,7 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
-  auto subset_contig = contig_ptr->subset(gene_char.geneBegin(), gene_char.geneEnd());
+  std::shared_ptr<const kgl::ContigDB> subset_contig = contig_ptr->viewFilter(ContigModifyFilter(gene_char.geneBegin(), gene_char.geneEnd()));
 
   return subset_contig;
 
@@ -329,7 +330,8 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 
     for (const auto& [cds_id, cds_ptr] : sequence_ptr->getFeatureMap()) {
 
-      gene_contig->merge(contig_ptr->subset(cds_ptr->sequence().begin(), cds_ptr->sequence().end()));
+      std::shared_ptr<const ContigDB> cds_contig_ptr = contig_ptr->viewFilter(ContigModifyFilter(cds_ptr->sequence().begin(), cds_ptr->sequence().end()));
+      gene_contig->merge(cds_contig_ptr);
 
     }
 

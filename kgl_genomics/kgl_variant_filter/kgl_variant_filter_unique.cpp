@@ -23,12 +23,26 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
   // Examine all offsets
   std::vector<std::shared_ptr<const Variant>> current_offset_vector;
-  std::vector<std::shared_ptr<const Variant>> next_offset_vector;
+  std::vector<std::shared_ptr<const Variant>> indel_offset_vector;
 
   for (auto const& [current_offset, current_offset_ptr] : contig.getMap()) {
 
-    current_offset_vector = next_offset_vector;
-    next_offset_vector.clear();
+    current_offset_vector.clear();
+    if (not indel_offset_vector.empty()) {
+
+      if (current_offset == indel_offset_vector.front()->offset() + 1) {
+        // Next +1 offset add to current
+        current_offset_vector = indel_offset_vector;
+
+      } else {
+        // Else select unique
+        contigVector(filtered_contig_ptr, indel_offset_vector);
+
+      }
+
+      indel_offset_vector.clear();
+
+    }
 
     for (auto const& variant_ptr : current_offset_ptr->getVariantArray()) {
 
@@ -45,7 +59,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
       } else { //indel
 
-        next_offset_vector.push_back(variant_ptr);
+        indel_offset_vector.push_back(variant_ptr);
 
       }
 
@@ -55,7 +69,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomUniqueFilter::filterUnique(const Conti
 
   } // For all offsets.
 
-  contigVector(filtered_contig_ptr, next_offset_vector);
+  contigVector(filtered_contig_ptr, indel_offset_vector);
 
   return filtered_contig_ptr;
 
@@ -99,7 +113,7 @@ void kgl::RandomUniqueFilter::contigVector( std::unique_ptr<ContigDB>& filtered_
 }
 
 
-std::shared_ptr<const kgl::Variant> kgl::RandomUniqueFilter::selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+std::shared_ptr<const kgl::Variant> kgl::RandomUniqueFilter::selectRandom(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
   if (variant_vector.empty()) {
 
@@ -114,30 +128,8 @@ std::shared_ptr<const kgl::Variant> kgl::RandomUniqueFilter::selectUnique(const 
 }
 
 
-std::shared_ptr<const kgl::Variant> kgl::FrequencyUniqueFilter::selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
-  if (variant_vector.empty()) {
-
-    ExecEnv::log().critical("UniqueOffsetFilter::selectRandom; selection vector is empty - cannot continue");
-
-  }
-
-  std::multimap<double, std::shared_ptr<const kgl::Variant>> frequency_map;
-  for (auto const& variant_ptr : variant_vector) {
-
-    double frequency = getFrequency(variant_ptr);
-    frequency_map.insert({frequency, variant_ptr});
-
-  }
-
-  auto [selected_frequency, selected_variant] = *frequency_map.rbegin();
-
-  return selected_variant;
-
-}
-
-
-double kgl::FrequencyUniqueFilter::getFrequency(const std::shared_ptr<const Variant>& variant_ptr) const {
+double kgl::RandomUniqueFilter::getFrequency(const std::shared_ptr<const Variant>& variant_ptr) const {
 
 
   size_t alt_count = variant_ptr->evidence().altVariantCount();
@@ -167,5 +159,104 @@ double kgl::FrequencyUniqueFilter::getFrequency(const std::shared_ptr<const Vari
   }
 
   return 0.0;
+
+}
+
+std::shared_ptr<const kgl::Variant> kgl::RandomUniqueFilter::selectFrequency(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
+
+  if (variant_vector.empty()) {
+
+    ExecEnv::log().critical("UniqueOffsetFilter::selectRandom; selection vector is empty - cannot continue");
+
+  }
+
+  std::multimap<double, std::shared_ptr<const kgl::Variant>> frequency_map;
+  for (auto const& variant_ptr : variant_vector) {
+
+    double frequency = getFrequency(variant_ptr);
+    frequency_map.insert({frequency, variant_ptr});
+
+  }
+
+  auto [selected_frequency, selected_variant] = *frequency_map.rbegin();
+
+  return selected_variant;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::unique_ptr <kgl::ContigDB> kgl::HomozygousUniqueFilter::filterHomozygous(const ContigDB &contig) const {
+
+  std::unique_ptr<ContigDB> filtered_contig_ptr = std::make_unique<ContigDB>(contig.contigId());
+
+  std::vector<std::shared_ptr<const Variant>> current_offset_vector;
+  std::vector<std::shared_ptr<const Variant>> indel_offset_vector;
+
+  for (auto const& [current_offset, offset_ptr] : contig.getMap()) {
+
+    current_offset_vector.clear();
+    if (not indel_offset_vector.empty()) {
+
+      if (current_offset == indel_offset_vector.front()->offset() + 1) {
+        // Next +1 offset add to current
+        current_offset_vector = indel_offset_vector;
+
+      } else {
+        // Else select unique
+        contigVector(filtered_contig_ptr, indel_offset_vector);
+
+      }
+
+      indel_offset_vector.clear();
+
+    }
+
+    // Process if Homozygous.
+    if (offset_ptr->getVariantArray().size() == 2) {
+
+      if (offset_ptr->getVariantArray().at(0)->HGVS() == offset_ptr->getVariantArray().at(1)->HGVS()) {
+
+        if (not filtered_contig_ptr->addVariant(offset_ptr->getVariantArray().at(0))) {
+
+          ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig: {}",
+                               offset_ptr->getVariantArray().at(0)->HGVS(), filtered_contig_ptr->contigId());
+
+        }
+
+        continue;
+
+      }
+
+    } // If homozygous.
+
+
+    // Else not Homozygous
+    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+      if (variant_ptr->isSNP()) {
+
+        current_offset_vector.push_back(variant_ptr);
+
+      } else {
+
+        indel_offset_vector.push_back(variant_ptr);
+
+      }
+
+    }
+
+    contigVector(filtered_contig_ptr, current_offset_vector);
+
+  }
+
+  contigVector(filtered_contig_ptr, indel_offset_vector);
+
+  return filtered_contig_ptr;
 
 }

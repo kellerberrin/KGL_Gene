@@ -42,6 +42,10 @@ public:
                                                                                  ContigOffset_t start,
                                                                                  ContigOffset_t end);
 
+  [[nodiscard]] static std::pair<OffsetVariantMap, size_t> altGetCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                                 ContigOffset_t start,
+                                                                                 ContigOffset_t end);
+
 private:
 
   // A margin to account for the change in offsets when converting to canonical variants.

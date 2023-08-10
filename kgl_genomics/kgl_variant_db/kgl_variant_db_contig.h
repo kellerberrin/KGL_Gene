@@ -75,16 +75,8 @@ public:
   // Returns a variant offset array (if it exists) at a specified offset within the contig.
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
-  // Retrieves a contig subset in the offset range [begin, end)
-  [[nodiscard]] std::shared_ptr<ContigDB> subset(ContigOffset_t start, ContigOffset_t end) const;
-
   // Unconditionally add all the variants in the supplied contig to this contig.
   bool merge(const std::shared_ptr<const ContigDB>& contig) { return contig->processAll(*this, &ContigDB::addVariant); }
-
-  //Set Functions.
-  // setIntersection returns a contig that contains variants present in both contigs.
-  // The VariantEquality flag determines whether variant phase is used in the equality.
-  [[nodiscard]] std::unique_ptr<ContigDB> setIntersection(const ContigDB& intersection_contig, VariantEquality variant_equality) const;
 
 private:
 
