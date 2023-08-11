@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_db_contig.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 
 #include <ranges>
 
@@ -138,7 +138,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filte
   std::unique_ptr<ContigDB> filtered_contig_ptr(std::make_unique<ContigDB>(contigId()));
   for (const auto& [offset, offset_ptr] : getMap()) {
 
-    auto filtered_offset_ptr = offset_ptr->copyFilter(filter);
+    auto filtered_offset_ptr = offset_ptr->viewFilter(filter);
     if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset_ptr))) {
 
       ExecEnv::log().error("ContigDB::filter; Problem adding offset: {}, to contig: {}", offset, contigId());
@@ -228,80 +228,6 @@ std::optional<kgl::OffsetDBArray> kgl::ContigDB::findOffsetArray(ContigOffset_t 
     return std::nullopt;
 
   }
-
-}
-
-
-std::optional<std::shared_ptr<const kgl::Variant>> kgl::ContigDB::findVariant(const Variant& variant) const {
-
-  auto result = contig_offset_map_.find(variant.offset());
-
-  if (result != contig_offset_map_.end()) {
-
-    auto& [offset, offset_ptr] = *result;
-
-    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
-
-      if (variant.analogous(*variant_ptr)) {
-
-        return variant_ptr;
-
-      }
-
-    }
-
-    return std::nullopt;
-
-
-  } else {
-
-    return std::nullopt;
-
-  }
-
-}
-
-// This search algorithm has n^2 complexity.
-// The variants in the template contig are unique. Variant phase is disregarded.
-std::shared_ptr<kgl::ContigDB> kgl::ContigDB::findContig(const std::shared_ptr<const ContigDB>& template_contig) const {
-
-  std::shared_ptr<ContigDB> found_contig_ptr(std::make_shared<ContigDB>(template_contig->contigId()));
-
-  for (auto const& [offset, offset_ptr] : template_contig->getMap()) {
-
-    auto result = contig_offset_map_.find(offset);
-    if (result != contig_offset_map_.end()) {
-
-      // Create a set of allele hashs to search.
-      std::unordered_set<std::string> search_hash;
-      for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
-
-        search_hash.insert(variant_ptr->HGVS());
-
-      }
-
-      // Search the set of hashs.
-      auto const& [this_offset, this_offset_ptr] = *result;
-      for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
-
-        auto result = search_hash.find(this_variant_ptr->HGVS());
-        if (result != search_hash.end()) {
-
-          if (not found_contig_ptr->addVariant(this_variant_ptr)) {
-
-            ExecEnv::log().error( "ContigDB::findContig; cannot add variant: {}", this_variant_ptr->HGVS());
-
-          }
-
-        }
-
-      }
-
-    } // if this offset
-
-  } // for all template offset
-
-  return found_contig_ptr;
 
 }
 

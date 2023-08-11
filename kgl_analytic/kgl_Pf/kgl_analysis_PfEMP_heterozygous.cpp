@@ -56,7 +56,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::unique_ptr<OffsetDB>& offset_ptr,
+void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<const OffsetDB>& offset_ptr,
                                                        VariantAnalysisType& analysis_record) {
 
   if (offset_ptr->getVariantArray().empty()) {

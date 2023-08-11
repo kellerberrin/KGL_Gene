@@ -4,7 +4,7 @@
 
 #include "kgl_mutation_db.h"
 #include "kgl_variant_filter_features.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_unique.h"
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"

@@ -186,6 +186,7 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
 
 }
 
+
 // Check if the variants reference() and alternate() are in canonical form.
 // The variant is canonical if SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
 // A canonical SNP will have referenceSize() == alternateSize() == 1.

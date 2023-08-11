@@ -156,8 +156,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome/kgl_genome_feature.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db.h
         kgl_genomics/kgl_variant_db/kgl_variant_db.cpp
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter.h
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter.cpp
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_variant.h
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_variant.cpp
         kgl_genomics/kgl_sequence/kgl_table.h
         kgl_genomics/kgl_sequence/kgl_table.cpp
         kgl_genomics/kgl_sequence/kgl_table_ncbi.h
@@ -320,8 +320,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_pf7_genetic_distance_parser.h
         kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.cpp
         kgl_genomics/kgl_evidence/kgl_variant_factory_vcf_evidence_vep.h
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db.h
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db.cpp
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_genome.h
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_genome.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_type.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_info.h
         kgl_genomics/kgl_parser/kgl_Pf7_physical_distance.cpp
@@ -344,8 +344,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_offset.h
         kgl_genomics/kgl_mutation/kgl_mutation_region.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_region.h
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_difference.cpp
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_difference.h)
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.cpp
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.h
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.cpp
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.h)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)

@@ -3,8 +3,8 @@
 //
 
 #include "kgl_analysis_verify.h"
-#include "kgl_variant_filter.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_variant.h"
+#include "kgl_variant_filter_db_offset.h"
 
 #include <chrono>
 #include <thread>

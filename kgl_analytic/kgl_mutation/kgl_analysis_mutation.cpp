@@ -5,7 +5,7 @@
 #include "kgl_analysis_mutation_data.h"
 #include "kgl_analysis_mutation.h"
 #include "kgl_analysis_gene_sequence.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_offset.h"
 
 
 namespace kgl = kellerberrin::genome;

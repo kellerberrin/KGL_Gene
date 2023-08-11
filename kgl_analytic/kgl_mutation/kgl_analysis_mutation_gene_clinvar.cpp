@@ -5,7 +5,8 @@
 #include "kgl_analysis_mutation_gene_clinvar.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_filter_info.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_contig.h"
+#include "kgl_variant_filter_db_offset.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -84,7 +85,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const ContigDB>& subject_variants,
                                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
-  auto subject_clinvar = clinvar_contig_->findContig(subject_variants);
+  std::shared_ptr<const ContigDB> subject_clinvar = clinvar_contig_->viewFilter(ContigTemplateFilter(subject_variants));
   auto info_vector = clinvarInfo(subject_clinvar);
   if (subject_clinvar->variantCount() > 0) {
 

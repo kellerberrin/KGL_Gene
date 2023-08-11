@@ -5,7 +5,8 @@
 #include "kgl_analysis_mutation_gene_variant.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_factory_vcf_evidence_vep.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_contig.h"
+#include "kgl_variant_filter_db_offset.h"
 #include "kel_distribution.h"
 
 
@@ -151,7 +152,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 
   auto unphased_contig = contig_opt.value();
 
-  auto found_all_unphased = unphased_contig->findContig(span_contig);
+  std::shared_ptr<const ContigDB> found_all_unphased = unphased_contig->viewFilter(ContigTemplateFilter(span_contig));
   std::shared_ptr<const ContigDB> found_hom_variants = span_contig->viewFilter(HomozygousFilter());
 
   vep_info.all_lof = vepCount(found_all_unphased, LOF_VEP_FIELD_, LOF_HC_VALUE_);

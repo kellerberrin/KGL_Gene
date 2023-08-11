@@ -3,7 +3,7 @@
 //
 
 #include "kgl_analysis_inbreed_locus.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 #include "kgl_analysis_inbreed_calc.h"
 #include "kel_distribution.h"
 

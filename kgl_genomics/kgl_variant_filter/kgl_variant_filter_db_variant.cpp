@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/10/17.
 //
 
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 
 
 namespace kgl = kellerberrin::genome;

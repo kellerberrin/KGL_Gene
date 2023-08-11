@@ -4,7 +4,7 @@
 
 
 #include "kgl_variant_db_population.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 #include "kel_workflow_threads.h"
 
 

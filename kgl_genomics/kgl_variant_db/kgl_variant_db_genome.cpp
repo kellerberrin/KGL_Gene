@@ -3,7 +3,7 @@
 //
 
 #include "kgl_variant_db_genome.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 
 namespace kgl = kellerberrin::genome;
 

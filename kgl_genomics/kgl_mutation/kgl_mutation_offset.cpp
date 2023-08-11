@@ -3,7 +3,8 @@
 //
 
 #include "kgl_mutation_offset.h"
-#include "kgl_variant_filter_db.h"
+#include "kgl_variant_filter_db_contig.h"
+#include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_unique.h"
 #include "kel_interval.h"
 

@@ -19,7 +19,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using OffsetDBMap = std::map<ContigOffset_t, std::unique_ptr<OffsetDB>>;
+using OffsetDBMap = std::map<ContigOffset_t, std::shared_ptr<OffsetDB>>;
 
 class ContigDB {
 
@@ -65,12 +65,6 @@ public:
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
-
-  // Optionally returns the variant pointer if found in this contig
-  [[nodiscard]] std::optional<std::shared_ptr<const Variant>> findVariant(const Variant& variant) const;
-
-  // Returns a contig containing all variants in this contig that match the template contig.
-  [[nodiscard]] std::shared_ptr<ContigDB> findContig(const std::shared_ptr<const ContigDB>& template_contig) const;
 
   // Returns a variant offset array (if it exists) at a specified offset within the contig.
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;

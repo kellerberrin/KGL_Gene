@@ -5,7 +5,7 @@
 #include "kgl_analysis_interval.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 
 #include <fstream>
 

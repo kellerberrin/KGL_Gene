@@ -9,7 +9,7 @@
 
 #include "kgl_variant_db.h"
 #include "kel_utility.h"
-#include "kgl_variant_filter.h"
+#include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 
 #include <unordered_set>
@@ -22,9 +22,13 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // General Info filter class.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // InfoType can only be templated with double, std::vector<double>, int64_t, std::vector<int64_t>, std::string,
 // std::vector<string> and bool.
 // Template Missing is the return value if the info field is not found.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename InfoType, bool Missing>
 requires ValidInfoDataType<InfoType>
