@@ -18,7 +18,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// ReturnType both variants if and only there are 2 variants at the location that are identical disregarding phase.
+// Filter homozygous variants. For Example if there are 6 variants defined at the offset consisting of
+// two homozygous pairs and 2 singleton (heterozygous) variants. Only the homozygous pair will be returned.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -99,6 +100,7 @@ private:
 
 
 };
+
 
 
 

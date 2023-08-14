@@ -432,15 +432,26 @@ bool kgl::PfVCFImpl::createAddVariant(const std::string& genome_name,
                                       const std::string& alternate_text,
                                       const VariantEvidence& evidence)  {
 
-  std::shared_ptr<const Variant> variant_ptr(std::make_shared<const Variant>( contig_ptr->contigId(),
-                                                                              contig_offset,
-                                                                              VariantPhase::UNPHASED,
-                                                                              identifier,
-                                                                              DNA5SequenceLinear(StringDNA5(reference_text)),
-                                                                              DNA5SequenceLinear(StringDNA5(alternate_text)),
-                                                                              evidence));
+  const Variant variant ( contig_ptr->contigId(),
+                          contig_offset,
+                          VariantPhase::UNPHASED,
+                          identifier,
+                          DNA5SequenceLinear(StringDNA5(reference_text)),
+                          DNA5SequenceLinear(StringDNA5(alternate_text)),
+                          evidence);
 
-  return addThreadSafeVariant(variant_ptr, genome_name);
+  if constexpr(PARSE_CANONICAL_VARIANTS_) {
+
+    std::shared_ptr<const Variant> variant_ptr = variant.cloneCanonical();
+    return addThreadSafeVariant(variant_ptr, genome_name);
+
+
+  } else {
+
+    std::shared_ptr<const Variant> variant_ptr = variant.clone();
+    return addThreadSafeVariant(variant_ptr, genome_name);
+
+  }
 
 }
 

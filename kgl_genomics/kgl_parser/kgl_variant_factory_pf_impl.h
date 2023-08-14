@@ -60,11 +60,15 @@ private:
   size_t variant_count_{0};
   constexpr static const size_t VARIANT_REPORT_INTERVAL_{10000};
 
-  // This object is write accessed by multiple threads, it MUST BE mutex guarded for any access.
+  // This object is write accessed by multiple threads, it MUST be mutex guarded for any access.
   const std::shared_ptr<PopulationDB> unphased_population_ptr_;   // Un-phased variants.
   const std::shared_ptr<const GenomeReference> genome_db_ptr_; // read access only.
 
   void setupPopulationStructure(const std::shared_ptr<const GenomeReference>& genome_db_ptr);
+
+  // If this flag is set, all parsed variants are converted to canonical format.
+  // A canonical variant has the cigar signature of '1X' for an SNP and '1MnD' (delete) or '1MnI' (insert) for indels.
+  constexpr static const bool PARSE_CANONICAL_VARIANTS_{true};
 
   [[nodiscard]] bool createAddVariant(const std::string& genome_name,
                                       const std::shared_ptr<const ContigReference>& contig_ptr,

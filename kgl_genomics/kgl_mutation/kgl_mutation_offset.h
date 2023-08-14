@@ -51,6 +51,10 @@ private:
   // A margin to account for the change in offsets when converting to canonical variants.
   // Canonical offsets always increase.
   constexpr static const size_t NUCLEOTIDE_CANONICAL_MARGIN{200} ;
+  /// Remove
+  inline static std::mutex displaylock_;
+  inline static size_t counter_{0};
+  /// Remove
 
 };
 

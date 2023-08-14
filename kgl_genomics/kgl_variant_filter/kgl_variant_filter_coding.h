@@ -41,17 +41,18 @@ namespace kellerberrin::genome {   //  organization level namespace
 // This filter selects a variant from multiple variants at a particular offset randomly.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RandomUniqueFilter : public FilterContigs {
+class RandomCodingFilter : public FilterContigs {
 
 public:
 
-  RandomUniqueFilter() { filterName("RandomUniqueFilter"); }
+  RandomCodingFilter() { filterName("RandomCodingFilter"); }
 
-  ~RandomUniqueFilter() override = default;
+  ~RandomCodingFilter() override = default;
 
   [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
-  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<RandomUniqueFilter>(*this); }
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<RandomCodingFilter>(*this); }
 
+  [[nodiscard]] static double getFrequency(const std::shared_ptr<const Variant>& variant_vector);
 
 protected:
 
@@ -61,9 +62,9 @@ protected:
 
   [[nodiscard]] std::shared_ptr<const Variant> selectRandom(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
   [[nodiscard]] std::shared_ptr<const Variant> selectFrequency(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
+  [[nodiscard]] std::shared_ptr<const Variant> selectHomozygous(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const;
 
   [[nodiscard]] std::unique_ptr<ContigDB> filterUnique(const ContigDB &contig) const;
-  [[nodiscard]] double getFrequency(const std::shared_ptr<const Variant>& variant_vector) const;
   void contigVector(std::unique_ptr<ContigDB>& contig_ptr, std::vector<std::shared_ptr<const Variant>>& offset_vector) const;
 
   constexpr static const char* AF_FIELD_{"AF"};
@@ -75,20 +76,20 @@ protected:
 // This filter selects the most frequently occurring variant (highest probability of occurring) from multiple variants at an offset.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FrequencyUniqueFilter : public RandomUniqueFilter {
+class FrequencyCodingFilter : public RandomCodingFilter {
 
 public:
 
-  FrequencyUniqueFilter() { filterName("FrequencyUniqueFilter"); }
-  ~FrequencyUniqueFilter() override = default;
+  FrequencyCodingFilter() { filterName("FrequencyCodingFilter"); }
+  ~FrequencyCodingFilter() override = default;
 
   [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
-  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<FrequencyUniqueFilter>(*this); }
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<FrequencyCodingFilter>(*this); }
 
 
 private:
 
-  // Selects a random unique variant by default.
+  // Selects the most common variant.
   [[nodiscard]] std::shared_ptr<const Variant>
   selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const override { return selectFrequency(variant_vector); }
 
@@ -102,21 +103,22 @@ private:
 // occurring variant is selected.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class HomozygousUniqueFilter : public RandomUniqueFilter {
+class HomozygousCodingFilter : public RandomCodingFilter {
 
 public:
 
-  HomozygousUniqueFilter() { filterName("HomozygousUniqueFilter"); }
-  ~HomozygousUniqueFilter() override = default;
+  HomozygousCodingFilter() { filterName("HomozygousCodingFilter"); }
+  ~HomozygousCodingFilter() override = default;
 
-  [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterHomozygous(contig); }
-  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<HomozygousUniqueFilter>(*this); }
+  [[nodiscard]] std::unique_ptr <ContigDB> applyFilter(const ContigDB &contig) const override { return filterUnique(contig); }
+  [[nodiscard]] std::shared_ptr <BaseFilter> clone() const override { return std::make_shared<HomozygousCodingFilter>(*this); }
 
 
 private:
 
-  // Preferentially selects homozygous variants.
-  [[nodiscard]] std::unique_ptr <ContigDB> filterHomozygous(const ContigDB &contig) const;
+  // Selects the most common variant.
+  [[nodiscard]] std::shared_ptr<const Variant>
+  selectUnique(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const override { return selectHomozygous(variant_vector); }
 
 };
 

@@ -79,14 +79,16 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
   }
 
   // Check if the variant modifies the gene interval.
- if (not variant.sequenceModifier(gene_interval_.lower(), gene_interval_.size())) {
+  auto [variant_offset, extent] = variant.extentOffset();
+  OpenRightInterval variant_interval(variant_offset, variant_offset + extent);
+
+ if (not variant_interval.intersects(gene_interval_)) {
 
    return false;
 
  }
 
-  auto [variant_offset, extent] = variant.extentOffset();
-  return transcript_union_.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + extent));
+  return transcript_union_.intersectsInterval(variant_interval);
 
 }
 
@@ -101,7 +103,10 @@ bool kgl::GeneIntervalStructure::transcriptModifier(const Variant& variant, cons
   }
 
   // Check if the variant modifies the gene interval.
-  if (not variant.sequenceModifier(gene_interval_.lower(), gene_interval_.size())) {
+  auto [variant_offset, extent] = variant.extentOffset();
+  OpenRightInterval variant_interval(variant_offset, variant_offset + extent);
+
+  if (not variant_interval.intersects(gene_interval_)) {
 
     return false;
 
@@ -116,8 +121,7 @@ bool kgl::GeneIntervalStructure::transcriptModifier(const Variant& variant, cons
   }
 
   auto const& [found_transcipt, transcript_intervals] = *find_iter;
-  auto [variant_offset, extent] = variant.extentOffset();
-  return transcript_intervals.intersectsInterval(OpenRightInterval(variant_offset, variant_offset + extent));
+  return transcript_intervals.intersectsInterval(variant_interval);
 
 }
 

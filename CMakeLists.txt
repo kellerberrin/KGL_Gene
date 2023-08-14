@@ -338,8 +338,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_db.h
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.h
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_unique.cpp
-        kgl_genomics/kgl_variant_filter/kgl_variant_filter_unique.h
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.cpp
+        kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.h
         kgl_genomics/kgl_mutation/kgl_mutation_offset.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_offset.h
         kgl_genomics/kgl_mutation/kgl_mutation_region.cpp

@@ -5,7 +5,7 @@
 #include "kgl_mutation_db.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db_offset.h"
-#include "kgl_variant_filter_unique.h"
+#include "kgl_variant_filter_coding.h"
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
 
@@ -28,11 +28,8 @@ namespace kgl = kellerberrin::genome;
 void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
 
-  // Remove homozygous variants
-  std::shared_ptr<const PopulationDB> unique_population_ptr = population_ptr->viewFilter(UniqueUnphasedFilter());
-
   // Get the active contigs in this population.
-  auto contig_map = unique_population_ptr->contigCount();
+  auto contig_map = population_ptr->contigCount();
 
   for (auto const& [contig_id, variant_count] : contig_map) {
 
@@ -46,7 +43,7 @@ void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
         auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
         for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
 
-          mutateTranscript( gene_ptr, transcript_id, transcript_ptr, unique_population_ptr, genome_ptr_);
+          mutateTranscript( gene_ptr, transcript_id, transcript_ptr, population_ptr, genome_ptr_);
 
         } // For transcript
 

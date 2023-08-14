@@ -240,23 +240,11 @@ std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() c
 }
 
 
-// For a sequence on the interval [a, b), Given a start offset a and a size (b-a). Determine if the variant will
-// modify the sequence. Note that this is different to just translating the sequence offsets. Any upstream indel will
-// modify the sequence [a, b) offsets but may not actually modify any of the nucleotides in the sequence.
-bool kgl::Variant::sequenceModifier(ContigOffset_t sequence_start, ContigSize_t sequence_size) const {
-
-  auto [extent_offset, extent_size] = extentOffset();
-  return sequence_start < (extent_offset + extent_size) and extent_offset < (sequence_start + sequence_size);
-
-}
-
 std::string kgl::Variant::cigar() const {
 
   return ParseVCFCigar::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
 
 }
-
-
 
 // Unique upto phase.
 std::string kgl::Variant::HGVS() const {

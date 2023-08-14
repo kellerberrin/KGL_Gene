@@ -110,11 +110,7 @@ public:
   // The offset used for storing the allele in the database.
   // The ZERO BASED offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
-  // For a sequence on the interval [a, b), Given a start offset a and a size (b-a). Determine if the variant will
-  // modify the sequence. Note that this is different to just translating the sequence offsets. Any upstream indel will
-  // modify the sequence [a, b) offsets but may not actually modify any of the nucleotides in the sequence.
-  [[nodiscard]] bool sequenceModifier(ContigOffset_t sequence_start, ContigSize_t sequence_size) const;
-  // The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
+   // The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
   // of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
   // is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides (ref.length() - alt.length() + 1).
   [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const;
@@ -168,7 +164,7 @@ private:
   inline static std::atomic<size_t> object_count_{0};  // Used to check memory usage and identify any memory leaks.
 
 
-  // Common (same nucleotide) Prefix and Suffix size for refernce and alternate.
+  // Common (same nucleotide) Prefix and Suffix size for reference and alternate.
   [[nodiscard]] size_t commonPrefix() const { return reference().commonPrefix(alternate()); }
   [[nodiscard]] size_t commonSuffix() const { return reference().commonSuffix(alternate()); }
 

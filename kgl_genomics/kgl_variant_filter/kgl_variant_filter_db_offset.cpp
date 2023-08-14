@@ -22,11 +22,35 @@ std::unique_ptr<kgl::OffsetDB> kgl::HomozygousFilter::applyFilter(const OffsetDB
     return filtered_offset_ptr;
 
   }
-  if (offset.getVariantArray().front()->HGVS() == offset.getVariantArray().back()->HGVS()) {
+  std::map<std::string, std::vector<std::shared_ptr<const Variant>>> variant_map;
+  for (auto const& variant_ptr : offset.getVariantArray()) {
 
-    filtered_offset_ptr->addVariant(offset.getVariantArray().front());
-    filtered_offset_ptr->addVariant(offset.getVariantArray().back());
-    return filtered_offset_ptr;
+    std::string variant_hash = variant_ptr->HGVS();
+    if (variant_map.contains(variant_hash)) {
+
+      auto& [hash, vector] = *variant_map.find(variant_hash);
+      vector.push_back(variant_ptr);
+
+    } else {
+
+      std::vector<std::shared_ptr<const Variant>> variant_vector{variant_ptr};
+      variant_map.try_emplace(variant_hash, variant_vector);
+
+    }
+
+  }
+
+  for (auto const& [hash, vector] : variant_map) {
+
+    if (vector.size() >= 2) {
+
+      for (auto const& variant_ptr : vector) {
+
+        filtered_offset_ptr->addVariant(variant_ptr);
+
+      }
+
+    }
 
   }
 

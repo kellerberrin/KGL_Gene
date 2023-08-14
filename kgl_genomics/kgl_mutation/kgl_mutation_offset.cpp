@@ -5,7 +5,7 @@
 #include "kgl_mutation_offset.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
-#include "kgl_variant_filter_unique.h"
+#include "kgl_variant_filter_coding.h"
 #include "kel_interval.h"
 
 #include <algorithm>
@@ -65,7 +65,7 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::altGetCanonicalVar
   // Remove multiple variants, that is minor alleles (SNP) that are not homozygous that share the same offset.
   // Note that if an indel occurs at the same offset as an SNP, this is not a problem, since in canonical form ('1MnI' or '1MnD'),
   // the indel actually modifies the next (+1) offset.
-  auto unique_contig_ptr = modify_contig_ptr->viewFilter(FrequencyUniqueFilter());
+  auto unique_contig_ptr = modify_contig_ptr->viewFilter(FrequencyCodingFilter());
 
   // Finally move the unique modifying variants to the offset map.
   for (auto const& [offset, offset_ptr] : unique_contig_ptr->getMap()) {
@@ -103,6 +103,7 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::altGetCanonicalVar
 
 }
 
+
 // Returns a map of unique canonical variants
 // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
 std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
@@ -119,13 +120,15 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVarian
   // Convert to canonical variants.
   auto canonical_contig_ptr = region_contig_ptr->canonicalContig();
   // Filter to just the variants that will modify the specified region [start, end).
-  auto modify_contig_ptr = canonical_contig_ptr->viewFilter(ContigModifyFilter(start, end));
+  auto modify_contig_ptr = region_contig_ptr->viewFilter(ContigModifyFilter(start, end));
   // Get the count of variants modifying the region [start, end).
-  size_t modify_count = modify_contig_ptr->variantCount();
+
   // Remove multiple variants, that is minor alleles (SNP) that are not homozygous that share the same offset.
   // Note that if an indel occurs at the same offset as an SNP, this is not a problem, since in canonical form ('1MnI' or '1MnD'),
   // the indel actually modifies the next (+1) offset.
-  auto unique_contig_ptr = modify_contig_ptr->viewFilter(HomozygousUniqueFilter());
+  auto unique_contig_ptr = modify_contig_ptr->viewFilter(HomozygousCodingFilter());
+  // Get the number of unique variants.
+  size_t modify_count = (modify_contig_ptr->viewFilter(UniqueUnphasedFilter()))->variantCount();
 
   // Finally move the unique modifying variants to the offset map.
   for (auto const& [offset, offset_ptr] : unique_contig_ptr->getMap()) {
@@ -158,6 +161,74 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVarian
   } // for all offsets.
 
   size_t non_unique_count = modify_count - offset_variant_map.size();
+
+  /// Remove
+  const size_t count_max{100};
+  static ContigOffset_t print_offset{0};
+  if (non_unique_count > 0 and counter_ < count_max and print_offset != end) {
+    std::scoped_lock lock(displaylock_);
+
+    struct ModifyStruct {
+
+      bool showAllVariants(const std::shared_ptr<const kgl::Variant>& variant_ptr) {
+
+        kellerberrin::ExecEnv::log().info("**** {}, Freq: {:.2f}%, Evidence: {}",
+                                          variant_ptr->HGVS(),
+                                          (RandomCodingFilter::getFrequency(variant_ptr) * 100.0),
+                                          variant_ptr->evidence().output());
+        return true;
+
+      }
+
+      bool loadSet(const std::shared_ptr<const kgl::Variant>& variant_ptr) {
+
+        std::string hash = variant_ptr->HGVS();
+        hash_set_.insert(hash);
+        return true;
+
+      }
+
+      bool showMultipleVariants(const std::shared_ptr<const kgl::Variant>& variant_ptr) {
+
+        std::string hash = variant_ptr->HGVS();
+        if (not hash_set_.contains(hash)) {
+
+          kellerberrin::ExecEnv::log().info("**** {}, Freq: {:.2f}%, Evidence: {}",
+                                            variant_ptr->HGVS(),
+                                            (RandomCodingFilter::getFrequency(variant_ptr) * 100.0),
+                                            variant_ptr->evidence().output());
+
+        }
+        return true;
+
+      }
+
+      std::set<std::string> hash_set_;
+
+    };
+
+    print_offset = end;
+    ModifyStruct modify_struct;
+    ExecEnv::log().info("*********************[ {}, {})", start, end);
+    modify_contig_ptr->processAll(modify_struct, &ModifyStruct::showAllVariants);
+    ExecEnv::log().info("****%%%%%%%");
+    for (auto const& [offset, variant_ptr] : offset_variant_map) {
+
+      modify_struct.loadSet(variant_ptr);
+      ExecEnv::log().info("**** {}, Freq: {:.2f}%, Evidence: {}",
+                          variant_ptr->HGVS(),
+                          (RandomCodingFilter::getFrequency(variant_ptr) * 100.0),
+                          variant_ptr->evidence().output());
+
+    }
+    ExecEnv::log().info("****%%%%%%%");
+
+    modify_contig_ptr->processAll(modify_struct, &ModifyStruct::showMultipleVariants);
+    ExecEnv::log().info("****************************");
+    ++counter_;
+
+  }
+  /// Remove
 
   return { offset_variant_map, non_unique_count };
 

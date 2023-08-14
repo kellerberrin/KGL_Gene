@@ -45,7 +45,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
-        updateVariantAnalysisType(offset_array_ptr, contig_count);
+        updateVariantAnalysisType(genome_id, contig_id, offset, offset_array_ptr, contig_count);
 
       } // offset
 
@@ -56,7 +56,10 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<const OffsetDB>& offset_ptr,
+void kgl::HeteroHomoZygous::updateVariantAnalysisType( const GenomeId_t& genome,
+                                                       const ContigId_t& contig,
+                                                       ContigOffset_t offset,
+                                                       const std::shared_ptr<const OffsetDB>& offset_ptr,
                                                        VariantAnalysisType& analysis_record) {
 
   if (offset_ptr->getVariantArray().empty()) {
@@ -97,18 +100,54 @@ void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<con
 
     }
 
+   // If variants have been modified to canonical, then can typically have SNP and indels at the same location.
   } else {
 
-    ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; offset, unexpected number of variants: {}", offset_ptr->getVariantArray().size());
-
-
+    // Expected at least one homozygous pair.
+    size_t indel_count{0};
+    size_t snp_count{0};
+    size_t homozygous_count{0};
+    std::set<std::string> hash_set;
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; Variant: {}, Cigar: {}, Format: {}",
-                          variant_ptr->HGVS(),
-                          variant_ptr->cigar(),
-                          variant_ptr->evidence().output(','));
+      if (variant_ptr->isSNP()) {
 
+        ++snp_count;
+
+      } else {
+
+        ++indel_count;
+
+      };
+      auto hash = variant_ptr->HGVS();
+      if (hash_set.contains(hash)) {
+
+        ++homozygous_count;
+
+      } else {
+
+        hash_set.insert(hash);
+
+      }
+
+    }
+
+    ++analysis_record.homozygous_minor_alleles_ += homozygous_count;
+    if (indel_count > 2) {
+
+      ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; genome: {}, contig: {}, offset: {}, unexpected number of variants: {}",
+                          genome, contig, offset, offset_ptr->getVariantArray().size());
+
+
+      for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+
+        ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; Variant: {}, Cigar: {}, Format: {}",
+                            variant_ptr->HGVS(),
+                            variant_ptr->cigar(),
+                            variant_ptr->evidence().output(','));
+
+
+      }
 
     }
 
