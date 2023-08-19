@@ -10,7 +10,6 @@
 #include <fstream>
 #include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
-#include "kel_patterns.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_gff_fasta.h"

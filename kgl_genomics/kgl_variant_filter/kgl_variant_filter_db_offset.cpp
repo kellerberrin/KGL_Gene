@@ -10,13 +10,14 @@ namespace kgl = kellerberrin::genome;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Filters all offsets where there are exactly 2 identical variants (disregarding phase).
+// Filters all offsets where there are identical homozygous variants (disregarding phase).
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<kgl::OffsetDB> kgl::HomozygousFilter::applyFilter(const OffsetDB& offset) const {
 
   auto filtered_offset_ptr = std::make_unique<OffsetDB>();
+  // Edge condition.
   if (offset.getVariantArray().size() != 2) {
 
     return filtered_offset_ptr;
@@ -49,6 +50,49 @@ std::unique_ptr<kgl::OffsetDB> kgl::HomozygousFilter::applyFilter(const OffsetDB
         filtered_offset_ptr->addVariant(variant_ptr);
 
       }
+
+    }
+
+  }
+
+  return filtered_offset_ptr;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Filters all offsets to only singleton heterozygous variants.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::unique_ptr<kgl::OffsetDB> kgl::HeterozygousFilter::applyFilter(const OffsetDB& offset) const {
+
+  auto filtered_offset_ptr = std::make_unique<OffsetDB>();
+
+  std::map<std::string, std::vector<std::shared_ptr<const Variant>>> variant_map;
+  for (auto const& variant_ptr : offset.getVariantArray()) {
+
+    std::string variant_hash = variant_ptr->HGVS();
+    if (variant_map.contains(variant_hash)) {
+
+      auto& [hash, vector] = *variant_map.find(variant_hash);
+      vector.push_back(variant_ptr);
+
+    } else {
+
+      std::vector<std::shared_ptr<const Variant>> variant_vector{variant_ptr};
+      variant_map.try_emplace(variant_hash, variant_vector);
+
+    }
+
+  }
+
+  for (auto const& [hash, vector] : variant_map) {
+
+    if (vector.size() == 1) {
+
+      filtered_offset_ptr->addVariant(vector.front());
 
     }
 

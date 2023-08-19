@@ -19,7 +19,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Filter homozygous variants. For Example if there are 6 variants defined at the offset consisting of
-// two homozygous pairs and 2 singleton (heterozygous) variants. Only the homozygous pair will be returned.
+// two homozygous pairs and 2 singleton (heterozygous) variants. Only the homozygous pairs will be returned.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +34,31 @@ public:
   // Implemented at offset level
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HomozygousFilter>(); }
+
+
+private:
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Filter heterozygous variants. For Example if there are 6 variants defined at the offset consisting of
+// two homozygous pairs and 2 singleton heterozygous variants. Only the heterozygous (singleton) variants will be returned.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class HeterozygousFilter: public FilterOffsets {
+
+public:
+
+  HeterozygousFilter() { filterName("Heterozygous"); }
+  ~HeterozygousFilter() override = default;
+
+  // Implemented at offset level
+  [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HeterozygousFilter>(); }
 
 
 private:

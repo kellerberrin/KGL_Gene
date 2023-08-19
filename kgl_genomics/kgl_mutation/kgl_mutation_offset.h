@@ -42,19 +42,12 @@ public:
                                                                                  ContigOffset_t start,
                                                                                  ContigOffset_t end);
 
-  [[nodiscard]] static std::pair<OffsetVariantMap, size_t> altGetCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                                 ContigOffset_t start,
-                                                                                 ContigOffset_t end);
 
 private:
 
   // A margin to account for the change in offsets when converting to canonical variants.
   // Canonical offsets always increase.
   constexpr static const size_t NUCLEOTIDE_CANONICAL_MARGIN{200} ;
-  /// Remove
-  inline static std::mutex displaylock_;
-  inline static size_t counter_{0};
-  /// Remove
 
 };
 

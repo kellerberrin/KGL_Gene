@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <fstream>
-#include "kel_patterns.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_gff_fasta.h"

@@ -4,6 +4,7 @@
 
 #include "kgl_analysis_PfEMP_heterozygous.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
+#include "kgl_variant_filter_db_offset.h"
 #include <fstream>
 
 
@@ -45,7 +46,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       for (auto const& [offset, offset_array_ptr] : contig_ptr->getMap()) {
 
-        updateVariantAnalysisType(genome_id, contig_id, offset, offset_array_ptr, contig_count);
+        updateVariantAnalysisType(offset_array_ptr, contig_count);
 
       } // offset
 
@@ -56,10 +57,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::updateVariantAnalysisType( const GenomeId_t& genome,
-                                                       const ContigId_t& contig,
-                                                       ContigOffset_t offset,
-                                                       const std::shared_ptr<const OffsetDB>& offset_ptr,
+void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<const OffsetDB>& offset_ptr,
                                                        VariantAnalysisType& analysis_record) {
 
   if (offset_ptr->getVariantArray().empty()) {
@@ -88,68 +86,18 @@ void kgl::HeteroHomoZygous::updateVariantAnalysisType( const GenomeId_t& genome,
 
     ++analysis_record.heterozygous_reference_minor_alleles_;
 
-  } else if (offset_ptr->getVariantArray().size() == 2) {
-
-    if (offset_ptr->getVariantArray().front()->HGVS() == offset_ptr->getVariantArray().back()->HGVS()) {
-
-      ++analysis_record.homozygous_minor_alleles_;
-
-    } else {
-
-      ++analysis_record.heterozygous_minor_alleles_;
-
-    }
-
-   // If variants have been modified to canonical, then can typically have SNP and indels at the same location.
   } else {
 
-    // Expected at least one homozygous pair.
-    size_t indel_count{0};
-    size_t snp_count{0};
-    size_t homozygous_count{0};
-    std::set<std::string> hash_set;
-    for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
+    auto homozgygous_offset = offset_ptr->viewFilter(HomozygousFilter());
+    if (not offset_ptr->getVariantArray().empty()) {
 
-      if (variant_ptr->isSNP()) {
-
-        ++snp_count;
-
-      } else {
-
-        ++indel_count;
-
-      };
-      auto hash = variant_ptr->HGVS();
-      if (hash_set.contains(hash)) {
-
-        ++homozygous_count;
-
-      } else {
-
-        hash_set.insert(hash);
-
-      }
+      auto unique_homozygous = offset_ptr->viewFilter(UniqueUnphasedFilter());
+      analysis_record.homozygous_minor_alleles_ += unique_homozygous->getVariantArray().size();
 
     }
 
-    ++analysis_record.homozygous_minor_alleles_ += homozygous_count;
-    if (indel_count > 2) {
-
-      ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; genome: {}, contig: {}, offset: {}, unexpected number of variants: {}",
-                          genome, contig, offset, offset_ptr->getVariantArray().size());
-
-
-      for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
-
-        ExecEnv::log().warn("HeteroHomoZygous::updateVariantAnalysisType; Variant: {}, Cigar: {}, Format: {}",
-                            variant_ptr->HGVS(),
-                            variant_ptr->cigar(),
-                            variant_ptr->evidence().output(','));
-
-
-      }
-
-    }
+    auto heterozgygous_offset = offset_ptr->viewFilter(HeterozygousFilter());
+    analysis_record.heterozygous_minor_alleles_ += heterozgygous_offset->getVariantArray().size();
 
   }
 

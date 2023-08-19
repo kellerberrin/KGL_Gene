@@ -5,7 +5,6 @@
 
 #include "kgl_genome_contig_feature.h"
 #include "kgl_genome_contig.h"
-#include "kel_patterns.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -19,22 +18,21 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::StructuredFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
 
-  id_feature_map_.insert(std::make_pair(feature_ptr->id(), feature_ptr));
-
-  offset_feature_map_.insert(std::make_pair(feature_ptr->sequence().begin(), feature_ptr));
+  // Store by feature id and feature BEGIN offset.
+  id_feature_map_.emplace(feature_ptr->id(), feature_ptr);
+  offset_feature_map_.emplace(feature_ptr->sequence().begin(), feature_ptr);
 
 }
 
 bool kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id,
                                            std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
 
-  auto iter_pair = id_feature_map_.equal_range(feature_id);
-
   feature_ptr_vec.clear();
 
-  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
+  auto const [lower_eq, upper_eq] = id_feature_map_.equal_range(feature_id);
+  for (auto const& [feature_ident, feature_ptr] : std::ranges::subrange(lower_eq, upper_eq)) {
 
-    feature_ptr_vec.emplace_back(iter->second);
+    feature_ptr_vec.emplace_back(feature_ptr);
 
   }
 
@@ -43,7 +41,7 @@ bool kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id,
 }
 
 
-void kgl::StructuredFeatures::verifyContigOverlap() {
+void kgl::StructuredFeatures::verifyContigOverlap() const {
 
   // If feature dimensions are [1, size] instead of [0, size) then assume that conversion from the
   // Gff convention of [1, size] has not been performed correctly during feature read from disk.
@@ -80,42 +78,69 @@ void kgl::StructuredFeatures::verifyContigOverlap() {
 }
 
 
-void kgl::StructuredFeatures::verifySubFeatureDuplicates() {
+size_t kgl::StructuredFeatures::verifySubFeatureDuplicates() const {
 
-  for (auto feature_pair : idFeatureMap()) {
-  
-    Feature &feature = *feature_pair.second;
+  size_t total_duplicates{0};
 
-    long duplicates = checkDuplicates(feature.subFeatures());
+  for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-    if (duplicates > 0) {
+    std::set<FeatureIdent_t> check_duplicate_set;
+    for (auto const& [sub_feature_ident, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-      ExecEnv::log().warn("Feature: {}; has {} duplicate sub-features", feature.id(), duplicates);
+         check_duplicate_set.insert(sub_feature_ident);
+
+    }
+
+    size_t duplicate_count = feature_ptr->subFeatures().size() - check_duplicate_set.size();
+    total_duplicates += duplicate_count;
+
+    if (duplicate_count > 0) {
+
+      ExecEnv::log().warn("StructuredFeatures::verifySubFeatureDuplicates; Feature: {}; has {} duplicate sub-features",
+                          feature_ident, duplicate_count);
 
     }
 
   }
+
+  return total_duplicates;
 
 }
 
 
-
 void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
 
+  size_t feature_duplicates = verifySubFeatureDuplicates();
 
-  for (auto feature_pair : idFeatureMap()) {
+  if (feature_duplicates > 0) {
 
-    Feature &feature = *feature_pair.second;
+    for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-    long duplicates_removed = deleteIterableDuplicates(feature.subFeatures());
+      std::map<std::string, std::shared_ptr<const Feature>> unique_features_map;
+      for (auto const& [sub_feature_ident, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-    if (duplicates_removed > 0) {
+        unique_features_map[sub_feature_ident] = sub_feature_ptr;
 
-      ExecEnv::log().info("{} duplicate sub-features removed from super feature: {}", duplicates_removed, feature.id());
+      }
 
-    }
+      size_t duplicates_removed = feature_ptr->subFeatures().size() - unique_features_map.size();
+      if (duplicates_removed > 0) {
 
-  }
+        ExecEnv::log().info("StructuredFeatures::removeSubFeatureDuplicates; {} duplicate sub-features removed from super feature: {}",
+                            duplicates_removed, feature_ident);
+
+        feature_ptr->subFeatures().clear();
+        for (auto const& [sub_feature_ident, sub_feature_ptr] : unique_features_map) {
+
+          feature_ptr->subFeatures().emplace(sub_feature_ident, sub_feature_ptr);
+
+        }
+
+      } // If sub-feature duplicates
+
+    }  // For all sub-features.
+
+  } // If any duplicates
 
 }
 
@@ -123,12 +148,10 @@ void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
 void kgl::StructuredFeatures::clearHierarchy() {
 
   // Remove all hierarchies for all features.
-  for (auto feature_pair : idFeatureMap()) {
+  for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-    Feature &feature = *feature_pair.second;
     // Remove feature hierarchy.
-
-    feature.clearHierachy();
+    feature_ptr->clearHierachy();
 
   }
 
@@ -242,35 +265,35 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
   clearHierarchy();
 
   // Establish or re-establish the hierarchies for all features.
-  for (auto feature_pair : idFeatureMap()) {
+  for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-    Feature& feature = *feature_pair.second;
     // For each feature lookup a list of super_features
     std::vector<FeatureIdent_t> super_features;
-    feature.getAttributes().getSuperFeatureIds(super_features);
+    feature_ptr->getAttributes().getSuperFeatureIds(super_features);
 
     // Add parent pointers for the child and child pointers for the super_features.
-    for (auto super_feature_id : super_features) {
+    for (auto const& super_feature_id : super_features) {
 
       std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
 
       if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
 
         // Flag an Error; could not find super feature.
-        ExecEnv::log().error("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
+        ExecEnv::log().error("GeneExonFeatures::setupFeatureHierarchy; Feature: {}; Super Feature: {} does not exist",
+                             feature_ident, super_feature_id);
 
       }
       if (super_feature_ptr_vec.size() > 1) {
 
         // Warning, more than 1 super feature.
-        ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
-                                 super_feature_id, super_feature_ptr_vec.size());
+        ExecEnv::log().warn("GeneExonFeatures::setupFeatureHierarchy; Super Feature id: {} returned : {} Super Features",
+                            super_feature_id, super_feature_ptr_vec.size());
 
       }
       if (not super_feature_ptr_vec.empty()) {
 
-        feature.setSuperFeature(super_feature_ptr_vec.front());
-        std::const_pointer_cast<Feature>(super_feature_ptr_vec.front())->addSubFeature(feature.id(), feature_pair.second);
+        feature_ptr->setSuperFeature(super_feature_ptr_vec.front());
+        std::const_pointer_cast<Feature>(super_feature_ptr_vec.front())->addSubFeature(feature_ident, feature_ptr);
 
       } // For all super_features with same id.
 
@@ -296,19 +319,19 @@ void kgl::GeneExonFeatures::createGeneMap() {
   gene_map_.clear();
 
   // Iterate through all the features looking for Gene features.
-  for(const auto& feature : offsetFeatureMap()) {
+  for(const auto& [offset, feature_ptr] : offsetFeatureMap()) {
 
-    if(feature.second->isGene()) {
+    if (feature_ptr->isGene()) {
 
-      ContigOffset_t end_offset = feature.second->sequence().end();
-      gene_map_.insert(std::make_pair(end_offset, std::static_pointer_cast<GeneFeature>(feature.second)));
+      // Note that genes are indexed by their END offset.
+      ContigOffset_t end_offset = feature_ptr->sequence().end();
+      gene_map_.emplace(end_offset, std::static_pointer_cast<GeneFeature>(feature_ptr));
 
     }
 
   }
 
 }
-
 
 
 

@@ -111,7 +111,6 @@ set(MATHEMATICAL_SOURCE_FILES
 set(UTILITY_SOURCE_FILES
         kel_utility/kel_utility.h
         kel_utility/kel_utility.cpp
-        kel_utility/kel_patterns.h
         kel_utility/kel_mem_alloc.h
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_date_time.cpp

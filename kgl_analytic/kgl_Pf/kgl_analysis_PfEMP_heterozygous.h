@@ -117,10 +117,7 @@ public:
 
   void UpdateSampleLocation(const LocationSummaryMap& location_summary);
 
-  static void updateVariantAnalysisType(const GenomeId_t& genome,
-                                        const ContigId_t& contig,
-                                        ContigOffset_t offset,
-                                        const std::shared_ptr<const OffsetDB>& offset_ptr,
+  static void updateVariantAnalysisType(const std::shared_ptr<const OffsetDB>& offset_ptr,
                                         VariantAnalysisType& analysis_record);
 
 private:

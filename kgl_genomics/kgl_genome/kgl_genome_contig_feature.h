@@ -61,8 +61,8 @@ private:
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
 
-  void verifyContigOverlap();
-  void verifySubFeatureDuplicates();
+  void verifyContigOverlap() const;
+  size_t verifySubFeatureDuplicates() const;
   void removeSubFeatureDuplicates();
 
 };
