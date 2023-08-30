@@ -130,7 +130,7 @@ std::vector<kgl::DNA5SequenceCoding> kgl::SequenceOffset::refIntronArraySequence
 
 kgl::DNA5SequenceCoding kgl::SequenceOffset::mutantCodingSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                       const DNA5SequenceLinear& sequence_ptr,
-                                                                      const VariantMutationOffset& indel_adjust,
+                                                                      const AdjustedSequenceOffset& indel_adjust,
                                                                       ContigOffset_t sub_sequence_offset,
                                                                       ContigSize_t sub_sequence_length,
                                                                       ContigOffset_t contig_offset) {
@@ -256,7 +256,7 @@ bool kgl::SequenceOffset::intronOffsetAdapter( const std::shared_ptr<const Trans
 
 // Adjusted for indel mutations.
 bool kgl::SequenceOffset::exonMutantOffset(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                           const VariantMutationOffset& indel_adjust,
+                                           const AdjustedSequenceOffset& indel_adjust,
                                            StrandSense& strand,
                                            ExonOffsetMap& exon_offset_map) {
 

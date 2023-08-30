@@ -37,7 +37,7 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 
   variant_map = std::move(contig_map);
 
-  return result;
+  return true;
 
 }
 

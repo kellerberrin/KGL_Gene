@@ -28,9 +28,9 @@ void kgl::ModifiedDNARegion::mutateDNA(const RegionVariantMap& region_variant_ma
   }
 
   // Get the unmutated sequence.
-  modified_sequence_ = contig_ptr->sequence().subSequence(contig_offset, contig_offset + region_size);
+  modified_sequence_ = contig_ptr->sequence().subSequence(contig_offset, region_size);
   // Initialize the offset structure that records indel offset changes to the original sequence.
-  variant_modification_offset_.clearIndelOffset();
+  variant_modification_offset_.initialSequence(contig_offset, region_size);
 
   // For all variants modifying the sequence.
   for (auto const& [_offset, variant_ptr] : region_variant_map.variantMap()) {

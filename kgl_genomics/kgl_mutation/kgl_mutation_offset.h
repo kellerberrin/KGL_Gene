@@ -47,7 +47,7 @@ private:
 
   // A margin to account for the change in offsets when converting to canonical variants.
   // Canonical offsets always increase.
-  constexpr static const size_t NUCLEOTIDE_CANONICAL_MARGIN{200} ;
+  constexpr static const SignedOffset_t NUCLEOTIDE_CANONICAL_MARGIN{200} ;
 
 };
 

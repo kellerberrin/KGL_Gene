@@ -71,7 +71,7 @@ public:
   // Convenience routine that returns a coding sequence from an unmutated (reference) sequence
   [[nodiscard]] static DNA5SequenceCoding mutantCodingSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                    const DNA5SequenceLinear& sequence,
-                                                                   const VariantMutationOffset& indel_adjust,
+                                                                   const AdjustedSequenceOffset& indel_adjust,
                                                                    ContigOffset_t sub_sequence_offset,
                                                                    ContigSize_t sub_sequence_length,
                                                                    ContigOffset_t contig_offset);
@@ -130,7 +130,7 @@ private:
 
   // Adjusted for indel mutations.
   [[nodiscard]] static bool exonMutantOffset( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                              const VariantMutationOffset& indel_adjust,
+                                              const AdjustedSequenceOffset& indel_adjust,
                                               StrandSense& strand,
                                               ExonOffsetMap& exon_offset_map);
 

@@ -47,14 +47,12 @@ public:
 
 private:
 
-  VariantMutationOffset variant_mutation_offset_;
+  AdjustedSequenceOffset variant_mutation_offset_;
 
-  [[nodiscard]] static bool mutateSequence( const DNA5SequenceLinear& reference,
-                                            const DNA5SequenceLinear& alternate,
-                                            ContigOffset_t canonical_offset,
-                                            SignedOffset_t offset_adjust,
-                                            DNA5SequenceLinear& dna_sequence,
-                                            SignedOffset_t& sequence_size_modify);
+  [[nodiscard]] static bool variantMutate(const std::shared_ptr<const Variant>& variant_ptr,
+                                          SignedOffset_t offset_adjust,
+                                          DNA5SequenceLinear& dna_sequence,
+                                          SignedOffset_t& sequence_size_modify);
 
   // Mutate a sequence by adding and subtracting subsequences at the designated canonical_offset
   [[nodiscard]] static bool performMutation( ContigOffset_t canonical_offset,
@@ -63,8 +61,7 @@ private:
                                              const DNA5SequenceLinear& add_subsequence,
                                              SignedOffset_t& sequence_size_modify);
 
-  [[nodiscard]] static bool preceedingMutation( const DNA5SequenceLinear& reference,
-                                                const DNA5SequenceLinear& alternate,
+  [[nodiscard]] static bool preceedingMutation( const std::shared_ptr<const Variant>& variant_ptr,
                                                 SignedOffset_t adjusted_offset,
                                                 DNA5SequenceLinear& dna_sequence,
                                                 SignedOffset_t& sequence_size_modify);

@@ -123,8 +123,8 @@ public:
 
       while (next_iter->first.lower() < interval.upper()) {
 
-        auto const [lower, upper] = next_iter->first.intersection(interval);
-        if (lower < upper) {
+        auto const intersect_interval = next_iter->first.intersection(interval);
+        if (not intersect_interval.empty()) {
 
           value_vector.push_back(next_iter->second);
 
@@ -149,9 +149,9 @@ public:
       while (interval.lower() < prev_iter->first.upper()) {
 
         // Is there an intersection between then argument interval and the previous interval.
-        auto const [lower, upper] = prev_iter->first.intersection(interval);
+        auto const intersect_interval = prev_iter->first.intersection(interval);
         // If so, then return the previous interval.
-        if (lower < upper) {
+        if (not intersect_interval.empty()) {
 
           value_vector.push_back(prev_iter->second);
 
@@ -170,47 +170,6 @@ public:
 
     // Else just return the upper interval (which may be end())
     return value_vector;
-
-  }
-
-  [[nodiscard]] std::vector<std::tuple<OpenRightInterval, ValueType, ValueType>> intersect() const {
-
-    std::vector<std::tuple<OpenRightInterval, ValueType, ValueType>> intersect_vec;
-
-    if (this->empty()) {
-
-      return intersect_vec;
-
-    }
-
-    auto iter = this->begin();
-    while (iter != this->end()) {
-
-      auto next_iter = std::ranges::next(iter, 1, this->end());
-      while (next_iter != this->end()) {
-
-        auto const& [interval, value] = *iter;
-        auto const& [next_interval, next_value] = *next_iter;
-        auto const [lower, upper] = interval.intersection(next_interval);
-        if (lower < upper) {
-
-          intersect_vec.push_back({OpenRightInterval(lower, upper), value, next_value});
-
-        } else {
-
-          break;
-
-        }
-
-        next_iter = std::ranges::next(next_iter, 1, this->end());
-
-      }
-
-      iter = std::ranges::next(iter, 1, this->end());
-
-    }
-
-    return intersect_vec;
 
   }
 

@@ -98,7 +98,7 @@ kgl::VariantType kgl::Variant::variantType() const {
 
   if (not isSNP()) {
 
-    return (reference().length() <= alternate().length()) ?  VariantType::INDEL_INSERT : VariantType::INDEL_DELETE;
+    return (referenceSize() < alternateSize()) ?  VariantType::INDEL_INSERT : VariantType::INDEL_DELETE;
 
   } else {
 
@@ -250,7 +250,7 @@ std::string kgl::Variant::cigar() const {
 std::string kgl::Variant::HGVS() const {
 
   // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(offset() + 1) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
+  return contigId() + ":g."  + std::to_string(offset()) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
 
 }
 
@@ -258,7 +258,7 @@ std::string kgl::Variant::HGVS() const {
 std::string kgl::Variant::HGVS_Phase() const {
 
   // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(offset() + 1) + reference().getSequenceAsString() +
+  return contigId() + ":g."  + std::to_string(offset()) + reference().getSequenceAsString() +
          ">" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
 
 }

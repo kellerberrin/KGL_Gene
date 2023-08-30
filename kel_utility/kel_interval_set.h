@@ -27,9 +27,6 @@ public:
   ~IntervalSet() = default;
 
   [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const;
-  [[nodiscard]] bool containsOffset(size_t offset) const { return contains(OpenRightInterval(offset, offset + 1)); }
-  // Returns the interval intersection between this set and the argument set returned as an interval set (possibly empty).
-  [[nodiscard]] IntervalSet intervalSetIntersection(const IntervalSet& interval_set) const;
   // Returns a vector (possibly empty) of set intervals that intersect the argument interval.
   [[nodiscard]] std::vector<OpenRightInterval> findIntersectsInterval(const OpenRightInterval &interval) const;
   // Returns a bool the interval and set intersect.

@@ -257,7 +257,7 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
 
     // Read the Date format "YYYY-MMM-DD"
     char date_buffer[32];
-    input.read(date_buffer, DateGP::TEXTSIZE+2);
+    input.read(date_buffer, DateGP::TEXTSIZE_ + 2);
 
     if (input.eof()) {
 
@@ -267,7 +267,7 @@ bool kgl::PubmedAPICache::readCacheRecord(std::istream& input, std::string& reco
     }
 
     // Remove the quote characters.
-    date_buffer[DateGP::TEXTSIZE+1] = '\0';
+    date_buffer[DateGP::TEXTSIZE_ + 1] = '\0';
     DateGP attribute_date(&date_buffer[1]);
     if (attribute_date.notInitialized()) {
 

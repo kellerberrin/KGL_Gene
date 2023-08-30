@@ -26,22 +26,43 @@ class OpenRightInterval {
 
 public:
 
-  OpenRightInterval(size_t lower, size_t upper);
+  OpenRightInterval(size_t lower, size_t upper) { resize(lower, upper); }
   ~OpenRightInterval() = default;
   OpenRightInterval(const OpenRightInterval &copy) = default;
 
   OpenRightInterval &operator=(const OpenRightInterval &copy) = default;
 
+  void resize(size_t lower, size_t upper); // Change the interval.
+  void translate(int64_t shift); // Shift the interval without changing it's size.
+  // Shift the interval so that lower() == 0. The translation (which is always non-positive) is returned.
+  int64_t translateZero();
+
   [[nodiscard]] size_t lower() const { return lower_; }
   [[nodiscard]] size_t upper() const { return upper_; }
   [[nodiscard]] size_t size() const { return upper_ - lower_; }
 
-  [[nodiscard]] bool containsOffset(size_t offset) const { return offset >= lower_ and offset < upper_; }
-  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return interval.lower_ >= lower_ and (interval.lower_ + interval.size()) <= upper_; }
-  // Returns the {lower, upper} bounds of the intersection interval or {0, 0} indicating no intersection.
-  [[nodiscard]] std::pair<size_t, size_t> intersection(const OpenRightInterval &interval) const;
-  [[nodiscard]] bool intersects(const OpenRightInterval &interval) const { auto const [lower, upper] = intersection(interval); return upper != 0; }
+  // Returns the intersection interval or the empty [0, 0) interval indicating no intersection.
+  [[nodiscard]] OpenRightInterval intersection(const OpenRightInterval &interval) const;
+  // Merge intersecting or adjacent intervals. If the argument intervals are disjoint and not adjacent
+  // then the empty [0, 0) intervals is returned. Note that the merging of the empty intervals will also produce an empty interval.
+  [[nodiscard]] OpenRightInterval merge(const OpenRightInterval &interval) const;
 
+  [[nodiscard]] bool empty() const { return size() == 0; }
+  [[nodiscard]] bool containsOffset(size_t offset) const { return offset >= lower_ and offset < upper_; }
+  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const;
+  // Note that empty [0, 0) intervals adjoin each other, other empty intervals such as [k, k) and [l, l) do not adjoin if k != l.
+  [[nodiscard]] bool adjacent(const OpenRightInterval &interval) const { return lower_ == interval.upper_ or interval.lower_ == upper_; }
+  [[nodiscard]] bool intersects(const OpenRightInterval &interval) const { return not disjoint(interval); }
+  [[nodiscard]] bool disjoint(const OpenRightInterval &interval) const { return intersection(interval).empty(); }
+
+  // Insert and Delete are used to modify an interval as if modified by the inserted and deleted intervals of indel variants.
+  // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
+  [[nodiscard]] OpenRightInterval insertInterval(const OpenRightInterval &insert_interval) const;
+  // For a valid delete the intersection of the delete interval must be non-empty.
+  // Note that the delete_interval argument may be modified if it is not fully contained in this interval.
+  [[nodiscard]] OpenRightInterval deleteInterval(const OpenRightInterval &delete_interval) const;
+  // Convenience routine to convert an interval to a string.
+  [[nodiscard]] std::string toString() const { return "[ " + std::to_string(lower_) + ", " + std::to_string(upper_) + ")"; }
 
 private:
 
@@ -50,14 +71,16 @@ private:
 
 };
 
+[[nodiscard]] bool operator==(const OpenRightInterval& lhs, const OpenRightInterval &rhs);
+[[nodiscard]] bool operator<(const OpenRightInterval &lhs, const OpenRightInterval &rhs);
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Adapters for std::set and std::map to use OpenRightInterval.
+// Comparison operator used to order intervals within indexed containers std::set or std::map.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Comparison operator used to order intervals within indexed containers std::set or std::map.
 struct CompareInterval {
 
   bool operator()(const OpenRightInterval &lhs, const OpenRightInterval &rhs) const { return lhs.lower() < rhs.lower(); }

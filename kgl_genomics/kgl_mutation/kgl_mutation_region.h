@@ -42,12 +42,12 @@ public:
   }
   ~ModifiedDNARegion() = default;
 
-  [[nodiscard]] const VariantMutationOffset& mutationOffsetMap() const { return variant_modification_offset_; }
+  [[nodiscard]] const AdjustedSequenceOffset& mutationOffsetMap() const { return variant_modification_offset_; }
   [[nodiscard]] const DNA5SequenceLinear& mutatedSequence() const { return modified_sequence_; }
 
 private:
 
-  VariantMutationOffset variant_modification_offset_;
+  AdjustedSequenceOffset variant_modification_offset_;
   DNA5SequenceLinear modified_sequence_;
 
   // These routines perform the actual mutation of the DNA sequence.

@@ -5,9 +5,9 @@
 #include "kgl_mutation_db.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db_offset.h"
-#include "kgl_variant_filter_coding.h"
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
+#include "kgl_mutation_interval.h"
 
 
 #include <ranges>
@@ -220,8 +220,33 @@ kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>
                                                                         gene_ptr->sequence().end(),
                                                                         std::move(interval_map));
 
+
+  checkIntervalMap(transcript_id, unique_transcript_ptr);
+
   return {unique_transcript_ptr, map_size, non_unique_count };
 
 }
 
+
+void kgl::MutateGenes::checkIntervalMap(const FeatureIdent_t& transcript_id, const std::shared_ptr<const RegionVariantMap>& region_variant_ptr) {
+
+  AdjustedSequenceInterval adjusted_offset (region_variant_ptr->variantRegion().lower(), region_variant_ptr->variantRegion().size());
+
+  for (auto const& [offset, variant_ptr] : region_variant_ptr->variantMap()) {
+
+    if (not adjusted_offset.updateOffsetMap(variant_ptr)) {
+
+      ExecEnv::log().warn("MutateGenes::checkIntervalMap; transcript: {}, problem verifying genome: {}, contig: {}, interval: [{}, {}), variant: {}",
+                          transcript_id,
+                          region_variant_ptr->genomeId(),
+                          region_variant_ptr->contigId(),
+                          region_variant_ptr->variantRegion().lower(),
+                          region_variant_ptr->variantRegion().upper(),
+                          variant_ptr->HGVS());
+
+    }
+
+  }
+
+}
 

@@ -8,21 +8,31 @@
 #include <map>
 #include <memory>
 #include "kgl_variant_db.h"
+#include "kel_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
 // The indel offset accounting map records previous indels so that inserts and deletes can be properly aligned.
+// The returned offset is relative to the offset of the sequence of interest (generally a gene or other region).
 using IndelAccountingMap = std::map<ContigOffset_t, SignedOffset_t>;
 
 
-class VariantMutationOffset {
+class AdjustedSequenceOffset {
 
 public:
 
-  VariantMutationOffset() { clearIndelOffset(); }
-  ~VariantMutationOffset() = default;
+  AdjustedSequenceOffset() : original_interval_(0, 0), modified_interval_(0, 0)  {}
+  AdjustedSequenceOffset(ContigOffset_t sequence_begin_offset, ContigSize_t sequence_size)
+  : original_interval_(sequence_begin_offset, sequence_begin_offset + sequence_size),
+    modified_interval_(original_interval_) {
+
+    initialSequence(sequence_begin_offset, sequence_size);
+
+  }
+
+  ~AdjustedSequenceOffset() = default;
 
   // Important - Call this routine before mutation.
   // Important - calculate indel offset adjustment with (this routine) adjustIndelOffsets() BEFORE calling updateIndelAccounting().
@@ -36,16 +46,28 @@ public:
   [[nodiscard]] SignedOffset_t totalIndelOffset() const;
 
   // Reset the count.
-  void clearIndelOffset() { indel_accounting_map_.clear(); }
+  void initialSequence(ContigOffset_t sequence_begin_offset, ContigSize_t sequence_size) {
+
+    original_interval_.resize(sequence_begin_offset, sequence_begin_offset + sequence_size);
+    modified_interval_.resize(sequence_begin_offset, sequence_begin_offset + sequence_size);
+    indel_accounting_map_.clear();
+
+  }
+
+  [[nodiscard]] const OpenRightInterval& orginalInterval() const { return original_interval_; }
+  [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
+
+  [[nodiscard]] bool reconcileIntervalOffset() const;
+  [[nodiscard]] bool updateOffsetMap(const std::shared_ptr<const Variant>& variant_ptr);
 
 private:
 
+  OpenRightInterval original_interval_;
+  OpenRightInterval modified_interval_;
   IndelAccountingMap indel_accounting_map_;
 
 
 };
-
-
 
 
 

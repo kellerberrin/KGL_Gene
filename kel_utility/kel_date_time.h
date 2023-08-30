@@ -39,7 +39,7 @@ public:
   [[nodiscard]] size_t day() const { return day_; }
 
   [[nodiscard]] std::string text() const; // returned as YYYY-MMM-DD, e.g. "2020-Jan-01"
-  static const constexpr size_t TEXTSIZE{11};
+  static const constexpr size_t TEXTSIZE_{11};
 
   [[nodiscard]] std::string year_text() const { return std::to_string(year_); }
   [[nodiscard]] std::string month_text() const { return std::to_string(month_); }

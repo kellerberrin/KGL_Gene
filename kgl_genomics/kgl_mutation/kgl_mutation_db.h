@@ -113,6 +113,9 @@ private:
                                                     const FeatureIdent_t& transcript_id,
                                                     const std::shared_ptr<const PopulationDB>& gene_population_ptr) const;
 
+  static void checkIntervalMap( const FeatureIdent_t& transcript_id,
+                                const std::shared_ptr<const RegionVariantMap>& region_variant_ptr);
+
 };
 
 
