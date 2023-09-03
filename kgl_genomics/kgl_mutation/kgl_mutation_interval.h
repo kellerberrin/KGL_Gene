@@ -41,6 +41,7 @@ public:
   [[nodiscard]] const OpenRightInterval& postUpdateInterval() const { return post_update_interval_; }
   [[nodiscard]] const OpenRightInterval& updatingInterval() const { return updating_interval_; }
 
+
   // String detailing audit information.
   [[nodiscard]] std::string toString() const;
 
@@ -62,7 +63,7 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using IntervalAuditMap = std::map<ContigOffset_t, SequenceAuditInfo>;
+using IntervalModifyMap = std::map<ContigOffset_t, SequenceAuditInfo>;
 
 class AdjustedSequenceInterval {
 
@@ -77,7 +78,7 @@ public:
 
   [[nodiscard]] const OpenRightInterval& orginalInterval() const { return original_interval_; }
   [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
-  [[nodiscard]] const IntervalAuditMap& auditMap() const { return indel_audit_map_; }
+  [[nodiscard]] const IntervalModifyMap& auditMap() const { return indel_audit_map_; }
 
   [[nodiscard]] bool updateOffsetMap(const std::shared_ptr<const Variant>& variant_ptr);
 
@@ -85,14 +86,7 @@ private:
 
   const OpenRightInterval original_interval_;
   OpenRightInterval modified_interval_;
-  IntervalAuditMap indel_audit_map_;
-
-  // Interval calculations will probably be multi-threaded, control thread access to the audit output.
-  mutable std::mutex audit_mutex_;
-  inline static size_t audit_count_{0};
-
-  constexpr static const size_t MAX_AUDIT_COUNT_{10} ; // Limit the number of audits to control log size.
-  constexpr static const bool DETAILED_INTERVAL_WARNING_{false} ;
+  IntervalModifyMap indel_audit_map_;
 
   [[nodiscard]] bool reconcileIntervalOffset() const;
 
@@ -105,13 +99,31 @@ private:
   // Calculates the sequence size after all mutations.
   [[nodiscard]] SignedOffset_t intervalSizeModification() const;
 
+  [[nodiscard]] OpenRightInterval updateOffsetSNP(const OpenRightInterval &adj_snp_interval);
+  [[nodiscard]] OpenRightInterval updateOffsetInsert(const OpenRightInterval &adj_insert_interval);
+  [[nodiscard]] OpenRightInterval updateOffsetDelete(const OpenRightInterval &adj_delete_interval);
+
+  // Insert and Delete are used to modify an interval as if modified by the inserted and deleted intervals of indel variants.
+  // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
+  [[nodiscard]] static OpenRightInterval insertInterval(const OpenRightInterval& target_interval, const OpenRightInterval &insert_interval);
+  // For a valid delete the intersection of the delete interval must be non-empty.
+  // Note that the delete_interval argument may be modified if it is not fully contained in this interval.
+  [[nodiscard]] static OpenRightInterval deleteInterval(const OpenRightInterval& target_interval, const OpenRightInterval &delete_interval);
+
+
+  // Detailed output for unexpected conditions.
   void printAudit();
+
+  // Interval calculations will probably be multi-threaded, thus we control thread access to the audit output.
+  mutable std::mutex audit_mutex_;
+  inline static size_t audit_count_{0};
+  constexpr static const size_t MAX_AUDIT_COUNT_{10} ; // Limit the number of audits printed to control log size.
 
 };
 
 
 
-}   // end namespace
+  }   // end namespace
 
 
 

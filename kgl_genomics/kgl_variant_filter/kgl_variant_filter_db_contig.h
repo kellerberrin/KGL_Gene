@@ -7,6 +7,7 @@
 
 #include "kgl_variant_filter_type.h"
 #include "kgl_variant_db_genome.h"
+#include "kel_interval_map.h"
 #include "kel_utility.h"
 
 
@@ -74,10 +75,37 @@ private:
   ContigOffset_t end_;
 
   // A heuristic region [start-margin, start) that looks for indel delete variants upstream of the region [start, end).
-  constexpr static const ContigOffset_t UPSTREAM_DELETE_MARGIN{500};
+  constexpr static const ContigOffset_t UPSTREAM_DOWNSTREAM_MARGIN_{500};
 
 };
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Filter out all variants that will be deleted by an upstream Delete variant
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Upstream delete map is indexed by the upper() value of the delete variant regions.
+using UpstreamDeleteMap = IntervalUpperMultiMapType<std::shared_ptr<const Variant>>;
+
+class ContigUpstreamFilter : public FilterContigs {
+
+public:
+
+  explicit ContigUpstreamFilter()  { filterName("Contig Upstream Filter"); }
+  ~ContigUpstreamFilter() override = default;
+
+  [[nodiscard]] std::unique_ptr<ContigDB> applyFilter(const ContigDB& contig) const override;
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<ContigUpstreamFilter>(*this); }
+
+private:
+
+  // Contains all delete variants that are not downstream of another delete variant (are not deleted upstream).
+  mutable UpstreamDeleteMap upstream_delete_map_; // Modified in applyFilter().
+
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

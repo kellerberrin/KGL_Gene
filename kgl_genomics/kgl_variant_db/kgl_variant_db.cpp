@@ -8,7 +8,7 @@
 
 
 namespace kgl = kellerberrin::genome;
-
+namespace kel = kellerberrin;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +58,13 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneCanonical() const {
                                                                   std::move(canonical_ref),
                                                                   std::move(canonical_alt),
                                                                   evidence()));
+
+  // Check to be sure.
+  if (not variant_ptr->isCanonical()) {
+
+    ExecEnv::log().error("Variant::cloneCanonical; variant: {} is NOT canonical", variant_ptr->HGVS());
+
+  }
 
   return variant_ptr;
 
@@ -212,30 +219,59 @@ bool kgl::Variant::isCanonical() const {
 
 }
 
+// The interval() of the variant is used to assess if a CANONICAL variant modifies a particular interval [a, b).
+// An SNP offset is an interval size 1 with lower() = offset().
+// A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
+// An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
+std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval() const {
 
-
-
-// The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
-// of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
-// is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides, ref.length().
-// Returns .first = offset, .second = extend_size.
-std::pair<kgl::ContigOffset_t, kgl::ContigSize_t> kgl::Variant::extentOffset() const {
-
-  auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
+  auto const [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
 
   switch(variantType()) {
 
-    case VariantType::SNP:
-    case VariantType::INDEL_INSERT:
-      return {canonical_offset, 1};
+    case VariantType::INDEL_INSERT: {
 
-    case VariantType::INDEL_DELETE:
-      return {canonical_offset, canonical_ref.length()};
+      size_t insert_size = canonical_alt.length() - canonical_ref.length();
+      ContigOffset_t insert_offset = canonical_offset + canonical_ref.length();
+      OpenRightInterval insert_interval{insert_offset, insert_offset + insert_size};
+      return {VariantType::INDEL_INSERT, insert_interval};
+
+    }
+
+    case VariantType::INDEL_DELETE: {
+
+      size_t delete_size = canonical_ref.length() - canonical_alt.length();
+      ContigOffset_t delete_offset = canonical_offset + canonical_alt.length();
+      OpenRightInterval delete_interval {delete_offset, delete_offset + delete_size};
+      return {VariantType::INDEL_DELETE, delete_interval};
+
+    }
+
+    default:
+    case VariantType::SNP: {
+
+      OpenRightInterval snp_interval{canonical_offset, canonical_offset + canonical_ref.length()};
+      return {VariantType::SNP, snp_interval};
+
+    }
 
   }
 
-  // Should not be executed.
-  return {canonical_offset, 1 };
+}
+
+// Modify the insert interval to [lower(), lower + 1)
+std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::memberInterval() const {
+
+  auto [variant_type, member_interval] = modifyInterval();
+  // An insert variant must start in the specified region.
+  // If we are testing intersection then we check that the INSERT lower() offset is a member.
+  if (variant_type == VariantType::INDEL_INSERT) {
+
+    member_interval.resize(member_interval.lower(), member_interval.lower()+1);
+
+  }
+
+  return {variant_type, member_interval};
 
 }
 

@@ -32,7 +32,7 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
   for (auto const& [sequence_name, coding_sequence] : coding_sequence_array->getMap()) {
 
     // Process all the CDS intervals within a transcript.
-    IntervalSet sequence_intervals;
+    IntervalSetLower sequence_intervals;
     for (auto const& [feature_offset, coding_feature] : coding_sequence->getFeatureMap()) {
 
       auto const& sequence = coding_feature->sequence();
@@ -79,10 +79,9 @@ bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {
   }
 
   // Check if the variant modifies the gene interval.
-  auto [variant_offset, extent] = variant.extentOffset();
-  OpenRightInterval variant_interval(variant_offset, variant_offset + extent);
+  auto const [variant_type, variant_interval] = variant.memberInterval();
 
- if (not variant_interval.intersects(gene_interval_)) {
+  if (not gene_interval_.intersects(variant_interval)) {
 
    return false;
 
@@ -103,9 +102,7 @@ bool kgl::GeneIntervalStructure::transcriptModifier(const Variant& variant, cons
   }
 
   // Check if the variant modifies the gene interval.
-  auto [variant_offset, extent] = variant.extentOffset();
-  OpenRightInterval variant_interval(variant_offset, variant_offset + extent);
-
+  auto const [variant_type, variant_interval] = variant.memberInterval();
   if (not variant_interval.intersects(gene_interval_)) {
 
     return false;
@@ -158,7 +155,7 @@ void kgl::IntervalCodingVariants::InitializeGeneVector(const std::vector<std::sh
     auto contig_iter = contig_interval_map_.find(gene_feature->contig()->contigId());
     if (contig_iter == contig_interval_map_.end()) {
 
-      auto [inserted_iter, result] = contig_interval_map_.try_emplace(gene_feature->contig()->contigId(), IntervalMultiMap<std::shared_ptr<const GeneIntervalStructure>>());
+      auto [inserted_iter, result] = contig_interval_map_.try_emplace(gene_feature->contig()->contigId(), IntervalLowerMultiMap<std::shared_ptr<const GeneIntervalStructure>>());
       if (not result) {
 
         ExecEnv::log().error("IntervalCodingVariants::InitializeGeneVector; cannot insert contig: {} (duplicate)", gene_feature->contig()->contigId());
@@ -195,8 +192,9 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
   auto const& [contig_id, interval_map] = *contig_iter;
 
   // Lookup the IntervalMap to see if there is a candidate gene for this variant.
-  auto const [offset, extent] = variant.extentOffset();
-  auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
+  auto const [variant_type, variant_interval] = variant.memberInterval();
+
+  auto gene_ptr_vector = interval_map.findIntersectsIntervals(variant_interval);
   for (auto const& gene_struct_ptr : gene_ptr_vector) {
 
     if (gene_struct_ptr->codingModifier(variant)) {
@@ -210,38 +208,4 @@ bool kgl::IntervalCodingVariants::codingRegionVariant(const Variant &variant) co
   return false;
 
 }
-
-
-std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::IntervalCodingVariants::getGeneCoding(const Variant &variant) const {
-
-
-  std::vector<std::shared_ptr<const kgl::GeneFeature>> gene_vector;
-  // Check if the contig is defined.
-  auto contig_iter = contig_interval_map_.find(variant.contigId());
-  if (contig_iter == contig_interval_map_.end()) {
-
-    return gene_vector; // Return the empty vector.
-
-  }
-
-  auto const& [contig_id, interval_map] = *contig_iter;
-
-  // Lookup the IntervalMap to see if there are candidate genes for this variant.
-  // Variants may (and do) map to more than one gene.
-  auto const [offset, extent] = variant.extentOffset();
-  auto gene_ptr_vector = interval_map.findIntersectsIntervals(OpenRightInterval(offset, offset + extent));
-  for (auto const& gene_struct_ptr : gene_ptr_vector) {
-
-    if (gene_struct_ptr->codingModifier(variant)) {
-
-      gene_vector.push_back(gene_struct_ptr->getGene());
-
-    }
-
-  }
-
-  return gene_vector;
-
-}
-
 

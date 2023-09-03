@@ -47,7 +47,7 @@ void kel::OpenRightInterval::translate(int64_t shift) {
   if (shift < 0 and std::abs(shift) > static_cast<int64_t>(lower())) {
 
     ExecEnv::log().warn("OpenRightInterval::translate; translate shift: {} results in negative values for interval [{}, {})", shift, lower_, upper_);
-    shift =  -1 * static_cast<int64_t>(lower());
+    return;
 
   }
 
@@ -97,49 +97,3 @@ kel::OpenRightInterval kel::OpenRightInterval::merge(const OpenRightInterval &in
   return {0, 0};
 
 }
-
-// To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
-kel::OpenRightInterval kel::OpenRightInterval::insertInterval(const OpenRightInterval &insert_interval) const {
-
-  if (containsOffset(insert_interval.lower())) {
-
-    return { lower(), upper() + insert_interval.size()};
-
-  }
-
-  return { lower(), upper()};
-
-}
-
-// For a valid delete the intersection of the delete interval must be non-empty.
-// Note that the delete_interval argument is modified.
-kel::OpenRightInterval kel::OpenRightInterval::deleteInterval(const OpenRightInterval &delete_interval) const {
-
-  // does not delete this interval.
-  if (disjoint(delete_interval)) {
-
-    return { lower(), upper()};
-
-  }
-
-  if (containsInterval(delete_interval) and delete_interval.lower() >= lower()) {
-
-    return { lower(), upper()-delete_interval.size() };
-
-  }
-
-  auto intersect_interval = intersection(delete_interval);
-
-  // If the delete interval extends beyond the modified interval.
-  if (delete_interval.lower() >= lower()) {
-
-    return { lower(), upper() - intersect_interval.size() };
-
-  }
-
-  // Else the delete interval is below the modified interval.
-  size_t upper_adjust = (lower() - delete_interval.lower()) + intersect_interval.size();
-  return { delete_interval.lower(), upper() - upper_adjust };
-
-}
-

@@ -7,7 +7,14 @@
 
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 std::string kgl::SequenceAuditInfo::toString() const {
@@ -15,16 +22,17 @@ std::string kgl::SequenceAuditInfo::toString() const {
   SignedOffset_t indel_size = static_cast<SignedOffset_t>(variant_ptr_->alternateSize())
                               - static_cast<SignedOffset_t>(variant_ptr_->referenceSize());
 
-  std::string audit_string =
-      " Prior: " + prior_interval_.toString() +
-      " Post: " + post_update_interval_.toString() +
-      " Update: " + updating_interval_.toString() +
-      " IndelSize: " + std::to_string(indel_size) +
-      " Variant: " + variant_ptr_->HGVS();
+  std::stringstream ss;
+  ss << " Prior: " << prior_interval_.toString()
+     << " Post: " << post_update_interval_.toString()
+     << " Update: " << updating_interval_.toString()
+     << " IndelSize: " << std::to_string(indel_size)
+     << " Variant: " << variant_ptr_->HGVS();
 
-  return audit_string;
+  return ss.str();
 
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -102,106 +110,83 @@ kgl::SignedOffset_t kgl::AdjustedSequenceInterval::intervalSizeModification() co
 
 bool kgl::AdjustedSequenceInterval::updateOffsetMap(const std::shared_ptr<const Variant>& variant_ptr) {
 
-  VariantType variant_type = variant_ptr->variantType();
+  auto const [variant_type, modify_interval] = variant_ptr->modifyInterval();
 
-  if (variant_type == VariantType::SNP) {
+  // Adjusted for previous indels.
+  OpenRightInterval adjusted_modify_interval(modify_interval);
+  adjusted_modify_interval.translate(intervalSizeModification());
 
-    return true; // No update.
+  // Save the previous interval
+  OpenRightInterval prior_interval(modifiedInterval());
 
-  }
+  switch(variant_type) {
 
-  ContigOffset_t indel_offset{0};
-  OpenRightInterval prior_update_interval(modified_interval_);
-  OpenRightInterval updating_interval(0, 0);
+    case VariantType::SNP:
+      modified_interval_ = updateOffsetSNP(adjusted_modify_interval);
+      break;
 
-  if (variant_type == VariantType::INDEL_DELETE) {
+    case VariantType::INDEL_DELETE:
+      modified_interval_ = updateOffsetDelete(adjusted_modify_interval);
+      break;
 
-    indel_offset = variant_ptr->offset() + variant_ptr->alternateSize(); // Actual offset of delete.
-    ContigOffset_t adjusted_delete_offset = indel_offset + intervalSizeModification(); // Adjusted for previous indels.
-    size_t delete_size = variant_ptr->referenceSize() - variant_ptr->alternateSize(); // Size of the delete.
-    updating_interval.resize(adjusted_delete_offset, adjusted_delete_offset + delete_size); // Adjusted delete interval
-    // Check for that the delete occurs on the modified interval
-    if (modified_interval_.disjoint(updating_interval)) {
-
-      // Check that the delete was valid in the first place.
-      OpenRightInterval original_delete_interval(indel_offset, indel_offset + delete_size);
-      if (not orginalInterval().disjoint(original_delete_interval)) {
-
-        ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; delete variant: {}, delete interval: {} disjoint on modified sequence interval: {}",
-                            variant_ptr->HGVS(),
-                            updating_interval.toString(),
-                            modified_interval_.toString());
-
-        printAudit();
-
-        return false;
-
-      } else { // Original delete was disjoint with the original interval.
-
-        if constexpr (DETAILED_INTERVAL_WARNING_) {
-
-          ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; original delete variant: {}, interval: {} disjoint on  original sequence interval: {}",
-                              variant_ptr->HGVS(),
-                              original_delete_interval.toString(),
-                              orginalInterval().toString());
-
-        }
-
-        return true;
-
-      }
-
-    }
-
-    modified_interval_ = modified_interval_.deleteInterval(updating_interval);
-
-
-  } else if (variant_type == VariantType::INDEL_INSERT) {
-
-    indel_offset = variant_ptr->offset() + variant_ptr->referenceSize(); // Actual offset of the insert.
-    ContigOffset_t adjusted_insert_offset = indel_offset + intervalSizeModification(); // Adjusted for previous indels.
-    size_t insert_size = variant_ptr->alternateSize() - variant_ptr->referenceSize(); // Size of the insert.
-    updating_interval.resize(adjusted_insert_offset, adjusted_insert_offset + insert_size); // Adjusted insert interval
-    if (not modified_interval_.containsOffset(adjusted_insert_offset)) {
-
-      // Check that the insert was valid in the first place.
-      if (orginalInterval().containsOffset(indel_offset)) {
-
-        ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; insert variant: {}, insert offset: {} not in sequence interval: {}",
-                            variant_ptr->HGVS(),
-                            adjusted_insert_offset,
-                            modified_interval_.toString());
-
-        printAudit();
-
-        return false;
-
-      } else { // The insert variant was not contained in the original interval
-
-        if constexpr (DETAILED_INTERVAL_WARNING_) {
-
-          ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; insert variant: {}, not in original sequence interval: {}",
-                              variant_ptr->HGVS(),
-                              original_interval_.toString());
-
-        }
-
-        return true;
-
-      }
-
-    }
-
-    modified_interval_ = modified_interval_.insertInterval(updating_interval);
-
-  } else {
-
-    ExecEnv::log().critical("AdjustedSequenceInterval::updateIndelAccounting; unknown variant type: {} cannot continue",
-                            variant_ptr->HGVS());
+    case VariantType::INDEL_INSERT:
+      modified_interval_ = updateOffsetInsert(adjusted_modify_interval);
+      break;
 
   }
 
-  return updateIndelAccounting(indel_offset, variant_ptr, prior_update_interval, modified_interval_, updating_interval);
+  return updateIndelAccounting( modify_interval.lower(),
+                                variant_ptr,
+                                prior_interval,
+                                modified_interval_,
+                                adjusted_modify_interval);
+
+}
+
+kel::OpenRightInterval kgl::AdjustedSequenceInterval::updateOffsetSNP(const OpenRightInterval&) {
+
+  return OpenRightInterval{modified_interval_};
+
+}
+
+
+kel::OpenRightInterval kgl::AdjustedSequenceInterval::updateOffsetInsert(const OpenRightInterval &adj_insert_interval) {
+
+  if (not modified_interval_.containsOffset(adj_insert_interval.lower())) {
+
+    ExecEnv::log().warn("AdjustedSequenceInterval::updateOffsetInsert; insert offset: {} not in sequence interval: {}",
+                        adj_insert_interval.toString(),
+                        modified_interval_.toString());
+
+    printAudit();
+
+    // No update
+    return modified_interval_;
+
+  }
+
+  return insertInterval(modified_interval_, adj_insert_interval);
+
+}
+
+
+kel::OpenRightInterval  kgl::AdjustedSequenceInterval::updateOffsetDelete(const OpenRightInterval &adj_delete_interval) {
+
+  // Check for that the delete occurs on the modified interval
+  if (modified_interval_.disjoint(adj_delete_interval)) {
+
+    ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; delete interval: {} disjoint on modified sequence interval: {}",
+                        adj_delete_interval.toString(),
+                        modified_interval_.toString());
+
+    printAudit();
+
+    // No update
+    return modified_interval_;
+
+  }
+
+  return deleteInterval(modified_interval_, adj_delete_interval);
 
 }
 
@@ -229,6 +214,53 @@ void kgl::AdjustedSequenceInterval::printAudit() {
   }
 
   ++audit_count_;
+
+}
+
+// To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
+kel::OpenRightInterval kgl::AdjustedSequenceInterval::insertInterval(const OpenRightInterval& target_interval,
+                                                                     const OpenRightInterval &insert_interval) {
+
+  if (target_interval.containsOffset(insert_interval.lower())) {
+
+    return { target_interval.lower(), target_interval.upper() + insert_interval.size()};
+
+  }
+
+  return { target_interval.lower(), target_interval.upper()};
+
+}
+
+// For a valid delete the intersection of the delete interval must be non-empty.
+kel::OpenRightInterval kgl::AdjustedSequenceInterval::deleteInterval( const OpenRightInterval& target_interval,
+                                                                      const OpenRightInterval &delete_interval) {
+
+  // does not delete this interval.
+  if (target_interval.disjoint(delete_interval)) {
+
+    return { target_interval.lower(), target_interval.upper()};
+
+  }
+
+  if (target_interval.containsInterval(delete_interval) and delete_interval.lower() >= target_interval.lower()) {
+
+    return { target_interval.lower(), target_interval.upper()-delete_interval.size()};
+
+  }
+
+  // Not contained and not disjoint therefore obtain the intersection interval
+  auto intersect_interval = target_interval.intersection(delete_interval);
+
+  // If the delete interval extends beyond the modified interval.
+  if (delete_interval.lower() >= target_interval.lower()) {
+
+    return { target_interval.lower(), target_interval.upper() - intersect_interval.size()};
+
+  }
+
+    // Else the delete interval is below the modified interval.
+  size_t upper_adjust = (target_interval.lower() - delete_interval.lower()) + intersect_interval.size();
+  return { delete_interval.lower(), target_interval.upper() - upper_adjust};
 
 }
 

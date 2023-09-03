@@ -17,7 +17,7 @@ namespace kel = kellerberrin;
 
 
 // Returns true if the interval argument is contained within one of the intervals held in the set.
-bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const {
+bool kel::IntervalSetLower::containsInterval(const OpenRightInterval& interval) const {
 
   if (empty()) {
 
@@ -67,10 +67,10 @@ bool kel::IntervalSet::containsInterval(const OpenRightInterval& interval) const
 
 // Returns the interval unions between this set and the argument set.
 // Intervals are modified/extended as necessary for a disjoint interval minimal union.
-kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_set) const {
+kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetLower& interval_set) const {
 
-  IntervalSet set_union;
-  IntervalMultiSet sorted_intervals;
+  IntervalSetLower set_union;
+  IntervalMultiSetLower sorted_intervals;
 
   if (empty() and interval_set.empty()) {
 
@@ -113,7 +113,7 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
         auto [set_iter, result] = set_union.insert(active_interval);
         if (not result) {
 
-          ExecEnv::log().warn("IntervalSet::intervalSetUnion; Cannot add duplicate interval: [{}, {})",
+          ExecEnv::log().warn("IntervalSetLower::intervalSetUnion; Cannot add duplicate interval: [{}, {})",
                               active_interval.lower(), active_interval.upper());
 
         }
@@ -129,7 +129,7 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
     auto [set_iter, result] = set_union.insert(active_interval);
     if (not result) {
 
-      ExecEnv::log().warn("IntervalSet::intervalSetUnion; Cannot add duplicate interval: [{}, {})",
+      ExecEnv::log().warn("IntervalSetLower::intervalSetUnion; Cannot add duplicate interval: [{}, {})",
                           active_interval.lower(), active_interval.upper());
 
     }
@@ -142,7 +142,7 @@ kel::IntervalSet kel::IntervalSet::intervalSetUnion(const IntervalSet& interval_
 
 
 // Find the set intervals that intersect the argument interval.
-[[nodiscard]] std::vector<kel::OpenRightInterval> kel::IntervalSet::findIntersectsInterval(const OpenRightInterval &interval) const {
+[[nodiscard]] std::vector<kel::OpenRightInterval> kel::IntervalSetLower::findIntersectsInterval(const OpenRightInterval &interval) const {
 
   std::vector<OpenRightInterval> value_vector;
 

@@ -103,13 +103,13 @@ private:
 
 
   // .first total variants, .second multiple (duplicate) variants per offset.
-  static std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t>
+  static std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t, size_t>
   genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
                            const std::shared_ptr<const GeneFeature>& gene_ptr,
                            const FeatureIdent_t& transcript_id);
 
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-  std::tuple<size_t, size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+  std::tuple<size_t, size_t, size_t, size_t, size_t> mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                     const FeatureIdent_t& transcript_id,
                                                     const std::shared_ptr<const PopulationDB>& gene_population_ptr) const;
 

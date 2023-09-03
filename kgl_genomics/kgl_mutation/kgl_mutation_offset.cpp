@@ -33,7 +33,7 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 
   std::shared_ptr<ContigDB> contig_ptr = find_iter->second;
 
-  auto [contig_map, result] = MutationOffset::getCanonicalVariants(contig_ptr, start, end);
+  auto [contig_map, non_unique, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, start, end);
 
   variant_map = std::move(contig_map);
 
@@ -45,7 +45,7 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 
 // Returns a map of unique canonical variants
 // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
-std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
+std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::MutationOffset::getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                                     ContigOffset_t start,
                                                                                     ContigOffset_t end) {
 
@@ -66,11 +66,15 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVarian
   // Note that if an indel occurs at the same offset as an SNP, this is not a problem, since in canonical form ('1MnI' or '1MnD'),
   // the indel actually modifies the next (+1) offset.
   auto unique_contig_ptr = modify_contig_ptr->viewFilter(HomozygousCodingFilter());
+  // Finally filter any variants that are deleted by an upstream delete variant.
+  auto no_upstream_delete = unique_contig_ptr->viewFilter(ContigUpstreamFilter());
   // Get the number of unique variants.
   size_t modify_count = (modify_contig_ptr->viewFilter(UniqueUnphasedFilter()))->variantCount();
+  // Get the number of upstream deleted variants.
+  size_t upstream_deleted = unique_contig_ptr->variantCount() - no_upstream_delete->variantCount();
 
   // Finally move the unique modifying variants to the offset map.
-  for (auto const& [offset, offset_ptr] : unique_contig_ptr->getMap()) {
+  for (auto const& [offset, offset_ptr] : no_upstream_delete->getMap()) {
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
@@ -101,7 +105,7 @@ std::pair<kgl::OffsetVariantMap, size_t> kgl::MutationOffset::getCanonicalVarian
 
   size_t non_unique_count = modify_count - offset_variant_map.size();
 
-  return { offset_variant_map, non_unique_count };
+  return { offset_variant_map, non_unique_count, upstream_deleted };
 
 }
 

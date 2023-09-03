@@ -55,12 +55,6 @@ public:
   [[nodiscard]] bool intersects(const OpenRightInterval &interval) const { return not disjoint(interval); }
   [[nodiscard]] bool disjoint(const OpenRightInterval &interval) const { return intersection(interval).empty(); }
 
-  // Insert and Delete are used to modify an interval as if modified by the inserted and deleted intervals of indel variants.
-  // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
-  [[nodiscard]] OpenRightInterval insertInterval(const OpenRightInterval &insert_interval) const;
-  // For a valid delete the intersection of the delete interval must be non-empty.
-  // Note that the delete_interval argument may be modified if it is not fully contained in this interval.
-  [[nodiscard]] OpenRightInterval deleteInterval(const OpenRightInterval &delete_interval) const;
   // Convenience routine to convert an interval to a string.
   [[nodiscard]] std::string toString() const { return "[ " + std::to_string(lower_) + ", " + std::to_string(upper_) + ")"; }
 
@@ -77,15 +71,23 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Comparison operator used to order intervals within indexed containers std::set or std::map.
+// Comparison operators used to order intervals within indexed containers std::set or std::map.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct CompareInterval {
+struct CompareIntervalLower {
 
   bool operator()(const OpenRightInterval &lhs, const OpenRightInterval &rhs) const { return lhs.lower() < rhs.lower(); }
 
 };
+
+
+struct CompareIntervalUpper {
+
+  bool operator()(const OpenRightInterval &lhs, const OpenRightInterval &rhs) const { return lhs.upper() < rhs.upper(); }
+
+};
+
 
 
 

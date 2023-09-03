@@ -26,7 +26,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // A map of named gene coding transcripts.
-using GeneCodingTranscriptMap = std::map<std::string, IntervalSet>;
+using GeneCodingTranscriptMap = std::map<std::string, IntervalSetLower>;
 class GeneIntervalStructure {
 
 public:
@@ -41,7 +41,7 @@ public:
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& getGene() const { return gene_feature_; }
   [[nodiscard]] const GeneCodingTranscriptMap& codingTranscripts() const { return gene_coding_transcripts_; }
   [[nodiscard]] const OpenRightInterval& geneInterval() const { return gene_interval_; }
-  [[nodiscard]] const IntervalSet& transcriptUnion() const { return transcript_union_; }
+  [[nodiscard]] const IntervalSetLower& transcriptUnion() const { return transcript_union_; }
 
   // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
   [[nodiscard]] bool isWithinGene(const Variant& variant) const { return gene_interval_.containsOffset(variant.offset()); }
@@ -54,7 +54,7 @@ private:
 
   std::shared_ptr<const GeneFeature> gene_feature_;
   GeneCodingTranscriptMap gene_coding_transcripts_;
-  IntervalSet transcript_union_;
+  IntervalSetLower transcript_union_;
   OpenRightInterval gene_interval_;
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
@@ -71,7 +71,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-using ContigIntervalMap = std::map<ContigId_t, IntervalMultiMap <std::shared_ptr<const GeneIntervalStructure>>>;
+using ContigIntervalMap = std::map<ContigId_t, IntervalLowerMultiMap <std::shared_ptr<const GeneIntervalStructure>>>;
 class IntervalCodingVariants {
 
 public:
@@ -82,8 +82,6 @@ public:
 
   // Returns true if the variant is within a gene coding region.
   [[nodiscard]] bool codingRegionVariant(const Variant& variant) const;
-  // Returns the empty vector if the variant is not within a gene coding region.
-  [[nodiscard]] std::vector<std::shared_ptr<const GeneFeature>> getGeneCoding(const Variant &variant) const;
 
   [[nodiscard]] const ContigIntervalMap& getCodingMap() const { return contig_interval_map_; }
 

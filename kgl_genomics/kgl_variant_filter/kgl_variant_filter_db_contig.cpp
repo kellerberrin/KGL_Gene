@@ -6,6 +6,8 @@
 #include "kgl_variant_filter_db_offset.h"
 #include "kel_interval.h"
 
+#include <ranges>
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -57,58 +59,100 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const Contig
 
 std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const ContigDB& contig) const {
 
+  std::unique_ptr<ContigDB> region_contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
 
-  // Return all variants in the [start, end) region.
-  auto region_contig_ptr = contig.viewFilter(ContigRegionFilter(start_, end_));
-
-  // Set up the region as an interval.
-  const OpenRightInterval specified_region(start_, end_);
+  OpenRightInterval specified_region{start_, end_};
 
   // Decrement the region start by the heuristic margin.
-  ContigOffset_t margin_start = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(start_)-UPSTREAM_DELETE_MARGIN);
-  auto const lower_bound = contig.getMap().lower_bound(margin_start);
+  ContigOffset_t margin_start = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(start_)-UPSTREAM_DOWNSTREAM_MARGIN_);
+  ContigOffset_t margin_end = end_ + UPSTREAM_DOWNSTREAM_MARGIN_;
 
-  ContigOffset_t margin_end = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(start_)-1);
+  auto const lower_bound = contig.getMap().lower_bound(margin_start);
   auto const upper_bound = contig.getMap().lower_bound(margin_end); //  Search [start-margin, start-1)
 
-  auto iter = lower_bound;
-  while (iter != contig.getMap().end() and iter != upper_bound) {
-
-    auto const& [offset, offset_ptr] = *iter;
+  for (auto const& [offset, offset_ptr] : std::ranges::subrange(lower_bound, upper_bound)) {
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      auto [extend_offset, extend_size] = variant_ptr->extentOffset();
-      const OpenRightInterval variant_interval(extend_offset, extend_offset + extend_size);
+      auto [variant_type, variant_interval] = variant_ptr->memberInterval();
 
       if (variant_interval.intersects(specified_region)) {
 
-        // Check if a delete variant
-        if (variant_ptr->variantType() == VariantType::INDEL_DELETE) {
+        if (not region_contig_ptr->addVariant(variant_ptr)) {
 
-          if (not region_contig_ptr->addVariant(variant_ptr)) {
+          ExecEnv::log().error("ContigModifyFilter::applyFilter; unable to add variant: {} to contig: {}",
+                               variant_ptr->HGVS(), region_contig_ptr->contigId());
 
-            ExecEnv::log().error("ContigModifyFilter::applyFilter; unable to add variant: {} to contig: {}",
-                                 variant_ptr->HGVS(), region_contig_ptr->contigId());
-
-          } // If successful add variant.
-
-        } else {
-
-          ExecEnv::log().error("ContigModifyFilter::applyFilter; Unexpected, upstream of [ {}, {}) modifying variant is not an indel DELETE: {}"
-                               , start_, end_, variant_ptr->HGVS());
-
-        } // If delete variant.
+        } // If successful add variant.
 
       } // If intersects.
 
     } // For all variants defined for the offset.
 
-    iter = std::ranges::next(iter, 1, contig.getMap().end());
-
   } // For all offsets in the margin region.
 
   return region_contig_ptr;
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Filter out all variants that will be deleted by an upstream Delete variant.
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const ContigDB& contig) const {
+
+  std::unique_ptr<ContigDB> contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
+
+  for (auto const& [offset, offset_ptr] : contig.getMap()) {
+
+    for (auto const &variant_ptr: offset_ptr->getVariantArray()) {
+
+      auto const [variant_type, modify_interval] = variant_ptr->modifyInterval();
+
+      OpenRightInterval lower_bound_key{ modify_interval.lower(), modify_interval.lower()}; // Zero sized.
+      auto const lower_bound = upstream_delete_map_.lower_bound(lower_bound_key);
+      auto const upper_bound = upstream_delete_map_.end();
+
+      bool upstream_delete{false};
+
+      for (auto const& [delete_interval, delete_variant_ptr] : std::ranges::subrange(lower_bound, upper_bound)) {
+
+        if (delete_interval.intersects(modify_interval)) {
+
+          upstream_delete = true;
+          break;
+
+        }
+
+      }
+
+      if (not upstream_delete) {
+
+        if (not contig_ptr->addVariant(variant_ptr)) {
+
+          ExecEnv::log().error("ContigUpstreamFilter::applyFilter; unable to add variant: {} to contig: {}",
+                               variant_ptr->HGVS(), contig_ptr->contigId());
+
+        }
+
+        if (variant_type == VariantType::INDEL_DELETE) {
+
+          upstream_delete_map_.emplace(modify_interval, variant_ptr);
+
+        } // If delete.
+
+      } // If not upstream delete.
+
+    } // For all variants in the offset.
+
+  } // For all Offsets.
+
+  return contig_ptr;
 
 }
 

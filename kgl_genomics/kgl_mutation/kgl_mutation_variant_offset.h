@@ -58,7 +58,6 @@ public:
   [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
 
   [[nodiscard]] bool reconcileIntervalOffset() const;
-  [[nodiscard]] bool updateOffsetMap(const std::shared_ptr<const Variant>& variant_ptr);
 
 private:
 

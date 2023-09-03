@@ -19,7 +19,7 @@ namespace kellerberrin {   //  organization::project level namespace
 
 // Interval adapter for std::map.
 template<typename ValueType>
-using IntervalMapType = std::map<OpenRightInterval, ValueType, CompareInterval>;
+using IntervalMapType = std::map<OpenRightInterval, ValueType, CompareIntervalLower>;
 
 template<typename ValueType>
 class IntervalMap : public IntervalMapType<ValueType> {
@@ -41,15 +41,15 @@ public:
 
 // Interval adapter for std::multimap.
 template<typename ValueType>
-using IntervalMultiMapType = std::multimap<OpenRightInterval, ValueType, CompareInterval>;
+using IntervalLowerMultiMapType = std::multimap<OpenRightInterval, ValueType, CompareIntervalLower>;
 
 template<typename ValueType>
-class IntervalMultiMap : public IntervalMultiMapType<ValueType> {
+class IntervalLowerMultiMap : public IntervalLowerMultiMapType<ValueType> {
 
 public:
 
-  IntervalMultiMap() = default;
-  ~IntervalMultiMap() = default;
+  IntervalLowerMultiMap() = default;
+  ~IntervalLowerMultiMap() = default;
 
   // Returns vector the value for all map intervals that contain the argument
   [[nodiscard]] std::vector<ValueType> findIntervalContains(const OpenRightInterval &interval) const {
@@ -176,6 +176,41 @@ public:
   [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return not findIntervalContains(interval).empty(); }
 
 };
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Interval adapter for std::map.
+template<typename ValueType>
+using IntervalUpperMapType = std::map<OpenRightInterval, ValueType, CompareIntervalUpper>;
+
+template<typename ValueType>
+class IntervalUpperMap : public IntervalUpperMapType<ValueType> {
+
+public:
+
+  IntervalUpperMap() = default;
+  ~IntervalUpperMap() = default;
+
+
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Interval adapter for std::multimap.
+template<typename ValueType>
+using IntervalUpperMultiMapType = std::multimap<OpenRightInterval, ValueType, CompareIntervalUpper>;
 
 
 } // namespace

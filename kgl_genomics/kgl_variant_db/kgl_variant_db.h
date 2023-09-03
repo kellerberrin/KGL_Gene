@@ -10,6 +10,8 @@
 #include "kgl_variant_filter_virtual.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
+#include "kel_interval.h"
+
 #include <memory>
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -110,10 +112,13 @@ public:
   // The offset used for storing the allele in the database.
   // The ZERO BASED offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
-   // The extentOffset() of the variant is used to assess if a CANONICAL variant modifies a particular region
-  // of a sequence in the interval [a, b). The offset is the canonical offset (see canonicalSequences()) and the extent
-  // is 1 for a (canonical) SNP and insert. A delete extent is the number of deleted nucleotides (ref.length() - alt.length() + 1).
-  [[nodiscard]] std::pair<ContigOffset_t, ContigSize_t> extentOffset() const;
+  // The interval() of the variant is used to assess if a CANONICAL variant modifies a particular interval [a, b).
+  // An SNP offset is an interval size 1 with lower() = offset().
+  // A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
+  // An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
+  [[nodiscard]] std::pair<VariantType, OpenRightInterval> modifyInterval() const;
+  // Modify the insert interval to [offset+ 1, offset + 2)
+  [[nodiscard]] std::pair<VariantType, OpenRightInterval> memberInterval() const;
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   // An assigned variant reference such as (HSapien) "rs187084".

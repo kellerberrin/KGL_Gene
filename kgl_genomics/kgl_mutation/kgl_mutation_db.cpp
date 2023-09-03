@@ -106,16 +106,18 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
   auto const [ total_variants,
                mut_active_genome,
               duplicate_variants,
-              duplicate_genomes] = mutateGenomes(gene_ptr, transcript_id, population_ptr);
+              duplicate_genomes,
+              upstream_deleted] = mutateGenomes(gene_ptr, transcript_id, population_ptr);
 
   ExecEnv::log().info("MutateGenes::mutateTranscript; Filtered Gene: {}, Transcript: {}, Description: {}",
                       gene_ptr->id(), transcript_id, gene_ptr->descriptionText());
-  ExecEnv::log().info("MutateGenes::mutateTranscript; Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}",
+  ExecEnv::log().info("MutateGenes::mutateTranscript; Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted: {}",
                       total_variants,
                       duplicate_variants,
                       population_ptr->getMap().size(),
                       mut_active_genome,
-                      duplicate_genomes);
+                      duplicate_genomes,
+                      upstream_deleted);
 
   // Multiple Offset/variant statistics foe each transcript.
   TranscriptMutateRecord transcript_record( gene_ptr,
@@ -133,7 +135,7 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+std::tuple<size_t, size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                     const FeatureIdent_t& transcript_id,
                                                                     const std::shared_ptr<const PopulationDB>& gene_population_ptr) const {
 
@@ -143,12 +145,12 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   // The tuple is variant map, total modifying variants, multiple variants (more than 1 modifying variant per offset).
-  std::vector<std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t>>> future_vector;
+  std::vector<std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t, size_t>>> future_vector;
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation, genome_ptr, gene_ptr, transcript_id);
+    std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t, size_t>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation, genome_ptr, gene_ptr, transcript_id);
     future_vector.push_back(std::move(future));
 
   }
@@ -157,10 +159,11 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
   size_t duplicate_variants{0}; // More than 1 variant per offset
   size_t duplicate_genomes{0}; // Genomes containing more than 1 variant per offset.
   size_t mutant_genomes{0}; // Genomes with mutations.
+  size_t upstream_delete_sum{0}; // Variants deleted by an upstream delete variant.
   // Wait for all the threads to return.
   for (auto& future : future_vector) {
 
-    auto const [unique_transcript_ptr, variant_count, duplicates] = future.get();
+    auto const [unique_transcript_ptr, variant_count, duplicates, upstream_deleted] = future.get();
 
     mutate_analysis_.addGenomeRecords(GenomeContigMutate(unique_transcript_ptr->genomeId(), variant_count, duplicates));
 
@@ -176,15 +179,16 @@ std::tuple<size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( cons
       ++mutant_genomes;
 
     }
+    upstream_delete_sum += upstream_deleted;
 
   }
 
-  return {total_variants, mutant_genomes, duplicate_variants, duplicate_genomes};
+  return {total_variants, mutant_genomes, duplicate_variants, duplicate_genomes, upstream_delete_sum};
 
 }
 
 
-std::tuple<std::shared_ptr<const kgl::RegionVariantMap>, size_t, size_t>
+std::tuple<std::shared_ptr<const kgl::RegionVariantMap>, size_t, size_t, size_t>
 kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
                                            const std::shared_ptr<const GeneFeature>& gene_ptr,
                                            const FeatureIdent_t& transcript_id) {
@@ -201,7 +205,7 @@ kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>
                                                                           gene_ptr->sequence().begin(),
                                                                           gene_ptr->sequence().end(),
                                                                           OffsetVariantMap());
-    return { unique_transcript_ptr, 0, 0 };
+    return { unique_transcript_ptr, 0, 0, 0 };
 
   }
   auto contig_ptr = contig_opt.value();
@@ -210,7 +214,7 @@ kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>
 
   auto interval = gene_interval.geneInterval();
 
-  auto [interval_map, non_unique_count] = MutationOffset::getCanonicalVariants(contig_ptr, interval.lower(), interval.upper());
+  auto [interval_map, non_unique_count, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, interval.lower(), interval.upper());
 
   size_t map_size = interval_map.size() + non_unique_count;
 
@@ -223,7 +227,7 @@ kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>
 
   checkIntervalMap(transcript_id, unique_transcript_ptr);
 
-  return {unique_transcript_ptr, map_size, non_unique_count };
+  return {unique_transcript_ptr, map_size, non_unique_count, upstream_deleted };
 
 }
 

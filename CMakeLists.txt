@@ -348,7 +348,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.h
         kgl_genomics/kgl_mutation/kgl_mutation_interval.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_interval.h)
+        kgl_genomics/kgl_mutation/kgl_mutation_interval.h
+)
 
 # 3rd party library for fast Levenshtein sequence matching.
 set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
