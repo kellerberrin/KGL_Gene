@@ -102,13 +102,22 @@ protected:
   [[nodiscard]] bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, AlphabetSequence& sub_sequence) const;
   // Equality of sequence.
   [[nodiscard]] bool equal(const AlphabetSequence& cmp_seq) const { return alphabet_string_ == cmp_seq.alphabet_string_; }
+  // Equality of sub-sequence.
+  [[nodiscard]] bool compareSubSequence(ContigOffset_t offset, const AlphabetSequence& sub_sequence) const {
+
+    return alphabet_string_.compareSubString(offset, sub_sequence);
+
+  }
+  [[nodiscard]] bool compareletter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
+
+    return alphabet_string_.compareLetter(offset, letter);
+
+  }
 
 private:
 
 
 };
-
-
 
 
 template<typename Alphabet>

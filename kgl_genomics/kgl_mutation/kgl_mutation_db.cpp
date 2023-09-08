@@ -7,8 +7,7 @@
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
-#include "kgl_mutation_interval.h"
-
+#include "kgl_mutation_sequence.h"
 
 #include <ranges>
 
@@ -99,35 +98,24 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
                                          const FeatureIdent_t& transcript_id,
                                          const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
                                          const std::shared_ptr<const PopulationDB>& population_ptr,
-                                         const std::shared_ptr<const GenomeReference>& reference_genome) const {
+                                         const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const {
 
 
 
-  auto const [ total_variants,
-               mut_active_genome,
-              duplicate_variants,
-              duplicate_genomes,
-              upstream_deleted] = mutateGenomes(gene_ptr, transcript_id, population_ptr);
+  auto const mutate_stats = mutateGenomes(gene_ptr, transcript_id, population_ptr, reference_genome_ptr);
 
   ExecEnv::log().info("MutateGenes::mutateTranscript; Filtered Gene: {}, Transcript: {}, Description: {}",
                       gene_ptr->id(), transcript_id, gene_ptr->descriptionText());
   ExecEnv::log().info("MutateGenes::mutateTranscript; Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted: {}",
-                      total_variants,
-                      duplicate_variants,
+                      mutate_stats.total_variants_,
+                      mutate_stats.duplicate_variants_,
                       population_ptr->getMap().size(),
-                      mut_active_genome,
-                      duplicate_genomes,
-                      upstream_deleted);
+                      mutate_stats.mutant_genomes_,
+                      mutate_stats.duplicate_genomes_,
+                      mutate_stats.upstream_delete_variants_);
 
-  // Multiple Offset/variant statistics foe each transcript.
-  TranscriptMutateRecord transcript_record( gene_ptr,
-                                            transcript_ptr,
-                                            total_variants,
-                                            duplicate_variants,
-                                            mut_active_genome,
-                                            duplicate_genomes,
-                                            population_ptr->getMap().size());
-
+  // Multiple Offset/variant statistics for each transcript.
+  TranscriptMutateRecord transcript_record( gene_ptr, transcript_ptr, mutate_stats);
   mutate_analysis_.addTranscriptRecord(transcript_record);
 
 }
@@ -135,9 +123,10 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-std::tuple<size_t, size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                                    const FeatureIdent_t& transcript_id,
-                                                                    const std::shared_ptr<const PopulationDB>& gene_population_ptr) const {
+kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                  const FeatureIdent_t& transcript_id,
+                                                  const std::shared_ptr<const PopulationDB>& gene_population_ptr,
+                                                  const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const {
 
   // All other filters are multi-threaded for each genome.
   // Calc how many threads required.
@@ -145,112 +134,146 @@ std::tuple<size_t, size_t, size_t, size_t, size_t> kgl::MutateGenes::mutateGenom
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   // The tuple is variant map, total modifying variants, multiple variants (more than 1 modifying variant per offset).
-  std::vector<std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t, size_t>>> future_vector;
+  std::vector<std::future<std::optional<RegionReturn>>> future_vector;
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    std::future<std::tuple<std::shared_ptr<const RegionVariantMap>, size_t, size_t, size_t>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation, genome_ptr, gene_ptr, transcript_id);
+    std::future<std::optional<RegionReturn>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation,
+                                                                                genome_ptr,
+                                                                                gene_ptr,
+                                                                                transcript_id,
+                                                                                reference_genome_ptr);
     future_vector.push_back(std::move(future));
 
   }
 
-  size_t total_variants{0}; // Total variants.
-  size_t duplicate_variants{0}; // More than 1 variant per offset
-  size_t duplicate_genomes{0}; // Genomes containing more than 1 variant per offset.
-  size_t mutant_genomes{0}; // Genomes with mutations.
-  size_t upstream_delete_sum{0}; // Variants deleted by an upstream delete variant.
+  MutateStats mutate_stats;
   // Wait for all the threads to return.
   for (auto& future : future_vector) {
 
-    auto const [unique_transcript_ptr, variant_count, duplicates, upstream_deleted] = future.get();
+    const std::optional<RegionReturn> region_return_opt  = future.get();
 
-    mutate_analysis_.addGenomeRecords(GenomeContigMutate(unique_transcript_ptr->genomeId(), variant_count, duplicates));
+    if (not region_return_opt) {
 
-    total_variants += variant_count;
-    if (duplicates > 0) {
-
-      duplicate_variants += duplicates;
-      ++duplicate_genomes;
+      // Skip the statistics
+      continue;
 
     }
-    if (variant_count > 0) {
 
-      ++mutant_genomes;
+    ++mutate_stats.total_genomes_;
+
+    auto const& region_return = region_return_opt.value();
+
+    // Collect statistics.
+    GenomeContigMutate genome_contig(region_return.regionVariant()->genomeId(),
+                                     region_return.variantCount(),
+                                     region_return.duplicates());
+    mutate_analysis_.addGenomeRecords(genome_contig);
+
+    // Calculate summary statistics.
+    mutate_stats.total_variants_ += region_return.variantCount();
+    if (region_return.duplicates() > 0) {
+
+      mutate_stats.duplicate_variants_ += region_return.duplicates();
+      ++mutate_stats.duplicate_genomes_;
 
     }
-    upstream_delete_sum += upstream_deleted;
+    if (region_return.variantCount() > 0) {
+
+      ++mutate_stats.mutant_genomes_;
+
+    }
+    if (region_return.upstreamDeleted() > 0) {
+
+      mutate_stats.upstream_delete_variants_ += region_return.upstreamDeleted();
+      ++mutate_stats.upstream_delete_genomes_;
+
+    }
 
   }
 
-  return {total_variants, mutant_genomes, duplicate_variants, duplicate_genomes, upstream_delete_sum};
+  return mutate_stats;
 
 }
 
 
-std::tuple<std::shared_ptr<const kgl::RegionVariantMap>, size_t, size_t, size_t>
-kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
-                                           const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                           const FeatureIdent_t& transcript_id) {
+std::optional<kgl::RegionReturn> kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
+                                                                            const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                                            const FeatureIdent_t& transcript_id,
+                                                                            const std::shared_ptr<const GenomeReference>& reference_genome_ptr) {
 
-  ContigId_t gene_contig = gene_ptr->contig()->contigId();
-  auto contig_opt = genome_ptr->getContig(gene_contig);
+  // Get the gene contig id.
+  const ContigId_t gene_contig_id = gene_ptr->contig()->contigId();
+
+  // Use this to obtain the variant contig.
+  auto contig_opt = genome_ptr->getContig(gene_contig_id);
   if (not contig_opt) {
 
     ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Genome: {} does not contain contig: {} for gene: {}",
-                        genome_ptr->genomeId(), gene_contig, gene_ptr->id());
+                        genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
-    auto unique_transcript_ptr = std::make_shared<const RegionVariantMap>(genome_ptr->genomeId(),
-                                                                          "",
-                                                                          gene_ptr->sequence().begin(),
-                                                                          gene_ptr->sequence().end(),
-                                                                          OffsetVariantMap());
-    return { unique_transcript_ptr, 0, 0, 0 };
+    return std::nullopt;
 
   }
   auto contig_ptr = contig_opt.value();
 
-  GeneIntervalStructure gene_interval(gene_ptr);
+  // And the reference genome contig.
+  auto contig_ref_opt = reference_genome_ptr->getContigSequence(gene_contig_id);
+  if (not contig_ref_opt) {
 
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Reference Genome: {} does not contain contig: {} for gene: {}",
+                        reference_genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
+
+    return std::nullopt;
+
+  }
+  auto contig_ref_ptr = contig_ref_opt.value();
+
+  // Get the gene interval
+  GeneIntervalStructure gene_interval(gene_ptr);
   auto interval = gene_interval.geneInterval();
 
+  // Return filtered variants adjusted for duplicate variants and upstream deletes.
   auto [interval_map, non_unique_count, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, interval.lower(), interval.upper());
 
   size_t map_size = interval_map.size() + non_unique_count;
 
-  auto unique_transcript_ptr = std::make_shared<const RegionVariantMap>(genome_ptr->genomeId(),
-                                                                        contig_ptr->contigId(),
-                                                                        gene_ptr->sequence().begin(),
-                                                                        gene_ptr->sequence().end(),
-                                                                        std::move(interval_map));
+  auto region_variant_ptr = std::make_shared<const RegionVariantMap>(genome_ptr->genomeId(),
+                                                                     contig_ptr->contigId(),
+                                                                     gene_ptr->sequence().begin(),
+                                                                     gene_ptr->sequence().end(),
+                                                                     std::move(interval_map));
 
+  auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(region_variant_ptr->variantRegion());
+  if (not adjusted_offset_ptr->processVariantMap(region_variant_ptr->variantMap())) {
 
-  checkIntervalMap(transcript_id, unique_transcript_ptr);
-
-  return {unique_transcript_ptr, map_size, non_unique_count, upstream_deleted };
-
-}
-
-
-void kgl::MutateGenes::checkIntervalMap(const FeatureIdent_t& transcript_id, const std::shared_ptr<const RegionVariantMap>& region_variant_ptr) {
-
-  AdjustedSequenceInterval adjusted_offset (region_variant_ptr->variantRegion().lower(), region_variant_ptr->variantRegion().size());
-
-  for (auto const& [offset, variant_ptr] : region_variant_ptr->variantMap()) {
-
-    if (not adjusted_offset.updateOffsetMap(variant_ptr)) {
-
-      ExecEnv::log().warn("MutateGenes::checkIntervalMap; transcript: {}, problem verifying genome: {}, contig: {}, interval: [{}, {}), variant: {}",
-                          transcript_id,
-                          region_variant_ptr->genomeId(),
-                          region_variant_ptr->contigId(),
-                          region_variant_ptr->variantRegion().lower(),
-                          region_variant_ptr->variantRegion().upper(),
-                          variant_ptr->HGVS());
-
-    }
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation;  transcript: {}, problem updating interval: {}, genome: {}, contig: {}",
+                        transcript_id,
+                        region_variant_ptr->variantRegion().toString(),
+                        region_variant_ptr->genomeId(),
+                        region_variant_ptr->contigId());
+    return std::nullopt;
 
   }
 
-}
+  auto adjusted_sequence_ptr = std::make_shared<AdjustedSequence>( contig_ref_ptr,
+                                                                   region_variant_ptr->variantRegion(),
+                                                                   adjusted_offset_ptr->indelModifyMap());
 
+  if (not adjusted_sequence_ptr->updateSequence()) {
+
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; transcript: {}, problem updating sequence interval: {} genome: {}, contig: {}",
+                        transcript_id,
+                        region_variant_ptr->variantRegion().toString(),
+                        region_variant_ptr->genomeId(),
+                        region_variant_ptr->contigId());
+    return std::nullopt;
+
+  }
+
+  RegionReturn region_return(region_variant_ptr, map_size, non_unique_count, upstream_deleted);
+
+  return region_return;
+
+}

@@ -79,6 +79,8 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
            << "Total Variants" << DELIMITER_
            << "Duplicate Variants"<< DELIMITER_
            << "Duplicate Genomes"<< DELIMITER_
+           << "Upstream Variants"<< DELIMITER_
+           << "Upstream Genomes"<< DELIMITER_
            << "Mutated_Genomes" << DELIMITER_
            << "Total_Geromes" << '\n';
 
@@ -87,18 +89,20 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
     out_file << transcript_record.genePtr()->contig()->contigId() << DELIMITER_
              << transcript_record.genePtr()->id() << DELIMITER_
              << transcript_record.transcriptionPtr()->getParent()->id() << DELIMITER_
-             << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_ : GeneFeature::NCRNA_GENE_)
-             << DELIMITER_
-             << transcript_record.genePtr()->descriptionText() << DELIMITER_
-             << transcript_record.transcriptionPtr()->start() << DELIMITER_
-             << transcript_record.transcriptionPtr()->end() << DELIMITER_
-             << transcript_record.transcriptionPtr()->codingFeatures() << DELIMITER_
-             << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
-             << transcript_record.totalVariants() << DELIMITER_
-             << transcript_record.multipleVariants() << DELIMITER_
-             << transcript_record.duplicateGenomes() << DELIMITER_
-             << transcript_record.mutatedGenomes() << DELIMITER_
-             << transcript_record.totalGenomes() << '\n';
+        << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_ : GeneFeature::NCRNA_GENE_)
+        << DELIMITER_
+        << transcript_record.genePtr()->descriptionText() << DELIMITER_
+        << transcript_record.transcriptionPtr()->start() << DELIMITER_
+        << transcript_record.transcriptionPtr()->end() << DELIMITER_
+        << transcript_record.transcriptionPtr()->codingFeatures() << DELIMITER_
+        << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
+        << transcript_record.mutateStats().total_variants_ << DELIMITER_
+        << transcript_record.mutateStats().duplicate_variants_ << DELIMITER_
+        << transcript_record.mutateStats().duplicate_genomes_ << DELIMITER_
+        << transcript_record.mutateStats().upstream_delete_variants_ << DELIMITER_
+        << transcript_record.mutateStats().upstream_delete_genomes_ << DELIMITER_
+             << transcript_record.mutateStats().mutant_genomes_ << DELIMITER_
+             << transcript_record.mutateStats().total_genomes_ << '\n';
 
   }
 

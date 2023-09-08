@@ -10,50 +10,11 @@
 #include <map>
 #include <memory>
 #include "kgl_variant_db.h"
+#include "kgl_mutation_variant_map.h"
 #include "kel_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Detailed info on how a variant updates the sequence interval and sequence.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class SequenceAuditInfo {
-
-public:
-
-  SequenceAuditInfo(const std::shared_ptr<const Variant>& variant_ptr,
-                    const OpenRightInterval& prior_interval,
-                    const OpenRightInterval& post_update_interval,
-                    const OpenRightInterval& updating_interval) :
-                    variant_ptr_(variant_ptr),
-                    prior_interval_(prior_interval),
-                    post_update_interval_(post_update_interval),
-                    updating_interval_(updating_interval) {}
-  SequenceAuditInfo(const SequenceAuditInfo& copy) = default;
-  ~SequenceAuditInfo() = default;
-
-  [[nodiscard]] const std::shared_ptr<const Variant>& variantPtr() const { return variant_ptr_; }
-  [[nodiscard]] const OpenRightInterval& priorInterval() const { return prior_interval_; }
-  [[nodiscard]] const OpenRightInterval& postUpdateInterval() const { return post_update_interval_; }
-  [[nodiscard]] const OpenRightInterval& updatingInterval() const { return updating_interval_; }
-
-
-  // String detailing audit information.
-  [[nodiscard]] std::string toString() const;
-
-private:
-
-  std::shared_ptr<const Variant> variant_ptr_;
-  const OpenRightInterval prior_interval_;
-  const OpenRightInterval post_update_interval_;
-  const OpenRightInterval updating_interval_;
-
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -62,46 +23,44 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-using IntervalModifyMap = std::map<ContigOffset_t, SequenceAuditInfo>;
-
 class AdjustedSequenceInterval {
 
 public:
 
-  AdjustedSequenceInterval(ContigOffset_t sequence_begin_offset, ContigSize_t sequence_size)
-      : original_interval_(sequence_begin_offset, sequence_begin_offset + sequence_size),
-        modified_interval_(original_interval_) {}
+  AdjustedSequenceInterval(const OpenRightInterval& original_interval) : original_interval_(original_interval),
+                                                                         modified_interval_(original_interval_) {}
 
   ~AdjustedSequenceInterval() = default;
 
 
   [[nodiscard]] const OpenRightInterval& orginalInterval() const { return original_interval_; }
   [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
-  [[nodiscard]] const IntervalModifyMap& auditMap() const { return indel_audit_map_; }
+  [[nodiscard]] const IntervalModifyMap& indelModifyMap() const { return indel_modify_map_; }
 
-  [[nodiscard]] bool updateOffsetMap(const std::shared_ptr<const Variant>& variant_ptr);
+  [[nodiscard]] bool processVariantMap(const OffsetVariantMap& variant_map);
 
 private:
 
   const OpenRightInterval original_interval_;
   OpenRightInterval modified_interval_;
-  IntervalModifyMap indel_audit_map_;
+  IntervalModifyMap indel_modify_map_;
 
-  [[nodiscard]] bool reconcileIntervalOffset() const;
+  [[nodiscard]] bool processVariant(const std::shared_ptr<const Variant>& variant_ptr);
 
-  [[nodiscard]] bool updateIndelAccounting(ContigOffset_t contig_offset,
-                                           const std::shared_ptr<const Variant>& variant_ptr,
-                                           const OpenRightInterval& prior_interval,
-                                           const OpenRightInterval& post_update_interval,
-                                           const OpenRightInterval& updating_interval);
+  [[nodiscard]] bool reconcileIntervalOffset(const SequenceVariantUpdate& sequence_update) const;
+
+  [[nodiscard]] std::pair<ContigOffset_t, SequenceVariantUpdate> updateInterval(const std::shared_ptr<const Variant>& variant_ptr) const;
+
+  [[nodiscard]] bool updateIndelAccounting(ContigOffset_t allele_offset, SequenceVariantUpdate sequence_update);
 
   // Calculates the sequence size after all mutations.
   [[nodiscard]] SignedOffset_t intervalSizeModification() const;
+  // Calculates the sequence offset after all mutations. Note this is not the same as size modification.
+  [[nodiscard]] SignedOffset_t intervalOffsetModification() const;
 
-  [[nodiscard]] OpenRightInterval updateOffsetSNP(const OpenRightInterval &adj_snp_interval);
-  [[nodiscard]] OpenRightInterval updateOffsetInsert(const OpenRightInterval &adj_insert_interval);
-  [[nodiscard]] OpenRightInterval updateOffsetDelete(const OpenRightInterval &adj_delete_interval);
+  // Returns the updated interval or the unmodified interval if a problem encountered.
+  [[nodiscard]] OpenRightInterval updateOffsetInsert(const OpenRightInterval &adj_insert_interval) const;
+  [[nodiscard]] OpenRightInterval updateOffsetDelete(const OpenRightInterval &adj_delete_interval) const;
 
   // Insert and Delete are used to modify an interval as if modified by the inserted and deleted intervals of indel variants.
   // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
@@ -112,7 +71,7 @@ private:
 
 
   // Detailed output for unexpected conditions.
-  void printAudit();
+  void printAudit() const;
 
   // Interval calculations will probably be multi-threaded, thus we control thread access to the audit output.
   mutable std::mutex audit_mutex_;

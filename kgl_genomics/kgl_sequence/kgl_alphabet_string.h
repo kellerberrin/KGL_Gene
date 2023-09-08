@@ -10,6 +10,7 @@
 #include <string>
 #include <algorithm>
 #include <functional>
+#include <optional>
 #include "kgl_genome_types.h"
 #include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_amino.h"
@@ -99,6 +100,21 @@ public:
 
   }
 
+  [[nodiscard]] bool compareSubString(ContigOffset_t offset, const AlphabetString& sub_string) const {
+
+    auto offset_string_opt = getViewSubString(offset, sub_string.length());
+    if (not offset_string_opt) {
+
+      return false;
+
+    }
+
+    std::basic_string_view<typename Alphabet::Alphabet>sub_view (sub_string.base_string_);
+    return sub_view == offset_string_opt.value();
+
+  }
+
+
   [[nodiscard]] bool append(const AlphabetString& sub_string) {
 
     try {
@@ -132,6 +148,7 @@ public:
 
   }
 
+
   // Generally used to count CpG islands. Look for ocurrances of [first, second] in the string.
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const;
 
@@ -139,7 +156,27 @@ public:
 
   typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
 
-  void modifyLetter(ContigOffset_t &offset, typename Alphabet::Alphabet letter) { base_string_[offset] = letter; }
+  void modifyLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) {
+
+    if (offset < base_string_.size()) {
+
+      base_string_[offset] = letter;
+
+    }
+
+  }
+
+  bool compareLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) {
+
+    if (offset < base_string_.size()) {
+
+      return base_string_[offset] == letter;
+
+    }
+
+    return false;
+
+  }
 
   [[nodiscard]] std::string str() const { return convertToCharString(); }
 
@@ -161,6 +198,8 @@ public:
 
   }
 
+
+
   [[nodiscard]] size_t commonPrefix(const AlphabetString& cmp_string) const;
   [[nodiscard]] size_t commonSuffix(const AlphabetString& cmp_string) const;
   [[nodiscard]] AlphabetString removePrefix(size_t prefix_size) const;
@@ -178,6 +217,22 @@ private:
 
   [[nodiscard]] std::string convertToCharString() const;
   void convertFromCharString(const std::string &alphabet_str);
+
+  [[nodiscard]] std::optional<std::basic_string_view<typename Alphabet::Alphabet>> getViewSubString(ContigOffset_t offset, ContigSize_t size) const {
+
+    std::basic_string_view<typename Alphabet::Alphabet>base_view (base_string_);
+    try {
+
+      return base_view.substr(offset, size); // throws: pos > size()
+
+    }
+    catch (...) {
+
+      return std::nullopt;
+
+    }
+
+  }
 
 
 };

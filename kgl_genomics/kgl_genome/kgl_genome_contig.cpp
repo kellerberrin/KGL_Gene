@@ -150,3 +150,16 @@ bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
   return true;
 
 }
+
+kgl::DNA5SequenceLinear kgl::ContigReference::getSubSequence(const OpenRightInterval& sequence_interval) const {
+
+  if (sequence_interval.upper() > sequence_ptr()->length()) {
+
+    ExecEnv::log().error("ContigReference::getSubSequence; requested sub interval: {} out of bounds for contig: {} size: {}",
+                         sequence_interval.toString(), contigId(), sequence_ptr()->length());
+
+  }
+
+  return sequence_ptr()->subSequence(sequence_interval.lower(), sequence_interval.size());
+
+}

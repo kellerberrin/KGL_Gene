@@ -19,6 +19,19 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// Simple object to pass mutation statistics
+struct MutateStats {
+
+  size_t total_variants_{0};
+  size_t total_genomes_{0};
+  size_t mutant_genomes_{0};
+  size_t duplicate_variants_{0};
+  size_t duplicate_genomes_{0};
+  size_t upstream_delete_variants_{0};
+  size_t upstream_delete_genomes_{0};
+
+};
+
 // Object to return and hold multi-threaded mutation results.
 class TranscriptMutateRecord {
 
@@ -26,38 +39,22 @@ public:
 
   TranscriptMutateRecord(std::shared_ptr<const GeneFeature> gene_ptr,
                          std::shared_ptr<const TranscriptionSequence> transcription_ptr,
-                         size_t total_variants,
-                         size_t multiple_variants,
-                         size_t mutated_genomes,
-                         size_t duplicate_genomes,
-                         size_t total_genomes) : gene_ptr_(std::move(gene_ptr)),
-                                                 transcription_ptr_(std::move(transcription_ptr)),
-                                                 total_variants_(total_variants),
-                                                 multiple_variants_(multiple_variants),
-                                                 mutated_genomes_(mutated_genomes),
-                                                 duplicate_genomes_(duplicate_genomes),
-                                                 total_genomes_(total_genomes) {}
+                         MutateStats mutate_stats) : gene_ptr_(std::move(gene_ptr)),
+                                                     transcription_ptr_(std::move(transcription_ptr)),
+                                                     mutate_stats_(mutate_stats) {}
 
   TranscriptMutateRecord(const TranscriptMutateRecord &) = default;
   ~TranscriptMutateRecord() = default;
 
   [[nodiscard]] const std::shared_ptr<const GeneFeature> &genePtr() const { return gene_ptr_; }
   [[nodiscard]] const std::shared_ptr<const TranscriptionSequence> &transcriptionPtr() const { return transcription_ptr_; }
-  [[nodiscard]] size_t totalVariants() const { return total_variants_; }
-  [[nodiscard]] size_t multipleVariants() const { return multiple_variants_; }
-  [[nodiscard]] size_t mutatedGenomes() const { return mutated_genomes_; }
-  [[nodiscard]] size_t duplicateGenomes() const { return duplicate_genomes_; }
-  [[nodiscard]] size_t totalGenomes() const { return total_genomes_; }
+  [[nodiscard]] const MutateStats& mutateStats() const { return mutate_stats_; }
 
 private:
 
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::shared_ptr<const TranscriptionSequence> transcription_ptr_;
-  size_t total_variants_{0};
-  size_t multiple_variants_{0};
-  size_t mutated_genomes_{0};
-  size_t duplicate_genomes_{0};
-  size_t total_genomes_{0};
+  MutateStats mutate_stats_;
 
 };
 

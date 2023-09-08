@@ -24,10 +24,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const Contig
   auto const lower_bound = contig.getMap().lower_bound(start_);
   auto const upper_bound = contig.getMap().lower_bound(end_); //  [start, end)
 
-  auto iter = lower_bound;
-  while (iter != contig.getMap().end() and iter != upper_bound) {
-
-    auto const& [offset, offset_ptr] = *iter;
+  for (auto const& [offset, offset_ptr] : std::ranges::subrange(lower_bound, upper_bound)) {
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
@@ -39,8 +36,6 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const Contig
       }
 
     }
-
-    iter = std::ranges::next(iter, 1, contig.getMap().end());
 
   }
 

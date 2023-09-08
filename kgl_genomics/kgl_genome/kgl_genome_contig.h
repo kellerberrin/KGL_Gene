@@ -16,6 +16,7 @@
 #include "kgl_genome_contig_feature.h"
 #include "kgl_genome_contig_aux.h"
 #include "kgl_gaf_parser.h"
+#include "kel_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -84,6 +85,9 @@ public:
   // Generate Amino acid sequences using the table specified for this contig.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
+
+  //Get a subsequence from the contig.
+  [[nodiscard]] DNA5SequenceLinear getSubSequence(const OpenRightInterval& sequence_interval) const;
 
   // Compare reference Contigs- mainly used for testing.
   [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;
