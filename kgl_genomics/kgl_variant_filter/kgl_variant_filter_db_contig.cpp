@@ -56,7 +56,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 
   std::unique_ptr<ContigDB> region_contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
 
-  OpenRightInterval specified_region{start_, end_};
+  OpenRightUnsigned specified_region{start_, end_};
 
   // Decrement the region start by the heuristic margin.
   ContigOffset_t margin_start = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(start_)-UPSTREAM_DOWNSTREAM_MARGIN_);
@@ -69,9 +69,27 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
+      // Note that memberInterval() is not the same as modifyInterval().
+      // This function is used to determine if a variant actually modifies the interval of interest
+      // rather than just modifying a region adjacent (Insert) to the interval and translating it's offset.
       auto [variant_type, variant_interval] = variant_ptr->memberInterval();
 
-      if (variant_interval.intersects(specified_region)) {
+      bool add_variant{false};
+      switch (variant_type) {
+
+        // Delete indels only need to intersect the region of interest to modify it.
+        case VariantType::INDEL_DELETE:
+          add_variant = specified_region.intersects(variant_interval);
+          break;
+
+        case VariantType::SNP:
+        case VariantType::INDEL_INSERT:
+          add_variant = specified_region.containsInterval(variant_interval);
+          break;
+
+      }
+
+      if (add_variant) {
 
         if (not region_contig_ptr->addVariant(variant_ptr)) {
 
@@ -80,7 +98,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 
         } // If successful add variant.
 
-      } // If intersects.
+      } // If add_variant flag is set.
 
     } // For all variants defined for the offset.
 
@@ -109,7 +127,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
       auto const [variant_type, modify_interval] = variant_ptr->modifyInterval();
 
-      OpenRightInterval lower_bound_key{ modify_interval.lower(), modify_interval.lower()}; // Zero sized.
+      OpenRightUnsigned lower_bound_key{modify_interval.lower(), modify_interval.lower()}; // Zero sized.
       auto const lower_bound = upstream_delete_map_.lower_bound(lower_bound_key);
       auto const upper_bound = upstream_delete_map_.end();
 

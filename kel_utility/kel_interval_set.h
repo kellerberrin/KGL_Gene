@@ -19,18 +19,18 @@ namespace kellerberrin {   //  organization::project level namespace
 
 
 // Interval adapter for std::set.
-class IntervalSetLower : public std::set<OpenRightInterval, CompareIntervalLower> {
+class IntervalSetLower : public std::set<OpenRightUnsigned, CompareIntervalLower> {
 
 public:
 
   IntervalSetLower() = default;
   ~IntervalSetLower() = default;
 
-  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const;
+  [[nodiscard]] bool containsInterval(const OpenRightUnsigned &interval) const;
   // Returns a vector (possibly empty) of set intervals that intersect the argument interval.
-  [[nodiscard]] std::vector<OpenRightInterval> findIntersectsInterval(const OpenRightInterval &interval) const;
+  [[nodiscard]] std::vector<OpenRightUnsigned> findIntersectsInterval(const OpenRightUnsigned &interval) const;
   // Returns a bool the interval and set intersect.
-  [[nodiscard]] bool intersectsInterval(const OpenRightInterval &interval) const { return not findIntersectsInterval(interval).empty(); }
+  [[nodiscard]] bool intersectsInterval(const OpenRightUnsigned &interval) const { return not findIntersectsInterval(interval).empty(); }
   // Returns the interval unions between this set and the argument set.
   // Intervals are modified/extended as necessary for a disjoint interval minimal union.
   [[nodiscard]] IntervalSetLower intervalSetUnion(const IntervalSetLower& interval_set) const;
@@ -49,7 +49,7 @@ public:
 
 
 // Interval adapter for std::set.
-class IntervalSetUpper : public std::set<OpenRightInterval, CompareIntervalUpper> {
+class IntervalSetUpper : public std::set<OpenRightUnsigned, CompareIntervalUpper> {
 
 public:
 
@@ -68,7 +68,7 @@ public:
 
 
 // Interval adapter for std::multiset.
-class IntervalMultiSetLower : public std::multiset<OpenRightInterval, CompareIntervalLower> {
+class IntervalMultiSetLower : public std::multiset<OpenRightUnsigned, CompareIntervalLower> {
 
 public:
 

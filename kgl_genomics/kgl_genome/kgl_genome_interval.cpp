@@ -36,7 +36,7 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
     for (auto const& [feature_offset, coding_feature] : coding_sequence->getFeatureMap()) {
 
       auto const& sequence = coding_feature->sequence();
-      OpenRightInterval sequence_interval(sequence.begin(), sequence.end());
+      OpenRightUnsigned sequence_interval(sequence.begin(), sequence.end());
       // Add to the interval set.
       auto [insert_iter, result] = sequence_intervals.insert(sequence_interval);
       if (not result) {

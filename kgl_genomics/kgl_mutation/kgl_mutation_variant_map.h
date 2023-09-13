@@ -50,14 +50,14 @@ public:
 
   [[nodiscard]] const GenomeId_t &genomeId() const { return genome_id_; }
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
-  [[nodiscard]] const OpenRightInterval &variantRegion() const { return variant_region_; }
+  [[nodiscard]] const OpenRightUnsigned &variantRegion() const { return variant_region_; }
   [[nodiscard]] const OffsetVariantMap &variantMap() const { return variant_map_; }
 
 private:
 
   GenomeId_t genome_id_;
   ContigId_t contig_id_;
-  OpenRightInterval variant_region_;
+  OpenRightUnsigned variant_region_;
   OffsetVariantMap variant_map_;
 
 };
@@ -108,9 +108,9 @@ class SequenceVariantUpdate {
 public:
 
   SequenceVariantUpdate(const std::shared_ptr<const Variant>& variant_ptr,
-                        const OpenRightInterval& prior_interval,
-                        const OpenRightInterval& post_update_interval,
-                        const OpenRightInterval& updating_interval,
+                        const OpenRightUnsigned& prior_interval,
+                        const OpenRightUnsigned& post_update_interval,
+                        const OpenRightUnsigned& updating_interval,
                         SequenceUpdateResult update_result) :
       variant_ptr_(variant_ptr),
       prior_interval_(prior_interval),
@@ -121,10 +121,13 @@ public:
   ~SequenceVariantUpdate() = default;
 
   [[nodiscard]] const std::shared_ptr<const Variant>& variantPtr() const { return variant_ptr_; }
-  [[nodiscard]] const OpenRightInterval& priorInterval() const { return prior_interval_; }
-  [[nodiscard]] const OpenRightInterval& postUpdateInterval() const { return post_update_interval_; }
-  [[nodiscard]] const OpenRightInterval& updatingInterval() const { return updating_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& priorInterval() const { return prior_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& postUpdateInterval() const { return post_update_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& updatingInterval() const { return updating_interval_; }
   [[nodiscard]] SequenceUpdateResult updateResult() const { return update_result_; }
+
+  // To determine the actual size of a delete on the interval.
+  [[nodiscard]] OpenRightUnsigned priorUpdateIntersect() const { return priorInterval().intersection(updatingInterval()); }
 
   // String detailing audit information.
   [[nodiscard]] std::string toString() const;
@@ -132,14 +135,15 @@ public:
 private:
 
   std::shared_ptr<const Variant> variant_ptr_;
-  const OpenRightInterval prior_interval_;
-  const OpenRightInterval post_update_interval_;
-  const OpenRightInterval updating_interval_;
+  const OpenRightUnsigned prior_interval_;
+  const OpenRightUnsigned post_update_interval_;
+  const OpenRightUnsigned updating_interval_;
   SequenceUpdateResult update_result_;
 
 };
 
 using IntervalModifyMap = std::map<ContigOffset_t, SequenceVariantUpdate>;
+using IntervalModifyMultiMap = std::multimap<ContigOffset_t, SequenceVariantUpdate>;
 
 
 } // namespace

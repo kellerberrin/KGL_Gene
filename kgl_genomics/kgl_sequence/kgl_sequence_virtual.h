@@ -5,10 +5,12 @@
 #ifndef KGL_SEQUENCE_VIRTUAL_H
 #define KGL_SEQUENCE_VIRTUAL_H
 
+
+#include "kgl_alphabet_string.h"
+#include "kel_interval.h"
+
 #include <string>
 #include <set>
-#include "kgl_alphabet_string.h"
-
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -61,6 +63,8 @@ public:
   [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
 
   [[nodiscard]] ContigSize_t length() const { return alphabet_string_.length(); }
+  [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_string_.length() }; }
+
   [[nodiscard]] std::string getSequenceAsString() const override { return alphabet_string_.str(); }
   [[nodiscard]] const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
@@ -87,6 +91,17 @@ public:
   [[nodiscard]] AlphabetSequence removePrefix(size_t prefix_size) const { return AlphabetSequence(alphabet_string_.removePrefix(prefix_size)); }
   [[nodiscard]] AlphabetSequence removeSuffix(size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removeSuffix(suffix_size)); }
   [[nodiscard]] AlphabetSequence removePrefixSuffix(size_t prefix_size, size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removePrefixSuffix(prefix_size, suffix_size)); }
+  // Equality of sub-sequence.
+  [[nodiscard]] bool compareSubSequence(ContigOffset_t offset, const AlphabetSequence& sub_sequence) const {
+
+    return alphabet_string_.compareSubString(offset, sub_sequence.alphabet_string_);
+
+  }
+  [[nodiscard]] bool compareletter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
+
+    return alphabet_string_.compareLetter(offset, letter);
+
+  }
 
 protected:
 
@@ -102,17 +117,6 @@ protected:
   [[nodiscard]] bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, AlphabetSequence& sub_sequence) const;
   // Equality of sequence.
   [[nodiscard]] bool equal(const AlphabetSequence& cmp_seq) const { return alphabet_string_ == cmp_seq.alphabet_string_; }
-  // Equality of sub-sequence.
-  [[nodiscard]] bool compareSubSequence(ContigOffset_t offset, const AlphabetSequence& sub_sequence) const {
-
-    return alphabet_string_.compareSubString(offset, sub_sequence);
-
-  }
-  [[nodiscard]] bool compareletter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
-
-    return alphabet_string_.compareLetter(offset, letter);
-
-  }
 
 private:
 

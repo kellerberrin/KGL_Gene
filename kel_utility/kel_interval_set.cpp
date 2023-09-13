@@ -17,7 +17,7 @@ namespace kel = kellerberrin;
 
 
 // Returns true if the interval argument is contained within one of the intervals held in the set.
-bool kel::IntervalSetLower::containsInterval(const OpenRightInterval& interval) const {
+bool kel::IntervalSetLower::containsInterval(const OpenRightUnsigned& interval) const {
 
   if (empty()) {
 
@@ -95,14 +95,14 @@ kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetL
   // Test for the empty condition.
   if (iter != sorted_intervals.end()) {
 
-    OpenRightInterval active_interval = *iter;
+    OpenRightUnsigned active_interval = *iter;
     // Loop through the multiset and aggregate any overlapping intervals.
     iter = std::ranges::next(iter, 1, sorted_intervals.end());
     while (iter != sorted_intervals.end()) {
 
-      OpenRightInterval next_interval = *iter;
+      OpenRightUnsigned next_interval = *iter;
 
-      OpenRightInterval merged_interval = active_interval.merge(next_interval);
+      OpenRightUnsigned merged_interval = active_interval.merge(next_interval);
 
       if (not merged_interval.empty()) {
 
@@ -142,9 +142,9 @@ kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetL
 
 
 // Find the set intervals that intersect the argument interval.
-[[nodiscard]] std::vector<kel::OpenRightInterval> kel::IntervalSetLower::findIntersectsInterval(const OpenRightInterval &interval) const {
+[[nodiscard]] std::vector<kel::OpenRightUnsigned> kel::IntervalSetLower::findIntersectsInterval(const OpenRightUnsigned &interval) const {
 
-  std::vector<OpenRightInterval> value_vector;
+  std::vector<OpenRightUnsigned> value_vector;
 
   if (empty()) {
 

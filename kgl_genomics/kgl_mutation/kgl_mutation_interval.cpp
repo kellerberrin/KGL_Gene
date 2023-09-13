@@ -124,7 +124,7 @@ kgl::SignedOffset_t kgl::AdjustedSequenceInterval::intervalSizeModification() co
 
       case VariantType::INDEL_DELETE: {
 
-          OpenRightInterval intersect_update = audit_record.priorInterval().intersection(audit_record.updatingInterval());
+          OpenRightUnsigned intersect_update = audit_record.priorInterval().intersection(audit_record.updatingInterval());
           indel_size_adjust -= static_cast<SignedOffset_t>(intersect_update.size());
 
         }
@@ -187,12 +187,11 @@ kgl::AdjustedSequenceInterval::updateInterval(const std::shared_ptr<const Varian
 
   // Adjust the modify interval for all previous indel modifications.
   SignedOffset_t previous_offset_modify = intervalOffsetModification();
-  OpenRightInterval adjusted_modify_interval(modify_interval);
-  adjusted_modify_interval.translate(previous_offset_modify);
+  auto adjusted_modify_interval = modify_interval.translate(previous_offset_modify);
 
   // Save the previous interval
-  OpenRightInterval prior_interval(modifiedInterval());
-  OpenRightInterval modified_interval(modifiedInterval());
+  OpenRightUnsigned prior_interval(modifiedInterval());
+  OpenRightUnsigned modified_interval(modifiedInterval());
 
   // Initialize the update result flag.
   SequenceUpdateResult update_result{SequenceUpdateResult::NORMAL};
@@ -269,7 +268,7 @@ kgl::AdjustedSequenceInterval::updateInterval(const std::shared_ptr<const Varian
 }
 
 
-kel::OpenRightInterval kgl::AdjustedSequenceInterval::updateOffsetInsert(const OpenRightInterval &adj_insert_interval) const {
+kel::OpenRightUnsigned kgl::AdjustedSequenceInterval::updateOffsetInsert(const OpenRightUnsigned &adj_insert_interval) const {
 
   if (not modified_interval_.containsOffset(adj_insert_interval.lower())) {
 
@@ -289,7 +288,7 @@ kel::OpenRightInterval kgl::AdjustedSequenceInterval::updateOffsetInsert(const O
 }
 
 
-kel::OpenRightInterval  kgl::AdjustedSequenceInterval::updateOffsetDelete(const OpenRightInterval &adj_delete_interval) const {
+kel::OpenRightUnsigned  kgl::AdjustedSequenceInterval::updateOffsetDelete(const OpenRightUnsigned &adj_delete_interval) const {
 
   // Check for that the delete occurs on the modified interval
   if (modified_interval_.disjoint(adj_delete_interval)) {
@@ -347,8 +346,8 @@ void kgl::AdjustedSequenceInterval::printAudit() const {
 }
 
 // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
-kel::OpenRightInterval kgl::AdjustedSequenceInterval::insertInterval(const OpenRightInterval& target_interval,
-                                                                     const OpenRightInterval &insert_interval) {
+kel::OpenRightUnsigned kgl::AdjustedSequenceInterval::insertInterval(const OpenRightUnsigned& target_interval,
+                                                                     const OpenRightUnsigned &insert_interval) {
 
   if (target_interval.containsOffset(insert_interval.lower())) {
 
@@ -362,8 +361,8 @@ kel::OpenRightInterval kgl::AdjustedSequenceInterval::insertInterval(const OpenR
 
 // The logic of deleting an interval from the target interval is surprisingly complex.
 // The logic below should be studied carefully before modification.
-kel::OpenRightInterval kgl::AdjustedSequenceInterval::deleteInterval( const OpenRightInterval& target_interval,
-                                                                      const OpenRightInterval &delete_interval) {
+kel::OpenRightUnsigned kgl::AdjustedSequenceInterval::deleteInterval(const OpenRightUnsigned& target_interval,
+                                                                     const OpenRightUnsigned &delete_interval) {
 
   // Does not delete this interval.
   if (target_interval.disjoint(delete_interval)) {

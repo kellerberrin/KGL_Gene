@@ -54,15 +54,15 @@ public:
 
   }
 
-  [[nodiscard]] const OpenRightInterval& orginalInterval() const { return original_interval_; }
-  [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& orginalInterval() const { return original_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& modifiedInterval() const { return modified_interval_; }
 
   [[nodiscard]] bool reconcileIntervalOffset() const;
 
 private:
 
-  OpenRightInterval original_interval_;
-  OpenRightInterval modified_interval_;
+  OpenRightUnsigned original_interval_;
+  OpenRightUnsigned modified_interval_;
   IndelAccountingMap indel_accounting_map_;
 
 

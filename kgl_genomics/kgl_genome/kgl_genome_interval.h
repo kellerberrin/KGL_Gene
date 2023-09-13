@@ -40,7 +40,7 @@ public:
   // Object access
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& getGene() const { return gene_feature_; }
   [[nodiscard]] const GeneCodingTranscriptMap& codingTranscripts() const { return gene_coding_transcripts_; }
-  [[nodiscard]] const OpenRightInterval& geneInterval() const { return gene_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& geneInterval() const { return gene_interval_; }
   [[nodiscard]] const IntervalSetLower& transcriptUnion() const { return transcript_union_; }
 
   // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
@@ -55,7 +55,7 @@ private:
   std::shared_ptr<const GeneFeature> gene_feature_;
   GeneCodingTranscriptMap gene_coding_transcripts_;
   IntervalSetLower transcript_union_;
-  OpenRightInterval gene_interval_;
+  OpenRightUnsigned gene_interval_;
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
   // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.

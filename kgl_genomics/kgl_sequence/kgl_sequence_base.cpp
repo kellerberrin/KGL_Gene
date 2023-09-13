@@ -35,6 +35,13 @@ bool kgl::DNA5SequenceLinear::deleteSubSequence(ContigOffset_t delete_offset, Co
 
 }
 
+bool kgl::DNA5SequenceLinear::deleteSubSequence(const OpenRightUnsigned& delete_interval) {
+
+  return deleteOffset(delete_interval.lower(), delete_interval.size());
+
+}
+
+
 // Insert offset is relative to the begining of the sequence (0 is the first letter).
 bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence) {
 
@@ -87,6 +94,12 @@ std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::intronArraySequenc
 }
 
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
+kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(const OpenRightUnsigned& sub_interval) const {
+
+  return subSequence(sub_interval.lower(), sub_interval.size());
+
+}
+
 kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offset, ContigSize_t sub_length) const {
 
   DNA5SequenceLinear sub_sequence;

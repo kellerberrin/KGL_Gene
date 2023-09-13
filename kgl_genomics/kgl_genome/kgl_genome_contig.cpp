@@ -151,7 +151,7 @@ bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
 
 }
 
-kgl::DNA5SequenceLinear kgl::ContigReference::getSubSequence(const OpenRightInterval& sequence_interval) const {
+kgl::DNA5SequenceLinear kgl::ContigReference::getSubSequence(const OpenRightUnsigned& sequence_interval) const {
 
   if (sequence_interval.upper() > sequence_ptr()->length()) {
 

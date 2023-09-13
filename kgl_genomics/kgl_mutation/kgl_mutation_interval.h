@@ -27,22 +27,22 @@ class AdjustedSequenceInterval {
 
 public:
 
-  AdjustedSequenceInterval(const OpenRightInterval& original_interval) : original_interval_(original_interval),
+  AdjustedSequenceInterval(const OpenRightUnsigned& original_interval) : original_interval_(original_interval),
                                                                          modified_interval_(original_interval_) {}
 
   ~AdjustedSequenceInterval() = default;
 
 
-  [[nodiscard]] const OpenRightInterval& orginalInterval() const { return original_interval_; }
-  [[nodiscard]] const OpenRightInterval& modifiedInterval() const { return modified_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& orginalInterval() const { return original_interval_; }
+  [[nodiscard]] const OpenRightUnsigned& modifiedInterval() const { return modified_interval_; }
   [[nodiscard]] const IntervalModifyMap& indelModifyMap() const { return indel_modify_map_; }
 
   [[nodiscard]] bool processVariantMap(const OffsetVariantMap& variant_map);
 
 private:
 
-  const OpenRightInterval original_interval_;
-  OpenRightInterval modified_interval_;
+  const OpenRightUnsigned original_interval_;
+  OpenRightUnsigned modified_interval_;
   IntervalModifyMap indel_modify_map_;
 
   [[nodiscard]] bool processVariant(const std::shared_ptr<const Variant>& variant_ptr);
@@ -59,15 +59,15 @@ private:
   [[nodiscard]] SignedOffset_t intervalOffsetModification() const;
 
   // Returns the updated interval or the unmodified interval if a problem encountered.
-  [[nodiscard]] OpenRightInterval updateOffsetInsert(const OpenRightInterval &adj_insert_interval) const;
-  [[nodiscard]] OpenRightInterval updateOffsetDelete(const OpenRightInterval &adj_delete_interval) const;
+  [[nodiscard]] OpenRightUnsigned updateOffsetInsert(const OpenRightUnsigned &adj_insert_interval) const;
+  [[nodiscard]] OpenRightUnsigned updateOffsetDelete(const OpenRightUnsigned &adj_delete_interval) const;
 
   // Insert and Delete are used to modify an interval as if modified by the inserted and deleted intervals of indel variants.
   // To insert an interval the lower() parameter of inserted interval must be within the range [lower, upper).
-  [[nodiscard]] static OpenRightInterval insertInterval(const OpenRightInterval& target_interval, const OpenRightInterval &insert_interval);
+  [[nodiscard]] static OpenRightUnsigned insertInterval(const OpenRightUnsigned& target_interval, const OpenRightUnsigned &insert_interval);
   // For a valid delete the intersection of the delete interval must be non-empty.
   // Note that the delete_interval argument may be modified if it is not fully contained in this interval.
-  [[nodiscard]] static OpenRightInterval deleteInterval(const OpenRightInterval& target_interval, const OpenRightInterval &delete_interval);
+  [[nodiscard]] static OpenRightUnsigned deleteInterval(const OpenRightUnsigned& target_interval, const OpenRightUnsigned &delete_interval);
 
 
   // Detailed output for unexpected conditions.

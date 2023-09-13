@@ -87,7 +87,7 @@ public:
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
   //Get a subsequence from the contig.
-  [[nodiscard]] DNA5SequenceLinear getSubSequence(const OpenRightInterval& sequence_interval) const;
+  [[nodiscard]] DNA5SequenceLinear getSubSequence(const OpenRightUnsigned& sequence_interval) const;
 
   // Compare reference Contigs- mainly used for testing.
   [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;

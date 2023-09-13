@@ -223,7 +223,7 @@ bool kgl::Variant::isCanonical() const {
 // An SNP offset is an interval size 1 with lower() = offset().
 // A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
 // An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
-std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval() const {
+std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::modifyInterval() const {
 
   auto const [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
 
@@ -233,7 +233,7 @@ std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval
 
       size_t insert_size = canonical_alt.length() - canonical_ref.length();
       ContigOffset_t insert_offset = canonical_offset + canonical_ref.length();
-      OpenRightInterval insert_interval{insert_offset, insert_offset + insert_size};
+      OpenRightUnsigned insert_interval{insert_offset, insert_offset + insert_size};
       return {VariantType::INDEL_INSERT, insert_interval};
 
     }
@@ -242,7 +242,7 @@ std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval
 
       size_t delete_size = canonical_ref.length() - canonical_alt.length();
       ContigOffset_t delete_offset = canonical_offset + canonical_alt.length();
-      OpenRightInterval delete_interval {delete_offset, delete_offset + delete_size};
+      OpenRightUnsigned delete_interval {delete_offset, delete_offset + delete_size};
       return {VariantType::INDEL_DELETE, delete_interval};
 
     }
@@ -250,7 +250,7 @@ std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval
     default:
     case VariantType::SNP: {
 
-      OpenRightInterval snp_interval{canonical_offset, canonical_offset + canonical_ref.length()};
+      OpenRightUnsigned snp_interval{canonical_offset, canonical_offset + canonical_ref.length()};
       return {VariantType::SNP, snp_interval};
 
     }
@@ -259,15 +259,16 @@ std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::modifyInterval
 
 }
 
-// Modify the insert interval to [lower(), lower + 1)
-std::pair<kgl::VariantType, kel::OpenRightInterval> kgl::Variant::memberInterval() const {
+// Modify the insert interval to [member_interval.lower()-1, member_interval.lower+1)
+std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::memberInterval() const {
 
   auto [variant_type, member_interval] = modifyInterval();
-  // An insert variant must start in the specified region.
-  // If we are testing intersection then we check that the INSERT lower() offset is a member.
+  // An insert variant must modify the specified region.
+  // Therefore the INSERT membership interval must be contained in the modified interval.
+  // Otherwise the INSERTed interval is adjacent to the modified interval and does not modify it.
   if (variant_type == VariantType::INDEL_INSERT) {
 
-    member_interval.resize(member_interval.lower(), member_interval.lower()+1);
+    member_interval.resize(member_interval.lower()-1, member_interval.lower()+1);
 
   }
 

@@ -116,9 +116,9 @@ public:
   // An SNP offset is an interval size 1 with lower() = offset().
   // A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
   // An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
-  [[nodiscard]] std::pair<VariantType, OpenRightInterval> modifyInterval() const;
+  [[nodiscard]] std::pair<VariantType, OpenRightUnsigned> modifyInterval() const;
   // Modify the insert interval to [offset+ 1, offset + 2)
-  [[nodiscard]] std::pair<VariantType, OpenRightInterval> memberInterval() const;
+  [[nodiscard]] std::pair<VariantType, OpenRightUnsigned> memberInterval() const;
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
   // An assigned variant reference such as (HSapien) "rs187084".

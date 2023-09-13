@@ -14,24 +14,24 @@ namespace kel = kellerberrin;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kel::operator==(const OpenRightInterval& lhs, const OpenRightInterval &rhs) {
+bool kel::operator==(const OpenRightUnsigned& lhs, const OpenRightUnsigned &rhs) {
 
   return lhs.lower() == rhs.lower() and lhs.upper() == rhs.upper();
 
 }
 
-bool kel::operator<(const OpenRightInterval &lhs, const OpenRightInterval &rhs) {
+bool kel::operator<(const OpenRightUnsigned &lhs, const OpenRightUnsigned &rhs) {
 
   return lhs.lower() < rhs.lower();
 
 }
 
 // Modify the interval.
-void kel::OpenRightInterval::resize(size_t lower, size_t upper)  {
+void kel::OpenRightUnsigned::resize(size_t lower, size_t upper)  {
 
   if (upper < lower) {
 
-    ExecEnv::log().warn("OpenRightInterval::resize; Incorrect Initialization, Upper Offset: {} < Lower Offset: {}", upper, lower);
+    ExecEnv::log().warn("OpenRightUnsigned::resize; Incorrect Initialization, Upper Offset: {} < Lower Offset: {}", upper, lower);
     std::swap(lower, upper);
 
   }
@@ -42,33 +42,34 @@ void kel::OpenRightInterval::resize(size_t lower, size_t upper)  {
 }
 
 // Shift the interval without changing it's size.
-void kel::OpenRightInterval::translate(int64_t shift) {
+kel::OpenRightUnsigned kel::OpenRightUnsigned::translate(int64_t shift) const {
 
-  if (shift < 0 and std::abs(shift) > static_cast<int64_t>(lower())) {
+  OpenRightUnsigned translated(*this);
+  if ((static_cast<int64_t>(lower()) + shift) < 0) {
 
-    ExecEnv::log().warn("OpenRightInterval::translate; translate shift: {} results in negative values for interval [{}, {})", shift, lower_, upper_);
-    return;
+    ExecEnv::log().warn("OpenRightUnsigned::translate; translate shift: {} results in negative values for interval: {}", shift, toString());
+    return {lower(), upper()};
 
   }
 
-  lower_ += shift;
-  upper_ += shift;
+  size_t translate_lower = static_cast<int64_t>(lower()) + shift;
+  size_t translate_upper = static_cast<int64_t>(upper()) + shift;
+
+  return { translate_lower , translate_upper };
 
 }
 
 
 // Shift the interval so that lower() == 0. The translation (which is always non-positive) is returned.
-int64_t kel::OpenRightInterval::translateZero() {
+kel::OpenRightUnsigned kel::OpenRightUnsigned::translateZero() const {
 
   int64_t shift =  -1 * static_cast<int64_t>(lower());
-  translate(shift);
-
-  return shift;
+  return translate(shift);
 
 }
 
 
-kel::OpenRightInterval kel::OpenRightInterval::intersection(const OpenRightInterval &interval) const {
+kel::OpenRightUnsigned kel::OpenRightUnsigned::intersection(const OpenRightUnsigned &interval) const {
 
   if (lower_ >= interval.upper_ or interval.lower_ >= upper_) {
 
@@ -80,13 +81,13 @@ kel::OpenRightInterval kel::OpenRightInterval::intersection(const OpenRightInter
 
 }
 
-bool kel::OpenRightInterval::containsInterval(const OpenRightInterval &interval) const {
+bool kel::OpenRightUnsigned::containsInterval(const OpenRightUnsigned &interval) const {
 
   return intersection(interval) == interval;
 
 }
 
-kel::OpenRightInterval kel::OpenRightInterval::merge(const OpenRightInterval &interval) const {
+kel::OpenRightUnsigned kel::OpenRightUnsigned::merge(const OpenRightUnsigned &interval) const {
 
   if (intersects(interval) or adjacent(interval)) {
 
