@@ -101,7 +101,11 @@ private:
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class SequenceUpdateResult { NORMAL, ERROR, DELETED_REGION};
+// The enum below has additional information about delete variants.
+// DELETED_REGION - When a large delete variant overlaps the entire region of interest and deletes the region.
+// PARTIAL_HIGH_DELETE - When a delete variant begins in the region of interest and deletes 'above' the region.
+// PARTIAL_LOW_DELETE - When a delete variant begins below in the region of interest and deletes the beginning of the region.
+enum class SequenceUpdateResult { NORMAL, ERROR, DELETED_REGION, PARTIAL_HIGH_DELETE, PARTIAL_LOW_DELETE};
 
 class SequenceVariantUpdate {
 

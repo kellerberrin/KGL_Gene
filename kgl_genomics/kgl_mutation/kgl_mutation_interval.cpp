@@ -34,8 +34,19 @@ std::string kgl::SequenceVariantUpdate::toString() const {
       update_result_text = "Error";
       break;
 
+    // When a large delete variant overlaps the entire region of interest and deletes the region.
     case SequenceUpdateResult::DELETED_REGION:
       update_result_text = "Deleted_Region";
+      break;
+
+    // When a delete variant begins in the region of interest and deletes 'above' the region.
+    case SequenceUpdateResult::PARTIAL_HIGH_DELETE:
+      update_result_text = "Partial_High_Delete";
+      break;
+
+    // When a delete variant begins below in the region of interest and deletes the beginning of the region.
+    case SequenceUpdateResult::PARTIAL_LOW_DELETE:
+      update_result_text = "Partial_Low_Delete";
       break;
 
   }
@@ -214,10 +225,18 @@ kgl::AdjustedSequenceInterval::updateInterval(const std::shared_ptr<const Varian
         } else {
 
           modified_interval = updated_interval;
-          // Check if entire region has been deleted (can happen with small ncRNA genes).
-          if (updated_interval.empty()) {
+          // Check if entire region has been deleted (can - and does - happen with small ncRNA genes).
+          if (modified_interval.empty()) {
 
             update_result = SequenceUpdateResult::DELETED_REGION;
+
+          } else if (adjusted_modify_interval.lower() < prior_interval.lower()) {
+
+            update_result = SequenceUpdateResult::PARTIAL_LOW_DELETE;
+
+          } else if (adjusted_modify_interval.upper() > prior_interval.upper()) {
+
+            update_result = SequenceUpdateResult::PARTIAL_HIGH_DELETE;
 
           }
 

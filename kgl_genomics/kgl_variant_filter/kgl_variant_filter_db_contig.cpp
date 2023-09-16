@@ -125,9 +125,9 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
     for (auto const &variant_ptr: offset_ptr->getVariantArray()) {
 
-      auto const [variant_type, modify_interval] = variant_ptr->modifyInterval();
+      auto const [variant_type, member_interval] = variant_ptr->memberInterval();
 
-      OpenRightUnsigned lower_bound_key{modify_interval.lower(), modify_interval.lower()}; // Zero sized.
+      OpenRightUnsigned lower_bound_key{member_interval.lower(), member_interval.lower()}; // Zero sized.
       auto const lower_bound = upstream_delete_map_.lower_bound(lower_bound_key);
       auto const upper_bound = upstream_delete_map_.end();
 
@@ -135,7 +135,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
       for (auto const& [delete_interval, delete_variant_ptr] : std::ranges::subrange(lower_bound, upper_bound)) {
 
-        if (delete_interval.intersects(modify_interval)) {
+        if (delete_interval.intersects(member_interval)) {
 
           upstream_delete = true;
           break;
@@ -155,7 +155,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
         if (variant_type == VariantType::INDEL_DELETE) {
 
-          upstream_delete_map_.emplace(modify_interval, variant_ptr);
+          upstream_delete_map_.emplace(member_interval, variant_ptr);
 
         } // If delete.
 

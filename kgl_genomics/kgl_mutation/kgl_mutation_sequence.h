@@ -11,6 +11,77 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// These helper classes keep track of the offset between the zero-offset modified sequence and the contig based offset.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class AdjustedModifiedOffset {
+
+public:
+
+  AdjustedModifiedOffset(ContigOffset_t contig_offset,
+                         ContigOffset_t modified_offset,
+                         SignedOffset_t indel_adjust)
+                         : contig_offset_(contig_offset),
+                           modified_offset_(modified_offset),
+                           indel_adjust_(indel_adjust) {}
+  ~AdjustedModifiedOffset() = default;
+
+  [[nodiscard]] ContigOffset_t contigOffset() const { return contig_offset_; }
+  [[nodiscard]] ContigOffset_t modifiedOffset() const { return modified_offset_; }
+  [[nodiscard]] SignedOffset_t indelAdjust() const { return indel_adjust_; }
+
+  // This is the updated cumulative indel size/offset adjustment used in the offset map below.
+  void addCumulativeOffset(SignedOffset_t update_adjust) { indel_adjust_ += update_adjust; }
+
+private:
+
+  ContigOffset_t contig_offset_;
+  ContigOffset_t modified_offset_;
+  SignedOffset_t indel_adjust_;
+
+};
+
+using AdjustOffsetMap = std::map<ContigOffset_t, AdjustedModifiedOffset>;
+
+class ModifiedOffsetMap {
+
+public:
+
+  ModifiedOffsetMap(const OpenRightUnsigned& contig_interval) : contig_interval_(contig_interval) {}
+  ~ModifiedOffsetMap() = default;
+
+  // Add an indel offset adjust to the map.
+  // Note that the actual indel increment is passed as an argument.
+  // But, importantly, the cumulative indel offset is stored in the map.
+  [[nodiscard]] bool addModifiedOffset(AdjustedModifiedOffset modified_offset);
+  // Given a contig based sequence interval, return the equivalent zero-based indel modified interval.
+  [[nodiscard]] OpenRightUnsigned convertContigModified(const OpenRightUnsigned& contig_interval) const;
+  // Finds the last cumulative offset or 0 if empty map.
+  [[nodiscard]] SignedOffset_t getCumulativeOffset() const;
+
+  // Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
+  // Calculates the offset into the modified_sequence_.
+  [[nodiscard]] std::pair<ContigOffset_t, bool> translateZeroOffset(ContigOffset_t offset) const;
+
+private:
+
+  const OpenRightUnsigned contig_interval_;
+  AdjustOffsetMap adjust_offset_map_;
+
+  // Finds the map offset element that is <= contig_offset. If not such element exists then returns 0.
+  [[nodiscard]] SignedOffset_t getIndelOffset(ContigOffset_t contig_offset) const;
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// This class actually modifies the zero-based sequence.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AdjustedSequence {
 
@@ -21,30 +92,33 @@ public:
                    IntervalModifyMap interval_modify_map)
                     : contig_ref_ptr_(std::move(contig_ref_ptr)),
                       contig_interval_(contig_interval),
-                      base_offset_adjust_(contig_interval_.lower()),
-                      interval_modify_map_(std::move(interval_modify_map)) { initializeSequences(); }
+                      interval_modify_map_(std::move(interval_modify_map)),
+                      modified_offset_map_(contig_interval) { initializeSequences(); }
   ~AdjustedSequence() = default;
 
-  [[nodiscard]] OpenRightUnsigned contigInterval() const { return contig_interval_; }
+  // The coding interval for the contig sequence.
+  [[nodiscard]] const OpenRightUnsigned& contigInterval() const { return contig_interval_; }
+  // The modify map for the original unmodified sequence.
   [[nodiscard]] const IntervalModifyMap& intervalMap() const { return interval_modify_map_; }
+  // The modify map for the zero based modified sequence.
+  [[nodiscard]] const ModifiedOffsetMap& sequenceMap() const { return modified_offset_map_; }
+  // The zero-based modified sequence.
   [[nodiscard]] const DNA5SequenceLinear& modifiedSequence() const { return modified_sequence_; }
+  // The zero-based unmodified sequence.
   [[nodiscard]] const DNA5SequenceLinear& originalSequence() const { return original_sequence_; }
-
+  // Update the unmodified zero-based sequence into the modified sequence.
   [[nodiscard]] bool updateSequence();
 
 private:
 
-
   std::shared_ptr<const ContigReference> contig_ref_ptr_;
   const OpenRightUnsigned contig_interval_;
-  const ContigOffset_t base_offset_adjust_; // Initialized to contig_interval_.lower();
   IntervalModifyMap interval_modify_map_;
-  IntervalModifyMultiMap update_audit_map_;
+  ModifiedOffsetMap modified_offset_map_;
   DNA5SequenceLinear modified_sequence_;
   DNA5SequenceLinear original_sequence_;
 
   // Used to adjust variant and modify map offsets to offsets within modified_sequence_.
-  ContigOffset_t current_offset_adjust_{0}; // Updated to priorInterval.lower() foe each update record.
   SignedOffset_t modify_offset_adjust_{0}; // Adjusted by indels, +ve for insert, -ve for delete.
 
   void initializeSequences();
@@ -54,16 +128,10 @@ private:
   [[nodiscard]] std::pair<bool, SignedOffset_t> updateSequenceInsert(const SequenceVariantUpdate& sequence_update);
 
   // Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
-  [[nodiscard]] ContigOffset_t translateZeroOffset(ContigOffset_t offset) const; // Calculates the offset into the modified_sequence_.
-  [[nodiscard]] OpenRightUnsigned translateZeroOffset(const OpenRightUnsigned& interval) const; // Same as above but translates an interval.
-
-  // Uses a base that is updated for each modify record.
-  ContigOffset_t translateRelativeOffset(ContigOffset_t offset) const;
-  OpenRightUnsigned translateRelativeOffset(const OpenRightUnsigned& interval) const;
+  [[nodiscard]] std::pair<ContigOffset_t, bool> translateZeroOffset(ContigOffset_t offset) const; // Calculates the offset into the modified_sequence_.
 
   // Given an interval map offset, returns the equivalent offset into the zero-offset original sequence [0, m), where (n-m) = base_offset_adjust_.
-  [[nodiscard]] ContigOffset_t originalZeroOffset(ContigOffset_t offset) const;  // Calculates the offset into the original_sequence_.
-  [[nodiscard]] OpenRightUnsigned translateOriginalOffset(const OpenRightUnsigned& interval) const; // Same as above but translates an interval.
+  [[nodiscard]] std::pair<ContigOffset_t, bool> originalZeroOffset(ContigOffset_t offset) const;  // Calculates the offset into the original_sequence_.
 
 };
 

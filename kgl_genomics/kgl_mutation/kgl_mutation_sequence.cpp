@@ -9,6 +9,126 @@ namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// These helper classes keep track of the offset between the zero-offset modified sequence and the contig based offset.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Add an indel offset adjust to the map.
+// Note that the actual indel increment is passed as an argument.
+// But, importantly, the cumulative indel offset is stored in the map.
+bool kgl::ModifiedOffsetMap::addModifiedOffset(AdjustedModifiedOffset modified_offset) {
+
+  // Store the cumulative offset;
+  SignedOffset_t prev_cumulative_offset = getIndelOffset(modified_offset.contigOffset());
+  modified_offset.addCumulativeOffset(prev_cumulative_offset);
+
+  auto [insert_iter, result] = adjust_offset_map_.try_emplace(modified_offset.contigOffset(), modified_offset);
+  if (not result) {
+
+    ExecEnv::log().warn("ModifiedOffsetMap::addModifiedOffset; could not insert duplicate offset: {}", modified_offset.contigOffset());
+
+  }
+
+  return result;
+
+}
+
+// Given a contig based sequence interval, return the equivalent zero-based indel modified interval.
+kel::OpenRightUnsigned kgl::ModifiedOffsetMap::convertContigModified(const OpenRightUnsigned& contig_interval) const {
+
+  auto [lower, lower_result] = translateZeroOffset(contig_interval.lower());
+  auto [upper, upper_result] = translateZeroOffset(contig_interval.upper());
+
+  if (lower_result and upper_result) {
+
+    return {lower, upper};
+
+  }
+
+  ExecEnv::log().warn("ModifiedOffsetMap::convertContigModified; problem converting contig interval: {}", contig_interval.toString());
+  return {0, 0};
+
+}
+
+std::pair<kgl::ContigOffset_t, bool> kgl::ModifiedOffsetMap::translateZeroOffset(ContigOffset_t offset) const {
+
+  // Rebase the offset to the zero offset of the modified sequence.
+  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset) + (getCumulativeOffset() - static_cast<SignedOffset_t>(contig_interval_.lower()));
+  if (adjusted_offset < 0) {
+
+    ExecEnv::log().warn("ModifiedOffsetMap::translateZeroOffset; calculated offset: {} is less than zero; contig offset: {}, cumulative indel adjust: {}, contig interval: {}",
+                        adjusted_offset, offset, getCumulativeOffset(), contig_interval_.toString());
+    return {0, false};
+
+  }
+
+  return {adjusted_offset, true};
+
+}
+
+// Finds the last cumulative offset or 0 if empty map.
+kgl::SignedOffset_t kgl::ModifiedOffsetMap::getCumulativeOffset() const {
+
+  if (not adjust_offset_map_.empty()) {
+
+    auto back_iter = adjust_offset_map_.rbegin();
+    auto const& [offset, offset_record] = *back_iter;
+    return offset_record.indelAdjust();
+
+  }
+
+  return 0;
+
+}
+
+// Finds the map offset element that is <= contig_offset. If not such element exists then returns 0.
+kgl::SignedOffset_t kgl::ModifiedOffsetMap::getIndelOffset(ContigOffset_t contig_offset) const {
+
+  auto map_iter = adjust_offset_map_.lower_bound(contig_offset);
+  if (map_iter == adjust_offset_map_.end()) {
+
+    if (not adjust_offset_map_.empty()) {
+
+      auto back_iter = adjust_offset_map_.rbegin();
+      auto const& [offset, offset_record] = *back_iter;
+      return offset_record.indelAdjust();
+
+    }
+
+    return 0;
+
+  }
+
+  auto const& [offset, offset_record] = *map_iter;
+  if (offset == contig_offset) {
+
+    return offset_record.indelAdjust();
+
+  }
+
+  // Decrement the iterator to begin() as a guard.
+  map_iter = std::ranges::prev(map_iter, 1, adjust_offset_map_.begin());
+  auto const& [prev_offset, prev_offset_record] = *map_iter;
+  if (prev_offset <= contig_offset) {
+
+    return prev_offset_record.indelAdjust();
+
+  }
+
+  return 0;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// This class actually modifies the zero-based sequence.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 void kgl::AdjustedSequence::initializeSequences() {
 
   if (not interval_modify_map_.empty()) {
@@ -37,9 +157,6 @@ bool kgl::AdjustedSequence::updateSequence() {
   std::pair<bool, SignedOffset_t> update{true, 0};
 
   for (auto const& [offset, interval_update] : interval_modify_map_) {
-
-    // Adjust the base offset to the current lower offset of the current interval.
-    current_offset_adjust_ = interval_update.priorInterval().lower();
 
     switch(interval_update.variantPtr()->variantType()) {
 
@@ -71,7 +188,18 @@ bool kgl::AdjustedSequence::updateSequence() {
 
 std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(const SequenceVariantUpdate& interval_update) {
 
-  const ContigOffset_t sequence_offset = translateZeroOffset(interval_update.variantPtr()->offset());
+  auto const [sequence_offset, sequence_result] = translateZeroOffset(interval_update.variantPtr()->offset());
+  if (not sequence_result) {
+
+    ExecEnv::log().warn("AdjustedSequence::updateSequenceSNP; Offset: {} not in interval: {}/{}, update: {}",
+                        interval_update.variantPtr()->offset(),
+                        contig_interval_.toString(),
+                        modified_sequence_.interval().toString(),
+                        interval_update.toString());
+
+    return {false, 0};
+
+  }
 
   const bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, interval_update.variantPtr()->reference());
   if (not reference_match) {
@@ -83,23 +211,12 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
 
   }
 
-  OpenRightUnsigned prior_interval(modified_sequence_.interval());
-  OpenRightUnsigned insert_update(sequence_offset, sequence_offset);
-
   if (not modified_sequence_.modifyBase(sequence_offset, interval_update.variantPtr()->alternate().at(0))) {
 
     ExecEnv::log().error("AdjustedSequence::updateSequenceSNP; could not modify base (SNP) at adjusted offset: {}", sequence_offset);
     return {false, 0};
 
   }
-
-  OpenRightUnsigned post_interval(modified_sequence_.interval());
-  SequenceVariantUpdate insert_record(interval_update.variantPtr(),
-                                      prior_interval,
-                                      post_interval,
-                                      insert_update,
-                                      SequenceUpdateResult::NORMAL);
-  update_audit_map_.insert({interval_update.variantPtr()->offset(), insert_record});
 
   return {true, 0};
 
@@ -109,37 +226,41 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
 
   auto delete_interval = interval_update.priorUpdateIntersect(); // intersection with the prior interval.
 
-  // Difference between the size of whole delete interval and the intersection with the prior interval.
-  size_t delete_size_adjust = interval_update.updatingInterval().size() - delete_interval.size();
+  ContigOffset_t ref_offset{0};
+  ContigSize_t ref_size{0};
 
-  if (delete_size_adjust > 0) {
+  // Adjust the reference sub-sequence for different deletion types.
+  switch(interval_update.updateResult()) {
 
-    ExecEnv::log().info("AdjustedSequence::updateSequenceDelete: update: {}, truncated: {}/{}, prior interval: {}/{}, modified interval: {}",
-                        interval_update.updatingInterval().toString(),
-                        delete_interval.toString(),
-                        translateZeroOffset(delete_interval).toString(),
-                        interval_update.priorInterval().toString(),
-                        translateZeroOffset(interval_update.priorInterval()).toString(),
-                        modified_sequence_.interval().toString());
+    case SequenceUpdateResult::PARTIAL_HIGH_DELETE:
+      ref_offset = interval_update.variantPtr()->alternateSize();
+      ref_size = delete_interval.size();
+      break;
 
-    auto trans_prior = translateZeroOffset(interval_update.priorInterval());
-    if (trans_prior.lower() > 0) {
+    case SequenceUpdateResult::DELETED_REGION:
+      ref_offset = interval_update.priorInterval().lower() - interval_update.updatingInterval().lower();
+      ref_offset += interval_update.variantPtr()->alternateSize();
+      ref_size = interval_update.priorInterval().size();
+      break;
 
-      for (auto const& [offset, audit_record] : update_audit_map_) {
+    case SequenceUpdateResult::PARTIAL_LOW_DELETE:
+      ref_offset = interval_update.updatingInterval().size() - delete_interval.size();
+      ref_offset += interval_update.variantPtr()->alternateSize();
+      ref_size = interval_update.variantPtr()->referenceSize() - ref_offset;
+      break;
 
-        ExecEnv::log().info("AdjustedSequence::updateSequenceDelete; audit: {}", audit_record.toString());
+    case SequenceUpdateResult::NORMAL:
+      ref_offset = interval_update.variantPtr()->alternateSize();
+      ref_size = interval_update.variantPtr()->referenceSize() - ref_offset;
+      break;
 
-      }
-
-    }
+    case SequenceUpdateResult::ERROR:
+      ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; encountered bad update: {}", interval_update.toString());
+      return {false, 0};
 
   }
 
-//  return {true, 0};
-
-  // Use the above to calculate the number of deleted nucleotides from the prior interval.
-  ContigOffset_t ref_offset = interval_update.variantPtr()->alternateSize() + delete_size_adjust;
-  ContigSize_t ref_size = interval_update.variantPtr()->referenceSize() - ref_offset;
+  // Check if the delete extends beyond the interval of interest.
   OpenRightUnsigned ref_interval(ref_offset, ref_offset + ref_size);
 
   // Check the delete size is the same size as the updating interval size.
@@ -156,58 +277,58 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   const DNA5SequenceLinear truncated_reference = interval_update.variantPtr()->reference().subSequence(ref_interval);
 
   // Convert to an equivalent offset in the modified interval.
-  const ContigOffset_t sequence_offset = translateZeroOffset(interval_update.variantPtr()->offset() + ref_offset);
+  ContigOffset_t contig_delete_offset = interval_update.variantPtr()->offset() + ref_offset;
+  auto [sequence_offset, sequence_result] = translateZeroOffset(contig_delete_offset);
+  if (not sequence_result) {
+
+    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; Offset: {} + reference offset: {}, not in interval: {}/{}, update: {}",
+                        interval_update.variantPtr()->offset(),
+                        ref_offset,
+                        contig_interval_.toString(),
+                        modified_sequence_.interval().toString(),
+                        interval_update.toString());
+
+    return {false, 0};
+
+  }
+
+  // Explicitly handle the case where the entire region is deleted.
+  if (interval_update.updateResult() == SequenceUpdateResult::DELETED_REGION) {
+
+    sequence_offset = 0;
+
+  }
+
   // Check if the deleted nucleotides match the nucleotides in the modified interval.
   bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, truncated_reference);
   if (not reference_match) {
 
     // The deleted nucleotides in the modified interval may have already been modified by a prior SNP.
     // So we check the deleted nucleotides against the original unmodified sequence.
-//    const ContigOffset_t original_offset = originalZeroOffset(delete_interval.lower());
-    const ContigOffset_t original_offset = originalZeroOffset(interval_update.variantPtr()->offset() + ref_offset);
-    auto orig_reference_match = original_sequence_.compareSubSequence(original_offset, truncated_reference);
+    auto const [original_offset, original_result] = originalZeroOffset(interval_update.variantPtr()->offset() + ref_offset);
+    reference_match = original_sequence_.compareSubSequence(original_offset, truncated_reference);
     if (not reference_match) {
 
-      if (orig_reference_match) {
-
-        ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; **** original match at: original offset: {}, interval: {}/{} , contig interval: {}, base: {}, current: {}, modify: {}",
-                            original_offset,
-                            modified_sequence_.interval().toString(),
-                            original_sequence_.interval().toString(),
-                            contig_interval_.toString(),
-                            base_offset_adjust_,
-                            current_offset_adjust_,
-                            modify_offset_adjust_);
-
-      }
-
-      auto mod_offset = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(sequence_offset)-10);
-      OpenRightUnsigned ref_window(mod_offset, mod_offset + 20 + ref_interval.size());
+      OpenRightUnsigned ref_window(sequence_offset, sequence_offset + ref_interval.size());
       const DNA5SequenceLinear interval_reference = modified_sequence_.subSequence(ref_window);
 
-      auto mod_original = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(original_offset)-10);
-      OpenRightUnsigned orig_window(mod_original, mod_original + ref_interval.size() + 20);
-      const DNA5SequenceLinear interval_original = original_sequence_.subSequence(orig_window);
-
-      ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; reference: {}/{} does not match sequence: {}/{}, offset: {}/{} interval: {}, update: {}/{}",
+      ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; reference: {} does not match sequence: {} at offset: {}/{}, ref interval: {}, delete interval: {}, Update: {}",
                           truncated_reference.getSequenceAsString(),
-                          ref_interval.toString(),
                           interval_reference.getSequenceAsString(),
-                          interval_original.getSequenceAsString(),
                           sequence_offset,
                           original_offset,
-                          modified_sequence_.interval().toString(),
-                          interval_update.toString(),
-                          delete_interval.toString());
+                          ref_interval.toString(),
+                          delete_interval.toString(),
+                          interval_update.toString()  );
+
       return {false, 0};
 
     }
 
   }
 
-//  return {true, 0};
-
   const OpenRightUnsigned delete_modified{sequence_offset, sequence_offset + ref_size };
+  int64_t delete_adjust = -1 * static_cast<int64_t>(ref_size); // deleted size as a -ve.
   bool delete_result = modified_sequence_.deleteSubSequence(delete_modified);
   if (not delete_result) {
 
@@ -218,20 +339,42 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
 
   }
 
-  return { true, -1 * ref_size};
+  bool add_result = modified_offset_map_.addModifiedOffset(AdjustedModifiedOffset(contig_delete_offset, sequence_offset, delete_adjust));
+  if (not add_result) {
+
+    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; failed to add delete adjust: {} at contig offset: {}",
+                        delete_adjust, contig_delete_offset);
+
+  }
+
+  return { true, delete_adjust};
 
 }
 
+
 std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert(const SequenceVariantUpdate& interval_update) {
 
-  const ContigOffset_t sequence_offset = translateZeroOffset(interval_update.variantPtr()->offset());
-  bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, interval_update.variantPtr()->reference());
+  ContigOffset_t contig_insert = interval_update.variantPtr()->offset();
+  auto const [sequence_offset, sequence_result] = translateZeroOffset(contig_insert);
+  if (not sequence_result) {
 
+    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; Offset: {}, original: {}/{} not in interval: {}, update: {}",
+                        interval_update.variantPtr()->offset(),
+                        contig_interval_.toString(),
+                        original_sequence_.interval().toString(),
+                        modified_sequence_.interval().toString(),
+                        interval_update.toString());
+
+    return {false, 0};
+
+  }
+
+  bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, interval_update.variantPtr()->reference());
   if (not reference_match) {
 
     // The reference letter may have already been modified by a prior SNP.
     // So we check the reference() against the original unmodified sequence.
-    const ContigOffset_t original_offset = originalZeroOffset(interval_update.variantPtr()->offset());
+    auto const [original_offset, original_result] = originalZeroOffset(interval_update.variantPtr()->offset());
     reference_match = original_sequence_.compareSubSequence(original_offset, interval_update.variantPtr()->reference());
 
     if (not reference_match) {
@@ -245,6 +388,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   }
 
   const ContigOffset_t insert_offset = interval_update.variantPtr()->referenceSize();
+  contig_insert += insert_offset;  // Adjust the insert offset for the reference size.
   const ContigSize_t insert_size = interval_update.variantPtr()->alternateSize() - insert_offset;
 
   // Check the insert size is the same size as the updating interval size.
@@ -258,11 +402,8 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   }
 
   ContigOffset_t sequence_insert = sequence_offset + insert_offset;
-
-  OpenRightUnsigned prior_interval = translateZeroOffset(interval_update.priorInterval());
-  OpenRightUnsigned insert_update(sequence_insert, sequence_insert + insert_size);
-
   const DNA5SequenceLinear truncated_alternate = interval_update.variantPtr()->alternate().subSequence(insert_offset, insert_size);
+
   bool insert_result = modified_sequence_.insertSubSequence(sequence_insert, truncated_alternate);
   if (not insert_result) {
 
@@ -272,97 +413,55 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
 
   }
 
-  OpenRightUnsigned post_interval(modified_sequence_.interval());
-  SequenceVariantUpdate insert_record(interval_update.variantPtr(),
-                                      prior_interval,
-                                      post_interval,
-                                      insert_update,
-                                      SequenceUpdateResult::NORMAL);
-  update_audit_map_.insert({interval_update.variantPtr()->offset(), insert_record});
+  bool add_result = modified_offset_map_.addModifiedOffset(AdjustedModifiedOffset(contig_insert,
+                                                                                  sequence_offset,
+                                                                                  static_cast<SignedOffset_t>(insert_size)));
+  if (not add_result) {
+
+    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; failed to add insert adjust: {} at contig offset: {}",
+                        insert_size, sequence_insert);
+
+  }
 
   return {insert_result, insert_size};
 
 }
 
 // Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
-kgl::ContigOffset_t kgl::AdjustedSequence::translateZeroOffset(ContigOffset_t offset) const {
+std::pair<kgl::ContigOffset_t, bool> kgl::AdjustedSequence::translateZeroOffset(ContigOffset_t offset) const {
 
   // Rebase the offset to the zero offset of the modified sequence.
-  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset) + (modify_offset_adjust_ - static_cast<SignedOffset_t>(base_offset_adjust_));
+  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset) + (modify_offset_adjust_ - static_cast<SignedOffset_t>(contigInterval().lower()));
   if (adjusted_offset < 0) {
 
-    ExecEnv::log().warn("AdjustedSequence::translateZeroOffset; offset interval: {} is not in the modified interval: {}",
-                        adjusted_offset, modified_sequence_.interval().toString());
-    return 0;
+    ExecEnv::log().warn("AdjustedSequence::translateZeroOffset; original offset: {}, offset interval: {}, modify_adjust: {}, contig interval: {}, is not in the modified interval: {}",
+                        offset, adjusted_offset, modify_offset_adjust_, contigInterval().toString(), modified_sequence_.interval().toString());
+    return {0, false};
 
   }
 
   if (not modified_sequence_.interval().containsOffset(adjusted_offset)) {
 
-    ExecEnv::log().warn("AdjustedSequence::translateZeroOffset; offset interval: {} is not in the modified interval: {}",
-                        adjusted_offset, modified_sequence_.interval().toString());
-    return 0;
+    ExecEnv::log().warn("AdjustedSequence::translateZeroOffset; original offset: {}, offset interval: {} is not in the modified interval: {}",
+                        offset, adjusted_offset, modified_sequence_.interval().toString());
+    return {0, false};
 
   }
 
-  return adjusted_offset;
+  return {adjusted_offset, true};
 
 }
-
-// Same as above but translates an interval.
-kel::OpenRightUnsigned kgl::AdjustedSequence::translateZeroOffset(const OpenRightUnsigned& interval) const {
-
-  const SignedOffset_t adjusted_offset =  modify_offset_adjust_ - static_cast<SignedOffset_t>(base_offset_adjust_);
-  return interval.translate(adjusted_offset);
-
-}
-
-
-
-// Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
-kgl::ContigOffset_t kgl::AdjustedSequence::translateRelativeOffset(ContigOffset_t offset) const {
-
-  // Rebase the offset to the zero offset of the modified sequence.
-  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset) + (modify_offset_adjust_ - static_cast<SignedOffset_t>(current_offset_adjust_));
-  if (adjusted_offset < 0) {
-
-    ExecEnv::log().warn("AdjustedSequence::translateRelativeOffset; offset interval: {} is not in the modified interval: {}",
-                        adjusted_offset, modified_sequence_.interval().toString());
-    return 0;
-
-  }
-
-  if (not modified_sequence_.interval().containsOffset(adjusted_offset)) {
-
-    ExecEnv::log().warn("AdjustedSequence::translateRelativeOffset; offset interval: {} is not in the modified interval: {}",
-                        adjusted_offset, modified_sequence_.interval().toString());
-    return 0;
-
-  }
-
-  return adjusted_offset;
-
-}
-
-// Same as above but translates an interval.
-kel::OpenRightUnsigned kgl::AdjustedSequence::translateRelativeOffset(const OpenRightUnsigned& interval) const {
-
-  const SignedOffset_t adjusted_offset =  modify_offset_adjust_ - static_cast<SignedOffset_t>(current_offset_adjust_);
-  return interval.translate(adjusted_offset);
-
-}
-
 
 // Given an interval map offset, returns the equivalent offset into the zero-offset original sequence [0, m), where (n-m) = base_offset_adjust_.
-kgl::ContigOffset_t kgl::AdjustedSequence::originalZeroOffset(ContigOffset_t offset) const {
+std::pair<kgl::ContigOffset_t, bool> kgl::AdjustedSequence::originalZeroOffset(ContigOffset_t offset) const {
 
   // Rebase the offset to the zero offset of the orginal sequence.
-  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset)  - static_cast<SignedOffset_t>(base_offset_adjust_);
+  const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(offset)  - static_cast<SignedOffset_t>(contigInterval().lower());
   if (adjusted_offset < 0) {
 
     ExecEnv::log().warn("AdjustedSequence::originalZeroOffset; offset interval: {} is not in the original interval: {}",
                         adjusted_offset, original_sequence_.interval().toString());
-    return 0;
+    return {0, false};
 
   }
 
@@ -370,18 +469,10 @@ kgl::ContigOffset_t kgl::AdjustedSequence::originalZeroOffset(ContigOffset_t off
 
     ExecEnv::log().warn("AdjustedSequence::originalZeroOffset; offset: {} is not in the original interval: {}",
                         adjusted_offset, original_sequence_.interval().toString());
-    return 0;
+    return {0, false};
 
   }
 
-  return adjusted_offset;
-
-}
-
-// Same as above but translates an interval.
-kel::OpenRightUnsigned kgl::AdjustedSequence::translateOriginalOffset(const OpenRightUnsigned& interval) const {
-
-  const SignedOffset_t adjusted_offset = -1 * static_cast<SignedOffset_t>(base_offset_adjust_);
-  return interval.translate(adjusted_offset);
+  return {adjusted_offset, true};
 
 }
