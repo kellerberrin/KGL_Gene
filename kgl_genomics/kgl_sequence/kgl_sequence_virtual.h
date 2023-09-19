@@ -74,6 +74,9 @@ public:
   // A hash value of the sequence.
   [[nodiscard]] size_t hashSequence() const { return alphabet_string_.hashString(); }
 
+  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+  [[nodiscard]] bool append(const AlphabetSequence& inserted_sequence);
+
   // Search for all subsequences.
   [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
 
@@ -111,7 +114,7 @@ protected:
   [[nodiscard]] bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
-  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
   // Returns bool false if offset and/or size are out of bounds.
   [[nodiscard]] bool getSubsequence(ContigOffset_t substring_offset, ContigSize_t substring_size, AlphabetSequence& sub_sequence) const;
@@ -156,6 +159,21 @@ bool AlphabetSequence<Alphabet>::deleteOffset(ContigOffset_t delete_offset, Cont
 
     ExecEnv::log().error("Problem deleting subsequence from sequence string, offset: {}, delete size: {}, sequence size: {}",
                          delete_offset, delete_size, length());
+    return false;
+
+  }
+
+  return true;
+
+}
+
+template<typename Alphabet>
+bool AlphabetSequence<Alphabet>::append(const AlphabetSequence& inserted_sequence) {
+
+  if (not alphabet_string_.append(inserted_sequence.alphabet_string_)) {
+
+    ExecEnv::log().error("Problem appending a sub-sequence, interval: {}, appended interval: {}",
+                         interval().toString(), inserted_sequence.interval().toString());
     return false;
 
   }

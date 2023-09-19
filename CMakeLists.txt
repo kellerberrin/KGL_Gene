@@ -354,6 +354,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.h
         kgl_genomics/kgl_mutation/kgl_mutation_aggregation.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_aggregation.h
+        kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_translate.h
 )
 
 # 3rd party library for fast Levenshtein sequence matching.

@@ -8,6 +8,7 @@
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
 #include "kgl_mutation_sequence.h"
+#include "kgl_mutation_aggregation.h"
 
 #include <ranges>
 
@@ -271,6 +272,37 @@ std::optional<kgl::RegionReturn> kgl::MutateGenes::genomeTranscriptMutation(cons
     return std::nullopt;
 
   }
+
+  auto modified_sequence_opt = SequenceAggregation::getModifiedGene(*adjusted_sequence_ptr, gene_interval, transcript_id);
+  if (not modified_sequence_opt) {
+
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; problem calculating modified gene sequence for transcript : {}, gene: {}",
+                        transcript_id, gene_ptr->id());
+
+  }
+
+  auto original_sequence_opt = SequenceAggregation::getOriginalGene(*adjusted_sequence_ptr, gene_interval, transcript_id);
+  if (not original_sequence_opt) {
+
+    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; problem calculating original gene sequence for transcript : {}, gene: {}",
+                        transcript_id, gene_ptr->id());
+
+  }
+
+  if (modified_sequence_opt and original_sequence_opt) {
+
+    auto& modify_sequence = modified_sequence_opt.value();
+    auto& original_sequence = original_sequence_opt.value();
+
+    if (modify_sequence.length() == 0) {
+
+      ExecEnv::log().info("***** MutateGenes::genomeTranscriptMutation; deleted gene: {}, transcript: {}, original size: {}",
+                          gene_ptr->id(), transcript_id, original_sequence.length());
+
+    }
+
+  }
+
 
   RegionReturn region_return(region_variant_ptr, map_size, non_unique_count, upstream_deleted);
 
