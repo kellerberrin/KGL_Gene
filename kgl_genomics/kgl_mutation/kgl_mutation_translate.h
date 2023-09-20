@@ -95,9 +95,13 @@ public:
   // Calculates the offset into the original_sequence_.
   [[nodiscard]] std::pair<ContigOffset_t, bool> originalZeroOffset(ContigOffset_t contig_offset) const { return calcModifiedOffset(contig_offset, 0); }
 
+  [[nodiscard]] const OpenRightUnsigned& contigInterval() const { return contig_interval_; }
+
+  void reinitialize(const OpenRightUnsigned &contig_interval) { contig_interval_ = contig_interval; adjust_offset_map_.clear(); }
+
 private:
 
-  const OpenRightUnsigned contig_interval_;
+  OpenRightUnsigned contig_interval_;
   AdjustOffsetMap adjust_offset_map_;
 
   // Lookup an indel modified zero-offset sequence - generally a gene or similar.

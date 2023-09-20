@@ -10,6 +10,7 @@
 #include "kgl_mutation_analysis.h"
 #include "kgl_mutation_variant_map.h"
 #include "kgl_mutation_interval.h"
+#include "kgl_mutation_aggregation.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -66,7 +67,7 @@ private:
                              const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const;
 
   // Multi-threaded function, statistics and other objects returned in RegionReturn.
-  static std::optional<RegionReturn> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
+  static std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                const FeatureIdent_t& transcript_id,
                                                                const std::shared_ptr<const GenomeReference>& reference_genome_ptr);

@@ -16,25 +16,74 @@ namespace kel = kellerberrin;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::AdjustedSequence::initializeSequences() {
+
+void kgl::AdjustedSequence::clear() {
+
+  interval_modify_map_.clear();
+  modified_offset_map_.reinitialize({0, 0});
+  modified_sequence_.clear();
+  original_sequence_.clear();
+  valid_modified_sequence_ = false;
+
+}
+
+// Update the unmodified zero-based sequence into the modified sequence.
+bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                                           const OpenRightUnsigned& contig_interval,
+                                           const IntervalModifyMap& interval_modify_map) {
+
+  initializeSequences(contig_ref_ptr, contig_interval, interval_modify_map);
+  bool result = updateSequence();
+  if (not result) {
+
+    ExecEnv::log().warn("djustedSequence::updateSequence; could not update sequence: {}, contig: {}",
+                        contig_interval.toString(), contig_ref_ptr->contigId());
+    clear();
+    return false;
+
+  }
+
+  if (not verifyUpdatedSequence()) {
+
+    ExecEnv::log().warn("djustedSequence::updateSequence; could not verify sequence: {}, contig: {}",
+                        contig_interval.toString(), contig_ref_ptr->contigId());
+    clear();
+    return false;
+
+  }
+
+  valid_modified_sequence_ = true;
+  return true;
+
+}
+
+
+void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                                                const OpenRightUnsigned& contig_interval,
+                                                const IntervalModifyMap& interval_modify_map) {
+
+  clear();
+  interval_modify_map_ = interval_modify_map;
+  modified_offset_map_.reinitialize(contig_interval);
 
   if (not interval_modify_map_.empty()) {
 
     auto [offset, first_sequence_modify] = *interval_modify_map_.begin();
 
-    if (contig_interval_ != first_sequence_modify.priorInterval()) {
+    if (contigInterval() != first_sequence_modify.priorInterval()) {
 
       ExecEnv::log().error("AdjustedSequence::initializeSequences; contig interval: {} does not match initial map interval: {}",
-                           contig_interval_.toString(), first_sequence_modify.priorInterval().toString());
+                           contigInterval().toString(), first_sequence_modify.priorInterval().toString());
       // Clear the map for good measure.
-      interval_modify_map_.clear();
+      clear();
+      return;
 
     }
 
   }
 
-  modified_sequence_ = contig_ref_ptr_->getSubSequence(contig_interval_);
-  original_sequence_ = contig_ref_ptr_->getSubSequence(contig_interval_);
+  modified_sequence_ = contig_ref_ptr->getSubSequence(contigInterval());
+  original_sequence_ = contig_ref_ptr->getSubSequence(contigInterval());
 
 }
 
@@ -71,6 +120,45 @@ bool kgl::AdjustedSequence::updateSequence() {
 
 }
 
+
+bool kgl::AdjustedSequence::verifyUpdatedSequence() const {
+
+  bool result{true};
+  for (auto const& [offset, interval_update] : interval_modify_map_) {
+
+    const std::shared_ptr<const Variant>& variant_ptr = interval_update.variantPtr();
+    if (variant_ptr->variantType() == VariantType::SNP) {
+
+      auto [modified_offset, offset_result] = sequenceMap().modifiedZeroOffset(offset);
+      if (not offset_result) {
+
+        ExecEnv::log().warn("AdjustedSequence::verifyUpdatedSequence; Cannot convert offset: {} to modified offset, variant: {}",
+                            offset, variant_ptr->HGVS());
+        result = false;
+        continue;
+
+      }
+
+      const bool reference_match = modified_sequence_.compareSubSequence(modified_offset, variant_ptr->alternate());
+      if (not reference_match) {
+
+        ExecEnv::log().warn("AdjustedSequence::verifyUpdatedSequence; alternate does not match modified sequence, modified offset: {} variant: {}",
+                            offset, variant_ptr->HGVS());
+
+        result = false;
+        continue;
+
+      }
+
+    }
+
+  }
+
+  return result;
+
+}
+
+
 std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(const SequenceVariantUpdate& interval_update) {
 
   ContigOffset_t offset_SNP = interval_update.variantPtr()->offset();
@@ -79,7 +167,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
 
     ExecEnv::log().warn("AdjustedSequence::updateSequenceSNP; Offset: {} not in interval: {}/{}, update: {}",
                         interval_update.variantPtr()->offset(),
-                        contig_interval_.toString(),
+                        contigInterval().toString(),
                         modified_sequence_.interval().toString(),
                         interval_update.toString());
 
@@ -170,7 +258,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
     ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; Offset: {} + reference offset: {}, not in interval: {}/{}, update: {}",
                         interval_update.variantPtr()->offset(),
                         ref_offset,
-                        contig_interval_.toString(),
+                        contigInterval().toString(),
                         modified_sequence_.interval().toString(),
                         interval_update.toString());
 
@@ -250,7 +338,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
 
     ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; Offset: {}, original: {}/{} not in interval: {}, update: {}",
                         interval_update.variantPtr()->offset(),
-                        contig_interval_.toString(),
+                        contigInterval().toString(),
                         original_sequence_.interval().toString(),
                         modified_sequence_.interval().toString(),
                         interval_update.toString());
@@ -322,11 +410,18 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
 // Note that the specified sub_interval must be contained in the initial contig_interval
 std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequence(const OpenRightUnsigned& sub_interval) const {
 
+  if (not valid_modified_sequence_) {
+
+    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; no valid modified sequence available");
+    return std::nullopt;
+
+  }
+
   // Check sub-interval bounds.
-  if (not contig_interval_.containsInterval(sub_interval)) {
+  if (not contigInterval().containsInterval(sub_interval)) {
 
     ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; sub interval: {} is not contained in contig interval: {}",
-                        sub_interval.toString(), contig_interval_.toString());
+                        sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }
 
@@ -351,11 +446,18 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
 // Note that the specified sub_interval must be contained in the initial contig_interval
 std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequence(const OpenRightUnsigned& sub_interval) const {
 
+  if (not valid_modified_sequence_) {
+
+    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; no valid original sequence available");
+    return std::nullopt;
+
+  }
+
   // Check sub-interval bounds.
-  if (not contig_interval_.containsInterval(sub_interval)) {
+  if (not contigInterval().containsInterval(sub_interval)) {
 
     ExecEnv::log().warn("AdjustedSequence::originalSubSequence; sub interval: {} is not contained in contig interval: {}",
-                        sub_interval.toString(), contig_interval_.toString());
+                        sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }
 

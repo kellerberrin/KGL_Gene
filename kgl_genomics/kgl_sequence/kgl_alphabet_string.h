@@ -63,6 +63,7 @@ public:
 
   [[nodiscard]] ContigSize_t length() const { return base_string_.length(); }
   [[nodiscard]] bool empty() const { return base_string_.empty(); }
+  void clear() { base_string_.clear(); }
 
   void reserve(ContigSize_t string_size) { base_string_.reserve(string_size); }
 

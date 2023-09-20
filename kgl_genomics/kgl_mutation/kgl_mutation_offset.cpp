@@ -33,7 +33,7 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 
   std::shared_ptr<ContigDB> contig_ptr = find_iter->second;
 
-  auto [contig_map, non_unique, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, start, end);
+  auto [contig_map, non_unique, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, OpenRightUnsigned(start, end));
 
   variant_map = std::move(contig_map);
 
@@ -46,20 +46,19 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 // Returns a map of unique canonical variants
 // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
 std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::MutationOffset::getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                                    ContigOffset_t start,
-                                                                                    ContigOffset_t end) {
+                                                                                             const OpenRightUnsigned& variant_interval) {
 
   OffsetVariantMap offset_variant_map;
 
   // Filter the variants plus a margin of 200 nucleotides at the beginning of the specified region.
   // To allow for any offset() change when the variants are converted to canonical.
-  ContigOffset_t lower = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(start)-NUCLEOTIDE_CANONICAL_MARGIN);
+  ContigOffset_t lower = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(variant_interval.lower())-NUCLEOTIDE_CANONICAL_MARGIN);
   // Filter to just variants in the region plus offset margins.
-  auto region_contig_ptr = contig_ptr->viewFilter(ContigRegionFilter(lower, end));
+  auto region_contig_ptr = contig_ptr->viewFilter(ContigRegionFilter(lower, variant_interval.upper()));
   // Convert to canonical variants.
   auto canonical_contig_ptr = region_contig_ptr->canonicalContig();
   // Filter to just the variants that will modify the specified region [start, end).
-  auto modify_contig_ptr = region_contig_ptr->viewFilter(ContigModifyFilter(start, end));
+  auto modify_contig_ptr = region_contig_ptr->viewFilter(ContigModifyFilter(variant_interval.lower(), variant_interval.upper()));
   // Get the count of variants modifying the region [start, end).
 
   // Remove multiple variants, that is minor alleles (SNP) that are not homozygous that share the same offset.

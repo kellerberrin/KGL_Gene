@@ -61,6 +61,7 @@ public:
 
   [[nodiscard]] auto operator[] (ContigOffset_t offset) const { return alphabet_string_[offset]; }
   [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
+  void clear() { alphabet_string_.clear(); }
 
   [[nodiscard]] ContigSize_t length() const { return alphabet_string_.length(); }
   [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_string_.length() }; }

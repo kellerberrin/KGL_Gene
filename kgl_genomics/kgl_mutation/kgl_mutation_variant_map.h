@@ -147,7 +147,6 @@ private:
 };
 
 using IntervalModifyMap = std::map<ContigOffset_t, SequenceVariantUpdate>;
-using IntervalModifyMultiMap = std::multimap<ContigOffset_t, SequenceVariantUpdate>;
 
 
 } // namespace
