@@ -5,9 +5,6 @@
 #ifndef KGL_VARIANT_MUTATION_H
 #define KGL_VARIANT_MUTATION_H
 
-//
-// Created by kellerberrin on 31/10/17.
-//
 
 #include "kgl_variant_db.h"
 #include "kgl_mutation_db.h"
@@ -16,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -53,4 +51,4 @@ private:
 }   // end namespace
 
 
-#endif //READSAMFILE_KGL_VARIANT_MUTATION_H
+#endif //KGL_VARIANT_MUTATION_H

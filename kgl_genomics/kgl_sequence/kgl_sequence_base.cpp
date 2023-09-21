@@ -4,13 +4,12 @@
 
 
 #include "kgl_sequence_base.h"
-#include "kgl_sequence_codon.h"
+#include "kgl_genome_interval.h"
+#include "kel_interval_set.h"
 
 #include <ranges>
 
 namespace kgl = kellerberrin::genome;
-
-
 
 
 
@@ -50,30 +49,6 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 
 }
 
-
-// The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscriptionSequence.
-kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                          ContigOffset_t sub_sequence_offset,
-                                                                          ContigSize_t sub_sequence_length,
-                                                                          ContigOffset_t contig_offset) const {
-
-  return DNA5SequenceCoding();
-//  return SequenceOffset::refCodingSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
-
-}
-
-
-// The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the TranscriptionSequence.
-kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                          ContigOffset_t sub_sequence_offset,
-                                                                          ContigSize_t sub_sequence_length,
-                                                                          ContigOffset_t contig_offset) const {
-  return DNA5SequenceCoding();
-//  return SequenceOffset::refIntronSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
-
-}
 
 // Convenience routine that returns an array of introns (strand adjusted).
 // Returned sequences are in transcription (strand) order with array[0] being the first intron.
@@ -194,5 +169,69 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 
 }
 
+std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
 
+  // Sort the intervals.
+  IntervalSetLower interval_set;
+  for (auto const& interval : interval_vector) {
+
+    auto [insert_iter, result] = interval_set.insert(interval);
+    if (not result) {
+
+      ExecEnv::log().warn("DNA5SequenceLinear::concatSequences; interval: {} has a duplicate lower()", interval.toString());
+
+    }
+
+  }
+
+  // Extract the modified sequences and concatenate them.
+  DNA5SequenceLinear concatenated_sequence;
+  for (auto const& sub_interval : interval_set) {
+
+    if (not interval().containsInterval(sub_interval)) {
+
+      ExecEnv::log().warn("DNA5SequenceLinear::concatSequences; sub-interval: {} unable is not contained in interval: {}",
+                          sub_interval.toString(), interval().toString());
+      return std::nullopt;
+
+    }
+
+    auto sub_sequence = subSequence(sub_interval);
+
+    bool result = concatenated_sequence.append(sub_sequence);
+    if (not result) {
+
+      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to concatenate modified sequence for interval: {}",
+                          sub_interval.toString());
+      return std::nullopt;
+
+    }
+
+  }
+
+  return concatenated_sequence;
+
+}
+
+
+kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const {
+
+  auto cds_interval_set = GeneIntervalStructure::transcriptIntervals(transcript_ptr);
+  std::vector<OpenRightUnsigned> interval_vector(cds_interval_set.begin(), cds_interval_set.end());
+
+  auto concat_sequence_opt = concatSequences(interval_vector);
+  if (not concat_sequence_opt) {
+
+    ExecEnv::log().warn("DNA5SequenceLinear::codingSequence; Unable to concat sequence intervals for Gene: {}, Transcript: {}",
+                        transcript_ptr->getGene()->id(), transcript_ptr->getParent()->id());
+
+    return {}; // Return an empty coding sequence.
+
+  }
+
+  auto& concat_sequence = concat_sequence_opt.value();
+
+  return concat_sequence.codingSequence(transcript_ptr->strand());
+
+}
 

@@ -49,6 +49,8 @@ public:
   [[nodiscard]] bool codingModifier(const Variant& variant) const;
   // Test if a variant modifies the specified transcript.
   [[nodiscard]] bool transcriptModifier(const Variant& variant, const FeatureIdent_t& Transcript) const;
+  // Static that returns a set of transcript intervals
+  [[nodiscard]] static IntervalSetLower transcriptIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
 
 private:
 

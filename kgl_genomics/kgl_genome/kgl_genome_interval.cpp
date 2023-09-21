@@ -12,6 +12,7 @@
 
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
 
 
 
@@ -29,31 +30,17 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
   auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_feature);
 
   // Process all the gene transcriptions.
-  for (auto const& [sequence_name, coding_sequence] : coding_sequence_array->getMap()) {
+  for (auto const& [transcript_id, transcript_ptr] : coding_sequence_array->getMap()) {
 
     // Process all the CDS intervals within a transcript.
-    IntervalSetLower sequence_intervals;
-    for (auto const& [feature_offset, coding_feature] : coding_sequence->getFeatureMap()) {
-
-      auto const& sequence = coding_feature->sequence();
-      OpenRightUnsigned sequence_interval(sequence.begin(), sequence.end());
-      // Add to the interval set.
-      auto [insert_iter, result] = sequence_intervals.insert(sequence_interval);
-      if (not result) {
-
-        ExecEnv::log().warn("GeneIntervalStructure::codingInterval; Gene: {}, Transcript: {} has duplicate coding regions: [{}, {})",
-                            gene_feature->id(), sequence_name, sequence_interval.lower(), sequence_interval.upper());
-
-      }
-
-    } // For each coding CDS feature within a transcript.
+    auto sequence_intervals = transcriptIntervals(transcript_ptr);
 
     // Insert the transcript interval set and identifier into the transcripts map.
-    auto [insert_iter, result] = gene_coding_transcripts_.try_emplace(sequence_name, sequence_intervals);
+    auto [insert_iter, result] = gene_coding_transcripts_.try_emplace(transcript_id, sequence_intervals);
     if (not result) {
 
       ExecEnv::log().warn("GeneIntervalStructure::codingInterval; Gene: {}, unable to insert Transcript: {} (duplicate)",
-                          gene_feature->id(), sequence_name);
+                          gene_feature->id(), transcript_id);
 
     }
 
@@ -65,6 +52,30 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
     transcript_union_ = transcript_union_.intervalSetUnion(transcript_set);
 
   }
+
+}
+
+kel::IntervalSetLower
+kgl::GeneIntervalStructure::transcriptIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+
+  // Process all the CDS intervals within a transcript.
+  IntervalSetLower sequence_intervals;
+  for (auto const& [feature_offset, coding_feature] : transcript_ptr->getFeatureMap()) {
+
+    auto const& sequence = coding_feature->sequence();
+    OpenRightUnsigned sequence_interval(sequence.begin(), sequence.end());
+    // Add to the interval set.
+    auto [insert_iter, result] = sequence_intervals.insert(sequence_interval);
+    if (not result) {
+
+      ExecEnv::log().warn("IntervalCodingVariants::transcriptIntervals; Gene: {}, Transcript: {} has duplicate coding region: {}",
+                          transcript_ptr->getGene()->id(), transcript_ptr->getGene()->id(), sequence_interval.toString());
+
+    }
+
+  } // For each coding CDS feature within a transcript.
+
+  return sequence_intervals;
 
 }
 

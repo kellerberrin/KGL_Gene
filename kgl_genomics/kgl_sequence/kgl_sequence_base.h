@@ -13,7 +13,6 @@
 #include "kgl_sequence_virtual.h"
 
 
-
 namespace kellerberrin::genome {   //  organization level namespace
 
 
@@ -42,7 +41,7 @@ class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 
 public:
 
-  DNA5SequenceCoding(DNA5SequenceCoding&& sequence) noexcept :  AlphabetSequence<CodingDNA5>(std::move(sequence)), strand_(sequence.strand_) {}
+  DNA5SequenceCoding(DNA5SequenceCoding&& sequence) noexcept :  AlphabetSequence<CodingDNA5>(std::move(sequence.alphabet_string_)), strand_(sequence.strand_) {}
   DNA5SequenceCoding(StringCodingDNA5&& sequence_string, StrandSense strand) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence_string)), strand_(strand) {}
   DNA5SequenceCoding() : strand_(StrandSense::FORWARD) {} // Empty sequences permitted
   DNA5SequenceCoding(DNA5SequenceCoding& copy) = delete; // For Performance reasons, no copy constructor.
@@ -103,26 +102,6 @@ public:
 
   // Equality operator.
   [[nodiscard]] bool operator==(const DNA5SequenceLinear& cmp_seq) const { return equal(cmp_seq); }
-  // Returns a defined subsequence (generally a single/group of codons) of the coding sequence
-  // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscriptionFeatureMap.
-  [[nodiscard]] DNA5SequenceCoding codingOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                            ContigOffset_t sub_sequence_offset,
-                                                            ContigSize_t sub_sequence_length,
-                                                            ContigOffset_t contig_offset) const;
-
-  // Convenience routine that returns an array of sequences (strand adjusted), these will, in general, not be on codon boundaries.
-  // Returned sequences are in transcription (strand) order with array[0] being the first exon.
-  // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
-  [[nodiscard]] std::vector<DNA5SequenceCoding> exonArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                   ContigOffset_t contig_offset = 0) const;
-
-  // The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-  // Setting sub_sequence_offset and sub_sequence_length to zero copies the entire intron sequence defined by the TranscriptionSequence.
-  [[nodiscard]] DNA5SequenceCoding intronOffsetSubSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                            ContigOffset_t sub_sequence_offset,
-                                                            ContigSize_t sub_sequence_length,
-                                                            ContigOffset_t contig_offset) const;
-
   // Convenience routine that returns an array of introns (strand adjusted).
   // Returned sequences are in transcription (strand) order with array[0] being the first intron.
   // The optional second offset argument is only used if the linear sequence is not a complete contig/chromosome.
@@ -157,12 +136,10 @@ public:
   [[nodiscard]] DNA5SequenceLinear subSequence(const OpenRightUnsigned& sub_interval) const;
   [[nodiscard]] DNA5SequenceLinear subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
+  // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
+  [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
   // The entire sequence defined by the TranscriptionSequence is returned.
-  [[nodiscard]] DNA5SequenceCoding codingSequence(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr) const {
-
-    return DNA5SequenceCoding();
-
-  }
+  [[nodiscard]] DNA5SequenceCoding codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
 
 private:
 
