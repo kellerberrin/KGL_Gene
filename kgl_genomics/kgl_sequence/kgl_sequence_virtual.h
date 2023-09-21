@@ -7,7 +7,7 @@
 
 
 #include "kgl_alphabet_string.h"
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 #include <string>
 #include <set>

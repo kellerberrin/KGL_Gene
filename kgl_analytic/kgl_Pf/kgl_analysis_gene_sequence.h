@@ -106,7 +106,7 @@ public:
                                         const FeatureIdent_t& gene,
                                         const FeatureIdent_t& sequence,
                                         const std::shared_ptr<const PopulationDB>& population_ptr,
-                                        const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                        const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                         const std::string& fasta_filename);
 
   [[nodiscard]] static bool mutateGenomeRegion( const GenomeId_t& genome,
@@ -148,7 +148,7 @@ public:
                                               const FeatureIdent_t& gene,
                                               const FeatureIdent_t& sequence,
                                               const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                              const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                               GeneSummaryMap& gene_summary_map);
 
 private:

@@ -212,8 +212,7 @@ public:
                   : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family),
                   sequence_distance_(sequence_distance) {
 
-    getIntronSequence(); // Distance of the intron sequence.
-//    getExonSequence(); // Distance of the
+    getExonSequence(); // Distance of the
 
   }
 

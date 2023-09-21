@@ -10,7 +10,7 @@
 #include "kgl_mutation_analysis.h"
 #include "kgl_mutation_variant_map.h"
 #include "kgl_mutation_interval.h"
-#include "kgl_mutation_aggregation.h"
+#include "kgl_mutation_transcript.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

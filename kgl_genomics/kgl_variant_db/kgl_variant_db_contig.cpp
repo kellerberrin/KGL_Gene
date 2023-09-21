@@ -236,7 +236,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
   std::pair<size_t, size_t> contig_count{0, 0};
 
-  std::shared_ptr<const DNA5SequenceContig> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
+  std::shared_ptr<const DNA5SequenceLinear> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
 
   for (auto const& [offset, variant_vector] : getMap()) {
 

@@ -109,7 +109,7 @@ bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const Tra
 
   if (coding_sequence_ptr) {
 
-    coding_sequence = sequence_ptr_->DNA5SequenceContig::codingSequence(coding_sequence_ptr);
+    coding_sequence = sequence_ptr_->DNA5SequenceLinear::codingSequence(coding_sequence_ptr);
     return true;
 
   }

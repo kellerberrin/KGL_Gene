@@ -217,21 +217,6 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
       // Do we have a valid intron (VAR only)?
       std::vector<DNA5SequenceCoding> intron_sequence_array = gene_ptr->contig()->sequence().intronArraySequence(coding_sequence);
       StrandSense strand;
-      IntronOffsetMap intron_offset_map;
-      if (not SequenceOffset::intronOffsetAdapter(coding_sequence, strand, intron_offset_map)) {
-
-        ExecEnv::log().error("VarGeneFamilyTree(), Contig: {}, Gene: {},  cannot generate INTRON map",
-                             coding_sequence->contig()->contigId(), coding_sequence->getGene()->id());
-        intron_offset_map.clear();
-      }
-
-      if (intron_offset_map.size() != intron_sequence_array.size()) {
-
-        ExecEnv::log().error("UPGMAGeneFamilyTree, Intron map size: {} different from Inron sequence size: {}",
-                             intron_offset_map.size(), intron_sequence_array.size());
-        continue;
-
-      }
 
       // Only add genes with valid coding sequences (no pseudo genes).
       if (gene_ptr->contig()->verifyDNACodingSequence(coding_dna_sequence)) {
@@ -240,8 +225,6 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
         if (intron_sequence_array.size() == 1) {
 
           auto& first_intron = intron_sequence_array.front();
-
-          auto& intron_seq = *intron_offset_map.begin();
 
           DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(first_intron);
           DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
@@ -281,8 +264,6 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
 
           intron << gene_ptr->id() << CSV_DELIMITER_
                  << cat_description << CSV_DELIMITER_
-                 << intron_seq.first << CSV_DELIMITER_
-                 << intron_seq.second << CSV_DELIMITER_
                  << static_cast<char>(strand) << CSV_DELIMITER_
                  << pss.str()
                  << CSV_DELIMITER_

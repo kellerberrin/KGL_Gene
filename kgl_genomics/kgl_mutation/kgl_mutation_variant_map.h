@@ -9,7 +9,7 @@
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_mutation_analysis.h"
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

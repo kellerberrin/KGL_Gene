@@ -5,7 +5,8 @@
 
 #include "kgl_sequence_base.h"
 #include "kgl_sequence_codon.h"
-#include "kgl_sequence_offset.h"
+
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -57,17 +58,8 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingOffsetSubSequence( const 
                                                                           ContigSize_t sub_sequence_length,
                                                                           ContigOffset_t contig_offset) const {
 
-  return SequenceOffset::refCodingSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
-
-}
-
-
-// The contig_offset adjusts for the offset in the contig from which the DNASequenceLinear was copied.
-// Setting sub_sequence_offset and sub_sequence_length to zero copies the entire sequence defined by the TranscriptionSequence.
-std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::exonArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                                 ContigOffset_t contig_offset) const {
-
-  return SequenceOffset::refExonArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
+  return DNA5SequenceCoding();
+//  return SequenceOffset::refCodingSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
 
 }
 
@@ -78,8 +70,8 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const 
                                                                           ContigOffset_t sub_sequence_offset,
                                                                           ContigSize_t sub_sequence_length,
                                                                           ContigOffset_t contig_offset) const {
-
-  return SequenceOffset::refIntronSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
+  return DNA5SequenceCoding();
+//  return SequenceOffset::refIntronSubSequence(coding_seq_ptr, *this, sub_sequence_offset, sub_sequence_length, contig_offset);
 
 }
 
@@ -88,8 +80,8 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::intronOffsetSubSequence( const 
 // The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
 std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
                                                                                    ContigOffset_t contig_offset) const {
-
-  return SequenceOffset::refIntronArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
+  return std::vector<kgl::DNA5SequenceCoding>();
+//  return SequenceOffset::refIntronArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
 
 }
 
@@ -135,10 +127,8 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::downConvertToLinear(const DNA5S
   StringDNA5 linear_string;
   linear_string.reserve(stranded_sequence.length()); // pre-allocate for efficiency
 
-  auto convert_base = [](CodingDNA5::Alphabet base) { return DNA5::convertFromCodingDNA5(base); };
-  std::transform(stranded_sequence.getAlphabetString().begin(),
-                 stranded_sequence.getAlphabetString().end(),
-                 std::back_inserter(linear_string), convert_base);
+  auto convert_base = [](CodingDNA5::Alphabet base)->DNA5::Alphabet { return DNA5::convertFromCodingDNA5(base); };
+  std::ranges::transform(stranded_sequence.getAlphabetString(), std::back_inserter(linear_string), convert_base);
 
   return DNA5SequenceLinear(std::move(linear_string));
 
@@ -151,10 +141,9 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::reverseDownConvert(const DNA5Se
   StringDNA5 linear_string;
   linear_string.reserve(stranded_sequence.length()); // pre-allocate for efficiency
 
-  auto complement_base = [](CodingDNA5::Alphabet coding_base) { return DNA5::convertComplementNucleotide(coding_base); };
-  std::transform(stranded_sequence.getAlphabetString().rbegin(),
-                 stranded_sequence.getAlphabetString().rend(),
-                 std::back_inserter(linear_string), complement_base);
+  auto complement = [](CodingDNA5::Alphabet coding_base)->DNA5::Alphabet { return DNA5::convertComplementNucleotide(coding_base); };
+  auto reversed_string = std::ranges::views::reverse(stranded_sequence.getAlphabetString());
+  std::ranges::transform(reversed_string,std::back_inserter(linear_string), complement);
 
   return DNA5SequenceLinear(std::move(linear_string));
 
@@ -186,24 +175,18 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 
 
   StringCodingDNA5 coding_string;
-  coding_string.reserve(length()); // pre-allocate for efficiency
+  coding_string.reserve(length()); // pre-allocate for efficiency.
 
   if (strand == StrandSense::REVERSE) {
 
-    for (auto rit = getAlphabetString().rbegin(); rit != getAlphabetString().rend(); ++rit) {
-
-      coding_string.push_back(DNA5::complementNucleotide(*rit));
-
-    }
+    auto complement_coding = [](DNA5::Alphabet base)->CodingDNA5::Alphabet { return DNA5::complementNucleotide(base); };
+    auto reversed_string = std::ranges::views::reverse(getAlphabetString());
+    std::ranges::transform(reversed_string, std::back_inserter(coding_string), complement_coding);
 
   } else { // Strand is positive or unknown.
 
-    auto convert_coding = [](DNA5::Alphabet base) { return DNA5::convertToCodingDNA5(base); };
-
-    std::transform(getAlphabetString().begin(),
-                   getAlphabetString().end(),
-                   std::back_inserter(coding_string),
-                   convert_coding);
+    auto convert_coding = [](DNA5::Alphabet base)->CodingDNA5::Alphabet { return DNA5::convertToCodingDNA5(base); };
+    std::ranges::transform(getAlphabetString(), std::back_inserter(coding_string), convert_coding);
 
   }
 
@@ -212,39 +195,4 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A STRANDED DNA string that can be converted to an AMINO sequence.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// A linear and contiguous DNA5 sequence used in a contig (chromosome). This object exists for semantic reasons.
-// NOT STRANDED
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Returns the codon offset of offset within a coding, returns false if not within the coding sequence.
-bool kgl::DNA5SequenceContig::codonOffset(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                          ContigOffset_t contig_offset,
-                                          ContigOffset_t& codon_offset,
-                                          ContigSize_t& base_in_codon) const {
-
-  ContigOffset_t sequence_offset;
-  ContigSize_t sequence_length;
-  if (SequenceOffset::refOffsetWithinCodingSequence(coding_seq_ptr, contig_offset, sequence_offset, sequence_length)) {
-
-    codon_offset = static_cast<ContigOffset_t>(sequence_offset / Codon::CODON_SIZE);
-    base_in_codon = static_cast <ContigOffset_t>(sequence_offset % Codon::CODON_SIZE);
-    return true;
-
-  } else {
-
-    codon_offset = 0;
-    base_in_codon = 0;
-    return false;
-
-  }
-
-}
 

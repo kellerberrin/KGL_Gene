@@ -5,7 +5,7 @@
 #ifndef KEL_INTERVAL_SET_H
 #define KEL_INTERVAL_SET_H
 
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 
 namespace kellerberrin {   //  organization::project level namespace
@@ -19,7 +19,7 @@ namespace kellerberrin {   //  organization::project level namespace
 
 
 // Interval adapter for std::set.
-class IntervalSetLower : public std::set<OpenRightUnsigned, CompareIntervalLower> {
+class IntervalSetLower : public std::set<OpenRightUnsigned, CompareUnsignedIntervalLower> {
 
 public:
 
@@ -49,7 +49,7 @@ public:
 
 
 // Interval adapter for std::set.
-class IntervalSetUpper : public std::set<OpenRightUnsigned, CompareIntervalUpper> {
+class IntervalSetUpper : public std::set<OpenRightUnsigned, CompareUnsignedIntervalUpper> {
 
 public:
 
@@ -68,7 +68,7 @@ public:
 
 
 // Interval adapter for std::multiset.
-class IntervalMultiSetLower : public std::multiset<OpenRightUnsigned, CompareIntervalLower> {
+class IntervalMultiSetLower : public std::multiset<OpenRightUnsigned, CompareUnsignedIntervalLower> {
 
 public:
 

@@ -2,8 +2,8 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#ifndef KGL_MUTATION_AGGREGATION_H
-#define KGL_MUTATION_AGGREGATION_H
+#ifndef KGL_MUTATION_TRANSCRIPT_H
+#define KGL_MUTATION_TRANSCRIPT_H
 
 #include "kgl_mutation_sequence.h"
 #include "kgl_genome_interval.h"
@@ -21,13 +21,14 @@ struct SequenceStats {
 };
 
 
-class SequenceAggregation {
+class SequenceTranscript {
 
 public:
 
-  SequenceAggregation() = default;
-  ~SequenceAggregation() = default;
+  SequenceTranscript() = default;
+  ~SequenceTranscript() = default;
 
+  // This can be called multiple times on the same object. An updated AdjustedSequence object is created each time.
   [[nodiscard]] std::pair<SequenceStats, bool> createModifiedSequence( const std::shared_ptr<const ContigDB>& contig_variant_ptr,
                                                                        const std::shared_ptr<const ContigReference>& contig_reference_ptr,
                                                                        const OpenRightUnsigned& modified_interval);
@@ -40,13 +41,16 @@ public:
   // and concatenates these in sorted sequence order.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
 
+  // Returns a sequence of the concatenated and modified exons. Not in strand sense.
   [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedGene( const GeneIntervalStructure& gene_interval,
                                                                    const FeatureIdent_t& transcript_id) const;
 
+  // Returns a sequence of the concatenated and original unmodified exons. Not in strand sense.
   [[nodiscard]] std::optional<DNA5SequenceLinear> getOriginalGene( const GeneIntervalStructure& gene_interval,
                                                                    const FeatureIdent_t& transcript_id) const;
 
-  // The adjusted sequence object has the original interval, detailed internal sequence structure and sequences.
+  // The adjusted sequence object has the original interval, detailed internal sequence structure and s
+  // modified and original sequences.
   [[nodiscard]] const AdjustedSequence& adjustedSequence() const { return adjusted_sequence_; }
 
 private:
@@ -60,4 +64,4 @@ private:
 
 } // namespace
 
-#endif //KGL_MUTATION_AGGREGATION_H
+#endif //KGL_MUTATION_TRANSCRIPT_H

@@ -24,7 +24,7 @@ std::shared_ptr<kgl::GenomeReference> kgl::ParseFasta::readFastaFile( const std:
   for (auto const& sequence : fasta_sequences) {
 
     StringDNA5 DNA5sequence(sequence.fastaSequence()); // convert to alphabet DNA5.
-    std::shared_ptr<DNA5SequenceContig> sequence_ptr(std::make_shared<DNA5SequenceContig>(std::move(DNA5sequence)));
+    std::shared_ptr<DNA5SequenceLinear> sequence_ptr(std::make_shared<DNA5SequenceLinear>(std::move(DNA5sequence)));
     const std::string contig_id = sequence.fastaId();
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence.fastaDescription(), sequence_ptr)) {

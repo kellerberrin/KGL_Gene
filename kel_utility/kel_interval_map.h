@@ -5,7 +5,7 @@
 #ifndef KEL_INTERVAL_MAP_H
 #define KEL_INTERVAL_MAP_H
 
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 namespace kellerberrin {   //  organization::project level namespace
 
@@ -19,7 +19,7 @@ namespace kellerberrin {   //  organization::project level namespace
 
 // Interval adapter for std::map.
 template<typename ValueType>
-using IntervalMapType = std::map<OpenRightUnsigned, ValueType, CompareIntervalLower>;
+using IntervalMapType = std::map<OpenRightUnsigned, ValueType, CompareUnsignedIntervalLower>;
 
 template<typename ValueType>
 class IntervalMap : public IntervalMapType<ValueType> {
@@ -41,7 +41,7 @@ public:
 
 // Interval adapter for std::multimap.
 template<typename ValueType>
-using IntervalLowerMultiMapType = std::multimap<OpenRightUnsigned, ValueType, CompareIntervalLower>;
+using IntervalLowerMultiMapType = std::multimap<OpenRightUnsigned, ValueType, CompareUnsignedIntervalLower>;
 
 template<typename ValueType>
 class IntervalLowerMultiMap : public IntervalLowerMultiMapType<ValueType> {
@@ -187,7 +187,7 @@ public:
 
 // Interval adapter for std::map.
 template<typename ValueType>
-using IntervalUpperMapType = std::map<OpenRightUnsigned, ValueType, CompareIntervalUpper>;
+using IntervalUpperMapType = std::map<OpenRightUnsigned, ValueType, CompareUnsignedIntervalUpper>;
 
 template<typename ValueType>
 class IntervalUpperMap : public IntervalUpperMapType<ValueType> {
@@ -210,7 +210,7 @@ public:
 
 // Interval adapter for std::multimap.
 template<typename ValueType>
-using IntervalUpperMultiMapType = std::multimap<OpenRightUnsigned, ValueType, CompareIntervalUpper>;
+using IntervalUpperMultiMapType = std::multimap<OpenRightUnsigned, ValueType, CompareUnsignedIntervalUpper>;
 
 
 } // namespace

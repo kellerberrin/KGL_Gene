@@ -37,7 +37,7 @@ public:
   [[nodiscard]] const GenomeId_t& genomeId() const { return resourceIdent(); }
 
   // ReturnType false if contig already exists.
-  [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceContig> sequence_ptr);
+  [[nodiscard]] bool addContigSequence(const ContigId_t& contig, const std::string& description, std::shared_ptr<DNA5SequenceLinear> sequence_ptr);
   // Returns false if key not found.
   [[nodiscard]] std::optional<std::shared_ptr<const ContigReference>> getContigSequence(const ContigId_t& contig) const;
 
@@ -46,13 +46,6 @@ public:
   [[nodiscard]] const GenomeContigMap& getMap() const { return genome_sequence_map_; }
 
   [[nodiscard]] const GeneOntology& geneOntology() const { return gene_ontology_; }
-
-  // Given a gene sequence offset with 5' start = 0 (strand adjusted), returns a strand adjusted offset within the contig.
-  [[nodiscard]] bool contigOffset( const ContigId_t& contig_id,
-                                   const FeatureIdent_t& gene_id,
-                                   const FeatureIdent_t& sequence_id,
-                                   ContigOffset_t sequence_offset,
-                                   ContigOffset_t& contig_offset) const;
 
   // Creates a genome database object.
   // The fasta and gff files must be specified and present.

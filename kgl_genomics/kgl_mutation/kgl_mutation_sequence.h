@@ -6,7 +6,7 @@
 #define KGL_MUTATION_SEQUENCE_H
 
 
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 #include "kgl_mutation_translate.h"
 #include "kgl_mutation_variant_map.h"
 #include "kgl_genome_contig.h"

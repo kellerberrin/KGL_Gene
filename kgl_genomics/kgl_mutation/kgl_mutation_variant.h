@@ -11,7 +11,6 @@
 
 #include "kgl_variant_db.h"
 #include "kgl_mutation_db.h"
-#include "kgl_mutation_variant_offset.h"
 
 #include <map>
 #include <memory>
@@ -37,34 +36,16 @@ public:
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,
                                 const std::shared_ptr<const ContigReference>& contig_ptr,
                                 const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
-                                DNA5SequenceCoding &dna_sequence);
+                                DNA5SequenceCoding &dna_sequence) { return true; }
 
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &insert_variant_map,
                                 const std::shared_ptr<const ContigReference>& contig_ptr,
                                 ContigOffset_t contig_offset,
                                 ContigSize_t sequence_size,
-                                DNA5SequenceLinear& dna_sequence_ptr);
+                                DNA5SequenceLinear& dna_sequence_ptr) { return true; }
 
 private:
 
-  AdjustedSequenceOffset variant_mutation_offset_;
-
-  [[nodiscard]] static bool variantMutate(const std::shared_ptr<const Variant>& variant_ptr,
-                                          SignedOffset_t offset_adjust,
-                                          DNA5SequenceLinear& dna_sequence,
-                                          SignedOffset_t& sequence_size_modify);
-
-  // Mutate a sequence by adding and subtracting subsequences at the designated canonical_offset
-  [[nodiscard]] static bool performMutation( ContigOffset_t canonical_offset,
-                                             DNA5SequenceLinear& mutated_sequence,
-                                             const DNA5SequenceLinear& delete_subsequence,
-                                             const DNA5SequenceLinear& add_subsequence,
-                                             SignedOffset_t& sequence_size_modify);
-
-  [[nodiscard]] static bool preceedingMutation( const std::shared_ptr<const Variant>& variant_ptr,
-                                                SignedOffset_t adjusted_offset,
-                                                DNA5SequenceLinear& dna_sequence,
-                                                SignedOffset_t& sequence_size_modify);
 
 };
 

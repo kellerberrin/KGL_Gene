@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#include "kgl_mutation_aggregation.h"
+#include "kgl_mutation_transcript.h"
 #include "kgl_mutation_offset.h"
 #include "kel_interval_set.h"
 
@@ -12,9 +12,9 @@ namespace kel = kellerberrin;
 
 
 std::pair<kgl::SequenceStats, bool>
-kgl::SequenceAggregation::createModifiedSequence( const std::shared_ptr<const ContigDB>& contig_variant_ptr,
-                                                  const std::shared_ptr<const ContigReference>& contig_reference_ptr,
-                                                  const OpenRightUnsigned& sequence_interval) {
+kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
+                                                const std::shared_ptr<const ContigReference>& contig_reference_ptr,
+                                                const OpenRightUnsigned& sequence_interval) {
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
   auto [interval_map, non_unique_count, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_variant_ptr, sequence_interval);
@@ -23,7 +23,7 @@ kgl::SequenceAggregation::createModifiedSequence( const std::shared_ptr<const Co
   auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(sequence_interval);
   if (not adjusted_offset_ptr->processVariantMap(interval_map)) {
 
-    ExecEnv::log().warn("SequenceAggregation::createModifiedSequence; problem updating interval: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("SequenceTranscript::createModifiedSequence; problem updating interval: {}, variant contig: {}, reference contig: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
@@ -34,7 +34,7 @@ kgl::SequenceAggregation::createModifiedSequence( const std::shared_ptr<const Co
                                             sequence_interval,
                                             adjusted_offset_ptr->indelModifyMap())) {
 
-    ExecEnv::log().warn("SequenceAggregation::createModifiedSequence; problem updating sequence: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("SequenceTranscript::createModifiedSequence; problem updating sequence: {}, variant contig: {}, reference contig: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
@@ -52,7 +52,7 @@ kgl::SequenceAggregation::createModifiedSequence( const std::shared_ptr<const Co
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatModifiedSequences( const std::vector<OpenRightUnsigned>& interval_vector) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
 
   // Sort the intervals.
   IntervalSetLower interval_set;
@@ -61,7 +61,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatModifiedS
     auto [insert_iter, result] = interval_set.insert(interval);
     if (not result) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatModifiedSequences; interval: {} has a duplicate lower()", interval.toString());
+      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; interval: {} has a duplicate lower()", interval.toString());
 
     }
 
@@ -74,7 +74,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatModifiedS
     auto modified_sequence_opt = adjusted_sequence_.modifiedSubSequence(sub_interval);
     if (not modified_sequence_opt) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatModifiedSequences; unable to generate modified sequence for interval: {}",
+      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; unable to generate modified sequence for interval: {}",
                           sub_interval.toString());
       return std::nullopt;
 
@@ -83,7 +83,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatModifiedS
     bool result = concatenated_sequence.append(modified_sequence_opt.value());
     if (not result) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatModifiedSequences; unable to concatenate modified sequence for interval: {}",
+      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; unable to concatenate modified sequence for interval: {}",
                           sub_interval.toString());
       return std::nullopt;
 
@@ -96,7 +96,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatModifiedS
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
 
   // Sort the intervals.
   IntervalSetLower interval_set;
@@ -105,7 +105,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatOriginalS
     auto [insert_iter, result] = interval_set.insert(interval);
     if (not result) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatOriginalSequences; interval: {} has a duplicate lower()", interval.toString());
+      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; interval: {} has a duplicate lower()", interval.toString());
 
     }
 
@@ -118,7 +118,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatOriginalS
     auto modified_sequence_opt = adjusted_sequence_.originalSubSequence(sub_interval);
     if (not modified_sequence_opt) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatOriginalSequences; unable to generate original sequence for interval: {}",
+      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to generate original sequence for interval: {}",
                           sub_interval.toString());
       return std::nullopt;
 
@@ -127,7 +127,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatOriginalS
     bool result = concatenated_sequence.append(modified_sequence_opt.value());
     if (not result) {
 
-      ExecEnv::log().warn("SequenceAggregation::concatOriginalSequences; unable to concatenate modified sequence for interval: {}",
+      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to concatenate modified sequence for interval: {}",
                           sub_interval.toString());
       return std::nullopt;
 
@@ -139,13 +139,13 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::concatOriginalS
 
 }
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::getModifiedGene( const GeneIntervalStructure& gene_interval,
-                                                                                  const FeatureIdent_t& transcript_id) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene(const GeneIntervalStructure& gene_interval,
+                                                                                const FeatureIdent_t& transcript_id) const {
 
   auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
   if (find_iter == gene_interval.codingTranscripts().end()) {
 
-    ExecEnv::log().warn("SequenceAggregation::getModifiedGene; could not find transcript: {} for gene: {}",
+    ExecEnv::log().warn("SequenceTranscript::getModifiedGene; could not find transcript: {} for gene: {}",
                         transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
@@ -157,7 +157,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::getModifiedGene
   auto sequence_opt = concatModifiedSequences(exon_vector);
   if (not sequence_opt) {
 
-    ExecEnv::log().warn("SequenceAggregation::getModifiedGene; could not modify transcript: {} for gene: {}",
+    ExecEnv::log().warn("SequenceTranscript::getModifiedGene; could not modify transcript: {} for gene: {}",
                         transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
@@ -168,13 +168,13 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::getModifiedGene
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::getOriginalGene( const GeneIntervalStructure& gene_interval,
-                                                                                  const FeatureIdent_t& transcript_id) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene(const GeneIntervalStructure& gene_interval,
+                                                                                const FeatureIdent_t& transcript_id) const {
 
   auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
   if (find_iter == gene_interval.codingTranscripts().end()) {
 
-    ExecEnv::log().warn("SequenceAggregation::getOriginalGene; could not find transcript: {} for gene: {}",
+    ExecEnv::log().warn("SequenceTranscript::getOriginalGene; could not find transcript: {} for gene: {}",
                         transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
@@ -186,7 +186,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceAggregation::getOriginalGene
   auto sequence_opt = concatOriginalSequences(exon_vector);
   if (not sequence_opt) {
 
-    ExecEnv::log().warn("SequenceAggregation::getOriginalGene; could not modify transcript: {} for gene: {}",
+    ExecEnv::log().warn("SequenceTranscript::getOriginalGene; could not modify transcript: {} for gene: {}",
                         transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 

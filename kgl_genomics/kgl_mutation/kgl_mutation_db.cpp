@@ -8,7 +8,7 @@
 #include "kgl_mutation_offset.h"
 #include "kel_workflow_threads.h"
 #include "kgl_mutation_sequence.h"
-#include "kgl_mutation_aggregation.h"
+#include "kgl_mutation_transcript.h"
 
 #include <ranges>
 
@@ -231,7 +231,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   GeneIntervalStructure gene_struct(gene_ptr);
   auto gene_interval = gene_struct.geneInterval();
 
-  SequenceAggregation modified_sequence;
+  SequenceTranscript modified_sequence;
 
   auto [stats,  result] = modified_sequence.createModifiedSequence(contig_ptr, contig_ref_ptr,gene_interval);
 

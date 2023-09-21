@@ -7,7 +7,6 @@
 #include "kgl_pfgenome_aux.h"
 #include "kgl_upgma_node.h"
 #include "kgl_phylogenetic_analysis.h"
-#include "kgl_sequence_offset.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_mutation_variant_db.h"
@@ -143,8 +142,8 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
                                    linear_reference_sequence,
                                    linear_mutant_sequence)) {
 
-    reference_sequence = SequenceOffset::codingSequence(linear_reference_sequence, coding_sequence_ptr->strand());
-    mutant_sequence = SequenceOffset::codingSequence(linear_mutant_sequence, coding_sequence_ptr->strand());
+    reference_sequence = linear_reference_sequence.codingSequence(coding_sequence_ptr->strand());
+    mutant_sequence = linear_mutant_sequence.codingSequence(coding_sequence_ptr->strand());
 
   } else {
 
@@ -218,8 +217,8 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
                                    linear_reference_sequence,
                                    linear_mutant_sequence)) {
 
-    reference_sequence = SequenceOffset::codingSequence(linear_reference_sequence, coding_sequence_ptr->strand());
-    mutant_sequence = SequenceOffset::codingSequence(linear_mutant_sequence, coding_sequence_ptr->strand());
+    reference_sequence = linear_reference_sequence.codingSequence(coding_sequence_ptr->strand());
+    mutant_sequence = linear_mutant_sequence.codingSequence(coding_sequence_ptr->strand());
 
   } else {
 
@@ -718,9 +717,9 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
 
   }
 
-  for(const auto& [genome, genome_ptr] : pop_variant_ptr->getMap()) {
+  for(const auto& [genome_id, genome_ptr] : pop_variant_ptr->getMap()) {
 
-    ExecEnv::log().info("outputMutationCSV(), Processing genome: {}", genome);
+    ExecEnv::log().info("outputMutationCSV(), Processing genome_id: {}", genome_id);
     size_t sequence_count = 0;
 
     sequence_count++;
@@ -730,7 +729,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
     if (not contig_opt) {
 
-      ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV, Could not find contig: {} in genome database", contig_id);
+      ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV, Could not find contig: {} in genome_id database", contig_id);
       return false;
 
     }
@@ -751,7 +750,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
                                                coding_sequence_ptr->end(),
                                                variant_map)) {
 
-      ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV, Problem retrieving variants, genome: {}, contig: {}", genome, contig_id);
+      ExecEnv::log().warn("GenomicMutation::outputAminoMutationCSV, Problem retrieving variants, genome_id: {}, contig: {}", genome_id, contig_id);
       return false;
 
     }
@@ -774,7 +773,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
       for (auto edit_item : edit_vector) {
 
         std::stringstream ss;
-        ss << genome << CSV_delimiter;
+        ss << genome_id << CSV_delimiter;
         ss << gene_id << CSV_delimiter;
         ss << sequence_id << CSV_delimiter;
         ss << edit_item.reference_char << CSV_delimiter;
@@ -786,7 +785,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
 
     } // if mutation
 
-    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome, sequence_count);
+    ExecEnv::log().info("outputMutantCSV(), Genome: {} mutated: {} sequences.", genome_id, sequence_count);
 
   } // for genome
 
@@ -910,12 +909,14 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
         mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_opt.value()->getAminoAcid(*mutant_codon));
         mutation_item.contig_id = contig_opt.value()->contigId();
         ContigOffset_t contig_offset;
+/*
         if (not genome_db->contigOffset(contig_id, gene_id, sequence_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
 
           ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
                                mutation_item.DNA_mutation.reference_char, mutation_item.DNA_mutation.reference_offset, mutation_item.DNA_mutation.mutant_char);
 
         }
+*/
         mutation_item.contig_offset = contig_offset;
         mutation_edit_vector.mutation_vector.push_back(mutation_item);
 

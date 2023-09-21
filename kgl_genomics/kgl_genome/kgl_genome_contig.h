@@ -16,7 +16,7 @@
 #include "kgl_genome_contig_feature.h"
 #include "kgl_genome_contig_aux.h"
 #include "kgl_gaf_parser.h"
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -34,7 +34,7 @@ class ContigReference {
 public:
 
   ContigReference(const ContigId_t& contig_id,
-                  const std::shared_ptr<const DNA5SequenceContig>& sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
+                  const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
   ContigReference(const ContigReference&) = default;
   ~ContigReference() = default;
 
@@ -59,9 +59,9 @@ public:
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] const std::string& description() const { return description_; }
-  [[nodiscard]] const DNA5SequenceContig& sequence() const { return *sequence_ptr_; }
+  [[nodiscard]] const DNA5SequenceLinear& sequence() const { return *sequence_ptr_; }
   [[nodiscard]] const TranslateToAmino& codingTable() const { return coding_table_; }
-  [[nodiscard]] std::shared_ptr<const DNA5SequenceContig> sequence_ptr() const { return sequence_ptr_; }
+  [[nodiscard]] std::shared_ptr<const DNA5SequenceLinear> sequence_ptr() const { return sequence_ptr_; }
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
 
 
@@ -100,7 +100,7 @@ private:
 
   ContigId_t contig_id_;
   std::string description_;
-  std::shared_ptr<const DNA5SequenceContig> sequence_ptr_;  // The contig unstranded DNA sequence.
+  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig.
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
 

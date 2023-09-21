@@ -10,7 +10,7 @@
 #include "kgl_variant_filter_virtual.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 #include <memory>
 

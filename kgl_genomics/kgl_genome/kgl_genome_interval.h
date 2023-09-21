@@ -8,7 +8,7 @@
 
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db.h"
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 #include "kel_interval_set.h"
 #include "kel_interval_map.h"
 

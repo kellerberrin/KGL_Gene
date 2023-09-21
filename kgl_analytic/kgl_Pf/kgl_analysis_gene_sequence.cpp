@@ -2,7 +2,6 @@
 // Created by kellerberrin on 16/01/18.
 //
 
-#include "kgl_sequence_offset.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
@@ -186,16 +185,16 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
                                       const FeatureIdent_t& gene,
                                       const FeatureIdent_t& sequence,
                                       const std::shared_ptr<const PopulationDB>& population_ptr,
-                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                      const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                       const std::string& fasta_filename) {
 
 
 
   GeneSummaryMap gene_summary_map;
 
-  for (auto const& genome : population_ptr->getMap()) {
+  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
-    if (not mutateGenomeGene(contig, gene, sequence, genome.second, genome_db_ptr, gene_summary_map)) {
+    if (not mutateGenomeGene(contig, gene, sequence, genome_ptr, genome_ref_ptr, gene_summary_map)) {
 
       return false;
 
@@ -204,7 +203,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   }
 
   // Get the contig.
-  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig);
+  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_ref_ptr->getContigSequence(contig);
   if (not contig_opt) {
 
     ExecEnv::log().warn("GenomicSequence::mutateGene; Could not find contig: {} in genome database", contig);
@@ -231,7 +230,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
 
   // Write all the amino sequences as a fasta file.
   std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;
-  for (auto summary : gene_summary_map) {
+  for (auto const& summary : gene_summary_map) {
 
     std::string reference_name = summary.first + "_Reference_" + sequence;
     std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(reference_name, summary.second.sequence_ptr);
@@ -265,7 +264,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
                                             const FeatureIdent_t& gene,
                                             const FeatureIdent_t& sequence,
                                             const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                            const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                            const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                             GeneSummaryMap& gene_summary_map) {
 
 
@@ -281,7 +280,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
                                      gene,
                                      sequence,
                                      PRIME_REGION_SIZE,
-                                     genome_db_ptr,
+                                     genome_ref_ptr,
                                      genome_variant_ptr,
                                      prime5_reference,
                                      prime5_mutant)) {
@@ -308,13 +307,13 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   AminoSequence protein_reference;
   AminoSequence protein_mutant;
 
-  if (GenomeMutation::mutantProteins( contig,
-                                      gene,
-                                      sequence,
-                                      genome_db_ptr,
-                                      gene_summary.variant_map,
-                                      protein_reference,
-                                      protein_mutant)) {
+  if (GenomeMutation::mutantProteins(contig,
+                                     gene,
+                                     sequence,
+                                     genome_ref_ptr,
+                                     gene_summary.variant_map,
+                                     protein_reference,
+                                     protein_mutant)) {
 
 
 
@@ -341,7 +340,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
                                      gene,
                                      sequence,
                                      PRIME_REGION_SIZE,
-                                     genome_db_ptr,
+                                     genome_ref_ptr,
                                      genome_variant_ptr,
                                      prime3_reference,
                                      prime3_mutant)) {
@@ -582,7 +581,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
                                     mutant_sequence)) {
 
 
-    DNA5SequenceCoding ref_reverse_complement = SequenceOffset::codingSequence(reference_sequence, StrandSense::REVERSE);
+    DNA5SequenceCoding ref_reverse_complement = reference_sequence.codingSequence(StrandSense::REVERSE);
 
     CompareDistance_t score = dna_distance_metric->linear_distance(reference_sequence, mutant_sequence);
 

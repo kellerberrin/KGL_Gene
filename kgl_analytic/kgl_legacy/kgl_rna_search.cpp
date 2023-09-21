@@ -2,7 +2,6 @@
 // Created by kellerberrin on 21/02/18.
 //
 
-#include "kgl_sequence_offset.h"
 #include "kgl_rna_search.h"
 
 #include <iostream>
@@ -41,7 +40,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
   // Get the reference DNA sequence
   rna_sequence_ = contig_opt.value()->sequence().subSequence(rna_offset, rna_region_size);
-  DNA5SequenceCoding stranded_rna_sequence = SequenceOffset::codingSequence(rna_sequence_, rna_strand);
+  DNA5SequenceCoding stranded_rna_sequence = rna_sequence_.codingSequence(rna_strand);
   rna_sequence_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   // Get the contig.
@@ -65,7 +64,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
   // Get the RNA target sequence
   rna_target_ = target_contig_opt.value()->sequence().subSequence(rna_target_offset, rna_target_size);
-  stranded_rna_sequence = SequenceOffset::codingSequence(rna_target_, rna_target_strand);
+  stranded_rna_sequence = rna_sequence_.codingSequence(rna_target_strand);
   rna_target_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
   return true;

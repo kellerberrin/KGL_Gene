@@ -115,8 +115,7 @@ set(UTILITY_SOURCE_FILES
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_date_time.cpp
         kel_utility/kel_date_time.h
-        kel_utility/kel_interval.cpp
-        kel_utility/kel_interval.h
+        kel_utility/kel_interval_unsigned.h
         kel_utility/kel_interval_map.h
         kel_utility/kel_interval_set.h
         kel_utility/kel_interval_set.cpp)
@@ -185,13 +184,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.h
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_variant.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_variant.h
         kgl_genomics/kgl_mutation/kgl_mutation_variant_db.cpp
-        kgl_genomics/kgl_sequence/kgl_sequence_offset.h
-        kgl_genomics/kgl_sequence/kgl_sequence_offset.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_variant_offset.h
-        kgl_genomics/kgl_mutation/kgl_mutation_variant_offset.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
@@ -341,8 +335,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.h
         kgl_genomics/kgl_mutation/kgl_mutation_offset.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_offset.h
-        kgl_genomics/kgl_mutation/kgl_mutation_region.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_region.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.cpp
@@ -352,14 +344,16 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_variant_map.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.h
-        kgl_genomics/kgl_mutation/kgl_mutation_aggregation.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_aggregation.h
+        kgl_genomics/kgl_mutation/kgl_mutation_transcript.cpp
+        kgl_genomics/kgl_mutation/kgl_mutation_transcript.h
         kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
+        kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
 )
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp
+        kel_utility/kel_interval_type.h)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES

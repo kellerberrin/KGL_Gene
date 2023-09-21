@@ -5,7 +5,7 @@
 #ifndef KGL_MUTATION_TRANSLATE_H
 #define KGL_MUTATION_TRANSLATE_H
 
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 #include "kgl_genome_types.h"
 #include "kgl_mutation_variant_map.h"
 

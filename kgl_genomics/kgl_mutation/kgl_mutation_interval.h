@@ -11,7 +11,7 @@
 #include <memory>
 #include "kgl_variant_db.h"
 #include "kgl_mutation_variant_map.h"
-#include "kel_interval.h"
+#include "kel_interval_unsigned.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
