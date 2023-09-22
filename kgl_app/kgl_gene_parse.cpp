@@ -5,12 +5,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Setup logger and read the XML program options.
 
-#include <iostream>
 #include "kgl_gene_app.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include "kel_utility.h"
 
+#include <iostream>
+#include <fstream>
 
 // Define namespace alias
 namespace fs = boost::filesystem;
@@ -19,13 +20,6 @@ namespace bt = boost;
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
-
-// const char* program_desc =
-//    R"("kgl_Gene" analyzes genetic differences (SNPs/Indels) in a population of organisms.
-//  The entire genome of many organisms can be compared and analysed simultaneously (with sufficient memory).
-//  The options xml file specifies a list of VCF files and associated organism attributes to be processed.
-//  This program also takes the genome FASTA file and the corresponding genetic feature model in GFF3 (only) format
-//  and builds a memory database of the genetic structure of the target organism to facilitate analysis.)";
 
 
 // Parse the command line.

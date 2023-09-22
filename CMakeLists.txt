@@ -5,12 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 # add extra include directories
-include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # the range library required by seqan3.
-                    /usr/local/include/seqan3/submodules/sdsl-lite/include   # the sdsl library required by seqan3.
-                    /usr/local/include/seqan3/submodules/cereal/include   # the cereal library required by seqan3.
-                    /usr/local/include/seqan3/include
-                    /usr/local/include/spdlog/include/
+include_directories(/usr/local/include/spdlog/include/
                     contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
+                    /usr/local/include/nlopt
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     /usr/include/eigen3
                     kel_utility         # Basic Infrastructure library
@@ -27,7 +24,7 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     kgl_genomics/kgl_genome_io
                     kgl_genomics/kgl_variant_db
                     kgl_genomics/kgl_variant_filter
-        kgl_genomics/kgl_variant_analysis
+                    kgl_genomics/kgl_variant_analysis
                     kgl_genomics/kgl_mutation
                     kgl_genomics/kgl_literature
                     kgl_mixture                  # Deconvolution and mixture library
@@ -43,6 +40,11 @@ include_directories( /usr/local/include/seqan3/submodules/range-v3/include   # t
                     contrib/rapidjson/include # 3rd party Json parser
                     contrib/rapidxml) # 3rd party XML parser
 
+link_directories(/usr/local/lib
+                 /usr/local/lib/ncl
+                 /usr/local/lib/boost
+                 /usr/local/lib/libhmsbeagle-1/lib
+                 /usr/local/lib/nlopt)
 
 
 # Add boost library directories
@@ -727,13 +729,6 @@ set(KPL_LIBRARY_SOURCE_FILES
 
 add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
 
-link_directories(/usr/local/lib)
-
-link_directories(/usr/local/lib/ncl)
-
-link_directories(/usr/local/lib/boost)
-
-link_directories(/usr/local/lib/libhmsbeagle-1/lib)
 
 #generate kpl executable
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp)

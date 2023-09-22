@@ -1,20 +1,3 @@
-// Copyright 2023 Kellerberrin
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-//
-//
 
 #ifndef KEL_LOGGING_H
 #define KEL_LOGGING_H
@@ -72,14 +55,14 @@ private:
 
 template<typename... Args> void Logger::trace(const std::string& message, Args... args) noexcept {
 
-  plog_impl_->trace(message, args...);
+  plog_impl_->trace(fmt::runtime(message), args...);
   plog_impl_->flush();
 
 }
 
 template<typename... Args> void Logger::info(const std::string& message, Args... args) noexcept {
 
-  plog_impl_->info(message, args...);
+  plog_impl_->info(fmt::runtime(message), args...);
   plog_impl_->flush();
 
 }
@@ -88,7 +71,7 @@ template<typename... Args> void Logger::warn(const std::string& message, Args...
 
   if (max_warn_messages_ < 0 or warn_message_count_ <= max_warn_messages_) {
 
-    plog_impl_->warn(message, args...);
+    plog_impl_->warn(fmt::runtime(message), args...);
     plog_impl_->flush();
 
   }
@@ -106,7 +89,7 @@ template<typename... Args> void Logger::warn(const std::string& message, Args...
 
 template<typename... Args> void Logger::error(const std::string& message, Args... args) noexcept {
 
-  plog_impl_->error(message , args...);
+  plog_impl_->error(fmt::runtime(message) , args...);
   plog_impl_->flush();
 
   ++error_message_count_;
@@ -124,7 +107,7 @@ template<typename... Args> void Logger::error(const std::string& message, Args..
 
 template<typename... Args> void Logger::critical(const std::string& message, Args... args) noexcept {
 
-  plog_impl_->critical(message, args...);
+  plog_impl_->critical(fmt::runtime(message), args...);
   plog_impl_->critical("Program exits.");
   plog_impl_->flush();
   std::exit(EXIT_FAILURE);
