@@ -7,6 +7,9 @@
 
 
 #include "kgl_analysis_virtual.h"
+#include "kgl_genome_collection.h"
+#include "kgl_mutation_db.h"
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -46,6 +49,12 @@ public:
   [[nodiscard]] bool finalizeAnalysis() override;
 
 private:
+
+  constexpr static const char PF3D7_IDENT_[]{"Pf3D7_64"};
+  std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
+  std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
+  std::shared_ptr<MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
+
 
 };
 

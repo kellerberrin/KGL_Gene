@@ -58,7 +58,6 @@ set(Boost_USE_STATIC_RUNTIME ON)
 # Find the Boost packages used.
 find_package( Boost COMPONENTS filesystem system timer chrono program_options iostreams REQUIRED )
 
-
 # zlib for compressed VCF files.
 find_package(ZLIB)
 if (ZLIB_FOUND)
