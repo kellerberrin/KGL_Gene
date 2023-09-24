@@ -24,6 +24,14 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
 
   }
 
+  ident_work_directory_ = work_directory + std::string("/") + ident();
+  if (not Utility::createDirectory(ident_work_directory_)) {
+
+    ExecEnv::log().critical("VerifyAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+                            ident_work_directory_);
+
+  }
+
   auto reference_genomes_ptr = std::make_shared<GenomeCollection>();
   for (auto const& genome_resource_ptr : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
@@ -37,7 +45,7 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
   auto pf3d7_opt = all_reference_genomes_ptr_->getOptionalGenome(PF3D7_IDENT_);
   if (not pf3d7_opt) {
 
-    ExecEnv::log().critical("PfEMPAnalysis::initializeAnalysis; Reference Genome: {} required for analysis - not supplied", PF3D7_IDENT_);
+    ExecEnv::log().critical("VerifyAnalysis::initializeAnalysis; Reference Genome: {} required for analysis - not supplied", PF3D7_IDENT_);
 
   }
   genome_3D7_ptr_ = pf3d7_opt.value();
@@ -66,9 +74,9 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_da
 
 
   // Mutate all the relevant genes in the relevant contigs.
-  ExecEnv::log().info("PfEMPAnalysis::performModification; Begin gene mutation");
+  ExecEnv::log().info("VerifyAnalysis::initializeAnalysis; Begin gene mutation");
   mutate_genes_ptr_->mutatePopulation(population_ptr);
-  ExecEnv::log().info("PfEMPAnalysis::performModification; End gene mutation");
+  ExecEnv::log().info("VerifyAnalysis::initializeAnalysis; End gene mutation");
 
   return true;
 
@@ -85,6 +93,14 @@ bool kgl::VerifyAnalysis::iterationAnalysis() {
 
 // All VCF data has been presented, finalize analysis and write results.
 bool kgl::VerifyAnalysis::finalizeAnalysis() {
+
+  // Output the mutation statistics.
+  std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
+  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
+  mutate_genes_ptr_->mutateAnalysis().printMutationTranscript(mutation_file_name);
+  mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
+  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
+  mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);
 
   return true;
 

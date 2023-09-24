@@ -2,11 +2,11 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#ifndef KGL_MUTATION_TRANSCRIPT_H
-#define KGL_MUTATION_TRANSCRIPT_H
+#ifndef KGL_SEQ_TRANSCRIPT_H
+#define KGL_SEQ_TRANSCRIPT_H
 
 #include "kgl_mutation_sequence.h"
-#include "kgl_genome_interval.h"
+#include "kgl_seq_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -64,4 +64,4 @@ private:
 
 } // namespace
 
-#endif //KGL_MUTATION_TRANSCRIPT_H
+#endif //KGL_SEQ_TRANSCRIPT_H

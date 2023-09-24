@@ -105,11 +105,6 @@ public:
   // Convenience routine that returns an array of introns (strand adjusted).
   // Returned sequences are in transcription (strand) order with array[0] being the first intron.
   // The optional second offset argument is only used if the linear sequence is not a complete contig/chromosome.
-  [[nodiscard]] std::vector<DNA5SequenceCoding> intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                     ContigOffset_t contig_offset = 0) const;
-
-  [[nodiscard]] DNA5SequenceCoding intronSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                     ContigOffset_t contig_offset = 0) const { return DNA5SequenceCoding(); }
 
   // Offset is the relative sequence offset.
   [[nodiscard]] bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
@@ -133,13 +128,20 @@ public:
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
 
   // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
+  [[nodiscard]] std::optional<DNA5SequenceLinear> subOptSequence(const OpenRightUnsigned& sub_interval) const;
   [[nodiscard]] DNA5SequenceLinear subSequence(const OpenRightUnsigned& sub_interval) const;
   [[nodiscard]] DNA5SequenceLinear subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
+
   // The entire sequence defined by the TranscriptionSequence is returned.
   [[nodiscard]] DNA5SequenceCoding codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
+  [[nodiscard]] std::vector<DNA5SequenceCoding> intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
+                                                                     ContigOffset_t contig_offset = 0) const;
+
+  [[nodiscard]] DNA5SequenceCoding intronSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
+                                                   ContigOffset_t contig_offset = 0) const;
 
 private:
 

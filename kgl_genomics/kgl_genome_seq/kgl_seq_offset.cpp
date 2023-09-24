@@ -2,7 +2,7 @@
 // Created by kellerberrin on 26/07/23.
 //
 
-#include "kgl_mutation_offset.h"
+#include "kgl_genome_seq/kgl_seq_offset.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_coding.h"

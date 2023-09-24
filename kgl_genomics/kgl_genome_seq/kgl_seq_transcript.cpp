@@ -2,8 +2,8 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#include "kgl_mutation_transcript.h"
-#include "kgl_mutation_offset.h"
+#include "kgl_genome_seq/kgl_seq_transcript.h"
+#include "kgl_seq_offset.h"
 #include "kel_interval_set.h"
 
 

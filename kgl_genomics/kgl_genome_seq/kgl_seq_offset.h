@@ -2,12 +2,12 @@
 // Created by kellerberrin on 26/07/23.
 //
 
-#ifndef KGL_MUTATION_OFFSET_H
-#define KGL_MUTATION_OFFSET_H
+#ifndef KGL_SEQ_OFFSET_H
+#define KGL_SEQ_OFFSET_H
 
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_mutation_variant.h"
+#include "kgl_genome_seq/kgl_seq_variant.h"
 #include "kgl_mutation_db.h"
 
 
@@ -56,4 +56,4 @@ private:
 
 } // Namespace
 
-#endif //KGL_MUTATION_OFFSET_H
+#endif //KGL_SEQ_OFFSET_H

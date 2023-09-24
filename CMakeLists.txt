@@ -99,7 +99,8 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_logging.h
         kel_app/kel_logging.cpp
         kel_app/kel_property_tree.cpp
-        kel_app/kel_property_tree.h)
+        kel_app/kel_property_tree.h
+        kel_app/kel_logging_source.h)
 
 set(MATHEMATICAL_SOURCE_FILES
         kel_math/kel_distribution.h
@@ -116,6 +117,7 @@ set(UTILITY_SOURCE_FILES
         kel_utility/kel_mem_alloc.cpp
         kel_utility/kel_date_time.cpp
         kel_utility/kel_date_time.h
+        kel_utility/kel_interval_type.h
         kel_utility/kel_interval_unsigned.h
         kel_utility/kel_interval_map.h
         kel_utility/kel_interval_set.h
@@ -185,8 +187,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.h
         kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_variant.h
-        kgl_genomics/kgl_mutation/kgl_mutation_variant_db.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_variant.h
+        kgl_genomics/kgl_genome_seq/kgl_seq_variant_db.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
@@ -240,7 +242,7 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_parser/kgl_variant_factory_population.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_offset.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_contig.h
-        kgl_genomics/kgl_mutation/kgl_mutation_variant_db.h
+        kgl_genomics/kgl_genome_seq/kgl_seq_variant_db.h
         kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.h
         kgl_genomics/kgl_parser/kgl_hsgenealogy_parser.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_parsers.h
@@ -326,16 +328,16 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_Pf7.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.h
-        kgl_genomics/kgl_genome/kgl_genome_interval.cpp
-        kgl_genomics/kgl_genome/kgl_genome_interval.h
+        kgl_genomics/kgl_genome_seq/kgl_seq_interval.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_interval.h
         kgl_genomics/kgl_mutation/kgl_mutation_db.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_db.h
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.h
-        kgl_genomics/kgl_mutation/kgl_mutation_offset.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_offset.h
+        kgl_genomics/kgl_genome_seq/kgl_seq_offset.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_offset.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_contig.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_db_offset.cpp
@@ -345,16 +347,17 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_variant_map.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.h
-        kgl_genomics/kgl_mutation/kgl_mutation_transcript.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_transcript.h
+        kgl_genomics/kgl_genome_seq/kgl_seq_transcript.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_transcript.h
         kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_variant_temp.cpp
+        kgl_genomics/kgl_sequence/kgl_sequence_base_temp.cpp
 )
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp
-        kel_utility/kel_interval_type.h)
+set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES

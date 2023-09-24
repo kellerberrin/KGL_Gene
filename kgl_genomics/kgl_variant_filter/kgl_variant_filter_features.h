@@ -6,7 +6,7 @@
 #define KGL_VARIANT_FILTER_FEATURES_H
 
 #include "kgl_variant_filter_type.h"
-#include "kgl_genome_interval.h"
+#include "kgl_genome_seq/kgl_seq_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

@@ -28,6 +28,7 @@ namespace kel = kellerberrin;
 
 
 
+
 kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 
   setFormat(SPDLOG_DEFAULT_FORMAT);
@@ -35,7 +36,7 @@ kel::Logger::Logger(const std::string& module, const std::string& log_file) {
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stderr_sink_mt>());
   sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file));
-  plog_impl_ = std::make_unique<spdlog::logger>(module, sinks.begin(), sinks.end());
+  log_impl_ptr_ = std::make_unique<spdlog::logger>(module, sinks.begin(), sinks.end());
 
 }
 

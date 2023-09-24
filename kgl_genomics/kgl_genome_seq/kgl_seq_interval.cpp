@@ -2,7 +2,7 @@
 // Created by kellerberrin on 29/05/23.
 //
 
-#include "kgl_genome_interval.h"
+#include "kgl_genome_seq/kgl_seq_interval.h"
 
 
 

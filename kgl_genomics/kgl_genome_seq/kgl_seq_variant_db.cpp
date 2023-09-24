@@ -3,8 +3,8 @@
 //
 
 #include <memory>
-#include "kgl_mutation_variant.h"
-#include "kgl_mutation_variant_db.h"
+#include "kgl_genome_seq/kgl_seq_variant.h"
+#include "kgl_seq_variant_db.h"
 
 
 namespace kgl = kellerberrin::genome;

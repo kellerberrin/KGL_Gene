@@ -2,8 +2,8 @@
 // Created by kellerberrin on 4/7/20.
 //
 
-#ifndef KGL_VARIANT_DB_MUTATION_H
-#define KGL_VARIANT_DB_MUTATION_H
+#ifndef KGL_SEQ_VARIANT_DB_H
+#define KGL_SEQ_VARIANT_DB_H
 
 #include <map>
 #include <memory>
@@ -63,4 +63,4 @@ public:
 } // namespace
 
 
-#endif //KGL_KGL_VARIANT_DB_MUTATION_H
+#endif //KGL_SEQ_VARIANT_DB_H

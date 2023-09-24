@@ -2,8 +2,8 @@
 // Created by kellerberrin on 29/05/23.
 //
 
-#ifndef KGL_GENOME_INTERVAL_H
-#define KGL_GENOME_INTERVAL_H
+#ifndef KGL_SEQ_INTERVAL_H
+#define KGL_SEQ_INTERVAL_H
 
 
 #include "kgl_genome_genome.h"
@@ -101,4 +101,4 @@ private:
 
 
 
-#endif //KGL_GENOME_INTERVAL_H
+#endif //KGL_SEQ_INTERVAL_H

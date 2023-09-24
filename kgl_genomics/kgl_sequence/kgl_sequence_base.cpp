@@ -4,7 +4,7 @@
 
 
 #include "kgl_sequence_base.h"
-#include "kgl_genome_interval.h"
+#include "kgl_genome_seq/kgl_seq_interval.h"
 #include "kel_interval_set.h"
 
 #include <ranges>
@@ -50,15 +50,21 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 }
 
 
-// Convenience routine that returns an array of introns (strand adjusted).
-// Returned sequences are in transcription (strand) order with array[0] being the first intron.
-// The optional second offset argument is onlu used if the linear sequence is not a complete contig/chromosome.
-std::vector<kgl::DNA5SequenceCoding> kgl::DNA5SequenceLinear::intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                                   ContigOffset_t contig_offset) const {
-  return std::vector<kgl::DNA5SequenceCoding>();
-//  return SequenceOffset::refIntronArraySequence(coding_seq_ptr, *this, 0, 0, contig_offset);
+// Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
+std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subOptSequence(const OpenRightUnsigned& sub_interval) const {
+
+  if (not interval().containsInterval(sub_interval)) {
+
+    ExecEnv::log().warn_location("Sub interval: {} not contained in interval: {}.", sub_interval.toString(), interval().toString());
+    return std::nullopt;
+
+  }
+
+  return subSequence(sub_interval.lower(), sub_interval.size());
 
 }
+
+
 
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
 kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(const OpenRightUnsigned& sub_interval) const {

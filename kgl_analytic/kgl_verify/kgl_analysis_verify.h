@@ -56,6 +56,9 @@ private:
   std::shared_ptr<MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
 
+  std::string ident_work_directory_;
+  constexpr static const char *VARIANT_COUNT_EXT_{".csv"};
+
 };
 
 

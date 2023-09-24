@@ -2,8 +2,8 @@
 // Created by kellerberrin on 3/01/18.
 //
 
-#ifndef KGL_VARIANT_MUTATION_H
-#define KGL_VARIANT_MUTATION_H
+#ifndef KGL_SEQ_VARIANT_H
+#define KGL_SEQ_VARIANT_H
 
 
 #include "kgl_variant_db.h"
@@ -34,13 +34,13 @@ public:
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &variant_map,
                                 const std::shared_ptr<const ContigReference>& contig_ptr,
                                 const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
-                                DNA5SequenceCoding &dna_sequence) { return true; }
+                                DNA5SequenceCoding &dna_sequence);
 
   [[nodiscard]] bool mutateDNA( const OffsetVariantMap &insert_variant_map,
                                 const std::shared_ptr<const ContigReference>& contig_ptr,
                                 ContigOffset_t contig_offset,
                                 ContigSize_t sequence_size,
-                                DNA5SequenceLinear& dna_sequence_ptr) { return true; }
+                                DNA5SequenceLinear& dna_sequence_ptr);
 
 private:
 
@@ -51,4 +51,4 @@ private:
 }   // end namespace
 
 
-#endif //KGL_VARIANT_MUTATION_H
+#endif //KGL_SEQ_VARIANT_H
