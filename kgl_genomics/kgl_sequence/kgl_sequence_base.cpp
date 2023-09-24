@@ -55,7 +55,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subOptSequence(c
 
   if (not interval().containsInterval(sub_interval)) {
 
-    ExecEnv::log().warn_location("Sub interval: {} not contained in interval: {}.", sub_interval.toString(), interval().toString());
+    ExecEnv::log().warn("Sub interval: {} not contained in interval: {}.", sub_interval.toString(), interval().toString());
     return std::nullopt;
 
   }
