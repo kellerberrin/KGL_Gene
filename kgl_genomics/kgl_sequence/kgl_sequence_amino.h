@@ -51,8 +51,6 @@ public:
 
   [[nodiscard]] bool removeTrailingStop();  // Remove the stop codon (if present).
 
-  // Returns a sub-sequence
-  [[nodiscard]] AminoSequence subSequence( ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
 private:
 

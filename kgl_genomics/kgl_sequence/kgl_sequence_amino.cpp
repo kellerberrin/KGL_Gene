@@ -42,23 +42,6 @@ bool kgl::AminoSequence::removeTrailingStop() {
 }
 
 
-// Returns a sub-sequence
-kgl::AminoSequence kgl::AminoSequence::subSequence( ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const {
-
-  AminoSequence sub_sequence;
-  if (not getSubsequence(sub_sequence_offset, sub_sequence_length, sub_sequence)) {
-
-    ExecEnv::log().error("AminoSequence::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
-                         sub_sequence_offset, sub_sequence_length, length());
-
-  }
-
-  return sub_sequence;
-
-}
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

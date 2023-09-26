@@ -82,8 +82,29 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
 
   }
 
-  modified_sequence_ = contig_ref_ptr->getSubSequence(contigInterval());
-  original_sequence_ = contig_ref_ptr->getSubSequence(contigInterval());
+  auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subOptSequence(contigInterval());
+  if (not modified_sequence_opt) {
+
+    ExecEnv::log().error("Rrequested modified sub interval: {} out of bounds for contig: {} interval: {}",
+                         contigInterval().toString(),
+                         contig_ref_ptr->contigId(),
+                         contig_ref_ptr->sequence_ptr()->interval().toString());
+    return;
+
+  }
+  auto original_sequence_opt = contig_ref_ptr->sequence_ptr()->subOptSequence(contigInterval());
+  if (not original_sequence_opt) {
+
+    ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig: {} interval: {}",
+                         contigInterval().toString(),
+                         contig_ref_ptr->contigId(),
+                         contig_ref_ptr->sequence_ptr()->interval().toString());
+    return;
+
+  }
+
+  modified_sequence_ = std::move(modified_sequence_opt.value());
+  original_sequence_ = std::move(original_sequence_opt.value());
 
 }
 
@@ -172,7 +193,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
   // Check sub-interval bounds.
   if (not contigInterval().containsInterval(sub_interval)) {
 
-    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; sub interval: {} is not contained in contig interval: {}",
+    ExecEnv::log().warn("Sub interval: {} is not contained in contig interval: {}",
                         sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }
@@ -181,16 +202,21 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
   auto [modified_interval, convert_result] = modified_offset_map_.lookupModifiedInterval(sub_interval);
   if (not convert_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; sub interval: {} cannot be converted to zero offset interval",
-                        sub_interval.toString());
+    ExecEnv::log().warn("Sub interval: {} cannot be converted to zero offset interval", sub_interval.toString());
     return std::nullopt;
 
   }
 
   // Retrieve the modified sub-sequence.
-  DNA5SequenceLinear sub_sequence = modified_sequence_.subSequence(modified_interval);
+  auto sub_sequence_opt = modified_sequence_.subOptSequence(modified_interval);
+  if (not sub_sequence_opt) {
 
-  return sub_sequence;
+    ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified  sequence: {}",
+                        modified_interval.toString(), modified_sequence_.interval().toString());
+
+  }
+
+  return sub_sequence_opt;
 
 }
 
@@ -224,9 +250,15 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
   }
 
   // Retrieve the modified sub-sequence.
-  DNA5SequenceLinear sub_sequence = original_sequence_.subSequence(modified_interval);
+  auto sub_sequence_opt = original_sequence_.subOptSequence(modified_interval);
+  if (not sub_sequence_opt) {
 
-  return sub_sequence;
+    ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified sequence: {}",
+                        modified_interval.toString(), original_sequence_.interval().toString());
+
+  }
+
+  return sub_sequence_opt;
 
 }
 

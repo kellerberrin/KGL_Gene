@@ -43,7 +43,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
       break;
 
     case SequenceUpdateResult::ERROR:
-      ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; encountered bad update: {}", interval_update.toString());
+      ExecEnv::log().warn("Encountered bad update: {}", interval_update.toString());
       return {false, 0};
 
   }
@@ -54,7 +54,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   // Check the delete size is the same size as the updating interval size.
   if (ref_interval.size() != delete_interval.size()) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; mismatch between delete sequence size: {} and update: {}",
+    ExecEnv::log().warn("Mismatch between delete sequence size: {} and update: {}",
                         ref_interval.size(), delete_interval.toString());
 
     return {false, 0};
@@ -62,14 +62,25 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   }
 
   // Retrieve the interval deleted nucleotides.
-  const DNA5SequenceLinear truncated_reference = interval_update.variantPtr()->reference().subSequence(ref_interval);
+  auto truncated_reference_opt = interval_update.variantPtr()->reference().subOptSequence(ref_interval);
+  if (not truncated_reference_opt) {
+
+    ExecEnv::log().warn("Cannot get sub-interval: {} from reference interval: {}, variant: {}",
+                        ref_interval.toString(),
+                        interval_update.variantPtr()->reference().interval().toString(),
+                        interval_update.variantPtr()->HGVS());
+
+    return {false, 0};
+
+  }
+  const DNA5SequenceLinear& truncated_reference = truncated_reference_opt.value();
 
   // Convert to an equivalent offset in the modified interval.
   ContigOffset_t contig_delete_offset = interval_update.variantPtr()->offset() + ref_offset;
   auto [sequence_offset, sequence_result] = modified_offset_map_.modifiedZeroOffset(contig_delete_offset);
   if (not sequence_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; Offset: {} + reference offset: {}, not in interval: {}/{}, update: {}",
+    ExecEnv::log().warn("Offset: {} + reference offset: {}, not in interval: {}/{}, update: {}",
                         interval_update.variantPtr()->offset(),
                         ref_offset,
                         contigInterval().toString(),
@@ -99,9 +110,19 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
     if (not reference_match) {
 
       OpenRightUnsigned ref_window(sequence_offset, sequence_offset + ref_interval.size());
-      const DNA5SequenceLinear interval_reference = modified_sequence_.subSequence(ref_window);
+      auto interval_reference_opt = modified_sequence_.subOptSequence(ref_window);
+      if (not interval_reference_opt) {
 
-      ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; reference: {} does not match sequence: {} at offset: {}/{}, ref interval: {}, delete interval: {}, Update: {}",
+        ExecEnv::log().warn("Failed to extract reference window interval: {} from modified sequence interval: {}",
+                            ref_window.toString(),
+                            modified_sequence_.interval().toString());
+
+        return {false, 0};
+
+      }
+      const DNA5SequenceLinear& interval_reference = interval_reference_opt.value();
+
+      ExecEnv::log().warn("Reference: {} does not match sequence: {} at offset: {}/{}, ref interval: {}, delete interval: {}, Update: {}",
                           truncated_reference.getSequenceAsString(),
                           interval_reference.getSequenceAsString(),
                           sequence_offset,
@@ -121,7 +142,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   bool delete_result = modified_sequence_.deleteSubSequence(delete_modified);
   if (not delete_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; failed to delete : {} from interval: {}",
+    ExecEnv::log().warn("Failed to delete : {} from interval: {}",
                         delete_modified.toString(), modified_sequence_.interval().toString());
 
     return {false, 0};
@@ -134,7 +155,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
                                                                                   interval_update));
   if (not add_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceDelete; failed to add delete adjust: {} at contig offset: {}",
+    ExecEnv::log().warn("Failed to add delete adjust: {} at contig offset: {}",
                         delete_adjust, contig_delete_offset);
 
   }
@@ -150,7 +171,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   auto [sequence_offset, sequence_result] = modified_offset_map_.modifiedZeroOffset(contig_insert);
   if (not sequence_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; Offset: {}, original: {}/{} not in interval: {}, update: {}",
+    ExecEnv::log().warn("Offset: {}, original: {}/{} not in interval: {}, update: {}",
                         interval_update.variantPtr()->offset(),
                         contigInterval().toString(),
                         original_sequence_.interval().toString(),
@@ -171,7 +192,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
 
     if (not reference_match) {
 
-      ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; reference does not match sequence, adjusted offset: {} update: {}",
+      ExecEnv::log().warn("Reference does not match sequence, adjusted offset: {} update: {}",
                           sequence_offset, interval_update.toString());
       return {false, 0};
 
@@ -186,21 +207,32 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   // Check the insert size is the same size as the updating interval size.
   if (insert_size != interval_update.updatingInterval().size()) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; mismatch between inserted sequence size: {} and update: {}",
-                        insert_size, interval_update.toString());
+    ExecEnv::log().warn("Mismatch between inserted sequence size: {} and update: {}", insert_size, interval_update.toString());
 
     return {false, 0};
 
   }
 
-  ContigOffset_t sequence_insert = sequence_offset + insert_offset;
-  const DNA5SequenceLinear truncated_alternate = interval_update.variantPtr()->alternate().subSequence(insert_offset, insert_size);
+  OpenRightUnsigned alt_sub_interval(insert_offset, insert_offset+insert_size);
+  auto truncated_alternate_opt = interval_update.variantPtr()->alternate().subOptSequence(alt_sub_interval);
+  if (not truncated_alternate_opt) {
 
+    ExecEnv::log().warn("Cannot extract alternate sub interval: {}, alternate interval: {}, variant: {}",
+                        alt_sub_interval.toString(),
+                        interval_update.variantPtr()->alternate().interval().toString(),
+                        interval_update.variantPtr()->HGVS());
+    return { false, 0};
+
+  }
+  const DNA5SequenceLinear& truncated_alternate = truncated_alternate_opt.value();
+
+  ContigOffset_t sequence_insert = sequence_offset + insert_offset;
   bool insert_result = modified_sequence_.insertSubSequence(sequence_insert, truncated_alternate);
   if (not insert_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; cannot insert: {} into interval: {}",
-                        truncated_alternate.interval().toString(), modified_sequence_.interval().toString());
+    ExecEnv::log().warn("Cannot insert: {} into interval: {}",
+                        truncated_alternate.interval().toString(),
+                        modified_sequence_.interval().toString());
     return { false, 0};
 
   }
@@ -211,7 +243,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
                                                                                   interval_update));
   if (not add_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceInsert; failed to add insert adjust: {} at contig offset: {}",
+    ExecEnv::log().warn("Failed to add insert adjust: {} at contig offset: {}",
                         insert_size, sequence_insert);
 
   }
@@ -226,7 +258,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
   auto [sequence_offset, sequence_result] = modified_offset_map_.modifiedZeroOffset(offset_SNP);
   if (not sequence_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceSNP; Offset: {} not in interval: {}/{}, update: {}",
+    ExecEnv::log().warn("Offset: {} not in interval: {}/{}, update: {}",
                         interval_update.variantPtr()->offset(),
                         contigInterval().toString(),
                         modified_sequence_.interval().toString(),
@@ -239,7 +271,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
   const bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, interval_update.variantPtr()->reference());
   if (not reference_match) {
 
-    ExecEnv::log().warn("AdjustedSequence::updateSequenceSNP; reference does not match sequence, adjusted offset: {} update: {}",
+    ExecEnv::log().warn("Reference does not match sequence, adjusted offset: {} update: {}",
                         sequence_offset, interval_update.toString());
 
     return {false, 0};
@@ -248,7 +280,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
 
   if (not modified_sequence_.modifyBase(sequence_offset, interval_update.variantPtr()->alternate().at(0))) {
 
-    ExecEnv::log().error("AdjustedSequence::updateSequenceSNP; could not modify base (SNP) at adjusted offset: {}", sequence_offset);
+    ExecEnv::log().error("Could not modify base (SNP) at adjusted offset: {}", sequence_offset);
     return {false, 0};
 
   }

@@ -178,13 +178,21 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   }
 
   // Get the reference DNA sequence
-  reference_sequence = contig_ref_ptr->sequence().subSequence(region_offset, region_size);
+  OpenRightUnsigned reference_interval(region_offset, region_offset+region_size);
+  auto reference_sequence_opt = contig_ref_ptr->sequence().subOptSequence(reference_interval);
+  if (not reference_sequence_opt) {
 
+    ExecEnv::log().warn("Problem extracting DNA sequence interval:{} for contig: {}, interval: {}",
+                        reference_interval.toString(), contig_id, contig_ref_ptr->sequence_ptr()->interval().toString());
+    return false;
+
+  }
+  reference_sequence = std::move(reference_sequence_opt.value());
   // And mutate the sequence.
   if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, region_offset, region_size, mutant_sequence)) {
 
-    ExecEnv::log().warn("GenomeMutation::mutantRegion; Problem mutating region DNA sequence for contig: {}, offset: {}, size: {}",
-                        contig_id, region_offset, region_size);
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, interval: {}",
+                        contig_id, reference_interval.toString());
     return false;
 
   }

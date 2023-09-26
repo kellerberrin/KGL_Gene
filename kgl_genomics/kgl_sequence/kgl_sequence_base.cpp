@@ -28,13 +28,6 @@ bool kgl::DNA5SequenceLinear::modifyBase(ContigOffset_t base_offset, DNA5::Alpha
 
 }
 
-// Delete offset is relative to the begining of the sequence (0 is the first letter).
-bool kgl::DNA5SequenceLinear::deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size) {
-
-  return deleteOffset(delete_offset, delete_size);
-
-}
-
 bool kgl::DNA5SequenceLinear::deleteSubSequence(const OpenRightUnsigned& delete_interval) {
 
   return deleteOffset(delete_interval.lower(), delete_interval.size());
@@ -60,37 +53,11 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subOptSequence(c
 
   }
 
-  return subSequence(sub_interval.lower(), sub_interval.size());
-
-}
-
-
-
-// Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
-kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(const OpenRightUnsigned& sub_interval) const {
-
-  return subSequence(sub_interval.lower(), sub_interval.size());
-
-}
-
-kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::subSequence(ContigOffset_t offset, ContigSize_t sub_length) const {
-
   DNA5SequenceLinear sub_sequence;
 
-  // Check offset and size.
-  if ((offset + sub_length) > length() or sub_length > length()) {
+  if (not getSubsequence(sub_interval.lower(), sub_interval.size(), sub_sequence)) {
 
-    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; sub sequence offset: {} and sub sequence size: {} too large for sequence length: {}",
-                        offset, sub_length, length());
-    // ReturnType an empty sequence
-    return sub_sequence;
-
-  }
-
-  if (not getSubsequence(offset, sub_length, sub_sequence)) {
-
-    ExecEnv::log().warn("DNA5SequenceLinear::subSequence; Cannot get sub-sequence offset: {} and sub sequence size: {} from sequence length: {}",
-                        offset, sub_length, length());
+    ExecEnv::log().warn("Cannot get sub-sequence: {} from sequence: {}", sub_interval.toString(), interval().toString());
     // ReturnType an empty sequence
     return sub_sequence;
 
@@ -136,15 +103,14 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::strandedDownConvert(const DNA5S
 
   switch(stranded_sequence.strand()) {
 
-    case StrandSense::FORWARD:
-      return downConvertToLinear(stranded_sequence);
-
     case StrandSense::REVERSE:
       return reverseDownConvert(stranded_sequence);
 
-  }
+    default:
+    case StrandSense::FORWARD:
+      return downConvertToLinear(stranded_sequence);
 
-  return downConvertToLinear(stranded_sequence); // To keep the compiler happy
+  }
 
 }
 
@@ -184,7 +150,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(
     auto [insert_iter, result] = interval_set.insert(interval);
     if (not result) {
 
-      ExecEnv::log().warn("DNA5SequenceLinear::concatSequences; interval: {} has a duplicate lower()", interval.toString());
+      ExecEnv::log().warn("Interval: {} has a duplicate lower()", interval.toString());
 
     }
 
@@ -196,18 +162,24 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(
 
     if (not interval().containsInterval(sub_interval)) {
 
-      ExecEnv::log().warn("DNA5SequenceLinear::concatSequences; sub-interval: {} unable is not contained in interval: {}",
+      ExecEnv::log().warn("Sub-interval: {} unable is not contained in interval: {}",
                           sub_interval.toString(), interval().toString());
       return std::nullopt;
 
     }
 
-    auto sub_sequence = subSequence(sub_interval);
+    auto sub_sequence_opt = subOptSequence(sub_interval);
+    if (not sub_sequence_opt) {
 
-    bool result = concatenated_sequence.append(sub_sequence);
+      ExecEnv::log().warn("Unable to extract sub-sequence: {} for interval: {}", sub_interval.toString(), interval().toString());
+      return sub_sequence_opt;
+
+    }
+
+    bool result = concatenated_sequence.append(sub_sequence_opt.value());
     if (not result) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to concatenate modified sequence for interval: {}",
+      ExecEnv::log().warn("Unable to concatenate modified sequence for interval: {}",
                           sub_interval.toString());
       return std::nullopt;
 
@@ -228,7 +200,7 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(const std::share
   auto concat_sequence_opt = concatSequences(interval_vector);
   if (not concat_sequence_opt) {
 
-    ExecEnv::log().warn("DNA5SequenceLinear::codingSequence; Unable to concat sequence intervals for Gene: {}, Transcript: {}",
+    ExecEnv::log().warn("Unable to concat sequence intervals for Gene: {}, Transcript: {}",
                         transcript_ptr->getGene()->id(), transcript_ptr->getParent()->id());
 
     return {}; // Return an empty coding sequence.

@@ -244,7 +244,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
     if (offset >= contig_sequence_ptr->length()) {
 
-      ExecEnv::log().error("ContigDB::validate,  Variant offset: {} exceeds total contig: {} size: {}", offset,
+      ExecEnv::log().error("Variant offset: {} exceeds total contig: {} size: {}", offset,
                            contig_db_ptr->contigId(), contig_sequence_ptr->length());
       continue;
 
@@ -259,16 +259,28 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
       }
 
-      if (contig_sequence_ptr->subSequence(variant_ptr->offset(), variant_ptr->reference().length()) == variant_ptr->reference()) {
+      OpenRightUnsigned contig_ref_interval(variant_ptr->offset(), variant_ptr->offset()+variant_ptr->referenceSize());
+      auto contig_ref_opt = contig_sequence_ptr->subOptSequence(contig_ref_interval);
+      if (not contig_ref_opt) {
+
+        ExecEnv::log().error("Unable to extract variant reference from contig: {}, contig interval: {}, variant: {}",
+                             contig_db_ptr->contigId(),
+                             contig_sequence_ptr->interval().toString(),
+                             variant_ptr->HGVS());
+        continue;
+
+      }
+
+      if (contig_ref_opt.value() == variant_ptr->reference()) {
 
         ++contig_count.second;
 
       } else {
 
-        ExecEnv::log().error(" ContigDB::validate, Mismatch, at Contig Offset: {} Sequence is: {}, Variant Reference Sequence is: {}",
+        ExecEnv::log().error("Mismatch, at Contig Offset: {} Contig Sequence is: {}, Variant is: {}",
                                variant_ptr->offset(),
-                               contig_sequence_ptr->subSequence(variant_ptr->offset(),variant_ptr->reference().length()).getSequenceAsString(),
-                               variant_ptr->reference().getSequenceAsString());
+                               contig_ref_opt.value().getSequenceAsString(),
+                               variant_ptr->HGVS());
 
       }
 

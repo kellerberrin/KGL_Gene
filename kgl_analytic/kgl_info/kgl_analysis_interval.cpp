@@ -572,14 +572,18 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       }
 
-      DNA5SequenceLinear sequence = contig_ptr->sequence_ptr()->subSequence(contig_offset, interval_size);
-      if (sequence.length() == 0) {
+      OpenRightUnsigned contig_sub_interval(contig_offset, contig_offset+interval_size);
+      auto sequence_opt = contig_ptr->sequence_ptr()->subOptSequence(contig_sub_interval);
+      if (not sequence_opt) {
 
-        ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized sequence, offset: {}, size: {}, contig: {} contig size: {}",
-                            contig_offset, interval_size, contig_id, contig_ptr->contigSize());
+        ExecEnv::log().warn("Could not extract sub-sequence: {} from contig: {} contig interval: {}",
+                            contig_sub_interval.toString(),
+                            contig_id,
+                            contig_ptr->sequence_ptr()->interval().toString());
         break;
 
       }
+      DNA5SequenceLinear& sequence = sequence_opt.value();
 
       if (sequence.length() != interval_size) {
 

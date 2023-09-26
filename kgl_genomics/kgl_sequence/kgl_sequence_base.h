@@ -109,7 +109,6 @@ public:
   // Offset is the relative sequence offset.
   [[nodiscard]] bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
-  [[nodiscard]] bool deleteSubSequence(ContigOffset_t delete_offset, ContigSize_t delete_size);
   [[nodiscard]] bool deleteSubSequence(const OpenRightUnsigned& delete_interval);
   // Insert offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool insertSubSequence(ContigOffset_t insert_offset, const DNA5SequenceLinear& inserted_sequence);
@@ -129,8 +128,6 @@ public:
 
   // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
   [[nodiscard]] std::optional<DNA5SequenceLinear> subOptSequence(const OpenRightUnsigned& sub_interval) const;
-  [[nodiscard]] DNA5SequenceLinear subSequence(const OpenRightUnsigned& sub_interval) const;
-  [[nodiscard]] DNA5SequenceLinear subSequence(ContigOffset_t sub_sequence_offset, ContigSize_t sub_sequence_length) const;
 
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;

@@ -41,10 +41,22 @@ kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
 
   contig_ptr_ = contig_opt.value();
 
-  const DNA5SequenceLinear contig_ref = contig_ptr_->sequence().subSequence(allele_offset_, reference_.length());
+  OpenRightUnsigned referenceInterval(allele_offset_, allele_offset_+reference_.length());
+  auto contig_ref_opt = contig_ptr_->sequence().subOptSequence(referenceInterval);
+  if (not contig_ref_opt) {
+
+    ExecEnv::log().error("Cannot extract reference interval: {} from contig: {} contig interval: {}",
+                         referenceInterval.toString(),
+                         contig_ptr_->contigId(),
+                         contig_ptr_->sequence().interval().toString());
+    parse_result_ = false;
+    return;
+
+  }
+  const DNA5SequenceLinear& contig_ref = contig_ref_opt.value();
   if (contig_ref.getSequenceAsString() != reference_) {
 
-    ExecEnv::log().error("ParseVCFRecord::parseRecord; Variant reference: {} does not match Contig region: {} at offset: {}",
+    ExecEnv::log().error("Variant reference: {} does not match Contig region: {} at offset: {}",
                          reference_, contig_ref.getSequenceAsString(), allele_offset_);
     parse_result_ = false;
     return;
