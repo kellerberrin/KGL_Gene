@@ -26,12 +26,10 @@
 namespace kel = kellerberrin;
 
 
-
-
 kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 
-  setFormat(SPDLOG_DEFAULT_FORMAT);
-  spdlog::set_level(setLevel(Severity::TRACE));
+  spdlog::set_pattern(SPDLOG_DEFAULT_FORMAT);
+  spdlog::set_level(spdlog::level::trace);
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stderr_sink_mt>());
   sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file));
@@ -40,52 +38,44 @@ kel::Logger::Logger(const std::string& module, const std::string& log_file) {
 }
 
 
-spdlog::level::level_enum kel::Logger::setLevel(Severity level) {
+bool kel::Logger::warnMessageLimits() {
 
-  switch(level) {
+  std::lock_guard<std::mutex> lock(limit_mutex_);
 
-    case Severity::TRACE:
-      return spdlog::level::trace;
+  ++warn_message_count_;
+  if (warn_message_count_ == max_warn_messages_) {
 
-    case Severity::INFO:
-      return spdlog::level::info;
-
-    case Severity::WARN:
-      return spdlog::level::warn;
-      break;
-
-    case Severity::ERROR:
-      return spdlog::level::err;
-
-    default:
-    case Severity::CRITICAL:
-      return spdlog::level::critical;
+    log_impl_ptr_->log(spdlog::level::warn, "Maximum warning messages: {} issued.", max_warn_messages_);
+    log_impl_ptr_->log(spdlog::level::warn, "Further warning messages will be suppressed.");
+    log_impl_ptr_->flush();
 
   }
 
-}
+  if (max_warn_messages_ == 0 or warn_message_count_ <= max_warn_messages_) {
 
-void kel::Logger::setFormat(const std::string& log_format) {
-
-  spdlog::set_pattern(log_format);
-
-}
-
-bool kel::Logger::messageLimits(Severity severity) {
-
-  if (severity == Severity::WARN) {
-
+    return true;
 
   }
 
-  if (severity == Severity::ERROR) {
+  return false;
 
+}
+
+bool kel::Logger::errorMessageLimits() {
+
+  std::lock_guard<std::mutex> lock(limit_mutex_);
+
+  ++error_message_count_;
+  if (max_error_messages_ > 0 and error_message_count_ > max_error_messages_) {
+
+    log_impl_ptr_->log(spdlog::level::err, "Maximum error messages: {} issued.", max_error_messages_);
+    log_impl_ptr_->log(spdlog::level::err, "Forced Program exit. May terminate abnormally.");
+    log_impl_ptr_->flush();
+    std::exit(EXIT_FAILURE);
 
   }
 
   return true;
 
 }
-
-
 

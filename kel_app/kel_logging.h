@@ -10,6 +10,7 @@
 #include <iostream>
 #include <source_location>
 #include <string_view>
+#include <mutex>
 
 
 
@@ -32,15 +33,21 @@ public:
   template<typename String>
   FormatLocation(const String &format,
                  const std::source_location &location = std::source_location::current())
-      : format_{format}, spdlog_locaton_{getSourceLocation(location)} {}
+      : format_{format}, spdlog_locaton_{getSourceLocation(location)} {
+
+        function_format_ = "[" + std::string(location.function_name()) + "] " + format;
+
+  }
   ~FormatLocation() = default;
 
   [[nodiscard]] const std::string& format() const {return format_; }
+  [[nodiscard]] const std::string& functionFormat() const {return function_format_; }
   [[nodiscard]] const spdlog::source_loc& sourceLocation() const { return spdlog_locaton_; }
 
 private:
 
   std::string format_;
+  std::string function_format_;
   spdlog::source_loc spdlog_locaton_;
 
 };
@@ -56,50 +63,107 @@ public:
   Logger(Logger&&) = delete;
   Logger& operator=(const Logger&) = delete;
 
-  enum class Severity { TRACE, INFO, WARN, ERROR, CRITICAL };
+  void setMaxErrorMessages(size_t max_messages) { max_error_messages_ = max_messages; } // Zero (0) is unlimited.
+  void setMaxWarningMessages(size_t max_messages) { max_warn_messages_ = max_messages; } // Zero (0) is unlimited.
 
-  void setMaxErrorMessages(int max_messages) { max_error_messages_ = max_messages; }
-  void setMaxWarningMessages(int max_messages) { max_warn_messages_ = max_messages; }
+// LOGGER_SOURCE_AUGMENTATION displays all source information for all messages types.
+//#define LOGGER_SOURCE_AUGMENTATION 1
+#ifdef LOGGER_SOURCE_AUGMENTATION
 
-  template<typename... Args> void location(FormatLocation format_location, Severity severity, Args &&...args) noexcept;
-  template<typename... Args> void noLocation(const std::string& message, Severity severity, Args &&...args) noexcept;
+  template<typename... Args> void info(FormatLocation format_location, Args&&... args) noexcept;
 
+#else
 
-  template<typename... Args> void trace(const std::string& message, Args&&... args) noexcept;
   template<typename... Args> void info(const std::string& message, Args&&... args) noexcept;
-  template<typename... Args> void warn(const std::string& message, Args&&... args) noexcept;
-  template<typename... Args> void warn_location(FormatLocation format_location, Args &&...args) noexcept;
-  template<typename... Args> void error(const std::string& message, Args&&... args) noexcept;
-  template<typename... Args> void critical(const std::string& message, Args&&... args) noexcept;
+
+#endif
+
+
+  template<typename... Args> void warn(FormatLocation format_location, Args &&...args) noexcept;
+  template<typename... Args> void error(FormatLocation format_location, Args&&... args) noexcept;
+  template<typename... Args> void critical(FormatLocation format_location, Args&&... args) noexcept;
 
 
 private:
 
-  static constexpr const char* SPDLOG_DEFAULT_FORMAT{"%+"};  // Default format from spdlog
-  static constexpr const char* DEFAULT_FLOAT_FORMAT = "0:.2f";
-
   std::unique_ptr<spdlog::logger> log_impl_ptr_;
-  // Negative values such as -1 allow unlimited warning and error messages.
-  int max_error_messages_{100};     // Defaults to 100 error messages
-  std::atomic<int> error_message_count_{0};     // Number of error messages issued.
-  int max_warn_messages_{100};     // Defaults to 100 warning messages
-  std::atomic<int> warn_message_count_{0};     // Number of warning messages issued.
+  size_t max_error_messages_{100};     // Defaults to 100 error messages, zero (0) is unlimited.
+  size_t error_message_count_{0};     // Number of error messages issued.
+  size_t max_warn_messages_{100};     // Defaults to 100 warning messages, zero (0) is unlimited.
+  size_t warn_message_count_{0};     // Number of warning messages issued.
+  std::mutex limit_mutex_;
 
-  bool messageLimits(Severity severity);
-  spdlog::level::level_enum setLevel(Severity level);
-  void setFormat(const std::string& message);
+  static constexpr const char* SPDLOG_DEFAULT_FORMAT{"%+"};  // Default format from spdlog
 
+  bool warnMessageLimits(); // Stops issuing messages after max warn messages reached.
+  bool errorMessageLimits(); // Forces program termination after max error messages reached.
 
 };
 
+#ifdef LOGGER_SOURCE_AUGMENTATION
 
 template<typename... Args>
-void Logger::location(FormatLocation format_location, Severity severity, Args&&... args) noexcept {
+void Logger::info(FormatLocation format_location, Args&&... args) noexcept {
 
-  if (messageLimits(severity)) {
+  log_impl_ptr_->log(format_location.sourceLocation(),
+                     spdlog::level::info,
+                     fmt::runtime(format_location.functionFormat()),
+                     std::forward<Args>(args)...);
+  log_impl_ptr_->flush();
+
+}
+
+
+template<typename... Args>
+void Logger::warn(FormatLocation format_location, Args&&... args) noexcept {
+
+  if (warnMessageLimits()) {
 
     log_impl_ptr_->log(format_location.sourceLocation(),
-                       setLevel(severity),
+                       spdlog::level::warn,
+                       fmt::runtime(format_location.functionFormat()),
+                       std::forward<Args>(args)...);
+    log_impl_ptr_->flush();
+
+  }
+
+}
+
+template<typename... Args>
+void Logger::error(FormatLocation format_location, Args&&... args) noexcept {
+
+  if (errorMessageLimits()) {
+
+    log_impl_ptr_->log(format_location.sourceLocation(),
+                       spdlog::level::err,
+                       fmt::runtime(format_location.functionFormat()),
+                       std::forward<Args>(args)...);
+    log_impl_ptr_->flush();
+
+  }
+
+}
+
+
+#else // LOGGER_SOURCE_AUGMENTATION
+
+
+template<typename... Args>
+void Logger::info(const std::string& message, Args&&... args) noexcept {
+
+  log_impl_ptr_->log(spdlog::level::info, fmt::runtime(message), std::forward<Args>(args)...);
+  log_impl_ptr_->flush();
+
+}
+
+
+template<typename... Args>
+void Logger::warn(FormatLocation format_location, Args&&... args) noexcept {
+
+  if (warnMessageLimits()) {
+
+    log_impl_ptr_->log(format_location.sourceLocation(),
+                       spdlog::level::warn,
                        fmt::runtime(format_location.format()),
                        std::forward<Args>(args)...);
     log_impl_ptr_->flush();
@@ -109,78 +173,38 @@ void Logger::location(FormatLocation format_location, Severity severity, Args&&.
 }
 
 template<typename... Args>
-void Logger::noLocation(const std::string& message, Severity severity, Args&&... args) noexcept {
+void Logger::error(FormatLocation format_location, Args&&... args) noexcept {
 
-  if (messageLimits(severity)) {
+  if (errorMessageLimits()) {
 
-    log_impl_ptr_->log(setLevel(severity), std::forward<Args>(args)...);
+    log_impl_ptr_->log(format_location.sourceLocation(),
+                       spdlog::level::err,
+                       fmt::runtime(format_location.format()),
+                       std::forward<Args>(args)...);
     log_impl_ptr_->flush();
 
   }
 
 }
 
+#endif  // LOGGER_SOURCE_AUGMENTATION
 
-template<typename... Args> void Logger::trace(const std::string& message, Args&&... args) noexcept {
+// Critical always displays the calling function.
+template<typename... Args>
+void Logger::critical(FormatLocation format_location, Args&&... args) noexcept {
 
-  log_impl_ptr_->trace(fmt::runtime(message), std::forward<Args>(args)...);
-  log_impl_ptr_->flush();
-
-}
-
-template<typename... Args> void Logger::info(const std::string& message, Args&&... args) noexcept {
-
-  log_impl_ptr_->info(fmt::runtime(message), std::forward<Args>(args)...);
-  log_impl_ptr_->flush();
-
-}
-
-template<typename... Args> void Logger::warn(const std::string& message, Args&&... args) noexcept {
-
-  if (max_warn_messages_ < 0 or warn_message_count_ <= max_warn_messages_) {
-
-    log_impl_ptr_->warn(fmt::runtime(message), std::forward<Args>(args)...);
-    log_impl_ptr_->flush();
-
-  }
-
-  if (max_warn_messages_ >= 0 and warn_message_count_ == max_warn_messages_) {
-
-    log_impl_ptr_->warn("Maximum warning messages: {} issued.", max_warn_messages_);
-    log_impl_ptr_->warn("Further warning messages will be suppressed.");
-
-  }
-
-  ++warn_message_count_;
-
-}
-
-template<typename... Args> void Logger::error(const std::string& message, Args&&... args) noexcept {
-
-  log_impl_ptr_->error(fmt::runtime(message) , std::forward<Args>(args)...);
-  log_impl_ptr_->flush();
-
-  ++error_message_count_;
-
-  if (max_error_messages_ >= 0 and error_message_count_ == max_error_messages_) {
-
-    log_impl_ptr_->error("Maximum error messages: {} issued.", max_error_messages_);
-    log_impl_ptr_->error("Program exits.");
-    log_impl_ptr_->flush();
-    std::exit(EXIT_FAILURE);
-
-  }
-
-}
-
-template<typename... Args> void Logger::critical(const std::string& message, Args&&... args) noexcept {
-
-  log_impl_ptr_->critical(fmt::runtime(message), std::forward<Args>(args)...);
-  log_impl_ptr_->critical("Program exits.");
+  log_impl_ptr_->log(format_location.sourceLocation(),
+                     spdlog::level::critical,
+                     fmt::runtime(format_location.functionFormat()),
+                     std::forward<Args>(args)...);
+  log_impl_ptr_->log(format_location.sourceLocation(),
+                     spdlog::level::critical,
+                     "Forced Program exit. May terminate abnormally.");
   log_impl_ptr_->flush();
   std::exit(EXIT_FAILURE);
 
 }
+
 
 } // end namespace.
 
