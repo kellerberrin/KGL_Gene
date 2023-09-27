@@ -5,7 +5,7 @@
 
 #include "kel_exec_env.h"
 #include "kgl_gaf_parser.h"
-#include "kgl_gff_fasta.h"
+#include "kgl_io_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;
 

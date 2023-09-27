@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#include "kgl_genome_seq/kgl_seq_transcript.h"
+#include "kgl_seq_transcript.h"
 #include "kgl_seq_offset.h"
 #include "kel_interval_set.h"
 
@@ -23,7 +23,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
   auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(sequence_interval);
   if (not adjusted_offset_ptr->processVariantMap(interval_map)) {
 
-    ExecEnv::log().warn("SequenceTranscript::createModifiedSequence; problem updating interval: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("Problem updating interval: {}, variant contig: {}, reference contig: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
@@ -34,7 +34,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
                                             sequence_interval,
                                             adjusted_offset_ptr->indelModifyMap())) {
 
-    ExecEnv::log().warn("SequenceTranscript::createModifiedSequence; problem updating sequence: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("Problem updating sequence: {}, variant contig: {}, reference contig: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
@@ -61,7 +61,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSe
     auto [insert_iter, result] = interval_set.insert(interval);
     if (not result) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; interval: {} has a duplicate lower()", interval.toString());
+      ExecEnv::log().warn("Interval: {} has a duplicate lower()", interval.toString());
 
     }
 
@@ -74,8 +74,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSe
     auto modified_sequence_opt = adjusted_sequence_.modifiedSubSequence(sub_interval);
     if (not modified_sequence_opt) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; unable to generate modified sequence for interval: {}",
-                          sub_interval.toString());
+      ExecEnv::log().warn("Unable to generate modified sequence for interval: {}", sub_interval.toString());
       return std::nullopt;
 
     }
@@ -83,8 +82,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSe
     bool result = concatenated_sequence.append(modified_sequence_opt.value());
     if (not result) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatModifiedSequences; unable to concatenate modified sequence for interval: {}",
-                          sub_interval.toString());
+      ExecEnv::log().warn("Unable to concatenate modified sequence for interval: {}", sub_interval.toString());
       return std::nullopt;
 
     }
@@ -118,8 +116,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatOriginalSe
     auto modified_sequence_opt = adjusted_sequence_.originalSubSequence(sub_interval);
     if (not modified_sequence_opt) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to generate original sequence for interval: {}",
-                          sub_interval.toString());
+      ExecEnv::log().warn("Unable to generate original sequence for interval: {}", sub_interval.toString());
       return std::nullopt;
 
     }
@@ -127,8 +124,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatOriginalSe
     bool result = concatenated_sequence.append(modified_sequence_opt.value());
     if (not result) {
 
-      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; unable to concatenate modified sequence for interval: {}",
-                          sub_interval.toString());
+      ExecEnv::log().warn("Unable to concatenate modified sequence for interval: {}", sub_interval.toString());
       return std::nullopt;
 
     }
@@ -145,8 +141,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene(
   auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
   if (find_iter == gene_interval.codingTranscripts().end()) {
 
-    ExecEnv::log().warn("SequenceTranscript::getModifiedGene; could not find transcript: {} for gene: {}",
-                        transcript_id, gene_interval.getGene()->id());
+    ExecEnv::log().warn("Could not find transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
   }
@@ -157,8 +152,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene(
   auto sequence_opt = concatModifiedSequences(exon_vector);
   if (not sequence_opt) {
 
-    ExecEnv::log().warn("SequenceTranscript::getModifiedGene; could not modify transcript: {} for gene: {}",
-                        transcript_id, gene_interval.getGene()->id());
+    ExecEnv::log().warn("Could not modify transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
   }
@@ -174,8 +168,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene(
   auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
   if (find_iter == gene_interval.codingTranscripts().end()) {
 
-    ExecEnv::log().warn("SequenceTranscript::getOriginalGene; could not find transcript: {} for gene: {}",
-                        transcript_id, gene_interval.getGene()->id());
+    ExecEnv::log().warn("Could not find transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
   }
@@ -186,8 +179,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene(
   auto sequence_opt = concatOriginalSequences(exon_vector);
   if (not sequence_opt) {
 
-    ExecEnv::log().warn("SequenceTranscript::getOriginalGene; could not modify transcript: {} for gene: {}",
-                        transcript_id, gene_interval.getGene()->id());
+    ExecEnv::log().warn("Could not modify transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
     return std::nullopt;
 
   }

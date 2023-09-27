@@ -74,8 +74,7 @@ void kgl::ParseVCF::enqueueLineRecord() {
     // Check for zero length lines.
     if (line_view.empty()) {
 
-      ExecEnv::log().warn( "ParseVCF::enqueueLineRecord; file: {}, unexpected zero length line found at line: {}"
-                          , getFileName(), line_record.lineCount());
+      ExecEnv::log().warn( "File: {}, unexpected zero length line found at line: {}", getFileName(), line_record.lineCount());
       continue;
 
     }
@@ -102,16 +101,14 @@ std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecor
     return VCFRecord::createEOFMarker();
 
   }
- //**********
-  size_t line_number = line.lineCount();
- //**********
+
   std::unique_ptr<VCFRecord> vcf_record_ptr(std::make_unique<VCFRecord>(std::move(line)));
 
   std::vector<std::string_view> field_views = Utility::viewTokenizer(vcf_record_ptr->line_record_str, VCF_FIELD_DELIMITER_CHAR_);
 
   if (field_views.size() < MINIMUM_VCF_FIELDS_) {
 
-    ExecEnv::log().error("ParseVCF::moveToVcfRecord; VCF file: {}, line: {}, record has less than the mandatory field count: {}"
+    ExecEnv::log().error("VCF file: {}, line: {}, record has less than the mandatory field count: {}"
                          , getFileName(), vcf_record_ptr->line_number, MINIMUM_VCF_FIELDS_);
     return nullptr;
 
@@ -155,15 +152,6 @@ std::unique_ptr<const kgl::VCFRecord> kgl::ParseVCF::moveToVcfRecord(IOLineRecor
     vcf_record_ptr->qual = std::stod(std::string(field_views[QUALITY_FIELD_IDX_]));
 
   }
-  //***************
-  const size_t test_line_number = 45237;
-  if (line_number == test_line_number) {
-
-    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, Quality Text: {}, Quality Float: {}", test_line_number, std::string(field_views[QUALITY_FIELD_IDX_]), vcf_record_ptr->qual);
-    ExecEnv::log().info("**********kgl::ParseVCF::moveToVcfRecord; Record: {}, First 4000 chars: {}", test_line_number, vcf_record_ptr->line_record_str.substr(0, 4000));
-
-  }
-  //***************
 
   vcf_record_ptr->filter = field_views[FILTER_FIELD_IDX_];
   vcf_record_ptr->info = field_views[INFO_FIELD_IDX_];

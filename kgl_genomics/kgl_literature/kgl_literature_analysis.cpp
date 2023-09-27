@@ -175,7 +175,7 @@ kgl::LitCitationPeriodMap kgl::LiteratureAnalysis::analyseCitationPeriod() const
 
   }
 
-  ExecEnv::log().info("LiteratureAnalysis::analyseCitationPeriod; Found citations: {}, Citations Not Found: {}", found_cite, cite_not_found);
+  ExecEnv::log().info("Found citations: {}, Citations Not Found: {}", found_cite, cite_not_found);
 
   return citation_period_map;
 
@@ -288,7 +288,7 @@ kgl::LitCitationVarianceMap kgl::LiteratureAnalysis::analyseCitationPercent() co
 
   }
 
-  ExecEnv::log().info("LiteratureAnalysis::analyseCitationPercent; Found citations: {}, Citations Not Found: {}", found_cite, cite_not_found);
+  ExecEnv::log().info("Found citations: {}, Citations Not Found: {}", found_cite, cite_not_found);
 
   return citation_variance_map;
 
@@ -361,7 +361,7 @@ kgl::CitationArrivals kgl::LiteratureAnalysis::publicationCitations(const std::s
   auto result = publication_map_.find(pub_pmid);
   if (result == publication_map_.end()) {
 
-    ExecEnv::log().error("LiteratureAnalysis::publicationCitations; publication: {} not found", pub_pmid);
+    ExecEnv::log().error("Publication: {} not found", pub_pmid);
     // ReturnType zero counts.
     CitationArrivals citation_arrivals;
     for (size_t month_index = 1; month_index <= CITATION_MONTHS; ++month_index) {
@@ -383,7 +383,7 @@ kgl::CitationArrivals kgl::LiteratureAnalysis::publicationCitations(const std::s
     auto cite_result = publication_map_.find(citation);
     if (cite_result == publication_map_.end()) {
 
-      ExecEnv::log().error("LiteratureAnalysis::publicationCitations; publication citation: {} not found", citation);
+      ExecEnv::log().error("Publication citation: {} not found", citation);
 
     } else {
 

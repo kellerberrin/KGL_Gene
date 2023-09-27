@@ -33,7 +33,7 @@ void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
     if (variant_count > 0) {
 
       auto gene_vector = contigGenes(contig_id);
-      ExecEnv::log().info("MutateGenes::mutatePopulation; Mutating contig: {}, gene count: {}", contig_id, gene_vector.size());
+      ExecEnv::log().info("Mutating contig: {}, gene count: {}", contig_id, gene_vector.size());
 
       for (auto const& gene_ptr : gene_vector) {
 
@@ -62,7 +62,7 @@ void kgl::MutateGenes::initializeGeneContigMap(const std::shared_ptr<const Genom
       auto [iter, result] = gene_contig_map_.try_emplace(gene_ptr, contig_id);
       if (not result) {
 
-        ExecEnv::log().warn("MutateGenes::initializeGeneContigMap; Unable to insert duplicate gene: {}", gene_ptr->id());
+        ExecEnv::log().warn("Unable to insert duplicate gene: {}", gene_ptr->id());
 
       }
 
@@ -102,9 +102,9 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
   auto const mutate_stats = mutateGenomes(gene_ptr, transcript_id, population_ptr, reference_genome_ptr);
 
-  ExecEnv::log().info("MutateGenes::mutateTranscript; Filtered Gene: {}, Transcript: {}, Description: {}",
+  ExecEnv::log().info("Filtered Gene: {}, Transcript: {}, Description: {}",
                       gene_ptr->id(), transcript_id, gene_ptr->descriptionText());
-  ExecEnv::log().info("MutateGenes::mutateTranscript; Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted: {}",
+  ExecEnv::log().info("Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted: {}",
                       mutate_stats.total_variants_,
                       mutate_stats.duplicate_variants_,
                       population_ptr->getMap().size(),
@@ -207,8 +207,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   auto contig_opt = genome_ptr->getContig(gene_contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Genome: {} does not contain contig: {} for gene: {}",
-                        genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
+    ExecEnv::log().warn("Genome: {} does not contain contig: {} for gene: {}", genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
 
@@ -219,7 +218,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   auto contig_ref_opt = reference_genome_ptr->getContigSequence(gene_contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("MutateGenes::genomeTranscriptMutation; Reference Genome: {} does not contain contig: {} for gene: {}",
+    ExecEnv::log().warn("Reference Genome: {} does not contain contig: {} for gene: {}",
                         reference_genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
@@ -245,7 +244,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
 
     if (modify_sequence.length() == 0) {
 
-      ExecEnv::log().info("***** MutateGenes::genomeTranscriptMutation; deleted gene: {}, transcript: {}, original size: {}",
+      ExecEnv::log().info("***** Deleted gene: {}, transcript: {}, original size: {}",
                           gene_ptr->id(), transcript_id, original_sequence.length());
 
     }

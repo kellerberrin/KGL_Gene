@@ -141,113 +141,6 @@ bool kgl::ContigReference::verifyGene(const std::shared_ptr<const GeneFeature>& 
 }
 
 
-bool kgl::ContigReference::verifyCodingSequences(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                 const TranscriptionSequenceArray& coding_seq_array) const {
-
-  bool result{true};
-  bool verbose{false};
-
-  if (coding_seq_array.empty()) {
-
-    ExecEnv::log().error("gene: {}; verifyCodingSequences(), empty TranscriptionSequenceArray", gene_ptr->id());
-
-  }
-
-  for (const auto& sequence : coding_seq_array.getMap()) {
-
-    if (sequence.second->getFeatureMap().empty()) {
-
-      ExecEnv::log().error("gene: {}; verifyCodingSequences(), no corresponding CDS features found", gene_ptr->id());
-      continue;
-
-    }
-
-    DNA5SequenceCoding coding_sequence = sequence_ptr_->codingSequence(sequence.second);
-
-    if (not coding_table_.checkStartCodon(coding_sequence)) {
-
-      if (verbose) {
-
-        ExecEnv::log().info("No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
-                            sequence.second->getGene()->id(),
-                            sequence.second->getParent()->id(),
-                            coding_table_.firstCodon(coding_sequence).getSequenceAsString());
-
-        gene_ptr->recusivelyPrintsubfeatures();
-
-      }
-
-      result = false;
-    }
-    if (not coding_table_.checkStopCodon(coding_sequence)) {
-
-      if (verbose) {
-
-        ExecEnv::log().info("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
-                            (Codon::codonLength(coding_sequence)-1),
-                            sequence.second->getGene()->id(),
-                            sequence.second->getParent()->id(),
-                            coding_table_.lastCodon(coding_sequence).getSequenceAsString());
-
-        gene_ptr->recusivelyPrintsubfeatures();
-
-      }
-
-      result = false;
-    }
-    size_t nonsense_index = coding_table_.checkNonsenseMutation(coding_sequence);
-    if (nonsense_index > 0) {
-
-      if (verbose) {
-
-        ExecEnv::log().info("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
-                            nonsense_index,
-                            sequence.second->getGene()->id(),
-                            sequence.second->getParent()->id(),
-                            Codon(coding_sequence, nonsense_index).getSequenceAsString());
-
-        gene_ptr->recusivelyPrintsubfeatures();
-
-      }
-
-      result = false;
-
-    }
-
-  } // for cds group
-
-  return result;
-
-}
-
-
-bool kgl::Feature::verifyCDSPhase(const TranscriptionSequenceArray& coding_seq_array) const {
-
-  bool result{false};
-  // Check for mod3
-  for(const auto& [super_feature_id, coding_sequence_ptr] : coding_seq_array.getMap()) {
-
-    // We just need 1 valid coding sequence.
-    if (verifyMod3(coding_sequence_ptr->getFeatureMap())) {
-
-      result =true;
-      break;
-
-    }
-
-  }
-
-  for(const auto& [super_feature_id, coding_sequence_ptr] : coding_seq_array.getMap()) {
-
-    result = result and verifyStrand(coding_sequence_ptr->getFeatureMap());
-
-  }
-
-  return result;
-
-}
-
-
 bool kgl::Feature::verifyMod3(const TranscriptionFeatureMap& feature_map) const {
 
   bool result = true;
@@ -366,5 +259,4 @@ size_t kgl::ContigReference::proteinSequenceSize(const AminoSequence& amino_sequ
   return 0; // Never reached, to keep the compiler happy.
 
 }
-
 

@@ -33,8 +33,9 @@ class ContigReference {
 
 public:
 
-  ContigReference(const ContigId_t& contig_id,
-                  const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr) : contig_id_(contig_id), sequence_ptr_(sequence_ptr) {}
+  ContigReference(ContigId_t contig_id,
+                  const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr)
+                  : contig_id_(std::move(contig_id)), sequence_ptr_(sequence_ptr) {}
   ContigReference(const ContigReference&) = default;
   ~ContigReference() = default;
 
@@ -78,16 +79,9 @@ public:
                                         const FeatureIdent_t& sequence_id,
                                         std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr) const;
 
-  // Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-  [[nodiscard]] bool getDNA5SequenceCoding( const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
-                                            DNA5SequenceCoding& dna_coding) const;
-
   // Generate Amino acid sequences using the table specified for this contig.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
-
-  //Get a subsequence from the contig.
-  [[nodiscard]] DNA5SequenceLinear getSubSequence(const OpenRightUnsigned& sequence_interval) const;
 
   // Compare reference Contigs- mainly used for testing.
   [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;
@@ -103,10 +97,6 @@ private:
   std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The contig unstranded DNA sequence.
   GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig.
   TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
-
-  // Check all gene coding sequences for start and end codons and nonsense (intermediate stop codon) mutations.
-  [[nodiscard]] bool verifyCodingSequences( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                            const TranscriptionSequenceArray& coding_seq_array) const;
 
 };
 

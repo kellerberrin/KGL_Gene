@@ -40,6 +40,8 @@ public:
   // Object access
   [[nodiscard]] const std::shared_ptr<const GeneFeature>& getGene() const { return gene_feature_; }
   [[nodiscard]] const GeneCodingTranscriptMap& codingTranscripts() const { return gene_coding_transcripts_; }
+  // Rarely used so lazy eval.
+  [[nodiscard]] GeneCodingTranscriptMap intronTranscripts() const { return createIntronMap(); }
   [[nodiscard]] const OpenRightUnsigned& geneInterval() const { return gene_interval_; }
   [[nodiscard]] const IntervalSetLower& transcriptUnion() const { return transcript_union_; }
 
@@ -51,6 +53,8 @@ public:
   [[nodiscard]] bool transcriptModifier(const Variant& variant, const FeatureIdent_t& Transcript) const;
   // Static that returns a set of transcript intervals
   [[nodiscard]] static IntervalSetLower transcriptIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
+  // Static that returns a set of transcript intron intervals
+  [[nodiscard]] static IntervalSetLower transcriptIntronIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
 
 private:
 
@@ -62,6 +66,8 @@ private:
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
   // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.
   [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig()->contigId()); }
+  // Create a map of introns.
+  [[nodiscard]] GeneCodingTranscriptMap createIntronMap() const;
 
 };
 

@@ -2,7 +2,7 @@
 // Created by kellerberrin on 23/09/23.
 //
 
-#include "kgl_genome_seq/kgl_seq_variant.h"
+#include "kgl_seq_variant.h"
 
 
 namespace kgl = kellerberrin::genome;

@@ -5,9 +5,10 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_genome_seq/kgl_seq_variant_db.h"
-#include "kgl_genome_seq/kgl_seq_offset.h"
-#include "kgl_gff_fasta.h"
+#include "kgl_seq_variant_db.h"
+#include "kgl_seq_offset.h"
+#include "kgl_seq_coding.h"
+#include "kgl_io_gff_fasta.h"
 
 #include <memory>
 #include <sstream>
@@ -62,9 +63,11 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
 
       }
     
-      DNA5SequenceCoding coding_dna;
-      if (contig_ref_ptr->getDNA5SequenceCoding(sequence_ptr, coding_dna)) {
 
+      auto coding_dna_opt = CodingTranscript::codingSequence(sequence_ptr, contig_ref_ptr);
+      if (coding_dna_opt) {
+
+        DNA5SequenceCoding& coding_dna = coding_dna_opt.value();
         std::stringstream ss;
         ss << gene_ptr->id() << "_" << ++coding_count;
         AminoSequence peptide = sequence_ptr->contig()->getAminoSequence(coding_dna);
@@ -73,7 +76,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
 
       } else {
 
-        ExecEnv::log().error("GenomicSequence::translateContig; Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_ptr->id(), genome_id);
+        ExecEnv::log().error("Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_ptr->id(), genome_id);
         return false;
 
       } // Coding DNA 
@@ -143,12 +146,13 @@ bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
       auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr));
 
       size_t coding_count = 0;
-      for (const auto& coding_sequence : coding_sequence_array_ptr->getMap()) {
+      for (const auto& [transcript_id, transcript_ptr] : coding_sequence_array_ptr->getMap()) {
 
-        DNA5SequenceCoding coding_dna;
-        if (contig_ptr->getDNA5SequenceCoding(coding_sequence.second, coding_dna)) {
+        auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+        if (coding_dna_opt) {
 
-          AminoSequence peptide_ptr = coding_sequence.second->contig()->getAminoSequence(coding_dna);
+          DNA5SequenceCoding& coding_dna = coding_dna_opt.value();
+          AminoSequence peptide_ptr = transcript_ptr->contig()->getAminoSequence(coding_dna);
           std::stringstream ss;
           ss << gene_id << "_" << ++coding_count;
           std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide_ptr)));

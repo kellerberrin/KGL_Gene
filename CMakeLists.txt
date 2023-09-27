@@ -22,6 +22,7 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics/kgl_database
                     kgl_genomics/kgl_genome
                     kgl_genomics/kgl_genome_io
+                    kgl_genomics/kgl_genome_seq
                     kgl_genomics/kgl_variant_db
                     kgl_genomics/kgl_variant_filter
                     kgl_genomics/kgl_variant_analysis
@@ -151,8 +152,8 @@ set(IO_SOURCE_FILES
 # Basic Genetic infrastructure library
 set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome/kgl_genome_types.h
-        kgl_genomics/kgl_genome_io/kgl_gff_fasta.h
-        kgl_genomics/kgl_genome_io/kgl_gff_fasta.cpp
+        kgl_genomics/kgl_genome_io/kgl_io_gff_fasta.h
+        kgl_genomics/kgl_genome_io/kgl_io_gff_fasta.cpp
         kgl_genomics/kgl_genome/kgl_genome_feature.h
         kgl_genomics/kgl_genome/kgl_genome_feature.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db.h
@@ -302,10 +303,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_literature/kgl_literature_filter_virtual.h
         kgl_genomics/kgl_literature/kgl_literature_data.h
         kgl_genomics/kgl_literature/kgl_literature_data.cpp
-        kgl_genomics/kgl_genome_io/kgl_gff3.cpp
-        kgl_genomics/kgl_genome_io/kgl_gff3.h
-        kgl_genomics/kgl_genome_io/kgl_fasta.cpp
-        kgl_genomics/kgl_genome_io/kgl_fasta.h
+        kgl_genomics/kgl_genome_io/kgl_io_gff3.cpp
+        kgl_genomics/kgl_genome_io/kgl_io_gff3.h
+        kgl_genomics/kgl_genome_io/kgl_io_fasta.cpp
+        kgl_genomics/kgl_genome_io/kgl_io_fasta.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_vcf_impl.h
         kgl_genomics/kgl_parser/kgl_pf7_sample_parser.cpp
@@ -353,7 +354,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
         kgl_genomics/kgl_genome_seq/kgl_seq_variant_temp.cpp
-        kgl_genomics/kgl_sequence/kgl_sequence_base_temp.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_coding.cpp
+        kgl_genomics/kgl_genome_seq/kgl_seq_coding.h
 )
 
 # 3rd party library for fast Levenshtein sequence matching.

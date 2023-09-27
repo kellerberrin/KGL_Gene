@@ -5,6 +5,7 @@
 
 #include "kgl_upgma.h"
 #include "kgl_analysis_PfEMP.h"
+#include "kgl_seq_coding.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -209,14 +210,23 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
 
     }
 
-    std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
-    DNA5SequenceCoding coding_dna_sequence;
+    std::shared_ptr<const TranscriptionSequence> transcript_ptr = coding_seq_ptr->getFirst();
+    auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, gene_ptr->contig());
+    if (coding_dna_opt) {
 
-    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
-
+      DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
       // Do we have a valid intron (VAR only)?
-      std::vector<DNA5SequenceCoding> intron_sequence_array = gene_ptr->contig()->sequence().intronArraySequence(coding_sequence);
-      StrandSense strand;
+
+      auto intron_map_opt = CodingTranscript::intronSequence(transcript_ptr, gene_ptr->contig());
+      if (not intron_map_opt) {
+
+        ExecEnv::log().error("Problem generating Intron map for Gene: {}, Transcript: {}",
+                             gene_ptr->id(), transcript_ptr->getParent()->id());
+        return;
+
+      }
+      auto& intron_sequence_array = intron_map_opt.value();
+      StrandSense strand = transcript_ptr->strand();
 
       // Only add genes with valid coding sequences (no pseudo genes).
       if (gene_ptr->contig()->verifyDNACodingSequence(coding_dna_sequence)) {
@@ -224,11 +234,8 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
         // Only 1 intron (var genes)
         if (intron_sequence_array.size() == 1) {
 
-          auto& first_intron = intron_sequence_array.front();
-
-          DNA5SequenceLinear intron_ptr = DNA5SequenceLinear::downConvertToLinear(first_intron);
-          DNA5SequenceLinear intron_seq_ptr_rev = DNA5SequenceLinear::downConvertToLinear(intron_ptr.codingSequence(StrandSense::REVERSE));
-          DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::strandedDownConvert(first_intron);
+          auto const& [intron_interval, first_intron] = *intron_sequence_array.begin();
+          DNA5SequenceLinear intron_seq_ptr = DNA5SequenceLinear::downConvertToLinear(*first_intron);
 
           std::stringstream pss;
           std::vector<ContigOffset_t> offset_vec = intron_seq_ptr.findAll(i_promoter);
@@ -311,10 +318,11 @@ void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeRefe
     }
 
     std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
-    DNA5SequenceCoding coding_dna_sequence;
 
-    if (gene_ptr->contig()->getDNA5SequenceCoding(coding_sequence, coding_dna_sequence)) {
+    auto coding_dna_opt = CodingTranscript::codingSequence(coding_sequence, gene_ptr->contig());
+    if (coding_dna_opt) {
 
+      DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
       std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance,
                                                                                           genome_ptr,
                                                                                           gene_ptr,

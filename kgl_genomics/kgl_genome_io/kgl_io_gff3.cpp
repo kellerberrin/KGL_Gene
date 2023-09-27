@@ -7,7 +7,7 @@
 
 #include "kel_exec_env.h"
 #include "kel_utility.h"
-#include "kgl_gff3.h"
+#include "kgl_io_gff3.h"
 #include "kel_mt_buffer.h"
 
 #include <functional>

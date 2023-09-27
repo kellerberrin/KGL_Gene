@@ -2,7 +2,7 @@
 // Created by kellerberrin on 29/05/23.
 //
 
-#include "kgl_genome_seq/kgl_seq_interval.h"
+#include "kgl_seq_interval.h"
 
 
 
@@ -55,6 +55,54 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 
 }
 
+// Using the transcript interval map, generate a map of introns.
+kgl::GeneCodingTranscriptMap kgl::GeneIntervalStructure::createIntronMap() const {
+
+  GeneCodingTranscriptMap intron_map;
+
+  for (auto const& [transcript_id, exon_interval_set] : gene_coding_transcripts_) {
+
+    IntervalSetLower intron_set;
+
+    auto iter_interval = exon_interval_set.begin();
+    while (iter_interval != exon_interval_set.end()) {
+
+      auto iter_next_interval = std::ranges::next(iter_interval, 1, exon_interval_set.end());
+      if (iter_next_interval == exon_interval_set.end()) {
+
+        break;
+
+      }
+
+      if (iter_interval->disjoint(*iter_next_interval) and not iter_interval->adjacent(*iter_next_interval)) {
+
+        OpenRightUnsigned intron_interval{iter_interval->upper(), iter_next_interval->lower()};
+        auto [insert_iter, result] = intron_set.insert(intron_interval);
+        if (not result) {
+
+          ExecEnv::log().warn("Unable to enter insert intron interval: {} (duplicate)", intron_interval.toString());
+
+        }
+
+      }
+
+      iter_interval = iter_next_interval;
+
+    } // Next exon pair.
+
+    auto [insert_iter, result] = intron_map.try_emplace(transcript_id, intron_set);
+    if (not result) {
+
+      ExecEnv::log().warn("Unable to enter insert intron set for transcript: {} (duplicate)", transcript_id);
+
+    }
+
+  }
+
+  return intron_map;
+
+}
+
 kel::IntervalSetLower
 kgl::GeneIntervalStructure::transcriptIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
 
@@ -78,6 +126,44 @@ kgl::GeneIntervalStructure::transcriptIntervals(const std::shared_ptr<const Tran
   return sequence_intervals;
 
 }
+
+kel::IntervalSetLower
+kgl::GeneIntervalStructure::transcriptIntronIntervals(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+
+  IntervalSetLower intron_set;
+
+  auto exon_interval_set = transcriptIntervals(transcript_ptr);
+
+  auto iter_interval = exon_interval_set.begin();
+  while (iter_interval != exon_interval_set.end()) {
+
+    auto iter_next_interval = std::ranges::next(iter_interval, 1, exon_interval_set.end());
+    if (iter_next_interval == exon_interval_set.end()) {
+
+      break;
+
+    }
+
+    if (iter_interval->disjoint(*iter_next_interval) and not iter_interval->adjacent(*iter_next_interval)) {
+
+      OpenRightUnsigned intron_interval{iter_interval->upper(), iter_next_interval->lower()};
+      auto [insert_iter, result] = intron_set.insert(intron_interval);
+      if (not result) {
+
+        ExecEnv::log().warn("Unable to enter insert intron interval: {} (duplicate)", intron_interval.toString());
+
+      }
+
+    }
+
+    iter_interval = iter_next_interval;
+
+  } // Next exon pair.
+
+  return intron_set;;
+
+}
+
 
 
 bool kgl::GeneIntervalStructure::codingModifier(const Variant& variant) const {

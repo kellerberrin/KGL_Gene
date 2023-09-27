@@ -4,7 +4,7 @@
 
 #include "kel_basic_io.h"
 #include "kel_utility.h"
-#include "kgl_fasta.h"
+#include "kgl_io_fasta.h"
 
 
 

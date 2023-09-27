@@ -31,7 +31,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 // This is a DNA5 coding sequence that has been generated using a TranscriptionSequence (CDS) object.
 // Or upconverted from a DNA5SequenceLinear sequence (see function codingSequence(StrandSense strand) below).
 // Only this object can be used to generate an amino acid sequence.
-// This sequence is ALWAYS STRANDED.
+// This sequence is ALWAYS in strand sense (reverse complement has already been performed on -ve strand sequences).
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
 using StringCodingDNA5 = AlphabetString<CodingDNA5>;
@@ -117,11 +117,6 @@ public:
   // Important - No strand conversion is performed.
   [[nodiscard]] static DNA5SequenceLinear downConvertToLinear(const DNA5SequenceCoding& stranded_sequence);
 
-
-  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-  // Important - Strand Conversion of reverse complement is performed for a -ve strand
-  [[nodiscard]] static DNA5SequenceLinear strandedDownConvert(const DNA5SequenceCoding& stranded_sequence);
-
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
   // A -ve strand returns the reverse complement as expected.
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
@@ -132,19 +127,7 @@ public:
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
 
-  // The entire sequence defined by the TranscriptionSequence is returned.
-  [[nodiscard]] DNA5SequenceCoding codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
-  [[nodiscard]] std::vector<DNA5SequenceCoding> intronArraySequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                                     ContigOffset_t contig_offset = 0) const;
-
-  [[nodiscard]] DNA5SequenceCoding intronSequence( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                   ContigOffset_t contig_offset = 0) const;
-
 private:
-
-  // Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-  // Important - Always returns the reverse complement of the coding sequence.
-  [[nodiscard]] static DNA5SequenceLinear reverseDownConvert(const DNA5SequenceCoding& stranded_sequence);
 
 
 };

@@ -12,7 +12,7 @@
 #include "kgl_sequence_compare.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"
-#include "kgl_gff_fasta.h"
+#include "kgl_io_gff_fasta.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

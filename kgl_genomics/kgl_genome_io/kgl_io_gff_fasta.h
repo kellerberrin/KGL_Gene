@@ -8,8 +8,8 @@
 
 
 #include "kgl_genome_genome.h"
-#include "kgl_gff3.h"
-#include "kgl_fasta.h"
+#include "kgl_io_gff3.h"
+#include "kgl_io_fasta.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

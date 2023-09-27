@@ -7,7 +7,7 @@
 
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_genome_seq/kgl_seq_variant.h"
+#include "kgl_seq_variant.h"
 #include "kgl_mutation_db.h"
 
 

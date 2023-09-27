@@ -106,7 +106,7 @@ public:
   [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
   [[nodiscard]] TranscriptionSequenceType codingType() const;
-  [[nodiscard]] static ProteinSequenceValidity checkValidProtein( const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
+  [[nodiscard]] static ProteinSequenceValidity checkValidProtein( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
                                                                   bool verbose = false); // ncRNA sequences are trivially valid.
 
 private:

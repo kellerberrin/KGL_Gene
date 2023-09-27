@@ -185,9 +185,6 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
 
-  static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                         std::shared_ptr<const GenomeReference> genome_db_ptr,
-                         const std::string& protein_family);
 
 protected:
 
@@ -229,7 +226,6 @@ private:
   DNA5SequenceLinear linear_sequence_;
 
   void  getExonSequence();
-  void  getIntronSequence();
 
 };
 

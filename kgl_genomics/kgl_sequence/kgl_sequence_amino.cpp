@@ -66,15 +66,6 @@ kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const DNA5SequenceCod
 }
 
 
-kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const std::shared_ptr<const TranscriptionSequence>& coding_seq_ptr,
-                                                           const DNA5SequenceLinear& contig_sequence) const {
-
-  return getAminoSequence(contig_sequence.codingSequence(coding_seq_ptr));
-
-}
-
-
-
 size_t kgl::TranslateToAmino::checkNonsenseMutation(const DNA5SequenceCoding& coding_sequence) const {
 
   for (size_t index = 0; index < Codon::codonLength(coding_sequence) - 1; ++index) {

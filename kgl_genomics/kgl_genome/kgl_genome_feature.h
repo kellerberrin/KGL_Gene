@@ -43,7 +43,6 @@ public:
   [[nodiscard]] const FeatureType_t& type() const { return type_; } // The actual Gff classification such as 'NCRNA_GENE'
   [[nodiscard]] const FeatureType_t& superType() const { return super_type_; } // High level feature classification such as 'GENE'
   [[nodiscard]] bool verifyStrand(const TranscriptionFeatureMap& Feature_map) const;   // Check feature strand consistency
-  [[nodiscard]] bool verifyCDSPhase(const TranscriptionSequenceArray& coding_seq_array) const; // Check the CDS phase for -ve and +ve strand genes
   void recusivelyPrintsubfeatures(size_t feature_level = 1) const; // useful debug function.
   [[nodiscard]] std::string featureText(char delimiter = ' ') const; // also useful for debug
   [[nodiscard]] std::string descriptionText(char delimiter = ' ') const; // Displays feature description.

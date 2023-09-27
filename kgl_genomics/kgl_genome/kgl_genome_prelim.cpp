@@ -5,6 +5,7 @@
 #include "kel_exec_env.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig.h"
+#include "kgl_seq_coding.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -293,30 +294,30 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 }
 
 
-[[nodiscard]] kgl::ProteinSequenceValidity kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const TranscriptionSequence>& sequence_ptr,
-                                                                                         bool verbose) {
+kgl::ProteinSequenceValidity
+kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr, bool verbose) {
 
-  if (sequence_ptr->getFeatureMap().empty()) {
+  if (transcript_ptr->getFeatureMap().empty()) {
 
-    ExecEnv::log().error("gene: {}; TranscriptionSequence::checkValidProtein, empty TranscriptionSequence", sequence_ptr->getGene()->id());
+    ExecEnv::log().error("gene: {}; TranscriptionSequence::checkValidProtein, empty TranscriptionSequence", transcript_ptr->getGene()->id());
     return ProteinSequenceValidity::EMPTY;
 
   }
 
-  if (sequence_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
+  if (transcript_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
 
     return ProteinSequenceValidity::VALID;
 
   }
 
-  auto sequence_length = sequence_ptr->codingNucleotides();
+  auto sequence_length = transcript_ptr->codingNucleotides();
   if ((sequence_length % Codon::CODON_SIZE) != 0) {
 
     if (verbose) {
 
       ExecEnv::log().error("TranscriptionSequence::checkValidProtein; Protein gene id: {} CDS Features: {}, total coding length: {}, not mod3",
-                           sequence_ptr->getGene()->id(),
-                           sequence_ptr->getFeatureMap().size(),
+                           transcript_ptr->getGene()->id(),
+                           transcript_ptr->getFeatureMap().size(),
                            sequence_length);
 
     }
@@ -325,19 +326,30 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 
   }
 
-  auto& contig = *sequence_ptr->getGene()->contig();
-  DNA5SequenceCoding coding_sequence = contig.sequence().codingSequence(sequence_ptr);
+  auto contig_ptr = transcript_ptr->getGene()->contig();
 
-  if (not contig.codingTable().checkStartCodon(coding_sequence)) {
+  auto coding_sequence_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+  if (not coding_sequence_opt) {
+
+    ExecEnv::log().info("Cannor generate valid coding sequence for Gene: {}, Transcript: {}",
+                        transcript_ptr->getGene()->id(),
+                        transcript_ptr->getParent()->id());
+
+    return ProteinSequenceValidity::EMPTY;
+
+  }
+  DNA5SequenceCoding& coding_sequence = coding_sequence_opt.value();
+
+  if (not contig_ptr->codingTable().checkStartCodon(coding_sequence)) {
 
     if (verbose) {
 
       ExecEnv::log().info("TranscriptionSequence::checkValidProtein, No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
-                          sequence_ptr->getGene()->id(),
-                          sequence_ptr->getParent()->id(),
-                          contig.codingTable().firstCodon(coding_sequence).getSequenceAsString());
+                          transcript_ptr->getGene()->id(),
+                          transcript_ptr->getParent()->id(),
+                          contig_ptr->codingTable().firstCodon(coding_sequence).getSequenceAsString());
 
-      sequence_ptr->getGene()->recusivelyPrintsubfeatures();
+      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
 
     }
 
@@ -345,17 +357,17 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 
   }
 
-  if (not contig.codingTable().checkStopCodon(coding_sequence)) {
+  if (not contig_ptr->codingTable().checkStopCodon(coding_sequence)) {
 
     if (verbose) {
 
       ExecEnv::log().info("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
                           (Codon::codonLength(coding_sequence)-1),
-                          sequence_ptr->getGene()->id(),
-                          sequence_ptr->getParent()->id(),
-                          contig.codingTable().lastCodon(coding_sequence).getSequenceAsString());
+                          transcript_ptr->getGene()->id(),
+                          transcript_ptr->getParent()->id(),
+                          contig_ptr->codingTable().lastCodon(coding_sequence).getSequenceAsString());
 
-      sequence_ptr->getGene()->recusivelyPrintsubfeatures();
+      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
 
     }
 
@@ -363,18 +375,18 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 
   }
 
-  size_t nonsense_index = contig.codingTable().checkNonsenseMutation(coding_sequence);
+  size_t nonsense_index = contig_ptr->codingTable().checkNonsenseMutation(coding_sequence);
   if (nonsense_index > 0) {
 
     if (verbose) {
 
       ExecEnv::log().info("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
                           nonsense_index,
-                          sequence_ptr->getGene()->id(),
-                          sequence_ptr->getParent()->id(),
+                          transcript_ptr->getGene()->id(),
+                          transcript_ptr->getParent()->id(),
                           Codon(coding_sequence, nonsense_index).getSequenceAsString());
 
-      sequence_ptr->getGene()->recusivelyPrintsubfeatures();
+      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
 
     }
 

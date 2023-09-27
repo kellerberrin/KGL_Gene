@@ -82,39 +82,6 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::downConvertToLinear(const DNA5S
 
 }
 
-// Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-// Important - Always returns the reverse complement of the stranded sequence.
-kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::reverseDownConvert(const DNA5SequenceCoding& stranded_sequence) {
-
-  StringDNA5 linear_string;
-  linear_string.reserve(stranded_sequence.length()); // pre-allocate for efficiency
-
-  auto complement = [](CodingDNA5::Alphabet coding_base)->DNA5::Alphabet { return DNA5::convertComplementNucleotide(coding_base); };
-  auto reversed_string = std::ranges::views::reverse(stranded_sequence.getAlphabetString());
-  std::ranges::transform(reversed_string,std::back_inserter(linear_string), complement);
-
-  return DNA5SequenceLinear(std::move(linear_string));
-
-}
-
-// Down-converts a coding DNA sequence to a linear DNA5 alphabet (swaps the logical alphabet from CodingDNA5 to DNA5).
-// Important - Strand Conversion of a reverse complement is performed for a -ve strand
-kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::strandedDownConvert(const DNA5SequenceCoding& stranded_sequence) {
-
-  switch(stranded_sequence.strand()) {
-
-    case StrandSense::REVERSE:
-      return reverseDownConvert(stranded_sequence);
-
-    default:
-    case StrandSense::FORWARD:
-      return downConvertToLinear(stranded_sequence);
-
-  }
-
-}
-
-
 
 // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
 // A -ve strand returns the reverse complement as expected.
@@ -188,28 +155,6 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(
   }
 
   return concatenated_sequence;
-
-}
-
-
-kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const {
-
-  auto cds_interval_set = GeneIntervalStructure::transcriptIntervals(transcript_ptr);
-  std::vector<OpenRightUnsigned> interval_vector(cds_interval_set.begin(), cds_interval_set.end());
-
-  auto concat_sequence_opt = concatSequences(interval_vector);
-  if (not concat_sequence_opt) {
-
-    ExecEnv::log().warn("Unable to concat sequence intervals for Gene: {}, Transcript: {}",
-                        transcript_ptr->getGene()->id(), transcript_ptr->getParent()->id());
-
-    return {}; // Return an empty coding sequence.
-
-  }
-
-  auto& concat_sequence = concat_sequence_opt.value();
-
-  return concat_sequence.codingSequence(transcript_ptr->strand());
 
 }
 

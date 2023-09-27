@@ -9,9 +9,10 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_genome_seq/kgl_seq_variant_db.h"
-#include "kgl_genome_seq/kgl_seq_offset.h"
-#include "kgl_gff_fasta.h"
+#include "kgl_seq_variant_db.h"
+#include "kgl_seq_offset.h"
+#include "kgl_seq_coding.h"
+#include "kgl_io_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -363,17 +364,19 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
         out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
 
         // Valid ORF
-        DNA5SequenceCoding coding_dna_sequence;
-        if (contig_ptr->getDNA5SequenceCoding(sequence_ptr, coding_dna_sequence)) {
+        auto coding_dna_opt = CodingTranscript::codingSequence( sequence_ptr, contig_ptr);
+        if (coding_dna_opt) {
 
-          out_file << (contig_ptr->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
+          out_file << (contig_ptr->verifyDNACodingSequence(coding_dna_opt.value()) ? "1" : "0") << CSV_delimiter;
 
         } else {
 
           out_file << "0" << CSV_delimiter;
+          return false;
 
         }
 
+        DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
         const std::vector<std::pair<CodingDNA5::Alphabet, size_t>> count_vector = coding_dna_sequence.countSymbols();
         out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence, count_vector) << CSV_delimiter;
         out_file << SequenceComplexity::complexityLempelZiv(coding_dna_sequence) << CSV_delimiter;
@@ -539,16 +542,19 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
         out_file << sequence_ptr->start() << CSV_delimiter;
         out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
 
-        DNA5SequenceCoding coding_dna_sequence;
-        if (contig_ptr->getDNA5SequenceCoding(sequence_ptr, coding_dna_sequence)) {
+        auto coding_dna_opt = CodingTranscript::codingSequence(sequence_ptr, gene_ptr->contig());
+        if (coding_dna_opt) {
 
-          out_file << (contig_ptr->verifyDNACodingSequence(coding_dna_sequence) ? "1" : "0") << CSV_delimiter;
+          DNA5SequenceCoding& verify_coding_sequence = coding_dna_opt.value();
+          out_file << (contig_ptr->verifyDNACodingSequence(verify_coding_sequence) ? "1" : "0") << CSV_delimiter;
 
         } else {
 
           out_file << "0" << CSV_delimiter;
+          return false;
 
         }
+        DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
 
         AminoSequence amino_reference  = contig_ptr->getAminoSequence(coding_dna_sequence);
         out_file << SequenceComplexity::alphabetEntropy<AminoAcid>(amino_reference, amino_reference.countSymbols()) << CSV_delimiter;

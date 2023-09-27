@@ -103,23 +103,6 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
 }
 
 
-// Given a CDS coding sequence, return the corresponding DNA base sequence (strand adjusted).
-bool kgl::ContigReference::getDNA5SequenceCoding(const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
-                                                 DNA5SequenceCoding& coding_sequence) const {
-
-  if (coding_sequence_ptr) {
-
-    coding_sequence = sequence_ptr_->DNA5SequenceLinear::codingSequence(coding_sequence_ptr);
-    return true;
-
-  }
-
-  ExecEnv::log().error("getDNA5SequenceCoding(), coding_sequence_ptr is null");
-  return false;
-
-}
-
-
 bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
 
   if (contig_id_ != lhs.contig_id_) {
@@ -148,18 +131,5 @@ bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
   }
 
   return true;
-
-}
-
-kgl::DNA5SequenceLinear kgl::ContigReference::getSubSequence(const OpenRightUnsigned& sequence_interval) const {
-
-  if (not sequence_ptr()->interval().containsInterval(sequence_interval)) {
-
-    ExecEnv::log().error("ContigReference::getSubSequence; requested sub interval: {} out of bounds for contig: {} interval: {}",
-                         sequence_interval.toString(), contigId(), sequence_ptr()->interval().toString());
-
-  }
-
-  return sequence_ptr()->subOptSequence(sequence_interval).value();
 
 }

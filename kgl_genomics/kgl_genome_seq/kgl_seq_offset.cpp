@@ -26,7 +26,7 @@ bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeD
 
   if (find_iter == genome_ptr->getMap().end()) {
 
-    ExecEnv::log().error("MutationOffset::getSortedVariants; Contig Id: {} not found in Genome Variant: {}", contig_id, genome_ptr->genomeId());
+    ExecEnv::log().error("Contig Id: {} not found in Genome Variant: {}", contig_id, genome_ptr->genomeId());
     return false;
 
   }

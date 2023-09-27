@@ -7,7 +7,9 @@
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_upgma_node.h"
 #include "kgl_genome_seq/kgl_seq_variant_db.h"
-#include "kgl_genome_seq/kgl_seq_offset.h"
+#include "kgl_seq_offset.h"
+#include "kgl_seq_coding.h"
+
 
 
 namespace kgl = kellerberrin::genome;
@@ -302,7 +304,7 @@ std::shared_ptr<const kgl::TranscriptionSequence>  kgl::ReferenceGeneDistance::g
 
   if (coding_seq_ptr->empty()) {
 
-    ExecEnv::log().critical("ReferenceGeneDistance::getCodingSequence; Gene contains no coding sequence : gene: {}", gene_ptr_->id());
+    ExecEnv::log().critical("Gene contains no coding sequence : gene: {}", gene_ptr_->id());
 
   }
 
@@ -313,7 +315,7 @@ std::shared_ptr<const kgl::TranscriptionSequence>  kgl::ReferenceGeneDistance::g
     std::string gene_id = coding_sequence->getGene()->id();
     std::string sequence_id = coding_sequence->getParent()->id();
 
-    ExecEnv::log().warn("ReferenceGeneDistance::getCodingSequence;  Gene: {} contains: {} CDS sequences. Using sequence: {}",
+    ExecEnv::log().warn("Gene: {} contains: {} CDS sequences. Using sequence: {}",
                         gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
 
   }
@@ -339,24 +341,24 @@ void  kgl::DNAGeneDistance::getExonSequence() {
 
   std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
 
-  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
+  // Just get the first transcript of the gene.
+  auto transcript_ptr = getCodingSequence();
+
+  auto coding_seq_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+
+  if (not coding_seq_opt) {
+
+    ExecEnv::log().warn("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
+                        contig_ptr->contigId(),
+                        transcript_ptr->getGene()->id(),
+                        transcript_ptr->getParent()->id());
+    return;
+  }
+  auto& dna_coding_sequence = coding_seq_opt.value();
 
   linear_sequence_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
 
-
 }
-
-
-void  kgl::DNAGeneDistance::getIntronSequence() {
-
-  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
-
-  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().intronSequence(getCodingSequence());
-
-  linear_sequence_ = DNA5SequenceLinear::downConvertToLinear(dna_coding_sequence);
-
-}
-
 
 kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
@@ -397,22 +399,25 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 }
 
 
-bool kgl::ReferenceGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
-                                            std::shared_ptr<const GenomeReference> ,
-                                            const std::string& ) {
-
-
-  return false;
-
-}
-
-
 
 void  kgl::AminoGeneDistance::getAminoSequence() {
 
   std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
 
-  DNA5SequenceCoding dna_coding_sequence = contig_ptr->sequence().codingSequence(getCodingSequence());
+  // Just get the first transcript of the gene.
+  auto transcript_ptr = getCodingSequence();
+
+  auto coding_seq_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+
+  if (not coding_seq_opt) {
+
+    ExecEnv::log().warn("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
+                        contig_ptr->contigId(),
+                        transcript_ptr->getGene()->id(),
+                        transcript_ptr->getParent()->id());
+    return;
+  }
+  auto& dna_coding_sequence = coding_seq_opt.value();
 
   amino_sequence_ = contig_ptr->getAminoSequence(dna_coding_sequence);
 
