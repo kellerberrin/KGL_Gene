@@ -229,7 +229,7 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
       StrandSense strand = transcript_ptr->strand();
 
       // Only add genes with valid coding sequences (no pseudo genes).
-      if (gene_ptr->contig()->verifyDNACodingSequence(coding_dna_sequence)) {
+      if (gene_ptr->contig()->checkValidCodingSequence(coding_dna_sequence) == ProteinSequenceValidity::VALID) {
 
         // Only 1 intron (var genes)
         if (intron_sequence_array.size() == 1) {

@@ -22,8 +22,8 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
   size_t ncRNA_gene_count{0};
   size_t empty_genes{0};
   size_t valid_sequence{0};
-  size_t not_mod3{0};
   size_t empty_sequence{0};
+  size_t not_mod3{0};
   size_t no_start_codon{0};
   size_t no_stop_codon{0};
   size_t nonsense_mutation{0};
@@ -61,7 +61,7 @@ void kgl::ContigReference::verifyCDSPhasePeptide() {
 
         }
 
-        switch(TranscriptionSequence::checkValidProtein(sequence_ptr, verbose)) {
+        switch(TranscriptionSequence::checkValidProtein(sequence_ptr)) {
 
           case ProteinSequenceValidity::VALID:
             valid_gene = true; // Only require 1 valid sequence for a valid protein gege.
@@ -189,70 +189,49 @@ bool kgl::Feature::verifyStrand(const TranscriptionFeatureMap& Feature_map) cons
 
 
 // Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigReference::verifyDNACodingSequence(const DNA5SequenceCoding& coding_sequence_ptr) const {
-
-  bool result = coding_table_.checkStopCodon(coding_sequence_ptr);
-  result = result and coding_table_.checkStartCodon(coding_sequence_ptr);
-  result = result and coding_table_.checkNonsenseMutation(coding_sequence_ptr) == 0;
-
-  return result;
-
-}
-
-
-// Verifies a coding sequence using the amino coding table defined for the contig.
-bool kgl::ContigReference::verifyProteinSequence(const AminoSequence& amino_sequence) const {
-
-  bool result = coding_table_.checkStopCodon(amino_sequence);
-  result = result and coding_table_.checkStartCodon(amino_sequence);
-  result = result and coding_table_.checkNonsenseMutation(amino_sequence) == 0;
-
-  return result;
-
-}
-
-
-// Verifies a coding sequence using the amino coding table defined for the contig.
-kgl::ProteinSequenceAnalysis kgl::ContigReference::proteinSequenceAnalysis(const AminoSequence& amino_sequence) const {
+kgl::ProteinSequenceValidity kgl::ContigReference::checkValidProteinSequence(const AminoSequence& amino_sequence) const {
 
   if (not coding_table_.checkStartCodon(amino_sequence)) {
 
-    return ProteinSequenceAnalysis::NO_START_CODON;
+    return ProteinSequenceValidity::NO_START_CODON;
 
   }
 
   if (coding_table_.checkNonsenseMutation(amino_sequence) != 0) {
 
-    return ProteinSequenceAnalysis::NONSENSE_MUTATION;
+    return ProteinSequenceValidity::NONSENSE_MUTATION;
 
   }
 
   if (not coding_table_.checkStopCodon(amino_sequence)) {
 
-    return ProteinSequenceAnalysis::NO_STOP_CODON;
+    return ProteinSequenceValidity::NO_STOP_CODON;
 
   }
 
-  return ProteinSequenceAnalysis::VALID_SEQUENCE;
+  return ProteinSequenceValidity::VALID;
 
 }
 
 
 size_t kgl::ContigReference::proteinSequenceSize(const AminoSequence& amino_sequence) const {
 
-  switch(proteinSequenceAnalysis(amino_sequence)) {
+  switch(checkValidProteinSequence(amino_sequence)) {
 
-    case ProteinSequenceAnalysis::NO_START_CODON:
+    case ProteinSequenceValidity::NO_START_CODON:
       return 0;
 
-    case ProteinSequenceAnalysis::NONSENSE_MUTATION:
+    case ProteinSequenceValidity::NONSENSE_MUTATION:
       return coding_table_.checkNonsenseMutation(amino_sequence);
 
-    case ProteinSequenceAnalysis::NO_STOP_CODON:
+    case ProteinSequenceValidity::NO_STOP_CODON:
       return 0;
 
-    case ProteinSequenceAnalysis::VALID_SEQUENCE:
+    case ProteinSequenceValidity::VALID:
       return amino_sequence.length();
+
+    default:
+      return 0;
 
   }
 

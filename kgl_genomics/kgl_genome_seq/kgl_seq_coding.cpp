@@ -42,7 +42,7 @@ kgl::CodingTranscript::intronSequence( const std::shared_ptr<const Transcription
   IntronMap intron_map;
   for (auto const& intron_interval : intron_interval_set) {
 
-    auto intron_sequence_opt = contig_ptr->sequence().subOptSequence(intron_interval);
+    auto intron_sequence_opt = contig_ptr->sequence().subSequence(intron_interval);
     if (not intron_sequence_opt) {
 
       ExecEnv::log().warn("Unable to generate intron sequence, interval {}, Gene: {}, Transcript: {}",

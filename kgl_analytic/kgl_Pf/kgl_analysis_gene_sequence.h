@@ -133,12 +133,6 @@ public:
                                                        const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
                                                        const std::shared_ptr<const GenomeReference>& genome_db_ptr);
 
-  [[nodiscard]] static bool translateGene( const GenomeId_t& genome_id,
-                                           const FeatureIdent_t& gene_id,
-                                           const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
-                                           const std::string& fasta_file_name);
-
-
   [[nodiscard]] static bool translateContig( const GenomeId_t& genome_id,
                                              const ContigId_t& gene_id,
                                              const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,

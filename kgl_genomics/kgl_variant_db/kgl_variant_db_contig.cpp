@@ -260,7 +260,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
       }
 
       OpenRightUnsigned contig_ref_interval(variant_ptr->offset(), variant_ptr->offset()+variant_ptr->referenceSize());
-      auto contig_ref_opt = contig_sequence_ptr->subOptSequence(contig_ref_interval);
+      auto contig_ref_opt = contig_sequence_ptr->subSequence(contig_ref_interval);
       if (not contig_ref_opt) {
 
         ExecEnv::log().error("Unable to extract variant reference from contig: {}, contig interval: {}, variant: {}",

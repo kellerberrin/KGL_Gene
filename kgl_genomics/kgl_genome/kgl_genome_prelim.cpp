@@ -295,11 +295,10 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 
 
 kgl::ProteinSequenceValidity
-kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr, bool verbose) {
+kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
 
   if (transcript_ptr->getFeatureMap().empty()) {
 
-    ExecEnv::log().error("gene: {}; TranscriptionSequence::checkValidProtein, empty TranscriptionSequence", transcript_ptr->getGene()->id());
     return ProteinSequenceValidity::EMPTY;
 
   }
@@ -310,24 +309,7 @@ kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const Transc
 
   }
 
-  auto sequence_length = transcript_ptr->codingNucleotides();
-  if ((sequence_length % Codon::CODON_SIZE) != 0) {
-
-    if (verbose) {
-
-      ExecEnv::log().error("TranscriptionSequence::checkValidProtein; Protein gene id: {} CDS Features: {}, total coding length: {}, not mod3",
-                           transcript_ptr->getGene()->id(),
-                           transcript_ptr->getFeatureMap().size(),
-                           sequence_length);
-
-    }
-
-    return ProteinSequenceValidity::NOT_MOD3;
-
-  }
-
   auto contig_ptr = transcript_ptr->getGene()->contig();
-
   auto coding_sequence_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
   if (not coding_sequence_opt) {
 
@@ -338,63 +320,10 @@ kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const Transc
     return ProteinSequenceValidity::EMPTY;
 
   }
-  DNA5SequenceCoding& coding_sequence = coding_sequence_opt.value();
 
-  if (not contig_ptr->codingTable().checkStartCodon(coding_sequence)) {
+  DNA5SequenceCoding &coding_sequence = coding_sequence_opt.value();
 
-    if (verbose) {
-
-      ExecEnv::log().info("TranscriptionSequence::checkValidProtein, No START codon Gene: {}, Sequence (mRNA): {} | first codon: {}",
-                          transcript_ptr->getGene()->id(),
-                          transcript_ptr->getParent()->id(),
-                          contig_ptr->codingTable().firstCodon(coding_sequence).getSequenceAsString());
-
-      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
-
-    }
-
-    return ProteinSequenceValidity::NO_START_CODON;
-
-  }
-
-  if (not contig_ptr->codingTable().checkStopCodon(coding_sequence)) {
-
-    if (verbose) {
-
-      ExecEnv::log().info("No STOP codon: {} Gene: {}, Sequence (mRNA): {} | last codon: {}",
-                          (Codon::codonLength(coding_sequence)-1),
-                          transcript_ptr->getGene()->id(),
-                          transcript_ptr->getParent()->id(),
-                          contig_ptr->codingTable().lastCodon(coding_sequence).getSequenceAsString());
-
-      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
-
-    }
-
-    return ProteinSequenceValidity::NO_STOP_CODON;
-
-  }
-
-  size_t nonsense_index = contig_ptr->codingTable().checkNonsenseMutation(coding_sequence);
-  if (nonsense_index > 0) {
-
-    if (verbose) {
-
-      ExecEnv::log().info("NONSENSE mutation codon:{} Gene: {}, Sequence (mRNA): {} | stop codon: {}",
-                          nonsense_index,
-                          transcript_ptr->getGene()->id(),
-                          transcript_ptr->getParent()->id(),
-                          Codon(coding_sequence, nonsense_index).getSequenceAsString());
-
-      transcript_ptr->getGene()->recusivelyPrintsubfeatures();
-
-    }
-
-    return ProteinSequenceValidity::NONSENSE_MUTATION;
-
-  }
-
-  return ProteinSequenceValidity::VALID;
+  return contig_ptr->checkValidCodingSequence(coding_sequence);
 
 }
 

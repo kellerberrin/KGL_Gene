@@ -24,10 +24,9 @@ void kgl::StructuredFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_
 
 }
 
-bool kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id,
-                                           std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
+std::vector<std::shared_ptr<const kgl::Feature>> kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id) const {
 
-  feature_ptr_vec.clear();
+  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
 
   auto const [lower_eq, upper_eq] = id_feature_map_.equal_range(feature_id);
   for (auto const& [feature_ident, feature_ptr] : std::ranges::subrange(lower_eq, upper_eq)) {
@@ -36,7 +35,7 @@ bool kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id,
 
   }
 
-  return not feature_ptr_vec.empty();
+  return feature_ptr_vec;
 
 }
 
@@ -274,26 +273,25 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto const& super_feature_id : super_features) {
 
-      std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
-
-      if (not findFeatureId(super_feature_id, super_feature_ptr_vec)) {
+      std::vector<std::shared_ptr<const Feature>> super_ptr_vec = findFeatureId(super_feature_id);
+      if (super_ptr_vec.empty()) {
 
         // Flag an Error; could not find super feature.
         ExecEnv::log().error("GeneExonFeatures::setupFeatureHierarchy; Feature: {}; Super Feature: {} does not exist",
                              feature_ident, super_feature_id);
 
       }
-      if (super_feature_ptr_vec.size() > 1) {
+      if (super_ptr_vec.size() > 1) {
 
         // Warning, more than 1 super feature.
         ExecEnv::log().warn("GeneExonFeatures::setupFeatureHierarchy; Super Feature id: {} returned : {} Super Features",
-                            super_feature_id, super_feature_ptr_vec.size());
+                            super_feature_id, super_ptr_vec.size());
 
       }
-      if (not super_feature_ptr_vec.empty()) {
+      if (not super_ptr_vec.empty()) {
 
-        feature_ptr->setSuperFeature(super_feature_ptr_vec.front());
-        std::const_pointer_cast<Feature>(super_feature_ptr_vec.front())->addSubFeature(feature_ident, feature_ptr);
+        feature_ptr->setSuperFeature(super_ptr_vec.front());
+        std::const_pointer_cast<Feature>(super_ptr_vec.front())->addSubFeature(feature_ident, feature_ptr);
 
       } // For all super_features with same id.
 

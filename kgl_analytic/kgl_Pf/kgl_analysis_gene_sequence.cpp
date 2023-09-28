@@ -26,51 +26,51 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genome_collection_ptr->getOptionalGenome(genome_id);
   if (not genome_opt) {
 
-    ExecEnv::log().warn("GenomicSequence::translateContig; Could not find Genome: {} in genome collection", genome_id);
+    ExecEnv::log().warn("Could not find Genome: {} in genome collection", genome_id);
     return false;
     
   }
-  std::shared_ptr<const GenomeReference> genome_ref_ptr = genome_opt.value();
+  auto& genome_ref_ptr = genome_opt.value();
 
   auto contig_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("GenomicSequence::translateContig; Did not find Contig: {} in Genome: {}", contig_id, genome_id);
+    ExecEnv::log().warn("Did not find Contig: {} in Genome: {}", contig_id, genome_id);
     return false;
 
   }
-  auto contig_ref_ptr = contig_opt.value();
+  auto& contig_ref_ptr = contig_opt.value();
 
   std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;  
   for (const auto& [gene_id, gene_ptr] : contig_ref_ptr->getGeneMap()) {
     
-    auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
+    auto transcript_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
     size_t coding_count = 0;
-    for (const auto& [sequence_id, sequence_ptr] : coding_sequence_array_ptr->getMap()) {
+    for (const auto& [transcript_id, transcript_ptr] : transcript_array_ptr->getMap()) {
 
-      ExecEnv::log().info("GenomicSequence::translateContig; Sequence Id: {}", sequence_id);
+      ExecEnv::log().info("Sequence Id: {}", transcript_id);
 
-      for (const auto& [cds_offset, cds_ptr] : sequence_ptr->getFeatureMap()) {
+      for (const auto& [cds_offset, cds_ptr] : transcript_ptr->getFeatureMap()) {
 
-        ExecEnv::log().info("GenomicSequence::translateContig; CDS Id: {}, Offset: {}", cds_ptr->id(), cds_offset);
+        ExecEnv::log().info("CDS Id: {}, Offset: {}", cds_ptr->id(), cds_offset);
 
         for (const auto& [attribute_key, attribute_value] : cds_ptr->getAttributes().getMap()) {
 
-          ExecEnv::log().info("GenomicSequence::translateContig; CDS Attribute Key: {} Value: {}", attribute_key, attribute_value);
+          ExecEnv::log().info("CDS Attribute Key: {} Value: {}", attribute_key, attribute_value);
 
         }
 
       }
     
 
-      auto coding_dna_opt = CodingTranscript::codingSequence(sequence_ptr, contig_ref_ptr);
+      auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ref_ptr);
       if (coding_dna_opt) {
 
         DNA5SequenceCoding& coding_dna = coding_dna_opt.value();
         std::stringstream ss;
         ss << gene_ptr->id() << "_" << ++coding_count;
-        AminoSequence peptide = sequence_ptr->contig()->getAminoSequence(coding_dna);
+        AminoSequence peptide = transcript_ptr->contig()->getAminoSequence(coding_dna);
         std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide)));
         amino_fasta_vector.push_back(fasta_entry);
 
@@ -88,7 +88,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
 
-    ExecEnv::log().warn("GenomicSequence::translateContig; Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
+    ExecEnv::log().warn("Problem writing peptide fasta for Contig: {} in file: {}", contig_id, fasta_file_name);
     return false;
 
   }
@@ -96,93 +96,6 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
   return true;
 
 }
-
-
-bool kgl::GenomicSequence::translateGene(const GenomeId_t& genome_id,
-                                         const FeatureIdent_t& gene_id,
-                                         const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
-                                         const std::string& fasta_file_name) {
-
-  // Get the genome object
-  std::optional<std::shared_ptr<const GenomeReference>> genome_opt = genome_collection_ptr->getOptionalGenome(genome_id);
-  if (not genome_opt) {
-
-    ExecEnv::log().warn("GenomicSequence::translateGene; Could not find Genome: {} in genome collection", genome_id);
-    return false;
-    
-  }
-  std::shared_ptr<const GenomeReference> genome_ref_ptr = genome_opt.value();
-
-
-  // Look through the contigs for the gene.
-  bool found = false;
-  std::shared_ptr<const ContigReference> contig_ptr;
-  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
-  for (const auto& contig : genome_ref_ptr->getMap() ) {
-
-    contig_ptr = contig.second;
-    if (contig_ptr->findFeatureId(gene_id, feature_ptr_vec)) {
-
-      found = true;
-      break;   
-
-    }
-
-  }
-
-  if (not found or feature_ptr_vec.empty() or not contig_ptr) {
-
-    ExecEnv::log().warn("GenomicSequence::translateGene; Did not find Gene: {} in Genome: {}", gene_id, genome_id);
-    return false;
-
-  }
-
-  std::vector<std::pair<std::string, std::shared_ptr<AminoSequence>>> amino_fasta_vector;
-  for (const auto& feature_ptr : feature_ptr_vec) {
-
-    
-    if (feature_ptr->isGene()) {
-
-      auto coding_sequence_array_ptr = GeneFeature::getTranscriptionSequences(std::static_pointer_cast<const GeneFeature>(feature_ptr));
-
-      size_t coding_count = 0;
-      for (const auto& [transcript_id, transcript_ptr] : coding_sequence_array_ptr->getMap()) {
-
-        auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
-        if (coding_dna_opt) {
-
-          DNA5SequenceCoding& coding_dna = coding_dna_opt.value();
-          AminoSequence peptide_ptr = transcript_ptr->contig()->getAminoSequence(coding_dna);
-          std::stringstream ss;
-          ss << gene_id << "_" << ++coding_count;
-          std::pair<std::string, std::shared_ptr<AminoSequence>> fasta_entry(ss.str(), std::make_shared<AminoSequence>(std::move(peptide_ptr)));
-          amino_fasta_vector.push_back(fasta_entry);
-
-        } else {
-
-          ExecEnv::log().error("GenomicSequence::translateGene; Cannot generate a DNA coding sequence for Gene: {} in Genome: {}", gene_id, genome_id);
-          return false;
-
-        }
-
-      }
-
-    }
-
-  }
-
-  // Sequences are presented as a pair of a sequence name and an amino sequences.
-  if (not GenomicMutation::writeMutantProteins(fasta_file_name, amino_fasta_vector)) {
-
-    ExecEnv::log().warn("GenomicSequence::translateGene; Problem writing peptide fasta for Gene: {} in file: {}", gene_id, fasta_file_name);
-    return false;
-
-  }
-
-  return true;
-
-}
-
 
 
 bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
@@ -210,21 +123,23 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_ref_ptr->getContigSequence(contig);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("GenomicSequence::mutateGene; Could not find contig: {} in genome database", contig);
+    ExecEnv::log().warn("Could not find contig: {} in genome database", contig);
     return false;
 
   }
+  auto& contig_ptr = contig_opt.value();
 
   for (auto summary : gene_summary_map) {
 
-    if (contig_opt.value()->verifyProteinSequence(*summary.second.sequence_mutant)) {
+    bool valid_sequence = contig_ptr->checkValidProteinSequence(*summary.second.sequence_mutant) == ProteinSequenceValidity::VALID;
+    if (valid_sequence) {
 
-      ExecEnv::log().info("GenomicSequence::mutateGene; Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+      ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
 
     } else {
 
-      ExecEnv::log().info("GenomicSequence::mutateGene; Frame shift mutation Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
+      ExecEnv::log().info("Frame shift mutation Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);
 
 
@@ -253,7 +168,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
   // Sequences are presented as a pair of a sequence name and an amino sequences.
   if (not GenomicMutation::writeMutantProteins(fasta_filename, amino_fasta_vector)) {
 
-    ExecEnv::log().warn("GenomicSequence::mutateGene; Problem writing protein fasta file: {}", fasta_filename);
+    ExecEnv::log().warn("Problem writing protein fasta file: {}", fasta_filename);
 
   }
 
@@ -302,7 +217,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
 
   } else {
 
-    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
                          genome_variant_ptr->genomeId(), contig, gene, sequence);
     return false;
 
@@ -331,7 +246,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
 
   } else {
 
-    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
                         genome_variant_ptr->genomeId(), contig, gene, sequence);
     return false;
 
@@ -358,7 +273,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
 
   } else {
 
-    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
                          genome_variant_ptr->genomeId(), contig, gene, sequence);
     return false;
 
@@ -368,7 +283,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
 
   if (not result.second) {
 
-    ExecEnv::log().error("MutateGenomeGene(), Duplicate sequence; Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
+    ExecEnv::log().error("Duplicate sequence; Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
                          genome_variant_ptr->genomeId(), contig, gene, sequence);
     return false;
 
@@ -400,7 +315,7 @@ bool kgl::GenomicSequence::mutateAllRegions(const std::string& file_name,
 
   for(auto const& genome_variant : pop_variant_ptr->getMap()) {
 
-    ExecEnv::log().info("outputSequenceCSV(), Processing genome: {}", genome_variant.first);
+    ExecEnv::log().info("Processing genome: {}", genome_variant.first);
     ContigSize_t sequence_count = 0;
 
     for (auto contig : genome_db_ptr->getMap()) {
@@ -414,7 +329,7 @@ bool kgl::GenomicSequence::mutateAllRegions(const std::string& file_name,
 
     }
 
-    ExecEnv::log().info("outputSequenceCSV(), Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
+    ExecEnv::log().info("Genome: {} mutated: {} sequences.", genome_variant.first, sequence_count);
 
   }
 
@@ -459,13 +374,13 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().error("outputGenomeGene(), Unexpected could not find Contig: {}", contig_id);
+    ExecEnv::log().error("Unexpected could not find Contig: {}", contig_id);
     return "<error>";
 
   }
   if (offset + region_size >= contig_opt.value()->sequence().length()) {
 
-    ExecEnv::log().error("outputGenomeGene(), Offset: {} + Region Size: {} exceed the Contig: {} size: {}",
+    ExecEnv::log().error("Offset: {} + Region Size: {} exceed the Contig: {} size: {}",
                          offset, region_size, contig_id, contig_opt.value()->sequence().length());
     return "<error>";
 
@@ -482,7 +397,7 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
                                              offset+region_size,
                                              variant_map)) {
 
-    ExecEnv::log().warn("GenomicSequence::outputGenomeRegion, Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
     return "<error>";
 
@@ -514,7 +429,7 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
 
   } else {
 
-    ExecEnv::log().error("outputGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
                          genome_variant_ptr->genomeId(), contig_id, offset, region_size);
     return "<error>";
 
@@ -542,7 +457,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const GenomeId_t& genome,
 
   } else {
 
-    ExecEnv::log().error("mutateGenomeRegion(), Genome: {} not found", genome);
+    ExecEnv::log().error("Genome: {} not found", genome);
     return false;
 
   }
@@ -569,7 +484,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
                                              offset+region_size,
                                              variant_map)) {
 
-    ExecEnv::log().warn("GenomicSequence::mutateGenomeRegion Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}",
                         genome_variant_ptr->genomeId(), contig);
     return false;
 
@@ -614,13 +529,13 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
 
     if (not ParseFasta::writeFastaFile(fasta_file, dna_seq_vector)) {
 
-      ExecEnv::log().error("MutateGenomeGene(), Problem writing to fasta file: {}", fasta_file);
+      ExecEnv::log().error("Problem writing to fasta file: {}", fasta_file);
 
     }
 
   } else {
 
-    ExecEnv::log().error("MutateGenomeGene(), Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
                          genome_variant_ptr->genomeId(), contig, offset, region_size);
     return false;
 

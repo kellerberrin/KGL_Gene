@@ -42,7 +42,7 @@ kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
   contig_ptr_ = contig_opt.value();
 
   OpenRightUnsigned referenceInterval(allele_offset_, allele_offset_+reference_.length());
-  auto contig_ref_opt = contig_ptr_->sequence().subOptSequence(referenceInterval);
+  auto contig_ref_opt = contig_ptr_->sequence().subSequence(referenceInterval);
   if (not contig_ref_opt) {
 
     ExecEnv::log().error("Cannot extract reference interval: {} from contig: {} contig interval: {}",

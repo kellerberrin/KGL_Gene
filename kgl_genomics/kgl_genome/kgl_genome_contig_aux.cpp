@@ -69,9 +69,9 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
   clearHierarchy();
 
   // Establish or re-establish the hierarchies for all features.
-  for (auto feature_pair : idFeatureMap()) {
+  for (auto const& [feature_id, feature_ptr] : idFeatureMap()) {
 
-    Feature& feature = *feature_pair.second;
+    Feature& feature = *feature_ptr;
 
     // TSS features are assigned to GENES
     std::vector<FeatureIdent_t> assigned_features;
@@ -80,24 +80,24 @@ void kgl::AdjalleyTSSFeatures::setupFeatureHierarchy(const StructuredFeatures& g
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto super_feature_id : assigned_features) {
 
-      std::vector<std::shared_ptr<const Feature>> super_feature_ptr_vec;
-      if (not gene_super_features.findFeatureId(super_feature_id, super_feature_ptr_vec)) {
+      std::vector<std::shared_ptr<const Feature>> super_ptr_vec = gene_super_features.findFeatureId(super_feature_id);
+      if (super_ptr_vec.empty()) {
 
         // Otherwise flag an Error; could not find super feature.
         ExecEnv::log().warn("Feature: {}; Super Feature: {} does not exist", feature.id(), super_feature_id);
 
       }
-      if (super_feature_ptr_vec.size() > 1) {
+      if (super_ptr_vec.size() > 1) {
 
         // Warning, more than 1 super feature.
         ExecEnv::log().warn("Super Feature id: {} returned : {} Super Features",
-                                 super_feature_id, super_feature_ptr_vec.size());
+                            super_feature_id, super_ptr_vec.size());
 
       }
-      if (not super_feature_ptr_vec.empty()) {
+      if (not super_ptr_vec.empty()) {
 
-        feature.setSuperFeature(super_feature_ptr_vec.front());
-        std::const_pointer_cast<Feature>(super_feature_ptr_vec.front())->addSubFeature(feature.id(), feature_pair.second);
+        feature.setSuperFeature(super_ptr_vec.front());
+        std::const_pointer_cast<Feature>(super_ptr_vec.front())->addSubFeature(feature_id, feature_ptr);
 
       } // For all super_features with same id.
 

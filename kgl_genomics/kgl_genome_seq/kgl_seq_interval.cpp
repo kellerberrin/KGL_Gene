@@ -28,6 +28,11 @@ void kgl::GeneIntervalStructure::codingInterval(const std::shared_ptr<const Gene
 
   // Get the gene transciptions.
   auto coding_sequence_array = GeneFeature::getTranscriptionSequences(gene_feature);
+  if (not coding_sequence_array->getMap().empty()) {
+
+    strand_ = coding_sequence_array->getFirst()->strand();
+
+  }
 
   // Process all the gene transcriptions.
   for (auto const& [transcript_id, transcript_ptr] : coding_sequence_array->getMap()) {

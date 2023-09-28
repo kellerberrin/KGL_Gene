@@ -26,9 +26,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 // ContigReference - A contiguous region, the associated sequence, and all features that map onto that region/sequence.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class ProteinSequenceAnalysis { VALID_SEQUENCE, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
-
-
 class ContigReference {
 
 public:
@@ -44,11 +41,7 @@ public:
   // Add parsed features to the different feature structures.
   [[nodiscard]] bool addContigFeature(std::shared_ptr<Feature>& feature_ptr);
 
-  // false if not found.
-  [[nodiscard]] bool findFeatureId( const FeatureIdent_t& feature_id,
-                                    std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const {
-    return gene_exon_features_.findFeatureId(feature_id, feature_ptr_vec);
-  }
+  [[nodiscard]] std::vector<std::shared_ptr<const Feature>> findFeatureId(const FeatureIdent_t& feature_id) const;
 
   [[nodiscard]] const GeneMap& getGeneMap() const { return gene_exon_features_.geneMap(); }
 
@@ -67,17 +60,17 @@ public:
 
 
   [[nodiscard]] static bool verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr);
-  [[nodiscard]] bool verifyDNACodingSequence(const DNA5SequenceCoding& coding_dna) const;
-  [[nodiscard]] bool verifyProteinSequence(const AminoSequence& amino_sequence) const;
-  [[nodiscard]] ProteinSequenceAnalysis proteinSequenceAnalysis(const AminoSequence& amino_sequence) const;
   // Returns the protein sequence as the distance in amino acids between the start codon and stop codon.
   // No start and stop codon returns 0.
   [[nodiscard]] size_t proteinSequenceSize(const AminoSequence& amino_sequence) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
-  [[nodiscard]] bool getCodingSequence( const FeatureIdent_t& gene_id,
-                                        const FeatureIdent_t& sequence_id,
-                                        std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr) const;
+  [[nodiscard]] std::optional<std::shared_ptr<const TranscriptionSequence>>
+    getCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& transcript_id) const;
+
+  // Given a transcript return the associated coding sequence.
+  [[nodiscard]] std::optional<DNA5SequenceCoding>
+    codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
 
   // Generate Amino acid sequences using the table specified for this contig.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
@@ -85,6 +78,10 @@ public:
 
   // Compare reference Contigs- mainly used for testing.
   [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;
+  // Check start codon, stop codon codon and nonsense mutation.
+  [[nodiscard]] ProteinSequenceValidity checkValidProteinSequence(const AminoSequence& amino_sequence) const;
+  // Check all of the above and Mod3.
+  [[nodiscard]] ProteinSequenceValidity checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const;
 
   // Wire-up the contig features
   void verifyFeatureHierarchy();

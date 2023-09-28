@@ -85,7 +85,7 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
 
 bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
                                           const FeatureIdent_t& gene_id,
-                                          const FeatureIdent_t& sequence_id,
+                                          const FeatureIdent_t& transcript_id,
                                           const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                           const OffsetVariantMap& variant_map,
                                           DNA5SequenceCoding& reference_sequence,
@@ -98,30 +98,30 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
     return false;
 
   }
-
-  auto contig_ref_ptr = contig_ref_opt.value();
+  auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
-  std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr;
-  if (not contig_ref_ptr->getCodingSequence(gene_id, sequence_id, coding_sequence_ptr)) {
+  auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+  if (not transcript_opt) {
 
-    ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, sequence_id);
+    ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
     return false;
 
   }
+  auto& transcript_ptr = transcript_opt.value();
 
-  auto coding_dna_opt = CodingTranscript::codingSequence(coding_sequence_ptr, contig_ref_ptr);
+  auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ref_ptr);
   if (not coding_dna_opt)  {
 
-    ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
+    ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
     return false;
 
   }
   reference_sequence = std::move(coding_dna_opt.value());
 
-  if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, coding_sequence_ptr, mutant_sequence)) {
+  if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, transcript_ptr, mutant_sequence)) {
 
-    ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, sequence_id);
+    ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
     return false;
 
   }
@@ -129,14 +129,14 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
   // Check the reference sequence for good measure.
   if (not reference_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted reference sequence: {}, gene: {}, contig: {}", transcript_id, gene_id, contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
   if (not mutant_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig: {}", transcript_id, gene_id, contig_id);
     // List out the variants.
     for (auto const& [offset, variant_ptr] : variant_map) {
 
@@ -180,7 +180,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
 
   // Get the reference DNA sequence
   OpenRightUnsigned reference_interval(region_offset, region_offset+region_size);
-  auto reference_sequence_opt = contig_ref_ptr->sequence().subOptSequence(reference_interval);
+  auto reference_sequence_opt = contig_ref_ptr->sequence().subSequence(reference_interval);
   if (not reference_sequence_opt) {
 
     ExecEnv::log().warn("Problem extracting DNA sequence interval:{} for contig: {}, interval: {}",

@@ -62,7 +62,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   }
 
   // Retrieve the interval deleted nucleotides.
-  auto truncated_reference_opt = interval_update.variantPtr()->reference().subOptSequence(ref_interval);
+  auto truncated_reference_opt = interval_update.variantPtr()->reference().subSequence(ref_interval);
   if (not truncated_reference_opt) {
 
     ExecEnv::log().warn("Cannot get sub-interval: {} from reference interval: {}, variant: {}",
@@ -110,7 +110,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
     if (not reference_match) {
 
       OpenRightUnsigned ref_window(sequence_offset, sequence_offset + ref_interval.size());
-      auto interval_reference_opt = modified_sequence_.subOptSequence(ref_window);
+      auto interval_reference_opt = modified_sequence_.subSequence(ref_window);
       if (not interval_reference_opt) {
 
         ExecEnv::log().warn("Failed to extract reference window interval: {} from modified sequence interval: {}",
@@ -214,7 +214,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   }
 
   OpenRightUnsigned alt_sub_interval(insert_offset, insert_offset+insert_size);
-  auto truncated_alternate_opt = interval_update.variantPtr()->alternate().subOptSequence(alt_sub_interval);
+  auto truncated_alternate_opt = interval_update.variantPtr()->alternate().subSequence(alt_sub_interval);
   if (not truncated_alternate_opt) {
 
     ExecEnv::log().warn("Cannot extract alternate sub interval: {}, alternate interval: {}, variant: {}",

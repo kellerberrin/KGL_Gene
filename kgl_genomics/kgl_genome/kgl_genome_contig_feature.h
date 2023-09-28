@@ -41,7 +41,7 @@ public:
   [[nodiscard]] virtual bool checkAddFeature(std::shared_ptr<Feature>& feature_ptr) = 0;
 
   // False if not found.
-  [[nodiscard]] bool findFeatureId(const FeatureIdent_t& feature_id, std::vector<std::shared_ptr<const Feature>>& feature_ptr_vec) const;
+  [[nodiscard]] std::vector<std::shared_ptr<const Feature>> findFeatureId(const FeatureIdent_t& feature_id) const;
 
   [[nodiscard]] const OffsetFeatureMap& offsetFeatureMap() const { return offset_feature_map_; }
   [[nodiscard]] const IdFeatureMap& idFeatureMap() const { return id_feature_map_; }

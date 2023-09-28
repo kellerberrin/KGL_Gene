@@ -41,7 +41,7 @@ public:
   // Returns reference and mutant stranded DNA.
   [[nodiscard]] static bool mutantCodingDNA(const ContigId_t &contig_id,
                                             const FeatureIdent_t &gene_id,
-                                            const FeatureIdent_t &sequence_id,
+                                            const FeatureIdent_t &transcript_id,
                                             const std::shared_ptr<const GenomeReference> &genome_ref_ptr,
                                             const OffsetVariantMap &variant_map,
                                             DNA5SequenceCoding &reference_sequence,

@@ -6,12 +6,12 @@
 #define KGL_SEQUENCE_BASE_H
 
 
-#include <string>
-#include <memory>
 #include "kgl_alphabet_string.h"
-#include "kgl_genome_feature.h"
+#include "kgl_genome_prelim.h"
 #include "kgl_sequence_virtual.h"
 
+#include <string>
+#include <memory>
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -102,10 +102,6 @@ public:
 
   // Equality operator.
   [[nodiscard]] bool operator==(const DNA5SequenceLinear& cmp_seq) const { return equal(cmp_seq); }
-  // Convenience routine that returns an array of introns (strand adjusted).
-  // Returned sequences are in transcription (strand) order with array[0] being the first intron.
-  // The optional second offset argument is only used if the linear sequence is not a complete contig/chromosome.
-
   // Offset is the relative sequence offset.
   [[nodiscard]] bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).
@@ -121,8 +117,8 @@ public:
   // A -ve strand returns the reverse complement as expected.
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
 
-  // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> subOptSequence(const OpenRightUnsigned& sub_interval) const;
+  // Returns an UNSTRANDED subsequence.
+  [[nodiscard]] std::optional<DNA5SequenceLinear> subSequence(const OpenRightUnsigned& sub_interval) const;
 
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;

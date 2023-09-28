@@ -52,6 +52,15 @@ kgl::AminoSequence kgl::TranslateToAmino::getAminoSequence(const DNA5SequenceCod
   StringAminoAcid protein_string;
   AminoAcid::Alphabet amino_acid;
 
+  size_t sequence_length = coding_sequence.length();
+  size_t mod3_length = (sequence_length % Codon::CODON_SIZE);
+  if (mod3_length != 0) {
+
+    ExecEnv::log().warn("Coding sequence length: {} is not mod3, mod3(length): {}, protein sequence length: {}",
+                        sequence_length, mod3_length, Codon::codonLength(coding_sequence));
+
+  }
+
   protein_string.reserve(Codon::codonLength(coding_sequence));
 
   for (size_t index = 0; index < Codon::codonLength(coding_sequence); ++index) {

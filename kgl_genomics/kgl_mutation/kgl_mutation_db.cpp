@@ -152,7 +152,6 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
   for (auto & [future, genome_id] : future_vector) {
 
     auto const [stats, valid_return]  = future.get();
-
     if (not valid_return) {
 
       // Skip the statistics
@@ -231,23 +230,34 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   auto gene_interval = gene_struct.geneInterval();
 
   SequenceTranscript modified_sequence;
-
-  auto [stats,  result] = modified_sequence.createModifiedSequence(contig_ptr, contig_ref_ptr,gene_interval);
+  auto [stats,  result] = modified_sequence.createModifiedSequence(contig_ptr, contig_ref_ptr, gene_interval);
 
   auto modified_sequence_opt = modified_sequence.getModifiedGene(gene_struct, transcript_id);
   auto original_sequence_opt = modified_sequence.getOriginalGene(gene_struct, transcript_id);
 
   if (modified_sequence_opt and original_sequence_opt) {
 
-    auto& modify_sequence = modified_sequence_opt.value();
-    auto& original_sequence = original_sequence_opt.value();
+    if (gene_struct.geneType() == GeneCodingType::PROTEIN_CODING) {
 
-    if (modify_sequence.length() == 0) {
+      auto& modified = modified_sequence_opt.value();
+      auto modified_coding = modified.codingSequence(gene_struct.strand());
+      stats.modified_sequence_ = gene_ptr->contig()->checkValidCodingSequence(modified_coding);
 
-      ExecEnv::log().info("***** Deleted gene: {}, transcript: {}, original size: {}",
-                          gene_ptr->id(), transcript_id, original_sequence.length());
+      auto& original = original_sequence_opt.value();
+      auto original_coding = original.codingSequence(gene_struct.strand());
+      stats.original_sequence_ = gene_ptr->contig()->checkValidCodingSequence(original_coding);
+
+    } else {
+
+      stats.modified_sequence_ = ProteinSequenceValidity::VALID;
+      stats.original_sequence_ = ProteinSequenceValidity::VALID;
 
     }
+
+  } else {
+
+    ExecEnv::log().warn("Problem mutating Gene: {}, Transcript: {}, Genome: {}",
+                        gene_ptr->id(), transcript_id, genome_ptr->genomeId());
 
   }
 

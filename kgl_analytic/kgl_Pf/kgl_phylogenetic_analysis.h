@@ -101,7 +101,7 @@ public:
 
   [[nodiscard]] static bool compare5Prime( const ContigId_t& contig_id,
                                            const FeatureIdent_t& gene_id,
-                                           const FeatureIdent_t& sequence_id,
+                                           const FeatureIdent_t& transcript_id,
                                            ContigSize_t region_size,
                                            const std::shared_ptr<const GenomeReference>& genome_db,
                                            const std::shared_ptr<const GenomeDB>& genome_variant,
@@ -110,7 +110,7 @@ public:
 
   [[nodiscard]]  static bool compare3Prime( const ContigId_t& contig_id,
                                             const FeatureIdent_t& gene_id,
-                                            const FeatureIdent_t& sequence_id,
+                                            const FeatureIdent_t& transcript_id,
                                             ContigSize_t region_size,
                                             const std::shared_ptr<const GenomeReference>& genome_db,
                                             const std::shared_ptr<const GenomeDB>& genome_variant,
@@ -140,14 +140,14 @@ public:
   [[nodiscard]]  static bool outputAminoMutationCSV( const std::string &file_name,
                                                      const ContigId_t& contig_id,
                                                      const FeatureIdent_t& gene_id,
-                                                     const FeatureIdent_t& sequence_id,
+                                                     const FeatureIdent_t& transcript_id,
                                                      const std::shared_ptr<const GenomeReference>& genome_db,
                                                      const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
   [[nodiscard]]  static bool outputDNAMutationCSV( const std::string &file_name,
                                                    const ContigId_t& contig_id,
                                                    const FeatureIdent_t& gene_id,
-                                                   const FeatureIdent_t& sequence_id,
+                                                   const FeatureIdent_t& transcript_id,
                                                    const std::shared_ptr<const GenomeReference>& genome_db,
                                                    const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
                                                    const PfGenomeAuxData& aux_Pf3k_data);

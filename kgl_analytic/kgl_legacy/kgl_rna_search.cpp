@@ -41,7 +41,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   }
 
   // Get the reference DNA sequence
-  auto rna_sequence_opt = contig_ptr->sequence().subOptSequence(rna_interval);
+  auto rna_sequence_opt = contig_ptr->sequence().subSequence(rna_interval);
   if (not rna_sequence_opt) {
 
     ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig: {} contig interval: {}",
@@ -75,7 +75,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 
 
   // Get the RNA target sequence
-  auto rna_target_opt = target_contig_ptr->sequence().subOptSequence(rna_target_interval);
+  auto rna_target_opt = target_contig_ptr->sequence().subSequence(rna_target_interval);
   if (not rna_target_opt) {
 
     ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig: {} contig interval: {}",
@@ -106,7 +106,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
        idx += rna_region_comparison_increment) {
 
     OpenRightUnsigned rna_interval(idx, idx+rna_region_subsize);
-    auto rna_sub_region_opt = rna_sequence_.subOptSequence(rna_interval);
+    auto rna_sub_region_opt = rna_sequence_.subSequence(rna_interval);
     if (not rna_sub_region_opt) {
 
       ExecEnv::log().warn("Cannot extract rna sub-region {} from rna sequence: {}",

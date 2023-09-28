@@ -5,8 +5,6 @@
 #ifndef KGL_SEQUENCE_AMINO_H
 #define KGL_SEQUENCE_AMINO_H
 
-
-#include <string>
 #include "kgl_sequence_base.h"
 #include "kgl_table.h"
 #include "kgl_sequence_virtual.h"

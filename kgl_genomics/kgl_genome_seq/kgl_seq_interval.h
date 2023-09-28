@@ -25,6 +25,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+enum class GeneCodingType { PROTEIN_CODING, RNA_NON_CODING };
 // A map of named gene coding transcripts.
 using GeneCodingTranscriptMap = std::map<std::string, IntervalSetLower>;
 class GeneIntervalStructure {
@@ -32,7 +33,12 @@ class GeneIntervalStructure {
 public:
 
   explicit GeneIntervalStructure(const std::shared_ptr<const GeneFeature>& gene_feature)
-  : gene_interval_(gene_feature->sequence().begin(), gene_feature->sequence().end()) { codingInterval(gene_feature); }
+  : gene_interval_(gene_feature->sequence().begin(), gene_feature->sequence().end()) {
+
+    codingInterval(gene_feature);
+    gene_type_ = GeneFeature::proteinCoding(gene_feature) ?  GeneCodingType::PROTEIN_CODING : GeneCodingType::RNA_NON_CODING;
+
+  }
   ~GeneIntervalStructure() = default;
 
   GeneIntervalStructure(const GeneIntervalStructure& copy) = default;
@@ -44,6 +50,9 @@ public:
   [[nodiscard]] GeneCodingTranscriptMap intronTranscripts() const { return createIntronMap(); }
   [[nodiscard]] const OpenRightUnsigned& geneInterval() const { return gene_interval_; }
   [[nodiscard]] const IntervalSetLower& transcriptUnion() const { return transcript_union_; }
+  [[nodiscard]] GeneCodingType geneType() const { return gene_type_; }
+  [[nodiscard]] StrandSense strand() const { return strand_; }
+
 
   // Given an offset, does the offset fall within a defined gene interval (can include 5 prime, coding intervals, introns, 3 prime).
   [[nodiscard]] bool isWithinGene(const Variant& variant) const { return gene_interval_.containsOffset(variant.offset()); }
@@ -62,6 +71,8 @@ private:
   GeneCodingTranscriptMap gene_coding_transcripts_;
   IntervalSetLower transcript_union_;
   OpenRightUnsigned gene_interval_;
+  GeneCodingType gene_type_;
+  StrandSense strand_{StrandSense::FORWARD};
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
   // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.

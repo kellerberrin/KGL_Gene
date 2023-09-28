@@ -4,7 +4,6 @@
 
 
 #include "kgl_sequence_base.h"
-#include "kgl_genome_seq/kgl_seq_interval.h"
 #include "kel_interval_set.h"
 
 #include <ranges>
@@ -44,7 +43,7 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 
 
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
-std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subOptSequence(const OpenRightUnsigned& sub_interval) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(const OpenRightUnsigned& sub_interval) const {
 
   if (not interval().containsInterval(sub_interval)) {
 
@@ -97,7 +96,7 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
     auto reversed_string = std::ranges::views::reverse(getAlphabetString());
     std::ranges::transform(reversed_string, std::back_inserter(coding_string), complement_coding);
 
-  } else { // Strand is positive or unknown.
+  } else {
 
     auto convert_coding = [](DNA5::Alphabet base)->CodingDNA5::Alphabet { return DNA5::convertToCodingDNA5(base); };
     std::ranges::transform(getAlphabetString(), std::back_inserter(coding_string), convert_coding);
@@ -135,7 +134,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(
 
     }
 
-    auto sub_sequence_opt = subOptSequence(sub_interval);
+    auto sub_sequence_opt = subSequence(sub_interval);
     if (not sub_sequence_opt) {
 
       ExecEnv::log().warn("Unable to extract sub-sequence: {} for interval: {}", sub_interval.toString(), interval().toString());

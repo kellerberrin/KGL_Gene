@@ -5,6 +5,8 @@
 
 #include "kel_exec_env.h"
 #include "kgl_genome_contig.h"
+#include "kgl_seq_interval.h"
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -40,14 +42,20 @@ kgl::AminoSequence kgl::ContigReference::getAminoSequence(const DNA5SequenceCodi
 }
 
 
-// Given a gene id and an mRNA id (sequence id) return the coding base sequence.
-bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
-                                             const FeatureIdent_t& sequence_id,
-                                             std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr) const {
+std::vector<std::shared_ptr<const kgl::Feature>> kgl::ContigReference::findFeatureId(const FeatureIdent_t& feature_id) const {
 
-  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
+  return gene_exon_features_.findFeatureId(feature_id);
+
+}
+
+
+// Given a gene id and an mRNA id (sequence id) return the coding base sequence.
+std::optional<std::shared_ptr<const kgl::TranscriptionSequence>>
+  kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& sequence_id) const {
+
+  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec = findFeatureId(gene_id);
   std::shared_ptr<const GeneFeature> gene_ptr;
-  if (findFeatureId(gene_id, feature_ptr_vec)) {
+  if (not feature_ptr_vec.empty()) {
 
     for (const auto& feature_ptr : feature_ptr_vec) {
 
@@ -61,7 +69,7 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
         } else {
 
           ExecEnv::log().warn("Feature: {} is not a gene.", gene_id);
-          return false;
+          return std::nullopt;
 
         }
 
@@ -74,31 +82,30 @@ bool kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id,
   if (not gene_ptr) {
 
     ExecEnv::log().warn("Gene not found for feature id: {}.", gene_id);
-    return false;
+    return std::nullopt;
 
   }
 
-  auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-  if (sequence_array_ptr->empty()) {
+  auto transcript_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
+  if (transcript_array_ptr->empty()) {
 
     ExecEnv::log().warn("No valid coding sequences found for Gene: {}.", gene_id);
-    return false;
+    return std::nullopt;
 
   }
 
-  for (const auto& sequence: sequence_array_ptr->getMap()) {
+  for (const auto& [transcript_id, transcript_ptr] : transcript_array_ptr->getMap()) {
 
-    if (sequence.second->getParent()->id() == sequence_id) {
+    if (transcript_ptr->getParent()->id() == sequence_id) {
 
-      coding_sequence_ptr = sequence.second;
-      return true;
+      return transcript_ptr;
 
     }
 
   }
 
   ExecEnv::log().warn("No valid coding sequences found for sequence id: {}.", sequence_id);
-  return false;
+  return std::nullopt;
 
 }
 
@@ -133,3 +140,43 @@ bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
   return true;
 
 }
+
+
+std::optional<kgl::DNA5SequenceCoding>
+kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+
+  auto cds_interval_set = GeneIntervalStructure::transcriptIntervals(transcript_ptr);
+  std::vector<OpenRightUnsigned> interval_vector(cds_interval_set.begin(), cds_interval_set.end());
+
+  auto concat_sequence_opt = sequence().concatSequences(interval_vector);
+  if (not concat_sequence_opt) {
+
+    ExecEnv::log().warn("Unable to concat sequence intervals for Gene: {}, Transcript: {}",
+                        transcript_ptr->getGene()->id(), transcript_ptr->getParent()->id());
+
+    return std::nullopt; // Return an empty coding sequence.
+
+  }
+  auto& concat_sequence = concat_sequence_opt.value();
+
+  return concat_sequence.codingSequence(transcript_ptr->strand());
+
+}
+
+
+kgl::ProteinSequenceValidity
+kgl::ContigReference::checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const {
+
+
+  auto sequence_length = coding_sequence.length();
+  if ((sequence_length % Codon::CODON_SIZE) != 0) {
+
+    return ProteinSequenceValidity::NOT_MOD3;
+
+  }
+
+  auto amino_sequence = getAminoSequence(coding_sequence);
+  return checkValidProteinSequence(amino_sequence);
+
+}
+

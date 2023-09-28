@@ -82,7 +82,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
 
   }
 
-  auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subOptSequence(contigInterval());
+  auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
   if (not modified_sequence_opt) {
 
     ExecEnv::log().error("Rrequested modified sub interval: {} out of bounds for contig: {} interval: {}",
@@ -92,7 +92,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
     return;
 
   }
-  auto original_sequence_opt = contig_ref_ptr->sequence_ptr()->subOptSequence(contigInterval());
+  auto original_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
   if (not original_sequence_opt) {
 
     ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig: {} interval: {}",
@@ -208,7 +208,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
   }
 
   // Retrieve the modified sub-sequence.
-  auto sub_sequence_opt = modified_sequence_.subOptSequence(modified_interval);
+  auto sub_sequence_opt = modified_sequence_.subSequence(modified_interval);
   if (not sub_sequence_opt) {
 
     ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified  sequence: {}",
@@ -250,7 +250,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
   }
 
   // Retrieve the modified sub-sequence.
-  auto sub_sequence_opt = original_sequence_.subOptSequence(modified_interval);
+  auto sub_sequence_opt = original_sequence_.subSequence(modified_interval);
   if (not sub_sequence_opt) {
 
     ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified sequence: {}",

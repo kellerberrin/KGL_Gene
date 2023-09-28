@@ -573,7 +573,7 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       }
 
       OpenRightUnsigned contig_sub_interval(contig_offset, contig_offset+interval_size);
-      auto sequence_opt = contig_ptr->sequence_ptr()->subOptSequence(contig_sub_interval);
+      auto sequence_opt = contig_ptr->sequence_ptr()->subSequence(contig_sub_interval);
       if (not sequence_opt) {
 
         ExecEnv::log().warn("Could not extract sub-sequence: {} from contig: {} contig interval: {}",
