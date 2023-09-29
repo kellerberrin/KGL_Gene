@@ -52,7 +52,7 @@ private:
   // Threads to process the VCF record queue.
   WorkflowThreads parser_threads_;
 
-  // Get genome and contig information.
+  // Get genome and contig_ref_ptr information.
   VCFParseHeader parseheader_;
 
   void readHeader(const std::string& file_name);

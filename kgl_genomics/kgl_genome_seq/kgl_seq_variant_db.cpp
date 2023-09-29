@@ -29,11 +29,11 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
 
   }
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -42,7 +42,7 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
   // Check the DNA5 reference sequence.
   if (not DNA_reference.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted CodingDNA5 reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted CodingDNA5 reference sequence: {}, gene: {}, contig_ref_ptr: {}", sequence_id, gene_id, contig_id);
 
   }
 
@@ -52,14 +52,14 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
   // Check the reference amino sequence.
   if (not reference_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted amino reference sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted amino reference sequence: {}, gene: {}, contig_ref_ptr: {}", sequence_id, gene_id, contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
   if (not DNA_mutant.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig_ref_ptr: {}", sequence_id, gene_id, contig_id);
     // List out the variants.
     for (auto const& variant : variant_map) {
 
@@ -74,7 +74,7 @@ bool kgl::GenomeMutation::mutantProteins( const ContigId_t& contig_id,
   // Check the mutant amino sequence.
   if (not mutant_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted amino mutant sequence: {}, gene: {}, contig: {}", sequence_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted amino mutant sequence: {}, gene: {}, contig_ref_ptr: {}", sequence_id, gene_id, contig_id);
 
   }
 
@@ -90,11 +90,11 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
                                           const OffsetVariantMap& variant_map,
                                           DNA5SequenceCoding& reference_sequence,
                                           DNA5SequenceCoding& mutant_sequence) {
-  // Get the contig.
+  // Get the contig_ref_ptr.
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -110,10 +110,10 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
   }
   auto& transcript_ptr = transcript_opt.value();
 
-  auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ref_ptr);
+  auto coding_dna_opt = contig_ref_ptr->codingSequence(transcript_ptr);
   if (not coding_dna_opt)  {
 
-    ExecEnv::log().warn("No valid DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
+    ExecEnv::log().warn("No valid DNA sequence for contig_ref_ptr: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
     return false;
 
   }
@@ -121,7 +121,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
 
   if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, transcript_ptr, mutant_sequence)) {
 
-    ExecEnv::log().warn("Problem mutating DNA sequence for contig: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
+    ExecEnv::log().warn("Problem mutating DNA sequence for contig_ref_ptr: {}, gene: {}, sequence id: {}", contig_id, gene_id, transcript_id);
     return false;
 
   }
@@ -129,14 +129,14 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
   // Check the reference sequence for good measure.
   if (not reference_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted reference sequence: {}, gene: {}, contig: {}", transcript_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted reference sequence: {}, gene: {}, contig_ref_ptr: {}", transcript_id, gene_id, contig_id);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
   if (not mutant_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig: {}", transcript_id, gene_id, contig_id);
+    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig_ref_ptr: {}", transcript_id, gene_id, contig_id);
     // List out the variants.
     for (auto const& [offset, variant_ptr] : variant_map) {
 
@@ -158,11 +158,11 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
                                        DNA5SequenceLinear& reference_sequence,
                                        DNA5SequenceLinear& mutant_sequence) {
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -172,7 +172,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   // Check offset and size.
   if ((region_offset + region_size) > contig_ref_ptr->sequence().length() or region_size > contig_ref_ptr->sequence().length()) {
 
-    ExecEnv::log().warn("Contig offset: {} and region size: {} too large for contig: {} length: {}",
+    ExecEnv::log().warn("Contig offset: {} and region size: {} too large for contig_ref_ptr: {} length: {}",
                         region_offset, region_size, contig_ref_ptr->contigId(), contig_ref_ptr->sequence().length());
     return false;
 
@@ -183,7 +183,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   auto reference_sequence_opt = contig_ref_ptr->sequence().subSequence(reference_interval);
   if (not reference_sequence_opt) {
 
-    ExecEnv::log().warn("Problem extracting DNA sequence interval:{} for contig: {}, interval: {}",
+    ExecEnv::log().warn("Problem extracting DNA sequence interval:{} for contig_ref_ptr: {}, interval: {}",
                         reference_interval.toString(), contig_id, contig_ref_ptr->sequence_ptr()->interval().toString());
     return false;
 
@@ -192,7 +192,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   // And mutate the sequence.
   if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, region_offset, region_size, mutant_sequence)) {
 
-    ExecEnv::log().warn("Problem mutating region DNA sequence for contig: {}, interval: {}",
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_ref_ptr: {}, interval: {}",
                         contig_id, reference_interval.toString());
     return false;
 
@@ -201,14 +201,14 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   // Check the reference sequence for good measure.
   if (not reference_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted reference contig: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
+    ExecEnv::log().error("Corrupted reference contig_ref_ptr: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
 
   }
 
   // Check for any DNA corruption acquired by mutating the reference sequence
   if (not mutant_sequence.verifySequence()) {
 
-    ExecEnv::log().error("Corrupted mutant contig: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
+    ExecEnv::log().error("Corrupted mutant contig_ref_ptr: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
     // List out the variants.
     for (auto const& [offset, variant_ptr] : variant_map) {
 

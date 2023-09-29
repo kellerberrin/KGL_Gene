@@ -62,7 +62,7 @@ void kgl::GrchVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_rec
   // Look at the filter field for "Pass"
   bool passed_filter = Utility::toupper(vcf_record_ptr->filter) == PASSED_FILTERS_;
 
-  // Convert VCF contig to genome contig.
+  // Convert VCF contig to genome contig_ref_ptr.
   std::string contig = contig_alias_map_.lookupAlias(vcf_record_ptr->contig_id);
 
   // Check for multiple alt sequences

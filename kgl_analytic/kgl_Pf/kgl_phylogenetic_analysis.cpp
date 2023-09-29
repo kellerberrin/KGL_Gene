@@ -94,11 +94,11 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
                                          DNA5SequenceCoding& reference_sequence,
                                          DNA5SequenceCoding& mutant_sequence) {
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -150,7 +150,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
 
   } else {
 
-    ExecEnv::log().warn("No valid 5 prime sequence for contig: {}, offset: {}, size: {}", contig_id, offset_5_prime, size_5_prime);
+    ExecEnv::log().warn("No valid 5 prime sequence for contig_ref_ptr: {}, offset: {}, size: {}", contig_id, offset_5_prime, size_5_prime);
     return false;
 
   }
@@ -169,11 +169,11 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
                                          DNA5SequenceCoding& reference_sequence,
                                          DNA5SequenceCoding& mutant_sequence) {
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -227,7 +227,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
 
   } else {
 
-    ExecEnv::log().warn("No valid 3 prime sequence for contig: {}, offset: {}, size: {}", contig_id, offset_3_prime, size_3_prime);
+    ExecEnv::log().warn("No valid 3 prime sequence for contig_ref_ptr: {}, offset: {}, size: {}", contig_id, offset_3_prime, size_3_prime);
     return false;
 
   }
@@ -349,29 +349,29 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
   out_file << outputSequenceHeader(CSV_delimiter, pop_variant_ptr) << '\n';
 
-  for (const auto& [contig, contig_ptr] : genome_db->getMap()) {
+  for (const auto& [contig, contig_ref_ptr] : genome_db->getMap()) {
 
-    ExecEnv::log().info("Processing contig: {}", contig);
+    ExecEnv::log().info("Processing contig_ref_ptr: {}", contig);
 
     size_t sequence_count = 0;
 
-    for (const auto& [gene, gene_ptr] : contig_ptr->getGeneMap()) {
+    for (const auto& [gene, gene_ptr] : contig_ref_ptr->getGeneMap()) {
 
       auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
-      for (const auto& [sequence_id, sequence_ptr] : coding_seq_ptr->getMap()) {
+      for (const auto& [sequence_id, transcript_ptr] : coding_seq_ptr->getMap()) {
 
 
-        out_file << contig_ptr->contigSize() << CSV_delimiter;
+        out_file << contig_ref_ptr->contigSize() << CSV_delimiter;
         out_file << gene_ptr->id() << CSV_delimiter;
         out_file << sequence_id << CSV_delimiter;
-        out_file << sequence_ptr->start() << CSV_delimiter;
-        out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
+        out_file << transcript_ptr->start() << CSV_delimiter;
+        out_file << transcript_ptr->codingNucleotides() << CSV_delimiter;
 
         // Valid ORF
-        auto coding_dna_opt = CodingTranscript::codingSequence( sequence_ptr, contig_ptr);
+        auto coding_dna_opt = contig_ref_ptr->codingSequence(transcript_ptr);
         if (coding_dna_opt) {
 
-          bool valid_sequence = contig_ptr->checkValidCodingSequence(coding_dna_opt.value()) == ProteinSequenceValidity::VALID;
+          bool valid_sequence = contig_ref_ptr->checkValidCodingSequence(coding_dna_opt.value()) == ProteinSequenceValidity::VALID;
           out_file << (valid_sequence ? "1" : "0") << CSV_delimiter;
 
         } else {
@@ -419,12 +419,12 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
           DNA5SequenceCoding mutant_sequence;
           OffsetVariantMap variant_map;
 
-          if (not MutationOffset::getSortedVariants( genome_ptr,
-                                                     contig,
-                                                     VariantPhase::HAPLOID_PHASED,
-                                                     sequence_ptr->start(),
-                                                     sequence_ptr->end(),
-                                                     variant_map)) {
+          if (not MutationOffset::getSortedVariants(genome_ptr,
+                                                    contig,
+                                                    VariantPhase::HAPLOID_PHASED,
+                                                    transcript_ptr->start(),
+                                                    transcript_ptr->end(),
+                                                    variant_map)) {
 
             ExecEnv::log().warn("Problem retrieving variants, genome: {}, gene: {}, sequence_id: {}",
                                 genome, gene, sequence_id);
@@ -531,7 +531,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
   for (auto const& [contig_id, contig_ptr] : genome_db->getMap()) {
 
-    ExecEnv::log().info("Processing contig: {}", contig_id);
+    ExecEnv::log().info("Processing contig_ref_ptr: {}", contig_id);
 
     size_t sequence_count = 0;
 
@@ -547,7 +547,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
         out_file << sequence_ptr->start() << CSV_delimiter;
         out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
 
-        auto coding_dna_opt = CodingTranscript::codingSequence(sequence_ptr, gene_ptr->contig());
+        auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(sequence_ptr);
         if (coding_dna_opt) {
 
           DNA5SequenceCoding& verify_coding_sequence = coding_dna_opt.value();
@@ -605,7 +605,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
                                                      sequence_ptr->end(),
                                                      variant_map)) {
 
-            ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}", genome, contig_id);
+            ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome, contig_id);
             return false;
 
           }
@@ -741,11 +741,11 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     sequence_count++;
     OffsetVariantMap variant_map;
 
-    // Get the contig.
+    // Get the contig_ref_ptr.
     std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
     if (not contig_opt) {
 
-      ExecEnv::log().warn("Could not find contig: {} in genome_id database", contig_id);
+      ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome_id database", contig_id);
       return false;
 
     }
@@ -768,7 +768,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
                                               transcript_ptr->end(),
                                               variant_map)) {
 
-      ExecEnv::log().warn("Problem retrieving variants, genome_id: {}, contig: {}", genome_id, contig_id);
+      ExecEnv::log().warn("Problem retrieving variants, genome_id: {}, contig_ref_ptr: {}", genome_id, contig_id);
       return false;
 
     }
@@ -839,11 +839,11 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
 
   }
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db->getContigSequence(contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().error("Could not find contig: {} in genome database", contig_id);
+    ExecEnv::log().error("Could not find contig_ref_ptr: {} in genome database", contig_id);
     return false;
 
   }
@@ -885,7 +885,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
                                               transcript_ptr->end(),
                                               variant_map)) {
 
-      ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}", genome, contig_id);
+      ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome, contig_id);
       return false;
 
     }
@@ -1067,7 +1067,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
                                                  const std::shared_ptr<const GenomeDB>& genome_variant) {
 
   std::string genome_id = genome_variant->genomeId();
-  std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = coding_sequence->getGene()->contig_ref_ptr();
   std::string contig = contig_ptr->contigId();
   std::string gene_id = coding_sequence->getGene()->id();
   std::string sequence_id = coding_sequence->getParent()->id();
@@ -1089,7 +1089,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
                                              coding_sequence->end(),
                                              variant_map)) {
 
-    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}", genome_id, contig);
+    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome_id, contig);
     return "<error>";
 
   }
@@ -1146,7 +1146,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
 
   } else {
 
-    ExecEnv::log().error("Problem mutating contig: {}, sequence: {}", contig_ptr->contigId(), sequence_id);
+    ExecEnv::log().error("Problem mutating contig_ref_ptr: {}, sequence: {}", contig_ptr->contigId(), sequence_id);
 
   }
 

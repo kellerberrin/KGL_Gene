@@ -33,7 +33,7 @@ void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
     if (variant_count > 0) {
 
       auto gene_vector = contigGenes(contig_id);
-      ExecEnv::log().info("Mutating contig: {}, gene count: {}", contig_id, gene_vector.size());
+      ExecEnv::log().info("Mutating contig_ref_ptr: {}, gene count: {}", contig_id, gene_vector.size());
 
       for (auto const& gene_ptr : gene_vector) {
 
@@ -199,25 +199,25 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
                                                                                const FeatureIdent_t& transcript_id,
                                                                                const std::shared_ptr<const GenomeReference>& reference_genome_ptr) {
 
-  // Get the gene contig id.
-  const ContigId_t gene_contig_id = gene_ptr->contig()->contigId();
+  // Get the gene contig_ref_ptr id.
+  const ContigId_t gene_contig_id = gene_ptr->contig_ref_ptr()->contigId();
 
-  // Use this to obtain the variant contig.
+  // Use this to obtain the variant contig_ref_ptr.
   auto contig_opt = genome_ptr->getContig(gene_contig_id);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("Genome: {} does not contain contig: {} for gene: {}", genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
+    ExecEnv::log().warn("Genome: {} does not contain contig_ref_ptr: {} for gene: {}", genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
 
   }
   auto& contig_ptr = contig_opt.value();
 
-  // And the reference genome contig.
+  // And the reference genome contig_ref_ptr.
   auto contig_ref_opt = reference_genome_ptr->getContigSequence(gene_contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("Reference Genome: {} does not contain contig: {} for gene: {}",
+    ExecEnv::log().warn("Reference Genome: {} does not contain contig_ref_ptr: {} for gene: {}",
                         reference_genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
@@ -241,11 +241,11 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
 
       auto& modified = modified_sequence_opt.value();
       auto modified_coding = modified.codingSequence(gene_struct.strand());
-      stats.modified_sequence_ = gene_ptr->contig()->checkValidCodingSequence(modified_coding);
+      stats.modified_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(modified_coding);
 
       auto& original = original_sequence_opt.value();
       auto original_coding = original.codingSequence(gene_struct.strand());
-      stats.original_sequence_ = gene_ptr->contig()->checkValidCodingSequence(original_coding);
+      stats.original_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(original_coding);
 
     } else {
 

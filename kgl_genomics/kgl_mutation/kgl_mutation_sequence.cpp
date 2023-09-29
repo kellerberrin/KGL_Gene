@@ -36,7 +36,7 @@ bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigRef
   bool result = updateSequence();
   if (not result) {
 
-    ExecEnv::log().warn("djustedSequence::updateSequence; could not update sequence: {}, contig: {}",
+    ExecEnv::log().warn("djustedSequence::updateSequence; could not update sequence: {}, contig_ref_ptr: {}",
                         contig_interval.toString(), contig_ref_ptr->contigId());
     clear();
     return false;
@@ -45,7 +45,7 @@ bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigRef
 
   if (not verifyUpdatedSequence()) {
 
-    ExecEnv::log().warn("djustedSequence::updateSequence; could not verify sequence: {}, contig: {}",
+    ExecEnv::log().warn("djustedSequence::updateSequence; could not verify sequence: {}, contig_ref_ptr: {}",
                         contig_interval.toString(), contig_ref_ptr->contigId());
     clear();
     return false;
@@ -72,7 +72,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
 
     if (contigInterval() != first_sequence_modify.priorInterval()) {
 
-      ExecEnv::log().error("AdjustedSequence::initializeSequences; contig interval: {} does not match initial map interval: {}",
+      ExecEnv::log().error("AdjustedSequence::initializeSequences; contig_ref_ptr interval: {} does not match initial map interval: {}",
                            contigInterval().toString(), first_sequence_modify.priorInterval().toString());
       // Clear the map for good measure.
       clear();
@@ -85,7 +85,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
   auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
   if (not modified_sequence_opt) {
 
-    ExecEnv::log().error("Rrequested modified sub interval: {} out of bounds for contig: {} interval: {}",
+    ExecEnv::log().error("Rrequested modified sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
                          contig_ref_ptr->sequence_ptr()->interval().toString());
@@ -95,7 +95,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
   auto original_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
   if (not original_sequence_opt) {
 
-    ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig: {} interval: {}",
+    ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
                          contig_ref_ptr->sequence_ptr()->interval().toString());
@@ -193,7 +193,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
   // Check sub-interval bounds.
   if (not contigInterval().containsInterval(sub_interval)) {
 
-    ExecEnv::log().warn("Sub interval: {} is not contained in contig interval: {}",
+    ExecEnv::log().warn("Sub interval: {} is not contained in contig_ref_ptr interval: {}",
                         sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }
@@ -234,7 +234,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
   // Check sub-interval bounds.
   if (not contigInterval().containsInterval(sub_interval)) {
 
-    ExecEnv::log().warn("AdjustedSequence::originalSubSequence; sub interval: {} is not contained in contig interval: {}",
+    ExecEnv::log().warn("AdjustedSequence::originalSubSequence; sub interval: {} is not contained in contig_ref_ptr interval: {}",
                         sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }

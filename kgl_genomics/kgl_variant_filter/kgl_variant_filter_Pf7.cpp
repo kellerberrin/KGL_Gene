@@ -127,7 +127,7 @@ void kgl::P7VariantFilter::printStats() {
   ExecEnv::log().info("Total UnFiltered Variants: {}, Total Filtered_variants: {}, Accepted: {:.2f}%, Rejected: {:.2f}%",
                       unfiltered_variants_.load(), accepted_variants_.load(), accepted, rejected );
 
-  ExecEnv::log().info("The 'Pf7_Pf3D7_MITO' contig 'MQ' filter accept threshold: {}", Pf7_Pf3D7_MITO_MQ_LEVEL_);
+  ExecEnv::log().info("The 'Pf7_Pf3D7_MITO' contig_ref_ptr 'MQ' filter accept threshold: {}", Pf7_Pf3D7_MITO_MQ_LEVEL_);
 
 }
 
@@ -191,7 +191,7 @@ bool kgl::P7VariantFilter::applyFilter(const Variant & variant) const {
   info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, MQ_FIELD_);
   if (info_opt) {
 
-    // Variants in the 'Pf7_Pf3D7_MITO' contig have a lower MQ threshold.
+    // Variants in the 'Pf7_Pf3D7_MITO' contig_ref_ptr have a lower MQ threshold.
     double mq_level = variant.contigId() == Pf7_Pf3D7_MITO ? Pf7_Pf3D7_MITO_MQ_LEVEL_ : MQ_LEVEL_;
     if (info_opt.value() >= mq_level) {
 

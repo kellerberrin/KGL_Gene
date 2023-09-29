@@ -36,7 +36,7 @@ public:
 private:
 
   GeneVector gene_vector_;   // Gene vector of interest.
-  std::shared_ptr<PopulationDB> gene_population_ptr; // Each contig per genome is a gene in the gene vector
+  std::shared_ptr<PopulationDB> gene_population_ptr; // Each contig_ref_ptr per genome is a gene in the gene vector
 
   constexpr static const char CSV_DELIMITER_ = ',';
 

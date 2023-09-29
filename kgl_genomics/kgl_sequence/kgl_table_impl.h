@@ -55,7 +55,7 @@ public:
   // There are 31 tables defined there and as time permits these can be added to the table array and will
   // be automatically available for DNA/RNA translation and Gene verification. Note that the kgl code maintains
   // separate tables for different contigs, so for example, a different table could used for (e.g. table 2)
-  // for a vertebrate mitochondrial contig.
+  // for a vertebrate mitochondrial contig_ref_ptr.
   static const TranslationTable* STANDARDTABLE;
   static const TranslationTable* TABLEARRAY[];
   static const size_t TABLEARRAYSIZE;

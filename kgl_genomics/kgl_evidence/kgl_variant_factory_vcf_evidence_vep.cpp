@@ -359,7 +359,7 @@ bool kgl::VepSubFieldValues::getGenomeValues(const std::shared_ptr<const GenomeD
 
 }
 
-// For a contig.
+// For a contig_ref_ptr.
 bool kgl::VepSubFieldValues::getContigValues(const std::shared_ptr<const ContigDB>& contig_ptr) {
 
   field_value_map_.clear();

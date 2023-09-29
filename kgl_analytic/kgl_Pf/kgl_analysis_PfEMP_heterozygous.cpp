@@ -50,7 +50,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 
       } // offset
 
-    } // contig
+    } // contig_ref_ptr
 
   } // genome (sample)
 

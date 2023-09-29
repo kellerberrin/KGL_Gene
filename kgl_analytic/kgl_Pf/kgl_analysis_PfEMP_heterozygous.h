@@ -30,7 +30,7 @@ struct VariantAnalysisType{
 
 };
 
-// Indexed by contig.
+// Indexed by contig_ref_ptr.
 using VariantAnalysisContigMap = std::map<std::string, VariantAnalysisType>;
 class VariantAnalysisObj {
 

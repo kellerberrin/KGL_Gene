@@ -47,10 +47,10 @@ void kgl::StructuredFeatures::verifyContigOverlap() const {
   // Adjust to [0, size) here.
   // Note that this suggests a problem with the (3rd party) Gff read functionality and should be addressed there.
 
-  for (auto [offset, feature_ptr] : offsetFeatureMap()) {
+  for (auto& [offset, feature_ptr] : offsetFeatureMap()) {
 
     Feature &feature = *feature_ptr;
-    // Error if feature overlaps the and of the contig.
+    // Error if feature overlaps the and of the contig_ref_ptr.
     // If [1,contig_size] then adjust to [0, contig_size)
 
     if (feature.sequence().begin() == 1) { // adjust to [0, size)
@@ -59,20 +59,20 @@ void kgl::StructuredFeatures::verifyContigOverlap() const {
       adj_sequence.begin(0);
       feature.sequence(adj_sequence);
       ExecEnv::log().warn("Contig: {} 1-offset features [1, {}], adjusted to zero-offset [0, {})",
-                          feature.contig()->contigId(), feature.contig()->contigSize(), feature.contig()->contigSize());
+                          feature.contig_ref_ptr()->contigId(), feature.contig_ref_ptr()->contigSize(), feature.contig_ref_ptr()->contigSize());
 
-    } else if (feature.sequence().end() > feature.contig()->contigSize()) { // No features larger than the contig.
+    } else if (feature.sequence().end() > feature.contig_ref_ptr()->contigSize()) { // No features larger than the contig_ref_ptr.
 
       FeatureSequence adj_sequence = feature.sequence();
-      adj_sequence.end(feature.contig()->contigSize());
+      adj_sequence.end(feature.contig_ref_ptr()->contigSize());
       feature.sequence(adj_sequence);
-      ExecEnv::log().warn("Feature: {} [{}, {}) exceeds contig size :{} adjusted to [{}, {})",
+      ExecEnv::log().warn("Feature: {} [{}, {}) exceeds contig_ref_ptr size :{} adjusted to [{}, {})",
                           feature.id(), feature.sequence().begin(), feature.sequence().end(),
-                          feature.contig()->contigSize(), feature.sequence().begin(), feature.contig()->contigSize());
+                          feature.contig_ref_ptr()->contigSize(), feature.sequence().begin(), feature.contig_ref_ptr()->contigSize());
 
     }
 
-  } // for contig
+  } // for contig_ref_ptr
 
 }
 

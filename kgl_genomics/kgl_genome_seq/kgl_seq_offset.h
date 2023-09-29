@@ -16,7 +16,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Static functions return canonical variants over a specified region [start, end) ready to modify a DNA sequence
-// over the same region and contig.
+// over the same region and contig_ref_ptr.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +27,7 @@ public:
   MutationOffset() = delete;
   ~MutationOffset() = delete;
 
-  // Returns canonical variants from the specified contig and region specified as [start, end).
+  // Returns canonical variants from the specified contig_ref_ptr and region specified as [start, end).
   // Note that delete indels can be have offset() < start.
   [[nodiscard]] static bool getSortedVariants( const std::shared_ptr<const GenomeDB>& genome_ptr,
                                                ContigId_t contig_id,

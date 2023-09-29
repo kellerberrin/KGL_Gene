@@ -23,7 +23,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 // Variant Chromosome phase
 enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
-                                         DIPLOID_PHASE_A = 1, // By convention, the female derived contig is first.
+                                         DIPLOID_PHASE_A = 1, // By convention, the female derived contig_ref_ptr is first.
                                          DIPLOID_PHASE_B = 2,
                                          UNPHASED = 255 };
 
@@ -158,9 +158,9 @@ public:
 
 private:
 
-  const ContigId_t contig_id_;                          // The contig of this variant
-  const ContigOffset_t contig_reference_offset_;        // Physical Location of the start of the reference sequence the contig.
-  const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig)
+  const ContigId_t contig_id_;                          // The contig_ref_ptr of this variant
+  const ContigOffset_t contig_reference_offset_;        // Physical Location of the start of the reference sequence the contig_ref_ptr.
+  const VariantPhase phase_id_;                         // The phase of this variant (which homologous contig_ref_ptr)
   const std::string identifier_;                        // The VCF supplied variant identifier such as (HSapien) "rs187084".
   const DNA5SequenceLinear reference_;                  // reference sequence (ref allele)
   const DNA5SequenceLinear alternate_;                  // alternate sequence (alt allele)

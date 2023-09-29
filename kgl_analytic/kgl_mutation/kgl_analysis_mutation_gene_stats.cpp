@@ -28,7 +28,7 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   std::string biotype_str = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
 
   genome_ = genome_id;
-  contig_ = gene_ptr->contig()->contigId();
+  contig_ = gene_ptr->contig_ref_ptr()->contigId();
   gene_ptr_ = gene_ptr;
   gene_id_ = gene_ptr->id();
   symbol_id_ = name;

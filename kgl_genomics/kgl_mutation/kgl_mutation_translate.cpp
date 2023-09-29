@@ -13,7 +13,7 @@ namespace kel = kellerberrin;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// These helper classes keep track of the offset between the zero-offset modified sequence and the contig based offset.
+// These helper classes keep track of the offset between the zero-offset modified sequence and the contig_ref_ptr based offset.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +71,7 @@ std::pair<kgl::ContigOffset_t, bool> kgl::ModifiedOffsetMap::calcModifiedOffset(
   const SignedOffset_t adjusted_offset = static_cast<SignedOffset_t>(contig_offset) + indel_adjust - static_cast<SignedOffset_t>(contig_interval_.lower());
   if (adjusted_offset < 0) {
 
-    ExecEnv::log().warn("ModifiedOffsetMap::calcModifiedOffset; calculated offset: {} is less than zero; offset input: {}, cumulative indel adjust: {}, contig interval: {}",
+    ExecEnv::log().warn("ModifiedOffsetMap::calcModifiedOffset; calculated offset: {} is less than zero; offset input: {}, cumulative indel adjust: {}, contig_ref_ptr interval: {}",
                         adjusted_offset, contig_offset, indel_adjust, contig_interval_.toString());
 
     for (auto const& [map_offset, map_record] :  adjust_offset_map_) {
@@ -135,7 +135,7 @@ std::optional<kgl::AdjustedModifiedOffset> kgl::ModifiedOffsetMap::getPreviousIn
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Given a contig based sequence interval, return the equivalent zero-based unmodified/original interval.
+// Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/original interval.
 std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupOriginalInterval(const OpenRightUnsigned& contig_interval) const {
 
   auto [lower, lower_result] = originalZeroOffset(contig_interval.lower());
@@ -147,7 +147,7 @@ std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupOriginalIn
 
   }
 
-  ExecEnv::log().warn("ModifiedOffsetMap::lookupOriginalInterval; problem converting contig interval: {}", contig_interval.toString());
+  ExecEnv::log().warn("ModifiedOffsetMap::lookupOriginalInterval; problem converting contig_ref_ptr interval: {}", contig_interval.toString());
   return {{0, 0}, false};
 
 }
@@ -160,7 +160,7 @@ std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupOriginalIn
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Given a contig based sequence interval, return the equivalent zero-based indel modified interval.
+// Given a contig_ref_ptr based sequence interval, return the equivalent zero-based indel modified interval.
 std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupModifiedInterval(const OpenRightUnsigned& contig_interval) const {
 
   auto [lower, lower_result] = lookupIndelOffset(contig_interval.lower());
@@ -172,14 +172,14 @@ std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupModifiedIn
 
   }
 
-  ExecEnv::log().warn("ModifiedOffsetMap::lookupModifiedInterval; problem converting contig interval: {}", contig_interval.toString());
+  ExecEnv::log().warn("ModifiedOffsetMap::lookupModifiedInterval; problem converting contig_ref_ptr interval: {}", contig_interval.toString());
   return {{0, 0}, false};
 
 }
 
 
 // Lookup an indel modified zero-offset sequence - generally a gene or similar.
-// Note that we must account for contig offsets that occur in the shadow of a delete.
+// Note that we must account for contig_ref_ptr offsets that occur in the shadow of a delete.
 std::pair<kgl::ContigOffset_t, bool> kgl::ModifiedOffsetMap::lookupIndelOffset(ContigOffset_t contig_offset) const {
 
   auto previous_indel_opt = getPreviousIndel(contig_offset);

@@ -88,10 +88,10 @@ void kgl::RandomCodingFilter::contigVector(std::unique_ptr<ContigDB>& filtered_c
 
       // Don't need to select a single variant.
       auto selected_variant = offset_vector.front();
-      // Add to the filtered contig object.
+      // Add to the filtered contig_ref_ptr object.
       if (not filtered_contig_ptr->addVariant(selected_variant)) {
 
-        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig: {}",
+        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
                              selected_variant->HGVS(), filtered_contig_ptr->contigId());
 
       }
@@ -100,10 +100,10 @@ void kgl::RandomCodingFilter::contigVector(std::unique_ptr<ContigDB>& filtered_c
 
       // Else select by frequency.
       auto selected_variant = selectUnique(offset_vector);
-      // Add to the filtered contig object.
+      // Add to the filtered contig_ref_ptr object.
       if (not filtered_contig_ptr->addVariant(selected_variant)) {
 
-        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig: {}",
+        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
                              selected_variant->HGVS(), filtered_contig_ptr->contigId());
 
       }

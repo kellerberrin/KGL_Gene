@@ -212,7 +212,7 @@ void kgl::TranscriptionSequence::prime_3_region(ContigSize_t requested_size, Con
 
 std::shared_ptr<const kgl::ContigReference> kgl::TranscriptionSequence::contig() const {
 
-  return getGene()->contig();
+  return getGene()->contig_ref_ptr();
 
 }
 
@@ -309,8 +309,8 @@ kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const Transc
 
   }
 
-  auto contig_ptr = transcript_ptr->getGene()->contig();
-  auto coding_sequence_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+  auto contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
+  auto coding_sequence_opt = contig_ref_ptr->codingSequence(transcript_ptr);
   if (not coding_sequence_opt) {
 
     ExecEnv::log().info("Cannor generate valid coding sequence for Gene: {}, Transcript: {}",
@@ -323,7 +323,7 @@ kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const Transc
 
   DNA5SequenceCoding &coding_sequence = coding_sequence_opt.value();
 
-  return contig_ptr->checkValidCodingSequence(coding_sequence);
+  return contig_ref_ptr->checkValidCodingSequence(coding_sequence);
 
 }
 

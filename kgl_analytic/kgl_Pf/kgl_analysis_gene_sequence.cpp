@@ -64,7 +64,7 @@ bool kgl::GenomicSequence::translateContig(const GenomeId_t& genome_id,
       }
     
 
-      auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ref_ptr);
+      auto coding_dna_opt = contig_ref_ptr->codingSequence(transcript_ptr);
       if (coding_dna_opt) {
 
         DNA5SequenceCoding& coding_dna = coding_dna_opt.value();
@@ -119,11 +119,11 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
 
   }
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_ref_ptr->getContigSequence(contig);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", contig);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig);
     return false;
 
   }
@@ -397,7 +397,7 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
                                              offset+region_size,
                                              variant_map)) {
 
-    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}",
                         genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
     return "<error>";
 
@@ -484,7 +484,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
                                              offset+region_size,
                                              variant_map)) {
 
-    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig: {}",
+    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}",
                         genome_variant_ptr->genomeId(), contig);
     return false;
 

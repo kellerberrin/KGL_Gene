@@ -155,7 +155,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
                                                                                   interval_update));
   if (not add_result) {
 
-    ExecEnv::log().warn("Failed to add delete adjust: {} at contig offset: {}",
+    ExecEnv::log().warn("Failed to add delete adjust: {} at contig_ref_ptr offset: {}",
                         delete_adjust, contig_delete_offset);
 
   }
@@ -243,7 +243,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
                                                                                   interval_update));
   if (not add_result) {
 
-    ExecEnv::log().warn("Failed to add insert adjust: {} at contig offset: {}",
+    ExecEnv::log().warn("Failed to add insert adjust: {} at contig_ref_ptr offset: {}",
                         insert_size, sequence_insert);
 
   }

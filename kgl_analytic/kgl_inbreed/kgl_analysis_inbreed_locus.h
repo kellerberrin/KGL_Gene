@@ -60,7 +60,7 @@ private:
 
 // Allele locus lists indexed by superpopulation
 using LocusMap = std::map<std::string, std::shared_ptr<const ContigDB>>;
-// LocusMaps indexed by contig id.
+// LocusMaps indexed by contig_ref_ptr id.
 using ContigLocusMap = std::map<ContigId_t, LocusMap>;
 
 // Just a namespace.
@@ -72,7 +72,7 @@ public:
   ~InbreedSampling() = delete;
 
 
-  // Uses the defined contigs in the unphased population to create a contig map of population locii.
+  // Uses the defined contigs in the unphased population to create a contig_ref_ptr map of population locii.
   [[nodiscard]] static ContigLocusMap getPopulationLocusMap(  std::shared_ptr<const PopulationDB> population_ptr,
                                                               const LociiVectorArguments& locii_args);
 

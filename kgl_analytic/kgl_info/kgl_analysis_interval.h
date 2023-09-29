@@ -114,7 +114,7 @@ public:
 private:
 
   const ContigId_t contig_id_;
-  const ContigOffset_t offset_; // offset with the contig.
+  const ContigOffset_t offset_; // offset with the contig_ref_ptr.
   const ContigSize_t interval_; // size of this interval.
 
   size_t SNP_count_{0};

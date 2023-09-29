@@ -70,9 +70,9 @@ public:
 
   // Given a transcript return the associated coding sequence.
   [[nodiscard]] std::optional<DNA5SequenceCoding>
-    codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
+    codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
 
-  // Generate Amino acid sequences using the table specified for this contig.
+  // Generate Amino acid sequences using the table specified for this contig_ref_ptr.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;
   [[nodiscard]] AminoAcid::Alphabet getAminoAcid(const Codon& codon) const { return coding_table_.getAmino(codon); }
 
@@ -83,7 +83,7 @@ public:
   // Check all of the above and Mod3.
   [[nodiscard]] ProteinSequenceValidity checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const;
 
-  // Wire-up the contig features
+  // Wire-up the contig_ref_ptr features
   void verifyFeatureHierarchy();
   void verifyCDSPhasePeptide();
 
@@ -91,9 +91,9 @@ private:
 
   ContigId_t contig_id_;
   std::string description_;
-  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The contig unstranded DNA sequence.
-  GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig.
-  TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig (e.g. mitochondria)
+  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The contig_ref_ptr unstranded DNA sequence.
+  GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig_ref_ptr.
+  TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig_ref_ptr (e.g. mitochondria)
 
 };
 

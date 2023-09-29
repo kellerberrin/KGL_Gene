@@ -18,7 +18,7 @@ std::shared_ptr<kgl::ContigDB> kgl::ContigDB::deepCopy() const {
 
 }
 
-// Unconditionally adds a variant to the contig.
+// Unconditionally adds a variant to the contig_ref_ptr.
 bool kgl::ContigDB::addVariant(const std::shared_ptr<const Variant> &variant_ptr) {
 
   // Lock this function to concurrent access.
@@ -119,11 +119,11 @@ size_t kgl::ContigDB::variantCount() const {
 }
 
 
-// Creates a copy of the contig that only contains variants passing the filter condition.
+// Creates a copy of the contig_ref_ptr that only contains variants passing the filter condition.
 // Note that we delete any empty offsets.
 std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filter) const {
 
-  // Only contig filter is implemented at this level.
+  // Only contig_ref_ptr filter is implemented at this level.
   if (filter.filterType() == FilterBaseType::CONTIG_FILTER) {
 
     const FilterContigs& contig_filter = static_cast<const FilterContigs&>(filter);
@@ -141,7 +141,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filte
     auto filtered_offset_ptr = offset_ptr->viewFilter(filter);
     if (not filtered_contig_ptr->addOffset(offset, std::move(filtered_offset_ptr))) {
 
-      ExecEnv::log().error("ContigDB::filter; Problem adding offset: {}, to contig: {}", offset, contigId());
+      ExecEnv::log().error("ContigDB::filter; Problem adding offset: {}, to contig_ref_ptr: {}", offset, contigId());
 
     }
 
@@ -244,7 +244,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
     if (offset >= contig_sequence_ptr->length()) {
 
-      ExecEnv::log().error("Variant offset: {} exceeds total contig: {} size: {}", offset,
+      ExecEnv::log().error("Variant offset: {} exceeds total contig_ref_ptr: {} size: {}", offset,
                            contig_db_ptr->contigId(), contig_sequence_ptr->length());
       continue;
 
@@ -263,7 +263,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
       auto contig_ref_opt = contig_sequence_ptr->subSequence(contig_ref_interval);
       if (not contig_ref_opt) {
 
-        ExecEnv::log().error("Unable to extract variant reference from contig: {}, contig interval: {}, variant: {}",
+        ExecEnv::log().error("Unable to extract variant reference from contig: {}, contig_ref_ptr interval: {}, variant: {}",
                              contig_db_ptr->contigId(),
                              contig_sequence_ptr->interval().toString(),
                              variant_ptr->HGVS());
@@ -293,7 +293,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 }
 
 
-// Create an equivalent contig that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+// Create an equivalent contig_ref_ptr that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
 // and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
 std::unique_ptr<kgl::ContigDB> kgl::ContigDB::canonicalContig() const {
 

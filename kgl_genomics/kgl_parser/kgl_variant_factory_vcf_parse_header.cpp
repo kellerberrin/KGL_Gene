@@ -297,7 +297,7 @@ bool kgl::VCFParseHeader::VCFContigAliasRemapping(const VCFContigMap& vcf_contig
                                                   std::shared_ptr<const GenomeReference> reference_genome,
                                                   VCFContigAliasMap contig_alias_map) {
 
-  // Reverse the VCF contig map.
+  // Reverse the VCF contig_ref_ptr map.
   std::map<size_t, std::string> reverse_map;
   for (auto const& [contig_id, contig_size] : vcf_contig_map) {
 
@@ -323,7 +323,7 @@ bool kgl::VCFParseHeader::VCFContigAliasRemapping(const VCFContigMap& vcf_contig
 
   if (contig_alias_map.size() != vcf_contig_map.size()) {
 
-    ExecEnv::log().warn("VCFParseHeader::VCFContigAliasRemapping, Caution - VCF/References Alias size: {} not equal to VCF contig size: {}",
+    ExecEnv::log().warn("VCFParseHeader::VCFContigAliasRemapping, Caution - VCF/References Alias size: {} not equal to VCF contig_ref_ptr size: {}",
                         contig_alias_map.size(), vcf_contig_map.size());
 
   }

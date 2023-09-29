@@ -57,14 +57,14 @@ public:
   // and Inserts by '1MnI'. The genome structure is re-created and is not a shallow copy.
   [[nodiscard]] std::unique_ptr<GenomeDB> canonicalGenome() const;
 
-  // Get the underlying contig map.
+  // Get the underlying contig_ref_ptr map.
   [[nodiscard]] const ContigDBMap& getMap() const { return contig_map_; }
 
-  // Creates the contig if it does not exist.
+  // Creates the contig_ref_ptr if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<ContigDB>> getCreateContig(const ContigId_t& contig_id);
-  // Const version, Returns nullopt if the contig does not exist.
+  // Const version, Returns nullopt if the contig_ref_ptr does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<const ContigDB>> getContig(const ContigId_t& contig_id) const;
-  // Returns nullopt if the contig does not exist.
+  // Returns nullopt if the contig_ref_ptr does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<ContigDB>> getContig(const ContigId_t& contig_id);
   // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj> bool processAll(Obj& object, MemberVariantFunc<Obj> objFunc) const {

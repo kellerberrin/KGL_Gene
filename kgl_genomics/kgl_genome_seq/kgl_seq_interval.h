@@ -75,8 +75,8 @@ private:
   StrandSense strand_{StrandSense::FORWARD};
 
   void codingInterval(const std::shared_ptr<const GeneFeature>& gene_vector);
-  // Used with the functions above to determine if a contig + offset resides within a gene interval or the coding intervals of a gene.
-  [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig()->contigId()); }
+  // Used with the functions above to determine if a contig_ref_ptr + offset resides within a gene interval or the coding intervals of a gene.
+  [[nodiscard]] bool isSameContig(const ContigId_t& contig) const { return contig == (gene_feature_->contig_ref_ptr()->contigId()); }
   // Create a map of introns.
   [[nodiscard]] GeneCodingTranscriptMap createIntronMap() const;
 

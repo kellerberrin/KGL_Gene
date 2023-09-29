@@ -275,9 +275,9 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
         gene_mutation.clinvar.processClinvar( genome_id, gene_contig_id, clinvar_population_ptr, gene_variant_ptr, genome_aux_data);
         gene_mutation.gene_variants.processVariantStats(genome_id, gene_variant_ptr, unphased_population_ptr, genome_aux_data, allele_citation_ptr);
 
-      } // contig not empty
+      } // contig_ref_ptr not empty
 
-    } // if contig
+    } // if contig_ref_ptr
 
   } // for genome
 

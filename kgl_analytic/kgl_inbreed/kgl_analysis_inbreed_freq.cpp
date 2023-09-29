@@ -433,7 +433,7 @@ kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
   LocusResults locus_results;
   locus_results.genome = genome_id;
 
-  // Diploid contig, only want SNP variants.
+  // Diploid contig_ref_ptr, only want SNP variants.
   auto snp_contig_ptr = contig_ptr->viewFilter(SNPFilter());
 
   // For all offsets.

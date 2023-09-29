@@ -29,7 +29,7 @@ kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
   // Get the offset.
   allele_offset_ = vcf_record.offset;
 
-  // Get the contig pointer.
+  // Get the contig_ref_ptr pointer.
   auto contig_opt = genome_db_ptr->getContigSequence(genome_contig);
   if (not contig_opt) {
 
@@ -45,7 +45,7 @@ kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
   auto contig_ref_opt = contig_ptr_->sequence().subSequence(referenceInterval);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().error("Cannot extract reference interval: {} from contig: {} contig interval: {}",
+    ExecEnv::log().error("Cannot extract reference interval: {} from contig: {} contig_ref_ptr interval: {}",
                          referenceInterval.toString(),
                          contig_ptr_->contigId(),
                          contig_ptr_->sequence().interval().toString());

@@ -23,7 +23,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
   auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(sequence_interval);
   if (not adjusted_offset_ptr->processVariantMap(interval_map)) {
 
-    ExecEnv::log().warn("Problem updating interval: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("Problem updating interval: {}, variant contig: {}, reference contig_ref_ptr: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
@@ -34,7 +34,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
                                             sequence_interval,
                                             adjusted_offset_ptr->indelModifyMap())) {
 
-    ExecEnv::log().warn("Problem updating sequence: {}, variant contig: {}, reference contig: {}",
+    ExecEnv::log().warn("Problem updating sequence: {}, variant contig: {}, reference contig_ref_ptr: {}",
                         sequence_interval.toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());

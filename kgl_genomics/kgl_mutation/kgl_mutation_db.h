@@ -36,7 +36,7 @@ public:
 
   }
   ~MutateGenes() = default;
-  // Return the id of all genes from a particular contig.
+  // Return the id of all genes from a particular contig_ref_ptr.
   std::vector<std::shared_ptr<const GeneFeature>> contigGenes(const ContigId_t& contig_id) const;
   // Mutate the population.
   void mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr);

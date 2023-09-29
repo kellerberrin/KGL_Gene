@@ -329,7 +329,7 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
     auto result = interval_map_.try_emplace(contig_id, std::move(interval_vector));
     if (not result.second) {
 
-      ExecEnv::log().error("IntervalAnalysis::setupIntervalStructure, Genome: {} Duplicate contig: {}", genome->genomeId(), contig_id);
+      ExecEnv::log().error("IntervalAnalysis::setupIntervalStructure, Genome: {} Duplicate contig_ref_ptr: {}", genome->genomeId(), contig_id);
 
     }
 
@@ -353,7 +353,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const Populatio
     auto result = interval_map_.find(contig_id);
     if (result == interval_map_.end()) {
 
-      ExecEnv::log().error("IntervalAnalysis::variantIntervalCount; Cannot find contig: {} mismatch between Reference Genome and Variant Population", contig_id);
+      ExecEnv::log().error("IntervalAnalysis::variantIntervalCount; Cannot find contig_ref_ptr: {} mismatch between Reference Genome and Variant Population", contig_id);
       return false;
 
     }
@@ -407,7 +407,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const Populatio
 
     } // interval
 
-  } // contig
+  } // contig_ref_ptr
 
   ExecEnv::log().info("Analysis: {},  filter processed: {}", ident(), variant_count);
 
@@ -519,8 +519,8 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
     auto contig_iter  = interval_map_.find(contig_id);
     if (contig_iter == interval_map_.end()) {
 
-      ExecEnv::log().error("IntervalAnalysis::writeData; could not find variant interval vector for contig: {}", contig_id);
-      continue; // next contig.
+      ExecEnv::log().error("IntervalAnalysis::writeData; could not find variant interval vector for contig_ref_ptr: {}", contig_id);
+      continue; // next contig_ref_ptr.
 
     }
 
@@ -528,12 +528,12 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
     if (interval_vector.empty()) {
 
-      ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized interval vector for contig: {}", contig_id);
-      continue; // next contig.
+      ExecEnv::log().warn("IntervalAnalysis::writeData; zero sized interval vector for contig_ref_ptr: {}", contig_id);
+      continue; // next contig_ref_ptr.
 
     }
 
-    // Calculate the number of variants processed, if zero then skip this contig.
+    // Calculate the number of variants processed, if zero then skip this contig_ref_ptr.
     size_t variant_count = 0;
     for (auto const& interval : interval_vector) {
 
@@ -543,12 +543,12 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
     if (variant_count == 0) {
 
-      ExecEnv::log().info("Contig: {} processed zero variants, skipping to next contig", contig_id);
-      continue; // next contig.
+      ExecEnv::log().info("Contig: {} processed zero variants, skipping to next contig_ref_ptr", contig_id);
+      continue; // next contig_ref_ptr.
 
     }
 
-    ExecEnv::log().info("IntervalAnalysis::writeData; processing contig: {}", contig_id);
+    ExecEnv::log().info("IntervalAnalysis::writeData; processing contig_ref_ptr: {}", contig_id);
     ContigOffset_t contig_offset = 0;
     ContigSize_t contig_size = contig_ptr->contigSize();
 
@@ -556,7 +556,7 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       if (contig_offset > contig_size) {
 
-        ExecEnv::log().error("IntervalAnalysis::writeData; calculated offset; {} exceeds contig size: {}", contig_offset, contig_size);
+        ExecEnv::log().error("IntervalAnalysis::writeData; calculated offset; {} exceeds contig_ref_ptr size: {}", contig_offset, contig_size);
         break;
 
       }
@@ -576,7 +576,7 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       auto sequence_opt = contig_ptr->sequence_ptr()->subSequence(contig_sub_interval);
       if (not sequence_opt) {
 
-        ExecEnv::log().warn("Could not extract sub-sequence: {} from contig: {} contig interval: {}",
+        ExecEnv::log().warn("Could not extract sub-sequence: {} from contig: {} contig_ref_ptr interval: {}",
                             contig_sub_interval.toString(),
                             contig_id,
                             contig_ptr->sequence_ptr()->interval().toString());
@@ -587,7 +587,7 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       if (sequence.length() != interval_size) {
 
-        ExecEnv::log().error("IntervalAnalysis::writeData; unexpected sequence size: {} returned from contig: {}, offset: {}, size: {}",
+        ExecEnv::log().error("IntervalAnalysis::writeData; unexpected sequence size: {} returned from contig_ref_ptr: {}, offset: {}, size: {}",
                              sequence.length(), contig_id, contig_offset, interval_size);
         break;
 
@@ -654,10 +654,10 @@ bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       contig_offset += interval_size; // next interval;
 
-    } // offset within contig.
+    } // offset within contig_ref_ptr.
 
 
-  } // contig
+  } // contig_ref_ptr
 
   ExecEnv::log().info("Analysis: {} completes",ident());
 

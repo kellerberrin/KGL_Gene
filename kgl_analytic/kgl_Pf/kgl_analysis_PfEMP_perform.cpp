@@ -130,7 +130,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
   GeneVector same_contig;
   for (auto const& gene_ptr : gene_vector) {
 
-    if (gene_ptr->contig()->contigId() == target_ptr->contig()->contigId()) {
+    if (gene_ptr->contig_ref_ptr()->contigId() == target_ptr->contig_ref_ptr()->contigId()) {
 
       same_contig.push_back(gene_ptr);
 
@@ -211,13 +211,13 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
     }
 
     std::shared_ptr<const TranscriptionSequence> transcript_ptr = coding_seq_ptr->getFirst();
-    auto coding_dna_opt = CodingTranscript::codingSequence(transcript_ptr, gene_ptr->contig());
+    auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(transcript_ptr);
     if (coding_dna_opt) {
 
       DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
       // Do we have a valid intron (VAR only)?
 
-      auto intron_map_opt = CodingTranscript::intronSequence(transcript_ptr, gene_ptr->contig());
+      auto intron_map_opt = CodingTranscript::intronSequence(transcript_ptr, gene_ptr->contig_ref_ptr());
       if (not intron_map_opt) {
 
         ExecEnv::log().error("Problem generating Intron map for Gene: {}, Transcript: {}",
@@ -229,7 +229,7 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
       StrandSense strand = transcript_ptr->strand();
 
       // Only add genes with valid coding sequences (no pseudo genes).
-      if (gene_ptr->contig()->checkValidCodingSequence(coding_dna_sequence) == ProteinSequenceValidity::VALID) {
+      if (gene_ptr->contig_ref_ptr()->checkValidCodingSequence(coding_dna_sequence) == ProteinSequenceValidity::VALID) {
 
         // Only 1 intron (var genes)
         if (intron_sequence_array.size() == 1) {
@@ -319,7 +319,7 @@ void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeRefe
 
     std::shared_ptr<const TranscriptionSequence> coding_sequence = coding_seq_ptr->getFirst();
 
-    auto coding_dna_opt = CodingTranscript::codingSequence(coding_sequence, gene_ptr->contig());
+    auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(coding_sequence);
     if (coding_dna_opt) {
 
       DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();

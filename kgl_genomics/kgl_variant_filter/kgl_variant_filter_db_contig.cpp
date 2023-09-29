@@ -30,7 +30,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const Contig
 
       if (not contig_ptr->addVariant(variant_ptr)) {
 
-        ExecEnv::log().error("ContigRegionFilter::applyFilter; unable to add variant: {} to contig: {}",
+        ExecEnv::log().error("ContigRegionFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
                              variant_ptr->HGVS(), contig_ptr->contigId());
 
       }
@@ -93,7 +93,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 
         if (not region_contig_ptr->addVariant(variant_ptr)) {
 
-          ExecEnv::log().error("ContigModifyFilter::applyFilter; unable to add variant: {} to contig: {}",
+          ExecEnv::log().error("ContigModifyFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
                                variant_ptr->HGVS(), region_contig_ptr->contigId());
 
         } // If successful add variant.
@@ -148,7 +148,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
         if (not contig_ptr->addVariant(variant_ptr)) {
 
-          ExecEnv::log().error("ContigUpstreamFilter::applyFilter; unable to add variant: {} to contig: {}",
+          ExecEnv::log().error("ContigUpstreamFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
                                variant_ptr->HGVS(), contig_ptr->contigId());
 
         }
@@ -172,13 +172,13 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Returns a contig containing all variants in *this contig that match the template contig.
+// Returns a contig containing all variants in *this contig that match the template contig_ref_ptr.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // This search algorithm has n^2 complexity.
-// The variants in the template contig are unique. Variant phase is disregarded.
+// The variants in the template contig_ref_ptr are unique. Variant phase is disregarded.
 std::unique_ptr<kgl::ContigDB> kgl::ContigTemplateFilter::applyFilter(const ContigDB& contig) const {
 
   auto found_contig_ptr = std::make_unique<ContigDB>(reference_ptr_->contigId());

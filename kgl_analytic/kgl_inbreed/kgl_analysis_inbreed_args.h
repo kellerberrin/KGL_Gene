@@ -42,10 +42,10 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //<help>The Minimum Contig Offset to Examine; Integer</help>
 //<parameterIdent>LowerWindow</parameterIdent>
 //
-//<help>The Maximum Contig Offset to examine, set to High Value for entire contig; Integer</help>
+//<help>The Maximum Contig Offset to examine, set to High Value for entire contig_ref_ptr; Integer</help>
 //<parameterIdent>UpperWindow</parameterIdent>
 //
-//<help>The Number of allele offsets to examine, set to High Value for entire contig; Integer</help>
+//<help>The Number of allele offsets to examine, set to High Value for entire contig_ref_ptr; Integer</help>
 //<parameterIdent>LociiCount</parameterIdent>
 //
 //<help>The minimum calculateDistance between allele offsets to minimize any linkage disequilibrium effects; Integer</help>

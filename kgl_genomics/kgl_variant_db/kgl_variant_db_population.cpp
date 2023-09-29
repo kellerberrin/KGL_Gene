@@ -218,7 +218,7 @@ std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCount() const {
         auto [insert_iter, result] = contig_map.try_emplace(contig_id, 0);
         if (not result) {
 
-          ExecEnv::log().error("PopulationDB::contigCount; expected error inserting contig: {}", contig_id);
+          ExecEnv::log().error("PopulationDB::contigCount; expected error inserting contig_ref_ptr: {}", contig_id);
           continue;
 
         }
@@ -263,7 +263,7 @@ size_t kgl::PopulationDB::squareContigs() {
         auto contig_opt = genome_ptr->getCreateContig(contig_id);
         if (not contig_opt) {
 
-          ExecEnv::log().error("PopulationDB::squareContigs; Unable to add contig: {} to genome: {}", contig_id, genome_id);
+          ExecEnv::log().error("PopulationDB::squareContigs; Unable to add contig_ref_ptr: {} to genome: {}", contig_id, genome_id);
 
         }
 

@@ -86,7 +86,7 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
 
   for (auto const& [key, transcript_record] : transcript_map_) {
 
-    out_file << transcript_record.genePtr()->contig()->contigId() << DELIMITER_
+    out_file << transcript_record.genePtr()->contig_ref_ptr()->contigId() << DELIMITER_
              << transcript_record.genePtr()->id() << DELIMITER_
              << transcript_record.transcriptionPtr()->getParent()->id() << DELIMITER_
         << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_ : GeneFeature::NCRNA_GENE_)

@@ -61,7 +61,7 @@ private:
   // Thus begin_offset_ = gff.begin - 1
   // And end_offset_ = gff.end
   // Note that always begin_offset_ < end_offset_. They are not strand adjusted.
-  // They always correspond to zero based offsets on the relevant contig.
+  // They always correspond to zero based offsets on the relevant contig_ref_ptr.
   ContigOffset_t begin_offset_;    // begin is the first nucleotide of the feature.
   ContigOffset_t end_offset_;      // end points past the last nucleotide of the feature; end = last_offset+1
   StrandSense strand_sense_;      // default is '+'

@@ -86,7 +86,7 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
   auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
   for (auto const& sequence : coding_seq_ptr->getMap()) {
 
-    std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig();
+    std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig_ref_ptr();
     std::string gene_id = sequence.second->getGene()->id();
     std::string sequence_id = sequence.second->getParent()->id();
     AminoSequence mutant_sequence;
@@ -148,7 +148,7 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   }
 
   std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig_ref_ptr();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getParent()->id();
 
@@ -217,7 +217,7 @@ void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
 
   std::stringstream ss;
 
-  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig()->contigSize());
+  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig_ref_ptr()->contigSize());
   contig_proportion = contig_proportion * 100.0;
   ss << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
 
@@ -242,7 +242,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   }
 
   std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig_ref_ptr();
   std::string gene_id = sequence->getGene()->id();
   std::string sequence_id = sequence->getParent()->id();
 
@@ -339,7 +339,7 @@ void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
 void  kgl::DNAGeneDistance::getExonSequence() {
 
-  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
+  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig_ref_ptr();
 
   // Just get the first transcript of the gene.
   auto transcript_ptr = getCodingSequence();
@@ -402,24 +402,24 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
 void  kgl::AminoGeneDistance::getAminoSequence() {
 
-  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig();
+  std::shared_ptr<const ContigReference> contig_ref_ptr = gene_ptr_->contig_ref_ptr();
 
   // Just get the first transcript of the gene.
   auto transcript_ptr = getCodingSequence();
 
-  auto coding_seq_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
+  auto coding_seq_opt = contig_ref_ptr->codingSequence(transcript_ptr);
 
   if (not coding_seq_opt) {
 
     ExecEnv::log().warn("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
-                        contig_ptr->contigId(),
+                        contig_ref_ptr->contigId(),
                         transcript_ptr->getGene()->id(),
                         transcript_ptr->getParent()->id());
     return;
   }
   auto& dna_coding_sequence = coding_seq_opt.value();
 
-  amino_sequence_ = contig_ptr->getAminoSequence(dna_coding_sequence);
+  amino_sequence_ = contig_ref_ptr->getAminoSequence(dna_coding_sequence);
 
 }
 

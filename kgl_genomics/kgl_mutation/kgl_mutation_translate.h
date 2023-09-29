@@ -17,7 +17,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // These helper classes keep track of the offset translation between the zero-offset modified sequence
-// and the contig based offset.
+// and the contig_ref_ptr based offset.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,10 +81,10 @@ public:
   // But, importantly, the cumulative indel offset is calculated and also stored in the map.
   [[nodiscard]] bool addModifiedOffset(AdjustedModifiedOffset modified_offset);
 
-  // Given a contig based sequence interval, return the equivalent zero-based indel modified interval (adjusts for delete indels).
+  // Given a contig_ref_ptr based sequence interval, return the equivalent zero-based indel modified interval (adjusts for delete indels).
   [[nodiscard]] std::pair<OpenRightUnsigned, bool> lookupModifiedInterval(const OpenRightUnsigned &contig_interval) const;
 
-  // Given a contig based sequence interval, return the equivalent zero-based unmodified/original interval.
+  // Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/original interval.
   [[nodiscard]] std::pair<OpenRightUnsigned, bool> lookupOriginalInterval(const OpenRightUnsigned &contig_interval) const;
 
   // Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
@@ -105,12 +105,12 @@ private:
   AdjustOffsetMap adjust_offset_map_;
 
   // Lookup an indel modified zero-offset sequence - generally a gene or similar.
-  // Note that we must account for contig offsets that occur in the shadow of a delete.
+  // Note that we must account for contig_ref_ptr offsets that occur in the shadow of a delete.
   [[nodiscard]] std::pair<ContigOffset_t, bool> lookupIndelOffset(ContigOffset_t offset) const;
 
-  // Get the previous indel adjustment to the supplied contig offset.
+  // Get the previous indel adjustment to the supplied contig_ref_ptr offset.
   [[nodiscard]] std::optional<AdjustedModifiedOffset> getPreviousIndel(ContigOffset_t contig_offset) const;
-  // Given a contig offset and an indel adjustment, calculate a zero-based offset - this does not adjust for delete indels.
+  // Given a contig_ref_ptr offset and an indel adjustment, calculate a zero-based offset - this does not adjust for delete indels.
   [[nodiscard]] std::pair<ContigOffset_t, bool> calcModifiedOffset(ContigOffset_t contig_offset, SignedOffset_t indel_adjust) const;
   // Finds the map offset element that is < contig_offset. If no such element exists then returns 0.
   [[nodiscard]] SignedOffset_t getIndelOffset(ContigOffset_t contig_offset) const;

@@ -42,7 +42,7 @@ std::string kgl::Feature::featureText(char delimiter) const {
   std::stringstream ss;
 
   ss << "Contig Id:" << delimiter
-     << contig()->contigId() << delimiter
+     << contig_ref_ptr()->contigId() << delimiter
      << "Feature Id:" << delimiter
      << id() << delimiter
      << "Type:" << delimiter

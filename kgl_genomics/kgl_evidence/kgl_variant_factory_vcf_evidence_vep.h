@@ -38,7 +38,7 @@ public:
   bool getPopulationValues(const std::shared_ptr<const PopulationDB>& population_ptr);
   // For a genome
   bool getGenomeValues(const std::shared_ptr<const GenomeDB>& genome_ptr);
-  // For a contig.
+  // For a contig_ref_ptr.
   bool getContigValues(const std::shared_ptr<const ContigDB>& contig_ptr);
 
 private:

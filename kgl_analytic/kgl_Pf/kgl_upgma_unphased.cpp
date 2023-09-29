@@ -30,7 +30,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
     auto cmp_contig_iter = node_ptr->genome_variant_ptr_->getMap().find(contig.first);
 
-    // Corresponding contig not found.
+    // Corresponding contig_ref_ptr not found.
     if (cmp_contig_iter == node_ptr->genome_variant_ptr_->getMap().end()) {
 
       distance += contig.second->variantCount();

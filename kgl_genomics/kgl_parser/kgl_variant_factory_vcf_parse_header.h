@@ -23,9 +23,9 @@ using VCFHeaderInfo = std::vector<std::pair<std::string, std::string>>;
 using VCFContigMap = std::map<ContigId_t, ContigSize_t>;
 // A map of VCF INFO fields.
 using VcfInfoKeyMap = std::map<std::string, std::string>;
-// A remapping of VCF contig names to Reference Genome contig names.
-// The key is the VCF contig ID, value is the Reference Genome ID.
-// Matched by contig sizes so there is a (small) chance of a mis-mapping
+// A remapping of VCF contig names to Reference Genome contig_ref_ptr names.
+// The key is the VCF contig_ref_ptr ID, value is the Reference Genome ID.
+// Matched by contig_ref_ptr sizes so there is a (small) chance of a mis-mapping
 using VCFContigAliasMap = std::map<std::string, std::string>;
 
 // A VCF INFO record.

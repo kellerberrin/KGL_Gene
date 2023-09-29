@@ -27,7 +27,7 @@ public:
   AdjustedSequence() :  modified_offset_map_({0, 0}) { clear(); }
   ~AdjustedSequence() = default;
 
-  // The coding interval for the contig sequence.
+  // The coding interval for the contig_ref_ptr sequence.
   [[nodiscard]] const OpenRightUnsigned& contigInterval() const { return modified_offset_map_.contigInterval(); }
   // The modify map for the zero based modified sequence.
   [[nodiscard]] const ModifiedOffsetMap& sequenceMap() const { return modified_offset_map_; }

@@ -197,12 +197,12 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
 
     // Retrieve the genome ptr.
     auto& [genome_id, genome_ptr] = *(population_ptr->getMap().begin());
-    // Generate contig locii maps
+    // Generate contig_ref_ptr locii maps
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
       contig_locus_map[contig_id] = getPopulationLocus( population_ptr, contig_id, locii_args);
 
-      ExecEnv::log().info( "Generated locus maps for contig: {}", contig_id);
+      ExecEnv::log().info( "Generated locus maps for contig_ref_ptr: {}", contig_id);
 
     }
 

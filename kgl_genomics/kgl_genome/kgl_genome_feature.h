@@ -13,7 +13,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Feature - Annotated contig features
+// Feature - Annotated contig_ref_ptr features
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ContigReference; // Forward decl;
@@ -27,9 +27,9 @@ public:
   Feature(FeatureIdent_t id,
           FeatureType_t type, // The actual Gff classification such as 'NCRNA_GENE'
           FeatureType_t super_type, // High level feature classification such as 'GENE'
-          std::shared_ptr<const ContigReference> contig_ptr,
+          std::shared_ptr<const ContigReference> contig_ref_ptr,
           FeatureSequence sequence): id_(std::move(id)), type_(std::move(type)), super_type_(std::move(super_type)),
-                                     contig_ptr_(std::move(contig_ptr)), sequence_(sequence) {}
+                                     contig_ref_ptr_(std::move(contig_ref_ptr)), sequence_(sequence) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 
@@ -73,7 +73,7 @@ public:
   [[nodiscard]] const SubFeatureMap& subFeatures() const { return sub_features_; }
   [[nodiscard]] SubFeatureMap& subFeatures() { return sub_features_; }
 
-  [[nodiscard]] std::shared_ptr<const ContigReference> contig() const { return contig_ptr_; }
+  [[nodiscard]] const std::shared_ptr<const ContigReference>& contig_ref_ptr() const { return contig_ref_ptr_; }
 
   // Compares features - primarily used for testing
   [[nodiscard]] bool equivalent(const Feature& lhs) const;
@@ -83,7 +83,7 @@ private:
   const FeatureIdent_t id_;
   const FeatureType_t type_;  // The actual Gff classification such as 'NCRNA_GENE'
   const FeatureType_t super_type_; // High level feature classification such as 'GENE'
-  std::shared_ptr<const ContigReference> contig_ptr_;
+  std::shared_ptr<const ContigReference> contig_ref_ptr_;
   FeatureSequence sequence_;
   SubFeatureMap sub_features_;
   SuperFeaturePtr super_feature_ptr_;

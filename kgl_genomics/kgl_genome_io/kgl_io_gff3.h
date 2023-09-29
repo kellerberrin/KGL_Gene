@@ -24,7 +24,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Thus begin_offset_ = gff.begin - 1
 // And end_offset_ = gff.end
 // Note that always begin_offset_ < end_offset_. They are not strand adjusted.
-// They always correspond to zero based offsets on the relevant contig.
+// They always correspond to zero based offsets on the relevant contig_ref_ptr.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GffRecord {

@@ -46,7 +46,7 @@ public:
   [[nodiscard]] const OffsetFeatureMap& offsetFeatureMap() const { return offset_feature_map_; }
   [[nodiscard]] const IdFeatureMap& idFeatureMap() const { return id_feature_map_; }
 
-  // Compares contig feature structures - primarily used for testing
+  // Compares contig_ref_ptr feature structures - primarily used for testing
   [[nodiscard]] bool equivalent(const StructuredFeatures& lhs) const;
 
 protected:

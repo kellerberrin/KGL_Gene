@@ -72,7 +72,7 @@ void kgl::PfVCFImpl::ProcessVCFRecord(std::unique_ptr<const VCFRecord> vcf_recor
 // This is multithreaded code called from the reader defined above.
 void kgl::PfVCFImpl::ParseRecord(std::unique_ptr<const VCFRecord> vcf_record_ptr) {
 
-  // Convert VCF contig to genome contig.
+  // Convert VCF contig to genome contig_ref_ptr.
   std::string genome_contig = contig_alias_map_.lookupAlias(vcf_record_ptr->contig_id);
 
   ParseVCFRecord recordParser(genome_contig, *vcf_record_ptr, genome_db_ptr_); //Each vcf record.
@@ -414,7 +414,7 @@ void kgl::PfVCFImpl::setupPopulationStructure(const std::shared_ptr<const Genome
 
       if (not genome_opt.value()->getCreateContig(contig.first)) {
         // Terminate runtime.
-        ExecEnv::log().critical("PfVCFImpl::setupPopulationStructure; Could not create contig: {} in genome: {} in the unphased population", contig.first, genome_id);
+        ExecEnv::log().critical("PfVCFImpl::setupPopulationStructure; Could not create contig_ref_ptr: {} in genome: {} in the unphased population", contig.first, genome_id);
 
       }
 

@@ -221,11 +221,11 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
     feature_id = feature_id_vec.front();
 
   }
-  // Get a pointer to the contig.
+  // Get a pointer to the contig_ref_ptr.
   std::optional<std::shared_ptr<const kgl::ContigReference>> contig_opt = genome_db.getContigSequence(gff_record.contig());
   if (not contig_opt) {
 
-    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not find contig: {}", gff_record.contig());
+    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not find contig_ref_ptr: {}", gff_record.contig());
     return false;
 
   }
@@ -279,13 +279,13 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
 
   // Add in the attributes.
   feature_ptr->setAttributes(gff_record.attributes());
-  // Annotate the contig.
+  // Annotate the contig_ref_ptr.
   std::shared_ptr<kgl::ContigReference> mutable_contig_ptr = std::const_pointer_cast<kgl::ContigReference>(contig_opt.value());
   bool result = mutable_contig_ptr->addContigFeature(feature_ptr);
 
   if (not result) {
 
-    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not add duplicate feature: {} to contig: {}", feature_id, gff_record.contig());
+    ExecEnv::log().error("ParseGff3::parseGffRecord; Could not add duplicate feature: {} to contig_ref_ptr: {}", feature_id, gff_record.contig());
     return false;
 
   }

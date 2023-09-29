@@ -98,7 +98,7 @@ void kgl::GenomeReference::setTranslationTable(const std::string& table) {
 
     if (not contig_ptr->setTranslationTable(table)) {
 
-      ExecEnv::log().error("setTranslationTable(), Could not set translation table: {} for contig: {}", table, contig_id);
+      ExecEnv::log().error("setTranslationTable(), Could not set translation table: {} for contig_ref_ptr: {}", table, contig_id);
 
     }
 
@@ -116,14 +116,14 @@ bool kgl::GenomeReference::equivalent(const GenomeReference& lhs) const {
 
       if (not contig_opt.value()->equivalent(*contig_reference)) {
 
-        ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} has differing contig/feature attributes", contig_id);
+        ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} has differing contig_ref_ptr/feature attributes", contig_id);
         equivalent_contigs = false;
 
       }
 
     } else {
 
-      ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} not found in comparison contig", contig_id);
+      ExecEnv::log().warn("GenomeReference::equivalent; contig id: {} not found in comparison contig_ref_ptr", contig_id);
       equivalent_contigs = false;
 
     }
@@ -135,7 +135,7 @@ bool kgl::GenomeReference::equivalent(const GenomeReference& lhs) const {
     auto contig_opt = getContigSequence(contig_id);
     if (not contig_opt) {
 
-      ExecEnv::log().warn("GenomeReference::equivalent; comparison contig: {} not found", contig_id);
+      ExecEnv::log().warn("GenomeReference::equivalent; comparison contig_ref_ptr: {} not found", contig_id);
       equivalent_contigs = false;
 
     }

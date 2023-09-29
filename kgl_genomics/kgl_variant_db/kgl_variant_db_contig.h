@@ -14,7 +14,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This object holds variants for each contig.
+// This object holds variants for each contig_ref_ptr.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ public:
 
   [[nodiscard]] const ContigId_t &contigId() const { return contig_id_; }
 
-  // Unconditionally adds a variant to the contig (unique or not).
+  // Unconditionally adds a variant to the contig_ref_ptr (unique or not).
   [[nodiscard]]  bool addVariant(const std::shared_ptr<const Variant> &variant_ptr);
 
 
@@ -44,32 +44,32 @@ public:
 
   [[nodiscard]] const OffsetDBMap &getMap() const { return contig_offset_map_; }
 
-  // Return a filtered copy of the contig.
-  // Important, returns a shallow copy of the contig - only use for CPU/memory efficiency.
+  // Return a filtered copy of the contig_ref_ptr.
+  // Important, returns a shallow copy of the contig_ref_ptr - only use for CPU/memory efficiency.
   [[nodiscard]] std::unique_ptr<ContigDB> viewFilter(const BaseFilter &filter) const;
-  // Filter this contig (efficient for large databases).
+  // Filter this contig_ref_ptr (efficient for large databases).
   // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
 
   // Deletes any empty Offsets, returns number deleted.
   size_t trimEmpty();
-  // Processes all variants in the contig with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  // Processes all variants in the contig_ref_ptr with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj> bool processAll(Obj& object, MemberVariantFunc<Obj> objFunc) const;
   // Implementation
   bool processAll(const VariantProcessFunc& objFunc) const;
 
-  // Create an equivalent contig that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
-  // and Inserts by '1MnI'. The contig structure is re-created and is not a shallow copy.
+  // Create an equivalent contig_ref_ptr that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  // and Inserts by '1MnI'. The contig_ref_ptr structure is re-created and is not a shallow copy.
   [[nodiscard]] std::unique_ptr<ContigDB> canonicalContig() const;
 
   // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
   // The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const ContigReference> &contig_db_ptr) const;
 
-  // Returns a variant offset array (if it exists) at a specified offset within the contig.
+  // Returns a variant offset array (if it exists) at a specified offset within the contig_ref_ptr.
   [[nodiscard]] std::optional<OffsetDBArray> findOffsetArray(ContigOffset_t offset) const;
 
-  // Unconditionally add all the variants in the supplied contig to this contig.
+  // Unconditionally add all the variants in the supplied contig_ref_ptr to this contig.
   bool merge(const std::shared_ptr<const ContigDB>& contig) { return contig->processAll(*this, &ContigDB::addVariant); }
 
 private:
@@ -88,7 +88,7 @@ private:
 
 
 // General purpose genome processing template.
-// Processes all variants in the contig with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>&))
+// Processes all variants in the contig_ref_ptr with class Obj and Func = &(bool Obj::objFunc(const std::shared_ptr<const Variant>&))
 template<class Obj>
 bool ContigDB::processAll(Obj& object, MemberVariantFunc<Obj> objFunc)  const {
 

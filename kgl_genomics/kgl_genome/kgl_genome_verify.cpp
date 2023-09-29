@@ -188,7 +188,7 @@ bool kgl::Feature::verifyStrand(const TranscriptionFeatureMap& Feature_map) cons
 }
 
 
-// Verifies a coding sequence using the amino coding table defined for the contig.
+// Verifies a coding sequence using the amino coding table defined for the contig_ref_ptr.
 kgl::ProteinSequenceValidity kgl::ContigReference::checkValidProteinSequence(const AminoSequence& amino_sequence) const {
 
   if (not coding_table_.checkStartCodon(amino_sequence)) {

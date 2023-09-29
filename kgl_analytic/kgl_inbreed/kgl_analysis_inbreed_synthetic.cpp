@@ -27,17 +27,17 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(std::shared_ptr<const Populatio
 
   }
 
-  // check that unphased only has 1 contig
+  // check that unphased only has 1 contig_ref_ptr
   auto [genone_id, contig_map] = *unphased_ptr->getMap().begin();
   if (contig_map->getMap().size() != 1) {
 
-    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} has more than 1 contig: {}",
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} has more than 1 contig_ref_ptr: {}",
                          unphased_ptr->populationId(), genone_id, contig_map->getMap().size());
     return false;
 
   }
 
-  // Get the size of the contig.
+  // Get the size of the contig_ref_ptr.
   auto [contig_id, contig_ptr] = *contig_map->getMap().begin();
 
   InbreedingParameters local_params = param_output.getParameters();
@@ -87,7 +87,7 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
 
   ContigLocusMap contig_locus_map = InbreedSampling::getPopulationLocusMap(unphased_ptr, parameters.lociiArguments());
 
-  // For each contig.
+  // For each contig_ref_ptr.
   for (auto const& [genome_contig_id, locus_map] : contig_locus_map) {
 
     // Use a thread pool to calculate inbreeding and relatedness.
@@ -131,7 +131,7 @@ kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const
 
     } // for locus
 
-  } // for contig.
+  } // for contig_ref_ptr.
 
   return results_map;
 

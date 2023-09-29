@@ -66,8 +66,8 @@ public:
   // and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
   [[nodiscard]] std::unique_ptr<PopulationDB> canonicalPopulation() const;
 
-  // Returns a list of contigs in the population and a sum of all variants in each contig.
-  // Useful for processing contig based VCF files (could be multi-threaded for speed).
+  // Returns a list of contigs in the population and a sum of all variants in each contig_ref_ptr.
+  // Useful for processing contig_ref_ptr based VCF files (could be multi-threaded for speed).
   [[nodiscard]] std::map<ContigId_t , size_t> contigCount() const;
 
   // Creates a filtered copy of the population database.

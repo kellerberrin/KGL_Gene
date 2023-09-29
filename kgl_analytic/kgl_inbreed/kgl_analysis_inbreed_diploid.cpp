@@ -31,17 +31,17 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Populat
 
   }
 
-  // check that unphased only has 1 contig
+  // check that unphased only has 1 contig_ref_ptr
   auto [genone_id, contig_map] = *unphased_ptr->getMap().begin();
   if (contig_map->getMap().size() != 1) {
 
-    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} has more than 1 contig: {}",
+    ExecEnv::log().error("InbreedingAnalysis::populationInbreeding; Unphased Population: {} Genome: {} has more than 1 contig_ref_ptr: {}",
                          unphased_ptr->populationId(), genone_id, contig_map->getMap().size());
     return false;
 
   }
 
-  // Get the size of the contig.
+  // Get the size of the contig_ref_ptr.
   auto [contig_id, contig_ptr] = *contig_map->getMap().begin();
 
   InbreedingParameters local_params = param_output.getParameters();

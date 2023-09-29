@@ -18,7 +18,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 // Variadic function to combine the UPGMAMatrix and UPGMADistanceNode to produce a population tree.
 // We are comparing contigs across genomes. The distance metric will be based on the difference in
-// the unphased variants held for each contig.
+// the unphased variants held for each contig_ref_ptr.
 template<typename T, typename... Args>
 void UnphasedDistanceTree(DistanceTree& distance_tree,
                           const std::string& newick_file,

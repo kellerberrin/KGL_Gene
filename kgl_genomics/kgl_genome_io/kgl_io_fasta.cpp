@@ -29,7 +29,7 @@ std::shared_ptr<kgl::GenomeReference> kgl::ParseFasta::readFastaFile( const std:
 
     if (not genome_db_ptr->addContigSequence(contig_id, sequence.fastaDescription(), sequence_ptr)) {
 
-      ExecEnv::log().error("addContigSequence(), Attempted to add duplicate contig; {}", contig_id);
+      ExecEnv::log().error("addContigSequence(), Attempted to add duplicate contig_ref_ptr; {}", contig_id);
 
     }
 

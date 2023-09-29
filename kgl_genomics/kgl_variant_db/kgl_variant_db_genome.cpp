@@ -71,7 +71,7 @@ std::optional<std::shared_ptr<kgl::ContigDB>> kgl::GenomeDB::getCreateContig(con
 
     if (not insert_result) {
 
-      ExecEnv::log().error("GenomeDB::getCreateContig(), Could not add contig: {} to genome : {}", contig_id, genomeId());
+      ExecEnv::log().error("GenomeDB::getCreateContig(), Could not add contig_ref_ptr: {} to genome : {}", contig_id, genomeId());
       return std::nullopt;
 
     }
@@ -128,7 +128,7 @@ bool kgl::GenomeDB::addContig(std::shared_ptr<ContigDB> contig_ptr) {
 
   if (not result) {
 
-    ExecEnv::log().error("GenomeDB::addContig(); could not add contig: {} (duplicate) to the genome", contig_ptr->contigId());
+    ExecEnv::log().error("GenomeDB::addContig(); could not add contig_ref_ptr: {} (duplicate) to the genome", contig_ptr->contigId());
 
   }
 
@@ -249,7 +249,7 @@ std::pair<size_t, size_t> kgl::GenomeDB::validate(const std::shared_ptr<const Ge
 
     if (not contig_opt) {
 
-      ExecEnv::log().error("GenomeDB::validate, No matching contig found in GenomeDatabase for Variant Contig: {}", contig_id);
+      ExecEnv::log().error("GenomeDB::validate, No matching contig_ref_ptr found in GenomeDatabase for Variant Contig: {}", contig_id);
       continue;
 
     }
@@ -285,7 +285,7 @@ std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::canonicalGenome() const {
     std::shared_ptr<ContigDB> canonical_contig_ptr = contig_ptr->canonicalContig();
     if (not canonical_genome_ptr->addContig(canonical_contig_ptr)) {
 
-      ExecEnv::log().error("GenomeDB::canonicalGenome; cannot add contig: {} to genome: {}", contig_id, genomeId());
+      ExecEnv::log().error("GenomeDB::canonicalGenome; cannot add contig_ref_ptr: {} to genome: {}", contig_id, genomeId());
 
     }
 
@@ -303,7 +303,7 @@ bool kgl::GenomeDB::processAll(const VariantProcessFunc& procFunc) const {
 
     if (not contig_ptr->processAll(procFunc)) {
 
-      ExecEnv::log().error("GenomeDB::processAll; Problem executing general purpose function for contig: {}", contig);
+      ExecEnv::log().error("GenomeDB::processAll; Problem executing general purpose function for contig_ref_ptr: {}", contig);
       return false;
 
     }

@@ -48,7 +48,7 @@ using ResultsMap = std::map<GenomeId_t, LocusResults>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A named column of results, rows are indexed by GenomeId_t in the ResultsMap.
-// Typically this will be the results for a contig or part of a contig.
+// Typically this will be the results for a contig or part of a contig_ref_ptr.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,7 @@ public:
   [[nodiscard]] const std::string& columnIdent() const { return column_identifier_; }
   [[nodiscard]] const ResultsMap& results() const { return results_; }
 
-  // Helper function generates a column ident based on a contig id and the region analyzed.
+  // Helper function generates a column ident based on a contig_ref_ptr id and the region analyzed.
   static std::string generateIdent(const ContigId_t& contig_id, ContigOffset_t lower, ContigOffset_t upper);
 
 private:

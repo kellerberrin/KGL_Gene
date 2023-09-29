@@ -20,11 +20,11 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
                                      StrandSense rna_target_strand,
                                      const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(rna_contig);
   if (not contig_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", rna_contig);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", rna_contig);
     return false;
 
   }
@@ -34,7 +34,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   OpenRightUnsigned rna_interval(rna_offset, rna_offset+rna_region_size);
   if (contig_ptr->sequence().interval().containsInterval(rna_interval)) {
 
-    ExecEnv::log().warn("RNA interval: {} is not contained in contig: {}, contig interval: {}",
+    ExecEnv::log().warn("RNA interval: {} is not contained in contig: {}, contig_ref_ptr interval: {}",
                         rna_interval.toString(), contig_ptr->contigId(), contig_ptr->sequence().interval().toString());
     return false;
 
@@ -44,18 +44,18 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   auto rna_sequence_opt = contig_ptr->sequence().subSequence(rna_interval);
   if (not rna_sequence_opt) {
 
-    ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig: {} contig interval: {}",
+    ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig_ref_ptr: {} contig interval: {}",
                         rna_interval.toString(), contig_ptr->contigId(), contig_ptr->sequence().interval().toString());
   }
   const DNA5SequenceLinear& rna_sequence = rna_sequence_opt.value();
   DNA5SequenceCoding stranded_rna_sequence = rna_sequence.codingSequence(rna_strand);
   rna_sequence_ = DNA5SequenceLinear::downConvertToLinear(stranded_rna_sequence);
 
-  // Get the contig.
+  // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> target_contig_opt = genome_db_ptr->getContigSequence(rna_target_contig);
   if (not target_contig_opt) {
 
-    ExecEnv::log().warn("Could not find contig: {} in genome database", rna_target_contig);
+    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", rna_target_contig);
     return false;
 
   }
@@ -65,7 +65,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   OpenRightUnsigned rna_target_interval(rna_target_offset, rna_target_offset + rna_target_size);
   if (target_contig_ptr->sequence().interval().containsInterval(rna_target_interval)) {
 
-    ExecEnv::log().warn("RNA target interval: {} is not contained in target contig: {}, target contig interval: {}",
+    ExecEnv::log().warn("RNA target interval: {} is not contained in target contig: {}, target contig_ref_ptr interval: {}",
                         rna_target_interval.toString(),
                         target_contig_ptr->contigId(),
                         target_contig_ptr->sequence().interval().toString());
@@ -78,7 +78,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
   auto rna_target_opt = target_contig_ptr->sequence().subSequence(rna_target_interval);
   if (not rna_target_opt) {
 
-    ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig: {} contig interval: {}",
+    ExecEnv::log().warn("Cannot extract rna sub-sequence: {} from contig: {} contig_ref_ptr interval: {}",
                         rna_target_interval.toString(),
                         target_contig_ptr->contigId(),
                         target_contig_ptr->sequence().interval().toString());

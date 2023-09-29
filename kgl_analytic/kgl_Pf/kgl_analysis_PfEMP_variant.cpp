@@ -50,9 +50,9 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
       for (auto const& gene_ptr : gene_vector_) {
 
-        if (gene_ptr->contig()->contigId() == contig_id) {
+        if (gene_ptr->contig_ref_ptr()->contigId() == contig_id) {
 
-          // Get/Create the gene contig from the gene population.
+          // Get/Create the gene contig_ref_ptr from the gene population.
           auto gene_contig_opt = gene_genome_ptr->getCreateContig(gene_ptr->id());
 
           if (not gene_contig_opt) {
@@ -74,7 +74,7 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
             for (const auto &[feature_id, feature_ptr]: sequence_ptr->getFeatureMap()) {
 
-              // Retrieve a gene contig containing all variants within the gene coding sequence.
+              // Retrieve a gene contig_ref_ptr containing all variants within the gene coding sequence.
               std::shared_ptr<const ContigDB> feature_contig_ptr = contig_ptr->viewFilter(ContigModifyFilter(feature_ptr->sequence().begin(),
                                                                                                              feature_ptr->sequence().end()));
               gene_contig_ptr->merge(feature_contig_ptr);
@@ -83,11 +83,11 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 
           } // if not empty
 
-        } // if same contig.
+        } // if same contig_ref_ptr.
 
       } // genemap
 
-    } // contig
+    } // contig_ref_ptr
 
   } // genome
 
@@ -401,7 +401,7 @@ void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const Po
 
   for (auto const& [genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
 
-  // Find the gene contig (or not).
+  // Find the gene contig_ref_ptr (or not).
     auto gene_contig_opt = gene_genome_ptr->getContig(gene_ptr_->id());
     if (not gene_contig_opt) {
 
