@@ -5,8 +5,6 @@
 #include "kel_property_tree.h"
 #include "kel_utility.h"
 
-// To stop boost complaining about global placeholders on boost/bind.
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS 1
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -628,9 +626,9 @@ bool kel::PropertyTree::getPropertySubTreeVector(std::vector<SubPropertyTree>& p
 
   }
 
-  for (auto impl_tree : tree_vector) {
+  for (auto const& [property_tree_id, property_tree] : tree_vector) {
 
-    property_tree_vector.emplace_back(SubPropertyTree(impl_tree.first, PropertyTree(impl_tree.second)));
+    property_tree_vector.emplace_back(SubPropertyTree(property_tree_id, PropertyTree(property_tree)));
 
   }
 

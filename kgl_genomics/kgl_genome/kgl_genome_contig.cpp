@@ -29,7 +29,7 @@ void kgl::ContigReference::verifyFeatureHierarchy() {
   // Setup the Gene feature structure first.
   gene_exon_features_.setupVerifyHierarchy();
   // Verify the Genes.
-  verifyCDSPhasePeptide();
+  verifyGeneFeatures();
 
 }
 
@@ -136,14 +136,14 @@ kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionS
 }
 
 
-kgl::ProteinSequenceValidity
+kgl::CodingSequenceValidity
 kgl::ContigReference::checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const {
 
 
   auto sequence_length = coding_sequence.length();
   if ((sequence_length % Codon::CODON_SIZE) != 0) {
 
-    return ProteinSequenceValidity::NOT_MOD3;
+    return CodingSequenceValidity::NOT_MOD3;
 
   }
 

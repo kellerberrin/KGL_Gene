@@ -77,9 +77,11 @@ class Feature; // Forward decl.
 class GeneFeature; // Forward decl.
 class ContigReference; // Forward decl.
 
+// Check a transcription coding sequence for validity. Note that all ncRNA sequences are trivially valid.
+enum class CodingSequenceValidity { NCRNA, VALID_PROTEIN, EMPTY,  NOT_MOD3, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
+
 enum class TranscriptionSequenceType { PROTEIN, NCRNA, EMPTY};
-// Check a Protein transcription sequence for validity. Note that all ncRNA sequences are trivially valid.
-enum class ProteinSequenceValidity { VALID, EMPTY,  NOT_MOD3, NO_START_CODON, NONSENSE_MUTATION, NO_STOP_CODON };
+
 using TranscriptionFeatureMap = std::map<ContigOffset_t, std::shared_ptr<const Feature>>;
 class TranscriptionSequence {
 
@@ -106,8 +108,12 @@ public:
   [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
   [[nodiscard]] TranscriptionSequenceType codingType() const;
+  [[nodiscard]] static CodingSequenceValidity checkSequenceStatus(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
+  [[nodiscard]] static bool checkValidProtein(CodingSequenceValidity sequence_status) { return sequence_status == CodingSequenceValidity::VALID_PROTEIN; }
   // ncRNA sequences are trivially valid.
-  [[nodiscard]] static ProteinSequenceValidity checkValidProtein( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
+  [[nodiscard]] static bool checkValidSequence(CodingSequenceValidity sequence_status) {
+    return checkValidProtein(sequence_status) or sequence_status == CodingSequenceValidity::NCRNA;
+  }
 
 private:
 
@@ -154,7 +160,48 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Simple object to hold coding sequence validity statistics.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct SequenceValidityStatistics {
+
+public:
+
+  SequenceValidityStatistics() =default;
+  ~SequenceValidityStatistics() =default;
+
+  [[nodiscard]] size_t ncRNA() const { return ncRNA_; }
+  [[nodiscard]] size_t validProtein() const { return valid_protein_; }
+  [[nodiscard]] size_t empty() const { return empty_; }
+  [[nodiscard]] size_t notMod3() const { return not_mod3_; }
+  [[nodiscard]] size_t noStartCodon() const { return no_start_codon_; }
+  [[nodiscard]] size_t nonsenseMutation() const { return nonsense_mutation_; }
+  [[nodiscard]] size_t noStopCodon() const { return no_stop_codon_; }
+  [[nodiscard]] size_t invalidProtein() const { return noStartCodon() + empty() + notMod3() + nonsenseMutation() +
+    noStopCodon(); }
+  [[nodiscard]] size_t totalProtein() const { return validProtein() + invalidProtein(); }
+  [[nodiscard]] size_t totalSequence() const { return totalProtein() + ncRNA(); }
+
+  void updateValidity(CodingSequenceValidity validity);
+  void updateTranscriptArray(const std::shared_ptr<const TranscriptionSequenceArray>& transcript_array_ptr);
+  void updateTranscript(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
+
+private:
+
+
+  size_t ncRNA_{0};
+  size_t valid_protein_{0};
+  size_t empty_{0};
+  size_t not_mod3_{0};
+  size_t no_start_codon_{0};
+  size_t nonsense_mutation_{0};
+  size_t no_stop_codon_{0};
+
+
+};
 
 }   // end namespace
 

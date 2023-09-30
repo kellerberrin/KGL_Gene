@@ -79,13 +79,13 @@ public:
   // Compare reference Contigs- mainly used for testing.
   [[nodiscard]] bool equivalent(const ContigReference& compare_contig) const;
   // Check start codon, stop codon codon and nonsense mutation.
-  [[nodiscard]] ProteinSequenceValidity checkValidProteinSequence(const AminoSequence& amino_sequence) const;
+  [[nodiscard]] CodingSequenceValidity checkValidProteinSequence(const AminoSequence& amino_sequence) const;
   // Check all of the above and Mod3.
-  [[nodiscard]] ProteinSequenceValidity checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const;
+  [[nodiscard]] CodingSequenceValidity checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const;
 
   // Wire-up the contig_ref_ptr features
   void verifyFeatureHierarchy();
-  void verifyCDSPhasePeptide();
+  void verifyGeneFeatures();
 
 private:
 

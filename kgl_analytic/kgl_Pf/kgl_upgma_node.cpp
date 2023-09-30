@@ -339,17 +339,16 @@ void kgl::ReferenceGeneDistance::writeNode(std::ostream& outfile) const {
 
 void  kgl::DNAGeneDistance::getExonSequence() {
 
-  std::shared_ptr<const ContigReference> contig_ptr = gene_ptr_->contig_ref_ptr();
+  const std::shared_ptr<const ContigReference>& contig_ref_ptr = gene_ptr_->contig_ref_ptr();
 
   // Just get the first transcript of the gene.
   auto transcript_ptr = getCodingSequence();
 
-  auto coding_seq_opt = CodingTranscript::codingSequence(transcript_ptr, contig_ptr);
-
+  auto coding_seq_opt = contig_ref_ptr->codingSequence(transcript_ptr);
   if (not coding_seq_opt) {
 
     ExecEnv::log().warn("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
-                        contig_ptr->contigId(),
+                        contig_ref_ptr->contigId(),
                         transcript_ptr->getGene()->id(),
                         transcript_ptr->getParent()->id());
     return;

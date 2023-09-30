@@ -25,13 +25,10 @@ public:
   ~CodingTranscript() = default;
 
   // The entire sequence defined by the TranscriptionSequence is returned.
-  [[nodiscard]] static std::optional<DNA5SequenceCoding>
-    codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                    const std::shared_ptr<const ContigReference>& contig_ptr);
 
   [[nodiscard]] static std::optional<IntronMap>
     intronSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                    const std::shared_ptr<const ContigReference>& contig_ptr);
+                    const std::shared_ptr<const ContigReference>& contig_ref_ptr);
 
 private:
 

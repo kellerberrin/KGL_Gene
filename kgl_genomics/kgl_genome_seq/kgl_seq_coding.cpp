@@ -9,40 +9,16 @@
 namespace kgl = kellerberrin::genome;
 
 
-
-std::optional<kgl::DNA5SequenceCoding>
-kgl::CodingTranscript::codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                                       const std::shared_ptr<const ContigReference>& contig_ptr) {
-
-  auto cds_interval_set = GeneIntervalStructure::transcriptIntervals(transcript_ptr);
-  std::vector<OpenRightUnsigned> interval_vector(cds_interval_set.begin(), cds_interval_set.end());
-
-  auto concat_sequence_opt = contig_ptr->sequence().concatSequences(interval_vector);
-  if (not concat_sequence_opt) {
-
-    ExecEnv::log().warn("Unable to concat sequence intervals for Gene: {}, Transcript: {}",
-                        transcript_ptr->getGene()->id(), transcript_ptr->getParent()->id());
-
-    return std::nullopt; // Return an empty coding sequence.
-
-  }
-  auto& concat_sequence = concat_sequence_opt.value();
-
-  return concat_sequence.codingSequence(transcript_ptr->strand());
-
-}
-
-
 std::optional<kgl::IntronMap>
 kgl::CodingTranscript::intronSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                                       const std::shared_ptr<const ContigReference>& contig_ptr) {
-
-  auto intron_interval_set = GeneIntervalStructure::transcriptIntronIntervals(transcript_ptr);
+                                       const std::shared_ptr<const ContigReference>& contig_ref_ptr) {
 
   IntronMap intron_map;
+
+  auto intron_interval_set = GeneIntervalStructure::transcriptIntronIntervals(transcript_ptr);
   for (auto const& intron_interval : intron_interval_set) {
 
-    auto intron_sequence_opt = contig_ptr->sequence().subSequence(intron_interval);
+    auto intron_sequence_opt = contig_ref_ptr->sequence().subSequence(intron_interval);
     if (not intron_sequence_opt) {
 
       ExecEnv::log().warn("Unable to generate intron sequence, interval {}, Gene: {}, Transcript: {}",

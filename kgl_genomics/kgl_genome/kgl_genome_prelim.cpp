@@ -64,8 +64,6 @@ kgl::StrandSense kgl::TranscriptionSequence::strand() const {
 }
 
 
-
-
 // Offset of the start of the sequence - not strand adjusted. Uses half interval [start, end).
 kgl::ContigOffset_t kgl::TranscriptionSequence::start() const {
 
@@ -294,18 +292,18 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 }
 
 
-kgl::ProteinSequenceValidity
-kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+kgl::CodingSequenceValidity
+kgl::TranscriptionSequence::checkSequenceStatus(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
 
   if (transcript_ptr->getFeatureMap().empty()) {
 
-    return ProteinSequenceValidity::EMPTY;
+    return CodingSequenceValidity::EMPTY;
 
   }
 
   if (transcript_ptr->codingType() == TranscriptionSequenceType::NCRNA) {
 
-    return ProteinSequenceValidity::VALID;
+    return CodingSequenceValidity::NCRNA;
 
   }
 
@@ -313,11 +311,11 @@ kgl::TranscriptionSequence::checkValidProtein(const std::shared_ptr<const Transc
   auto coding_sequence_opt = contig_ref_ptr->codingSequence(transcript_ptr);
   if (not coding_sequence_opt) {
 
-    ExecEnv::log().info("Cannor generate valid coding sequence for Gene: {}, Transcript: {}",
+    ExecEnv::log().info("Cannot generate valid coding sequence for Gene: {}, Transcript: {}",
                         transcript_ptr->getGene()->id(),
                         transcript_ptr->getParent()->id());
 
-    return ProteinSequenceValidity::EMPTY;
+    return CodingSequenceValidity::EMPTY;
 
   }
 
@@ -386,15 +384,14 @@ std::unique_ptr<const kgl::TranscriptionSequenceArray> kgl::TranscriptionSequenc
 
   auto sequence_array_ptr = std::make_unique<TranscriptionSequenceArray>();
 
-  for (auto const& [offset, sequence_ptr] : getMap()) {
+  for (auto const& [offset, transcript_ptr] : getMap()) {
 
-    auto sequence_validity = TranscriptionSequence::checkValidProtein(sequence_ptr);
-    if (sequence_validity == ProteinSequenceValidity::VALID) {
+    auto sequence_validity = TranscriptionSequence::checkSequenceStatus(transcript_ptr);
+    if (TranscriptionSequence::checkValidSequence(sequence_validity)) {
 
-      if (not sequence_array_ptr->insertSequence(sequence_ptr)) {
+      if (not sequence_array_ptr->insertSequence(transcript_ptr)) {
 
-        ExecEnv::log().error("TranscriptionSequenceArray::validTranscriptionArray; Duplicate offset sequence, gene id: {}, offset: {}",
-                             sequence_ptr->getGene()->id(), offset);
+        ExecEnv::log().error("Duplicate offset sequence, gene id: {}, offset: {}", transcript_ptr->getGene()->id(), offset);
 
       }
 
@@ -405,3 +402,69 @@ std::unique_ptr<const kgl::TranscriptionSequenceArray> kgl::TranscriptionSequenc
   return sequence_array_ptr;
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kgl::SequenceValidityStatistics::updateValidity(CodingSequenceValidity validity) {
+
+  switch(validity) {
+
+    case CodingSequenceValidity::NCRNA:
+      ++ncRNA_;
+      break;
+
+    case CodingSequenceValidity::VALID_PROTEIN:
+      ++valid_protein_;
+      break;
+
+    case CodingSequenceValidity::EMPTY:
+      ++empty_;
+      break;
+
+    case CodingSequenceValidity::NOT_MOD3:
+      ++not_mod3_;
+      break;
+
+    case CodingSequenceValidity::NO_START_CODON:
+      ++no_start_codon_;
+      break;
+
+    case CodingSequenceValidity::NONSENSE_MUTATION:
+      ++nonsense_mutation_;
+      break;
+
+    case CodingSequenceValidity::NO_STOP_CODON:
+      ++no_stop_codon_;
+      break;
+
+  }
+
+}
+
+
+void kgl::SequenceValidityStatistics::updateTranscriptArray(const std::shared_ptr<const TranscriptionSequenceArray>& transcript_array_ptr) {
+
+  for (auto const& [trnascript_id, transcript_ptr]: transcript_array_ptr->getMap()) {
+
+    updateTranscript(transcript_ptr);
+
+  }
+
+}
+
+
+void kgl::SequenceValidityStatistics::updateTranscript(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+
+  auto sequence_validity = TranscriptionSequence::checkSequenceStatus(transcript_ptr);
+  updateValidity(sequence_validity)  ;
+
+}
+
+
+

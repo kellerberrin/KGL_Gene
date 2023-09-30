@@ -114,7 +114,7 @@ public:
   ~GeneFeature() override = default;
 
   // Public function returns a sequence map.
-  [[nodiscard]] static std::unique_ptr<const TranscriptionSequenceArray> getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene);
+  [[nodiscard]] static std::shared_ptr<const TranscriptionSequenceArray> getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene);
 
   constexpr static const char CODING_GENE_[] = "GENE";
   constexpr static const char PROTEIN_CODING_GENE_[] = "PROTEIN_CODING_GENE";

@@ -162,10 +162,11 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
     ++mutate_stats.total_genomes_;
 
     // Collect statistics.
-    GenomeContigMutate genome_contig(genome_id,
-                                     stats.map_size_,
-                                     stats.upstream_deleted_);
-    mutate_analysis_.addGenomeRecords(genome_contig);
+    mutate_analysis_.addGenomeRecords(genome_id,
+                                      stats.map_size_,
+                                      stats.upstream_deleted_,
+                                      stats.modified_sequence_,
+                                      stats.original_sequence_);
 
     // Calculate summary statistics.
     mutate_stats.total_variants_ += stats.map_size_;
@@ -186,6 +187,9 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
       ++mutate_stats.upstream_delete_genomes_;
 
     }
+
+    mutate_stats.modified_validity_.updateValidity(stats.modified_sequence_);
+    mutate_stats.original_validity_.updateValidity(stats.original_sequence_);
 
   }
 
@@ -249,8 +253,8 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
 
     } else {
 
-      stats.modified_sequence_ = ProteinSequenceValidity::VALID;
-      stats.original_sequence_ = ProteinSequenceValidity::VALID;
+      stats.modified_sequence_ = CodingSequenceValidity::NCRNA;
+      stats.original_sequence_ = CodingSequenceValidity::NCRNA;
 
     }
 

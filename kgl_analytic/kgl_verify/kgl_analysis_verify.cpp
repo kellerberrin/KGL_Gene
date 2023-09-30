@@ -98,6 +98,11 @@ bool kgl::VerifyAnalysis::finalizeAnalysis() {
   std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
   mutate_genes_ptr_->mutateAnalysis().printMutationTranscript(mutation_file_name);
+
+  std::string validity_file_name = std::string("MutationValidity") + std::string(VARIANT_COUNT_EXT_);
+  validity_file_name = Utility::filePath(validity_file_name, ident_work_directory_);
+  mutate_genes_ptr_->mutateAnalysis().printMutationValidity(validity_file_name);
+
   mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
   mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
   mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);

@@ -38,8 +38,8 @@ class ExecEnv {
 
 public:
 
-  ExecEnv()=delete;
-  ~ExecEnv()=delete;
+  ExecEnv() = delete;
+  ~ExecEnv() = delete;
 
 
   // Definition of this template application function is in "kel_exec_env_app.h"

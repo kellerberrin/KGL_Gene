@@ -131,8 +131,8 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
 
   for (auto summary : gene_summary_map) {
 
-    bool valid_sequence = contig_ptr->checkValidProteinSequence(*summary.second.sequence_mutant) == ProteinSequenceValidity::VALID;
-    if (valid_sequence) {
+    auto sequence_validity = contig_ptr->checkValidProteinSequence(*summary.second.sequence_mutant);
+    if (TranscriptionSequence::checkValidProtein(sequence_validity)) {
 
       ExecEnv::log().info("Multiple comparison Genome: {}, protein score: {}, 5Prime score: {}, 3Prime score: {}",
                           summary.first, summary.second.sequence_distance, summary.second.prime5_distance, summary.second.prime3_distance);

@@ -11,14 +11,14 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-// Simple struct to return variant stats.
+// Simple struct to return generated sequence stats.
 struct SequenceStats {
 
   size_t map_size_{0};
   size_t non_unique_count_{0};
   size_t upstream_deleted_{0};
-  ProteinSequenceValidity original_sequence_{ProteinSequenceValidity::VALID};
-  ProteinSequenceValidity modified_sequence_{ProteinSequenceValidity::VALID};
+  CodingSequenceValidity original_sequence_{CodingSequenceValidity::VALID_PROTEIN};
+  CodingSequenceValidity modified_sequence_{CodingSequenceValidity::VALID_PROTEIN};
 
 };
 

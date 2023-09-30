@@ -24,7 +24,6 @@
 namespace kel = kellerberrin;
 
 
-
 std::unique_ptr<kel::Logger> kel::ExecEnv::createLogger( const std::string& module,
                                                          const std::string& log_file,
                                                          int max_error_messages,

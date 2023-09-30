@@ -371,7 +371,8 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
         auto coding_dna_opt = contig_ref_ptr->codingSequence(transcript_ptr);
         if (coding_dna_opt) {
 
-          bool valid_sequence = contig_ref_ptr->checkValidCodingSequence(coding_dna_opt.value()) == ProteinSequenceValidity::VALID;
+          auto sequence_validity = contig_ref_ptr->checkValidCodingSequence(coding_dna_opt.value());
+          bool valid_sequence = TranscriptionSequence::checkValidProtein(sequence_validity);
           out_file << (valid_sequence ? "1" : "0") << CSV_delimiter;
 
         } else {
@@ -551,7 +552,8 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
         if (coding_dna_opt) {
 
           DNA5SequenceCoding& verify_coding_sequence = coding_dna_opt.value();
-          bool valid_sequence = contig_ptr->checkValidCodingSequence(verify_coding_sequence) == ProteinSequenceValidity::VALID;
+          auto sequence_validity = contig_ptr->checkValidCodingSequence(verify_coding_sequence);
+          bool valid_sequence = TranscriptionSequence::checkValidProtein(sequence_validity);
           out_file << (valid_sequence ? "1" : "0") << CSV_delimiter;
 
         } else {
@@ -623,7 +625,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
             switch (contig_ptr->checkValidProteinSequence(amino_mutant)) {
 
-              case ProteinSequenceValidity::VALID: {
+              case CodingSequenceValidity::VALID_PROTEIN: {
 
                 CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
                 out_file << amino_distance << CSV_delimiter;
@@ -631,11 +633,11 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
               }
                 break;
 
-              case ProteinSequenceValidity::NO_START_CODON:
+              case CodingSequenceValidity::NO_START_CODON:
                 out_file << -1 << CSV_delimiter;
                 break;
 
-              case ProteinSequenceValidity::NONSENSE_MUTATION: {
+              case CodingSequenceValidity::NONSENSE_MUTATION: {
 
                 size_t valid_seq_size = contig_ptr->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
                 double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq.length());
@@ -644,7 +646,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
               }
                 break;
 
-              case ProteinSequenceValidity::NO_STOP_CODON:
+              case CodingSequenceValidity::NO_STOP_CODON:
                 out_file << -3 << CSV_delimiter;
                 break;
 
@@ -1121,10 +1123,12 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
                                      amino_mutant)) {
 
     error_flag = false;
-    valid_reference = contig_ptr->checkValidProteinSequence(amino_reference_seq) == ProteinSequenceValidity::VALID;
+    auto reference_validity = contig_ptr->checkValidProteinSequence(amino_reference_seq) ;
+    valid_reference = TranscriptionSequence::checkValidProtein(reference_validity);
 
     CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
-    bool valid_sequence = contig_ptr->checkValidProteinSequence(amino_mutant) == ProteinSequenceValidity::VALID;
+    auto sequence_validity = contig_ptr->checkValidProteinSequence(amino_mutant) ;
+    bool valid_sequence = TranscriptionSequence::checkValidProtein(sequence_validity);
     if (valid_sequence) {
 
       average_score += static_cast<double>(amino_distance);

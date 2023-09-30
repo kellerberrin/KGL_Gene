@@ -29,8 +29,12 @@ struct MutateStats {
   size_t duplicate_genomes_{0};
   size_t upstream_delete_variants_{0};
   size_t upstream_delete_genomes_{0};
+  SequenceValidityStatistics modified_validity_;
+  SequenceValidityStatistics original_validity_;
 
 };
+
+
 
 // Object to return and hold multi-threaded mutation results.
 class TranscriptMutateRecord {
@@ -63,29 +67,35 @@ class GenomeContigMutate {
 
 public:
 
-  GenomeContigMutate(GenomeId_t genome_id,
-                     size_t total_variants,
-                     size_t multiple_variants) : genome_id_(std::move(genome_id)),
-                                                 total_variants_(total_variants),
-                                                 multiple_variants_(multiple_variants){}
+  explicit GenomeContigMutate(GenomeId_t genome_id) : genome_id_(std::move(genome_id)) {}
   GenomeContigMutate(const GenomeContigMutate &) = default;
   ~GenomeContigMutate() = default;
 
   [[nodiscard]] const GenomeId_t &genomeId() const { return genome_id_; }
   [[nodiscard]] size_t totalVariants() const { return total_variants_; }
   [[nodiscard]] size_t multipleVariants() const { return multiple_variants_; }
-  void addRecord(const GenomeContigMutate& record) {
+  [[nodiscard]] const SequenceValidityStatistics& modifiedValidity() const { return modified_validity_; }
+  [[nodiscard]] const SequenceValidityStatistics& originalValidity() const { return original_validity_; }
 
-    total_variants_ += record.total_variants_;
-    multiple_variants_ += record.multiple_variants_;
+  void addRecord(size_t total_variants,
+                 size_t multiple_variants,
+                 CodingSequenceValidity modified,
+                 CodingSequenceValidity original) {
+
+    total_variants_ += total_variants;
+    multiple_variants_ += multiple_variants;
+    modified_validity_.updateValidity(modified);
+    original_validity_.updateValidity(original);
 
   }
 
 private:
 
   GenomeId_t genome_id_;
-  size_t total_variants_;
-  size_t multiple_variants_;
+  size_t total_variants_{0};
+  size_t multiple_variants_{0};
+  SequenceValidityStatistics modified_validity_;
+  SequenceValidityStatistics original_validity_;
 
 };
 
@@ -101,12 +111,17 @@ public:
   ~MutateAnalysis() = default;
 
   void addTranscriptRecord(const TranscriptMutateRecord &record);
-  void addGenomeRecords(const GenomeContigMutate &record);
+  void addGenomeRecords(const GenomeId_t& genome_id,
+                        size_t total_variants,
+                        size_t multiple_variants,
+                        CodingSequenceValidity modified,
+                        CodingSequenceValidity original);
 
   [[nodiscard]] const TranscriptRecordMap &getTranscriptMap() const { return transcript_map_; }
   [[nodiscard]] const GenomeRecordMap &getGenomeMap() const { return genome_map_; }
 
   void printMutationTranscript(const std::string &file_name) const;
+  void printMutationValidity(const std::string& file_name) const;
   void printGenomeContig(const std::string &file_name) const;
 
 private:
