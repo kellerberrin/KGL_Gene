@@ -5,7 +5,7 @@
 #include "kgl_mutation_db.h"
 #include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db_offset.h"
-#include "kgl_genome_seq/kgl_seq_offset.h"
+#include "kgl_genome_seq/kgl_seq_variant_filter.h"
 #include "kel_workflow_threads.h"
 #include "kgl_mutation_sequence.h"
 #include "kgl_genome_seq/kgl_seq_transcript.h"
@@ -135,6 +135,7 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
   using FutureType = std::future<std::pair<kgl::SequenceStats, bool>>;
   std::vector<std::pair<FutureType, std::string>> future_vector;
 
+
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
@@ -198,31 +199,32 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
 }
 
 
-std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_ptr,
+std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_db_ptr,
                                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                                const FeatureIdent_t& transcript_id,
-                                                                               const std::shared_ptr<const GenomeReference>& reference_genome_ptr) {
+                                                                               const std::shared_ptr<const GenomeReference>& genome_ref_ptr) {
 
   // Get the gene contig_ref_ptr id.
   const ContigId_t gene_contig_id = gene_ptr->contig_ref_ptr()->contigId();
 
   // Use this to obtain the variant contig_ref_ptr.
-  auto contig_opt = genome_ptr->getContig(gene_contig_id);
-  if (not contig_opt) {
+  auto contig_db_opt = genome_db_ptr->getContig(gene_contig_id);
+  if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Genome: {} does not contain contig_ref_ptr: {} for gene: {}", genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
+    ExecEnv::log().warn("Genome: {} does not contain variant contig: {} for gene: {}",
+                        genome_db_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
 
   }
-  auto& contig_ptr = contig_opt.value();
+  auto& contig_db_ptr = contig_db_opt.value();
 
   // And the reference genome contig_ref_ptr.
-  auto contig_ref_opt = reference_genome_ptr->getContigSequence(gene_contig_id);
+  auto contig_ref_opt = genome_ref_ptr->getContigSequence(gene_contig_id);
   if (not contig_ref_opt) {
 
-    ExecEnv::log().warn("Reference Genome: {} does not contain contig_ref_ptr: {} for gene: {}",
-                        reference_genome_ptr->genomeId(), gene_contig_id, gene_ptr->id());
+    ExecEnv::log().warn("Reference Genome: {} does not contain reference contig: {} for gene: {}",
+                        genome_ref_ptr->genomeId(), gene_contig_id, gene_ptr->id());
 
     return {{}, false};
 
@@ -234,7 +236,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   auto gene_interval = gene_struct.geneInterval();
 
   SequenceTranscript modified_sequence;
-  auto [stats,  result] = modified_sequence.createModifiedSequence(contig_ptr, contig_ref_ptr, gene_interval);
+  auto [stats,  result] = modified_sequence.createModifiedSequence(contig_db_ptr, contig_ref_ptr, gene_interval);
 
   auto modified_sequence_opt = modified_sequence.getModifiedGene(gene_struct, transcript_id);
   auto original_sequence_opt = modified_sequence.getOriginalGene(gene_struct, transcript_id);
@@ -261,7 +263,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   } else {
 
     ExecEnv::log().warn("Problem mutating Gene: {}, Transcript: {}, Genome: {}",
-                        gene_ptr->id(), transcript_id, genome_ptr->genomeId());
+                        gene_ptr->id(), transcript_id, genome_db_ptr->genomeId());
 
   }
 

@@ -128,6 +128,9 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
            << "Transcript" << DELIMITER_
            << "Gene Type" << DELIMITER_
            << "Description" << DELIMITER_
+           << "Transcript Begin" << DELIMITER_
+           << "Transcript Size" << DELIMITER_
+           << "Total Variants" << DELIMITER_
            << "Total Sequences" << DELIMITER_
            << "NCRNA Sequences" << DELIMITER_
            << "Valid Original" << DELIMITER_
@@ -146,10 +149,13 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
     << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_ : GeneFeature::NCRNA_GENE_)
     << DELIMITER_
     << transcript_record.genePtr()->descriptionText() << DELIMITER_
+    << transcript_record.transcriptionPtr()->start() << DELIMITER_
+    << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
+    << transcript_record.mutateStats().total_variants_ << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.totalSequence() << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.ncRNA() << DELIMITER_
     << transcript_record.mutateStats().original_validity_.validProtein() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.validProtein() << DELIMITER_
+    << transcript_record.mutateStats().modified_validity_.validProtein()  << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.notMod3() << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.noStartCodon() << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.noStopCodon() << DELIMITER_

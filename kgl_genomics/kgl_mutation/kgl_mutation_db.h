@@ -67,10 +67,10 @@ private:
                              const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const;
 
   // Multi-threaded function, statistics and other objects returned in RegionReturn.
-  static std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_ptr,
+  static std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_db_ptr,
                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                const FeatureIdent_t& transcript_id,
-                                                               const std::shared_ptr<const GenomeReference>& reference_genome_ptr);
+                                                               const std::shared_ptr<const GenomeReference>& genome_ref_ptr);
 
 
 };

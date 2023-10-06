@@ -10,7 +10,7 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_seq_variant_db.h"
-#include "kgl_seq_offset.h"
+#include "kgl_seq_variant_filter.h"
 #include "kgl_seq_coding.h"
 #include "kgl_io_gff_fasta.h"
 
@@ -125,11 +125,11 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   DNA5SequenceLinear linear_reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not MutationOffset::getSortedVariants( genome_variant, contig_id,
-                                             VariantPhase::HAPLOID_PHASED,
-                                             offset_5_prime,
+  if (not SequenceVariantFilter::getSortedVariants(genome_variant, contig_id,
+                                                   VariantPhase::HAPLOID_PHASED,
+                                                   offset_5_prime,
                                              offset_5_prime + size_5_prime,
-                                             variant_map)) {
+                                                   variant_map)) {
 
     ExecEnv::log().warn("GenomicMutation::compare5Prime, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant->genomeId(), gene_id, transcript_id);
@@ -201,12 +201,12 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   DNA5SequenceLinear linear_reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not MutationOffset::getSortedVariants( genome_variant,
-                                             contig_id,
-                                             VariantPhase::HAPLOID_PHASED,
-                                             offset_3_prime,
+  if (not SequenceVariantFilter::getSortedVariants(genome_variant,
+                                                   contig_id,
+                                                   VariantPhase::HAPLOID_PHASED,
+                                                   offset_3_prime,
                                              offset_3_prime + size_3_prime,
-                                             variant_map)) {
+                                                   variant_map)) {
 
     ExecEnv::log().warn("Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
                         genome_variant->genomeId(), gene_id, transcript_id);
@@ -420,12 +420,12 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
           DNA5SequenceCoding mutant_sequence;
           OffsetVariantMap variant_map;
 
-          if (not MutationOffset::getSortedVariants(genome_ptr,
-                                                    contig,
-                                                    VariantPhase::HAPLOID_PHASED,
-                                                    transcript_ptr->start(),
-                                                    transcript_ptr->end(),
-                                                    variant_map)) {
+          if (not SequenceVariantFilter::getSortedVariants(genome_ptr,
+                                                           contig,
+                                                           VariantPhase::HAPLOID_PHASED,
+                                                           transcript_ptr->start(),
+                                                           transcript_ptr->end(),
+                                                           variant_map)) {
 
             ExecEnv::log().warn("Problem retrieving variants, genome: {}, gene: {}, sequence_id: {}",
                                 genome, gene, sequence_id);
@@ -600,12 +600,12 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
           OffsetVariantMap variant_map;
 
-          if (not MutationOffset::getSortedVariants( genome_ptr,
-                                                     contig_id,
-                                                     VariantPhase::HAPLOID_PHASED,
-                                                     sequence_ptr->start(),
-                                                     sequence_ptr->end(),
-                                                     variant_map)) {
+          if (not SequenceVariantFilter::getSortedVariants(genome_ptr,
+                                                           contig_id,
+                                                           VariantPhase::HAPLOID_PHASED,
+                                                           sequence_ptr->start(),
+                                                           sequence_ptr->end(),
+                                                           variant_map)) {
 
             ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome, contig_id);
             return false;
@@ -763,12 +763,12 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     }
     auto& transcript_ptr = transcript_opt.value();
 
-    if (not MutationOffset::getSortedVariants(genome_ptr,
-                                              contig_id,
-                                              VariantPhase::HAPLOID_PHASED,
-                                              transcript_ptr->start(),
-                                              transcript_ptr->end(),
-                                              variant_map)) {
+    if (not SequenceVariantFilter::getSortedVariants(genome_ptr,
+                                                     contig_id,
+                                                     VariantPhase::HAPLOID_PHASED,
+                                                     transcript_ptr->start(),
+                                                     transcript_ptr->end(),
+                                                     variant_map)) {
 
       ExecEnv::log().warn("Problem retrieving variants, genome_id: {}, contig_ref_ptr: {}", genome_id, contig_id);
       return false;
@@ -880,12 +880,12 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     }
     auto& transcript_ptr = transcript_opt.value();
 
-    if (not MutationOffset::getSortedVariants(genome_ptr,
-                                              contig_id,
-                                              VariantPhase::HAPLOID_PHASED,
-                                              transcript_ptr->start(),
-                                              transcript_ptr->end(),
-                                              variant_map)) {
+    if (not SequenceVariantFilter::getSortedVariants(genome_ptr,
+                                                     contig_id,
+                                                     VariantPhase::HAPLOID_PHASED,
+                                                     transcript_ptr->start(),
+                                                     transcript_ptr->end(),
+                                                     variant_map)) {
 
       ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome, contig_id);
       return false;
@@ -1084,12 +1084,12 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
   bool valid_reference = false;
   OffsetVariantMap variant_map;
 
-  if (not MutationOffset::getSortedVariants( genome_variant,
-                                             contig,
-                                             VariantPhase::HAPLOID_PHASED,
-                                             coding_sequence->start(),
-                                             coding_sequence->end(),
-                                             variant_map)) {
+  if (not SequenceVariantFilter::getSortedVariants(genome_variant,
+                                                   contig,
+                                                   VariantPhase::HAPLOID_PHASED,
+                                                   coding_sequence->start(),
+                                                   coding_sequence->end(),
+                                                   variant_map)) {
 
     ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}", genome_id, contig);
     return "<error>";

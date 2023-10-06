@@ -2,7 +2,7 @@
 // Created by kellerberrin on 26/07/23.
 //
 
-#include "kgl_genome_seq/kgl_seq_offset.h"
+#include "kgl_genome_seq/kgl_seq_variant_filter.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_coding.h"
@@ -14,39 +14,20 @@
 namespace kgl = kellerberrin::genome;
 
 
-bool kgl::MutationOffset::getSortedVariants( const std::shared_ptr<const GenomeDB>& genome_ptr,
-                                             ContigId_t contig_id,
-                                             VariantPhase,
-                                             ContigOffset_t start,
-                                             ContigOffset_t end,
-                                             OffsetVariantMap &variant_map) {
+bool kgl::SequenceVariantFilter::getSortedVariants(const std::shared_ptr<const GenomeDB>& ,
+                                                   ContigId_t,
+                                                   VariantPhase,
+                                                   ContigOffset_t,
+                                                   ContigOffset_t,
+                                                   OffsetVariantMap &) { return true; }
 
-
-  auto find_iter = genome_ptr->getMap().find(contig_id);
-
-  if (find_iter == genome_ptr->getMap().end()) {
-
-    ExecEnv::log().error("Contig Id: {} not found in Genome Variant: {}", contig_id, genome_ptr->genomeId());
-    return false;
-
-  }
-
-  std::shared_ptr<ContigDB> contig_ptr = find_iter->second;
-
-  auto [contig_map, non_unique, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_ptr, OpenRightUnsigned(start, end));
-
-  variant_map = std::move(contig_map);
-
-  return true;
-
-}
 
 
 
 // Returns a map of unique canonical variants
 // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
-std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::MutationOffset::getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                                             const OpenRightUnsigned& variant_interval) {
+std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::SequenceVariantFilter::getCanonicalVariants(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                                                                   const OpenRightUnsigned& variant_interval) {
 
   OffsetVariantMap offset_variant_map;
 
@@ -93,7 +74,7 @@ std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::MutationOffset::getCanoni
       if (not result) {
 
         auto const& [find_offset, find_variant] = *offset_variant_map.find(insert_offset);
-        ExecEnv::log().error("MutationOffset::getCanonicalVariants; insert fails at offset: {} insert variant: {}, duplicate map variant: {}"
+        ExecEnv::log().error("SequenceVariantFilter::getCanonicalVariants; insert fails at offset: {} insert variant: {}, duplicate map variant: {}"
             , insert_offset, variant_ptr->HGVS(),  find_variant->HGVS());
 
       }
@@ -109,5 +90,15 @@ std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::MutationOffset::getCanoni
 }
 
 
+void kgl::SequenceVariantFilter::canonicalVariants(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                   const OpenRightUnsigned& sequence_interval) {
+
+
+  auto [interval_map, non_unique_count, upstream_deleted] = SequenceVariantFilter::getCanonicalVariants(contig_ptr, sequence_interval);
+  offset_variant_map_ = std::move(interval_map);
+  duplicate_variants_ = non_unique_count;
+  downstream_delete_ = upstream_deleted;
+
+}
 
 

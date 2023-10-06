@@ -3,7 +3,7 @@
 //
 
 #include "kgl_seq_transcript.h"
-#include "kgl_seq_offset.h"
+#include "kgl_seq_variant_filter.h"
 #include "kel_interval_set.h"
 
 
@@ -17,11 +17,11 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
                                                 const OpenRightUnsigned& sequence_interval) {
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
-  auto [interval_map, non_unique_count, upstream_deleted] = MutationOffset::getCanonicalVariants(contig_variant_ptr, sequence_interval);
-  size_t map_size = interval_map.size() + non_unique_count + upstream_deleted;
+  SequenceVariantFilter mutation_offset(contig_variant_ptr, sequence_interval);
+  size_t map_size = mutation_offset.sequenceVariants();
 
   auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(sequence_interval);
-  if (not adjusted_offset_ptr->processVariantMap(interval_map)) {
+  if (not adjusted_offset_ptr->processVariantMap(mutation_offset.offsetVariantMap())) {
 
     ExecEnv::log().warn("Problem updating interval: {}, variant contig: {}, reference contig_ref_ptr: {}",
                         sequence_interval.toString(),
@@ -44,8 +44,8 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 
   SequenceStats sequence_stats;
   sequence_stats.map_size_ = map_size;
-  sequence_stats.non_unique_count_ = non_unique_count;
-  sequence_stats.upstream_deleted_ = upstream_deleted;
+  sequence_stats.non_unique_count_ = mutation_offset.duplicateVariants();
+  sequence_stats.upstream_deleted_ = mutation_offset.downstreamDelete();
 
   return { sequence_stats, true};
 
