@@ -7,7 +7,6 @@
 
 
 #include "kgl_genome_contig.h"
-#include "kgl_seq_coding.h"
 #include "kgl_sequence_base.h"
 #include "kel_interval_map.h"
 

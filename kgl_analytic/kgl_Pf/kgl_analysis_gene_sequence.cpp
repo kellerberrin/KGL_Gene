@@ -390,24 +390,22 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not SequenceVariantFilter::getSortedVariants(genome_variant_ptr,
-                                                   contig_opt.value()->contigId(),
-                                                   VariantPhase::HAPLOID_PHASED,
-                                                   offset,
-                                             offset+region_size,
-                                                   variant_map)) {
+  auto contig_db_opt = genome_variant_ptr->getContig(contig_id);
+  if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}",
-                        genome_variant_ptr->genomeId(), contig_opt.value()->contigId());
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr->genomeId());
     return "<error>";
 
   }
+  auto& contig_ptr = contig_db_opt.value();
+  OpenRightUnsigned region_interval(offset, offset+region_size);
+  SequenceVariantFilter seq_variant_filter(contig_ptr, region_interval);
 
   if (GenomeMutation::mutantRegion( contig_id,
                                     offset,
                                     region_size,
                                     genome_db_ptr,
-                                    variant_map,
+                                    seq_variant_filter.offsetVariantMap(),
                                     reference_sequence,
                                     mutant_sequence)) {
 
@@ -464,6 +462,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const GenomeId_t& genome,
 
 }
 
+
 bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
                                               const ContigOffset_t offset,
                                               const ContigSize_t region_size,
@@ -477,28 +476,25 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
   DNA5SequenceLinear reference_sequence;
   OffsetVariantMap variant_map;
 
-  if (not SequenceVariantFilter::getSortedVariants(genome_variant_ptr,
-                                                   contig,
-                                                   VariantPhase::HAPLOID_PHASED,
-                                                   offset,
-                                             offset+region_size,
-                                                   variant_map)) {
+  auto contig_db_opt = genome_variant_ptr->getContig(contig);
+  if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Problem retrieving variants, genome: {}, contig_ref_ptr: {}",
-                        genome_variant_ptr->genomeId(), contig);
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig, genome_variant_ptr->genomeId());
     return false;
 
   }
+  auto& contig_ptr = contig_db_opt.value();
+  OpenRightUnsigned region_interval(offset, offset+region_size);
+  SequenceVariantFilter seq_variant_filter(contig_ptr, region_interval);
 
 
   if (GenomeMutation::mutantRegion( contig,
                                     offset,
                                     region_size,
                                     genome_db_ptr,
-                                    variant_map,
+                                    seq_variant_filter.offsetVariantMap(),
                                     reference_sequence,
                                     mutant_sequence)) {
-
 
     DNA5SequenceCoding ref_reverse_complement = reference_sequence.codingSequence(StrandSense::REVERSE);
 

@@ -2,26 +2,15 @@
 // Created by kellerberrin on 26/07/23.
 //
 
-#include "kgl_genome_seq/kgl_seq_variant_filter.h"
+#include "kgl_seq_variant_filter.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_coding.h"
-#include "kel_interval_unsigned.h"
 
 #include <algorithm>
 
 
 namespace kgl = kellerberrin::genome;
-
-
-bool kgl::SequenceVariantFilter::getSortedVariants(const std::shared_ptr<const GenomeDB>& ,
-                                                   ContigId_t,
-                                                   VariantPhase,
-                                                   ContigOffset_t,
-                                                   ContigOffset_t,
-                                                   OffsetVariantMap &) { return true; }
-
-
 
 
 // Returns a map of unique canonical variants
@@ -102,3 +91,16 @@ void kgl::SequenceVariantFilter::canonicalVariants(const std::shared_ptr<const C
 }
 
 
+void kgl::SequenceVariantFilter::selectFilterType(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                  const OpenRightUnsigned& sequence_interval) {
+
+  switch(sequenceFilterType()) {
+
+    case SeqVariantFilterType::DEFAULT_SEQ_FILTER:
+    case SeqVariantFilterType::HIGHEST_FREQ_VARIANT:
+      canonicalVariants(contig_ptr, sequence_interval);
+      break;
+
+  }
+
+}

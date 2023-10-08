@@ -66,12 +66,12 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const Vi
 void kgl::UPGMAProteinDistance::mutateProteins() {
 
   mutated_proteins_.clear();
-  for (auto contig : genome_db_ptr_->getMap()) {
+  for (auto const& [contig_id, contig_ptr] : genome_db_ptr_->getMap()) {
 
-    for (auto gene : contig.second->getGeneMap()) {
+    for (auto const& [gene_id, gene_ptr] : contig_ptr->getGeneMap()) {
 
 
-        getProtein(gene.second);
+        getProtein(gene_ptr);
 
 
     }
@@ -83,36 +83,33 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 
 void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_ptr) {
 
-  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
-  for (auto const& sequence : coding_seq_ptr->getMap()) {
+  auto transcript_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
+  for (auto const& [transcript_id, transcript_ptr] : transcript_array_ptr->getMap()) {
 
-    std::shared_ptr<const ContigReference> contig_ptr = sequence.second->getGene()->contig_ref_ptr();
-    std::string gene_id = sequence.second->getGene()->id();
-    std::string sequence_id = sequence.second->getParent()->id();
+    auto& contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
+    const std::string& contig_id = contig_ref_ptr->contigId();
+    const std::string& gene_id = transcript_ptr->getGene()->id();
     AminoSequence mutant_sequence;
     AminoSequence reference_sequence;
-    OffsetVariantMap variant_map;
 
-    if (not SequenceVariantFilter::getSortedVariants(genome_variant_ptr_,
-                                                     contig_ptr->contigId(),
-                                                     VariantPhase::HAPLOID_PHASED,
-                                                     sequence.second->start(),
-                                                     sequence.second->end(),
-                                                     variant_map)) {
+    auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+    if (not contig_db_opt) {
 
-      ExecEnv::log().warn("UPGMAProteinDistance::getProtein, Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
-                          genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+      ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
       return;
 
     }
+    auto& contig_ptr = contig_db_opt.value();
+    SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
 
-    if (GenomeMutation::mutantProteins( contig_ptr->contigId(),
-                                        gene_id,
-                                        sequence_id,
-                                        genome_db_ptr_,
-                                        variant_map,
-                                        reference_sequence,
-                                        mutant_sequence)) {
+
+    if (GenomeMutation::mutantProteins(contig_id,
+                                       gene_id,
+                                       transcript_id,
+                                       genome_db_ptr_,
+                                       seq_variant_filter.offsetVariantMap(),
+                                       reference_sequence,
+                                       mutant_sequence)) {
 
       mutated_proteins_[gene_id] = std::make_shared<AminoSequence>(std::move(mutant_sequence));
 
@@ -138,52 +135,48 @@ bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
 
 void kgl::UPGMAGeneDistance::mutateProtein() {
 
-  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
+  auto transcipt_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
 
-  if (coding_seq_ptr->empty()) {
+  if (transcipt_array_ptr->empty()) {
 
-    ExecEnv::log().critical("UPGMAGeneDistance::mutateProtein; Gene contains no coding sequence : genome: {} gene: {}",
+    ExecEnv::log().critical("Gene contains no coding transcript_ptr : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
 
   }
 
-  std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig_ref_ptr();
-  std::string gene_id = sequence->getGene()->id();
-  std::string sequence_id = sequence->getParent()->id();
+  const auto& transcript_ptr = transcipt_array_ptr->getFirst();
+  const auto& contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
+  const std::string& contig_id = contig_ref_ptr->contigId();
+  const std::string& gene_id = transcript_ptr->getGene()->id();
+  const std::string& transcript_id = transcript_ptr->getParent()->id();
 
-  if (coding_seq_ptr->size() > 1) {
+  if (transcipt_array_ptr->size() > 1) {
 
-    ExecEnv::log().warn("UPGMAGeneDistance::mutateProtein;  Genome: {} gene: {} contains: {} sequences using sequence: {}",
-                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
+    ExecEnv::log().warn("Genome: {} gene: {} contains: {} sequences using transcript_ptr: {}",
+                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), transcipt_array_ptr->size(), transcript_id);
 
   }
-
 
   AminoSequence mutant_sequence;
   AminoSequence reference_sequence;
-  OffsetVariantMap variant_map;
 
-  if (not SequenceVariantFilter::getSortedVariants(genome_variant_ptr_,
-                                                   contig_ptr->contigId(),
-                                                   VariantPhase::HAPLOID_PHASED,
-                                                   sequence->start(),
-                                                   sequence->end(),
-                                                   variant_map)) {
+  auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+  if (not contig_db_opt) {
 
-    ExecEnv::log().warn("UPGMAGeneDistance::mutateProtein; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
-                        genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
     return;
 
   }
+  auto& contig_ptr = contig_db_opt.value();
+  SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
 
-  if (GenomeMutation::mutantProteins(contig_ptr->contigId(),
-                                          gene_id,
-                                          sequence_id,
-                                          genome_db_ptr_,
-                                          variant_map,
-                                          reference_sequence,
-                                          mutated_protein_)) {
+  if (GenomeMutation::mutantProteins(contig_id,
+                                     gene_id,
+                                     transcript_id,
+                                     genome_db_ptr_,
+                                     seq_variant_filter.offsetVariantMap(),
+                                     reference_sequence,
+                                     mutated_protein_)) {
 
   }
 
@@ -233,53 +226,49 @@ void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
 
 void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
-  auto coding_seq_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
-  if (coding_seq_ptr->size() == 0) {
+  auto transcript_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
+  if (transcript_array_ptr->empty()) {
 
-    ExecEnv::log().critical("write_node(), Gene contains no coding sequence : genome: {} gene: {}",
+    ExecEnv::log().critical("write_node(), Gene contains no coding transcript_ptr : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
 
   }
 
-  std::shared_ptr<const TranscriptionSequence> sequence = coding_seq_ptr->getFirst();
-  std::shared_ptr<const ContigReference> contig_ptr = sequence->getGene()->contig_ref_ptr();
-  std::string gene_id = sequence->getGene()->id();
-  std::string sequence_id = sequence->getParent()->id();
+  const auto& transcript_ptr = transcript_array_ptr->getFirst();
+  const auto& contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
+  const std::string& contig_id = contig_ref_ptr->contigId();
+  const std::string& gene_id = transcript_ptr->getGene()->id();
+  const std::string& transcript_id = transcript_ptr->getParent()->id();
 
-  if (coding_seq_ptr->size() > 1) {
+  if (transcript_array_ptr->size() > 1) {
 
-    ExecEnv::log().warn("UPGMAATP4Distance::writeNode;  Genome: {} gene: {} contains: {} sequences using sequence: {}",
-                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), coding_seq_ptr->size(), sequence_id);
+    ExecEnv::log().warn("Genome: {} gene: {} contains: {} sequences using transcript_ptr: {}",
+                        genome_variant_ptr_->genomeId(), gene_id, transcript_array_ptr->size(), transcript_id);
 
   }
-
 
   AminoSequence mutant_sequence;
   AminoSequence reference_sequence;
-  OffsetVariantMap variant_map;
 
-  if (not SequenceVariantFilter::getSortedVariants(genome_variant_ptr_,
-                                                   contig_ptr->contigId(),
-                                                   VariantPhase::HAPLOID_PHASED,
-                                                   sequence->start(),
-                                                   sequence->end(),
-                                                   variant_map)) {
+  auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+  if (not contig_db_opt) {
 
-    ExecEnv::log().warn("UPGMAATP4Distance::writeNode; Problem retrieving variants, genome: {}, gene: {}, sequence: {}",
-                        genome_variant_ptr_->genomeId(), gene_id, sequence_id);
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
     return;
 
   }
+  const auto& contig_ptr = contig_db_opt.value();
+  SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
 
-  if (not GenomeMutation::mutantProteins(contig_ptr->contigId(),
+  if (not GenomeMutation::mutantProteins(contig_id,
                                          gene_id,
-                                         sequence_id,
+                                         transcript_id,
                                          genome_db_ptr_,
-                                         variant_map,
+                                         seq_variant_filter.offsetVariantMap(),
                                          reference_sequence,
                                          mutant_sequence)) {
 
-    ExecEnv::log().critical("UPGMAATP4Distance::writeNode; Cannot mutate sequence for : genome: {} gene: {}",
+    ExecEnv::log().critical("Cannot mutate transcript_ptr for : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());
 
   }

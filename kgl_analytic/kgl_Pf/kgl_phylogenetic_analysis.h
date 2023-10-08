@@ -103,8 +103,8 @@ public:
                                            const FeatureIdent_t& gene_id,
                                            const FeatureIdent_t& transcript_id,
                                            ContigSize_t region_size,
-                                           const std::shared_ptr<const GenomeReference>& genome_db,
-                                           const std::shared_ptr<const GenomeDB>& genome_variant,
+                                           const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                           const std::shared_ptr<const GenomeDB>& genome_db_ptr,
                                            DNA5SequenceCoding& reference_sequence,
                                            DNA5SequenceCoding& mutant_sequence);
 
@@ -112,8 +112,8 @@ public:
                                             const FeatureIdent_t& gene_id,
                                             const FeatureIdent_t& transcript_id,
                                             ContigSize_t region_size,
-                                            const std::shared_ptr<const GenomeReference>& genome_db,
-                                            const std::shared_ptr<const GenomeDB>& genome_variant,
+                                            const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                            const std::shared_ptr<const GenomeDB>& genome_db_ptr,
                                             DNA5SequenceCoding& reference_sequence,
                                             DNA5SequenceCoding& mutant_sequence_vector);
 
@@ -128,12 +128,12 @@ public:
   [[nodiscard]]  static bool outputDNASequenceCSV( const std::string &file_name,
                                                    SequenceAnalysisType analysis_type,
                                                    const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
-                                                   const std::shared_ptr<const GenomeReference>& genome_db,
+                                                   const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                    const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
   [[nodiscard]]  static bool outputAminoSequenceCSV( const std::string &file_name,
                                                      const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
-                                                     const std::shared_ptr<const GenomeReference>& genome_db,
+                                                     const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                      const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
 
@@ -141,14 +141,14 @@ public:
                                                      const ContigId_t& contig_id,
                                                      const FeatureIdent_t& gene_id,
                                                      const FeatureIdent_t& transcript_id,
-                                                     const std::shared_ptr<const GenomeReference>& genome_db,
+                                                     const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                      const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
   [[nodiscard]]  static bool outputDNAMutationCSV( const std::string &file_name,
                                                    const ContigId_t& contig_id,
                                                    const FeatureIdent_t& gene_id,
                                                    const FeatureIdent_t& transcript_id,
-                                                   const std::shared_ptr<const GenomeReference>& genome_db,
+                                                   const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                    const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
                                                    const PfGenomeAuxData& aux_Pf3k_data);
 
@@ -159,9 +159,9 @@ private:
   [[nodiscard]] static std::string outputSequence( char delimiter,
                                                    const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
                                                    const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
-                                                   const std::shared_ptr<const TranscriptionSequence>& coding_sequence,
-                                                   const std::shared_ptr<const GenomeReference>& genome_db,
-                                                   const std::shared_ptr<const GenomeDB>& genome_variant);
+                                                   const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
+                                                   const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                                   const std::shared_ptr<const GenomeDB>& genome_db_ptr);
 
 
 };

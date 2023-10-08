@@ -39,12 +39,14 @@ public:
   // The zero-based unmodified sub-sequence.
   // Note that the specified sub_interval must be contained in the initial contig_interval
   [[nodiscard]] std::optional<DNA5SequenceLinear> originalSubSequence(const OpenRightUnsigned& sub_interval) const;
+
   // Update the unmodified zero-based sequence into the modified sequence.
   // This function can update the modified sequence multiple times.
   [[nodiscard]] bool updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
-                                    const OpenRightUnsigned& contig_interval,
-                                    const IntervalModifyMap& interval_modify_map);
+                                    const SequenceVariantFilter& filtered_variants);
 
+  // This function moves the original (.first) and modified (.second) sequences and initializes (clears) the object.
+  std::optional<std::pair<DNA5SequenceLinear, DNA5SequenceLinear>> moveSequenceClear();
 
 private:
 
@@ -53,6 +55,12 @@ private:
   DNA5SequenceLinear modified_sequence_;
   DNA5SequenceLinear original_sequence_;
   bool valid_modified_sequence_{false};
+
+  // Update the unmodified zero-based sequence into the modified sequence.
+  // This function can update the modified sequence multiple times.
+  [[nodiscard]] bool updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                                    const OpenRightUnsigned& contig_interval,
+                                    const IntervalModifyMap& interval_modify_map);
 
   void initializeSequences(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
                            const OpenRightUnsigned& contig_interval,

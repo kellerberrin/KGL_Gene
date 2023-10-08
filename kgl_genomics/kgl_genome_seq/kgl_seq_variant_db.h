@@ -5,14 +5,8 @@
 #ifndef KGL_SEQ_VARIANT_DB_H
 #define KGL_SEQ_VARIANT_DB_H
 
-#include <map>
-#include <memory>
-#include <vector>
-#include <sstream>
-#include "kgl_genome_attributes.h"
-#include "kgl_variant_db.h"
-#include "kgl_variant_db_population.h"
-#include "kgl_mutation_db.h"
+#include "kgl_genome_genome.h"
+#include "kgl_seq_variant_filter.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -56,6 +50,18 @@ public:
                                          DNA5SequenceLinear &reference_sequence,
                                          DNA5SequenceLinear &mutant_sequence);
 
+  // Returns reference and mutant stranded DNA.
+  [[nodiscard]] static bool utantCodingDNA(const ContigId_t &contig_id,
+                                             const FeatureIdent_t &gene_id,
+                                            const FeatureIdent_t &transcript_id,
+                                            const OffsetVariantMap &variant_map,
+                                            DNA5SequenceCoding &reference_sequence,
+                                            DNA5SequenceCoding &mutant_sequence);
+
+// This function moves the original (.first) and modified (.second) sequences .
+  [[nodiscard]] static std::optional<std::pair<DNA5SequenceLinear, DNA5SequenceLinear>>
+  mutantRegion( const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                const SequenceVariantFilter& sequence_filter);
 
 };
 

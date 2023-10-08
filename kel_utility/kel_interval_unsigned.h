@@ -2,8 +2,8 @@
 // Created by kellerberrin on 15/06/23.
 //
 
-#ifndef KEL_INTERVAL_H
-#define KEL_INTERVAL_H
+#ifndef KEL_INTERVAL_UNSIGNED_H
+#define KEL_INTERVAL_UNSIGNED_H
 
 
 #include <set>
@@ -50,4 +50,4 @@ struct CompareUnsignedIntervalUpper {
 
 
 
-#endif //KEL_INTERVAL_H
+#endif //KEL_INTERVAL_UNSIGNED_H

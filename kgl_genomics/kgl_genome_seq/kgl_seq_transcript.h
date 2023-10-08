@@ -57,7 +57,6 @@ public:
 
 private:
 
-
   AdjustedSequence adjusted_sequence_;
 
 };

@@ -4,7 +4,7 @@
 
 #include "kgl_seq_transcript.h"
 #include "kgl_seq_variant_filter.h"
-#include "kel_interval_set.h"
+#include "kgl_mutation_interval.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -17,22 +17,10 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
                                                 const OpenRightUnsigned& sequence_interval) {
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
-  SequenceVariantFilter mutation_offset(contig_variant_ptr, sequence_interval);
-  size_t map_size = mutation_offset.sequenceVariants();
+  SequenceVariantFilter filtered_variants(contig_variant_ptr, sequence_interval);
+  size_t map_size = filtered_variants.preFilterVariants();
 
-  auto adjusted_offset_ptr = std::make_shared<AdjustedSequenceInterval>(sequence_interval);
-  if (not adjusted_offset_ptr->processVariantMap(mutation_offset.offsetVariantMap())) {
-
-    ExecEnv::log().warn("Problem updating interval: {}, variant contig: {}, reference contig_ref_ptr: {}",
-                        sequence_interval.toString(),
-                        contig_variant_ptr->contigId(),
-                        contig_reference_ptr->contigId());
-    return {{}, false};
-
-  }
-  if (not adjusted_sequence_.updateSequence(contig_reference_ptr,
-                                            sequence_interval,
-                                            adjusted_offset_ptr->indelModifyMap())) {
+  if (not adjusted_sequence_.updateSequence(contig_reference_ptr, filtered_variants)) {
 
     ExecEnv::log().warn("Problem updating sequence: {}, variant contig: {}, reference contig_ref_ptr: {}",
                         sequence_interval.toString(),
@@ -44,8 +32,8 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 
   SequenceStats sequence_stats;
   sequence_stats.map_size_ = map_size;
-  sequence_stats.non_unique_count_ = mutation_offset.duplicateVariants();
-  sequence_stats.upstream_deleted_ = mutation_offset.downstreamDelete();
+  sequence_stats.non_unique_count_ = filtered_variants.duplicateVariants();
+  sequence_stats.upstream_deleted_ = filtered_variants.downstreamDelete();
 
   return { sequence_stats, true};
 

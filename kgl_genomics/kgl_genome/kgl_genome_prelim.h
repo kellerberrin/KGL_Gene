@@ -5,11 +5,14 @@
 #ifndef KGL_GENOME_PRELIM_H
 #define KGL_GENOME_PRELIM_H
 
+#include "kgl_genome_types.h"
+
+#include "kel_interval_unsigned.h"
+
 #include <memory>
 #include <string>
 #include <vector>
 #include <map>
-#include "kgl_genome_types.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -39,6 +42,7 @@ public:
 
   [[nodiscard]] ContigOffset_t begin() const { return begin_offset_; }
   [[nodiscard]] ContigOffset_t end() const { return end_offset_; }
+  [[nodiscard]] OpenRightUnsigned interval() const { return OpenRightUnsigned(begin(), end()); }
   [[nodiscard]] StrandSense strand() const { return strand_sense_; }
   [[nodiscard]] uint32_t phase() const { return phase_; }
   [[nodiscard]] ContigSize_t length() const { return end_offset_ - begin_offset_; }
@@ -106,6 +110,7 @@ public:
   void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
   [[nodiscard]] ContigOffset_t start() const; // Zero-based offset [start, end) of the start of the sequence - not strand adjusted.
   [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
+  [[nodiscard]] OpenRightUnsigned interval() const { return OpenRightUnsigned(start(), end()); }
   [[nodiscard]] ContigSize_t codingNucleotides() const; // Total number of nucleotides in all CDS.
   [[nodiscard]] TranscriptionSequenceType codingType() const;
   [[nodiscard]] static CodingSequenceValidity checkSequenceStatus(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
@@ -152,7 +157,7 @@ public:
   static void printSequence(std::shared_ptr<const TranscriptionSequenceArray> sequence_ptr);
 
   // Only ncRNA and valid Protein transcriptions.
-  std::unique_ptr<const TranscriptionSequenceArray> validTranscriptionArray() const;
+  [[nodiscard]] std::unique_ptr<const TranscriptionSequenceArray> validTranscriptionArray() const;
 
 private:
 

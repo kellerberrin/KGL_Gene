@@ -29,7 +29,6 @@ public:
 
   AdjustedSequenceInterval(const OpenRightUnsigned& original_interval) : original_interval_(original_interval),
                                                                          modified_interval_(original_interval_) {}
-
   ~AdjustedSequenceInterval() = default;
 
 

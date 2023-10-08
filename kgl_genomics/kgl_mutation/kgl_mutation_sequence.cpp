@@ -3,6 +3,7 @@
 //
 
 #include "kgl_mutation_sequence.h"
+#include "kgl_mutation_interval.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -27,6 +28,24 @@ void kgl::AdjustedSequence::clear() {
 
 }
 
+
+bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                                           const SequenceVariantFilter& filtered_variants) {
+
+  AdjustedSequenceInterval adjusted_offset(filtered_variants.sequenceInterval());
+  if (not adjusted_offset.processVariantMap(filtered_variants.offsetVariantMap())) {
+
+    ExecEnv::log().warn("Problem updating interval: {}, reference contig_ref_ptr: {}",
+                        filtered_variants.sequenceInterval().toString(), contig_ref_ptr->contigId());
+    return false;
+
+  }
+
+  return updateSequence(contig_ref_ptr, filtered_variants.sequenceInterval(), adjusted_offset.indelModifyMap());
+
+}
+
+
 // Update the unmodified zero-based sequence into the modified sequence.
 bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
                                            const OpenRightUnsigned& contig_interval,
@@ -45,7 +64,7 @@ bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigRef
 
   if (not verifyUpdatedSequence()) {
 
-    ExecEnv::log().warn("djustedSequence::updateSequence; could not verify sequence: {}, contig_ref_ptr: {}",
+    ExecEnv::log().warn("Could not verify sequence: {}, contig_ref_ptr: {}",
                         contig_interval.toString(), contig_ref_ptr->contigId());
     clear();
     return false;
@@ -72,7 +91,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
 
     if (contigInterval() != first_sequence_modify.priorInterval()) {
 
-      ExecEnv::log().error("AdjustedSequence::initializeSequences; contig_ref_ptr interval: {} does not match initial map interval: {}",
+      ExecEnv::log().error("Contig_ref_ptr interval: {} does not match initial map interval: {}",
                            contigInterval().toString(), first_sequence_modify.priorInterval().toString());
       // Clear the map for good measure.
       clear();
@@ -85,7 +104,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
   auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
   if (not modified_sequence_opt) {
 
-    ExecEnv::log().error("Rrequested modified sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
+    ExecEnv::log().error("Requested modified sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
                          contig_ref_ptr->sequence_ptr()->interval().toString());
@@ -153,7 +172,7 @@ bool kgl::AdjustedSequence::verifyUpdatedSequence() const {
       auto [modified_offset, offset_result] = sequenceMap().modifiedZeroOffset(offset);
       if (not offset_result) {
 
-        ExecEnv::log().warn("AdjustedSequence::verifyUpdatedSequence; Cannot convert offset: {} to modified offset, variant: {}",
+        ExecEnv::log().warn("Cannot convert offset: {} to modified offset, variant: {}",
                             offset, variant_ptr->HGVS());
         result = false;
         continue;
@@ -163,7 +182,7 @@ bool kgl::AdjustedSequence::verifyUpdatedSequence() const {
       const bool reference_match = modified_sequence_.compareSubSequence(modified_offset, variant_ptr->alternate());
       if (not reference_match) {
 
-        ExecEnv::log().warn("AdjustedSequence::verifyUpdatedSequence; alternate does not match modified sequence, modified offset: {} variant: {}",
+        ExecEnv::log().warn("Alternate does not match modified sequence, modified offset: {} variant: {}",
                             offset, variant_ptr->HGVS());
 
         result = false;
@@ -185,7 +204,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
 
   if (not valid_modified_sequence_) {
 
-    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; no valid modified sequence available");
+    ExecEnv::log().warn("No valid modified sequence available");
     return std::nullopt;
 
   }
@@ -226,7 +245,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
 
   if (not valid_modified_sequence_) {
 
-    ExecEnv::log().warn("AdjustedSequence::modifiedSubSequence; no valid original sequence available");
+    ExecEnv::log().warn("No valid original sequence available");
     return std::nullopt;
 
   }
@@ -234,7 +253,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
   // Check sub-interval bounds.
   if (not contigInterval().containsInterval(sub_interval)) {
 
-    ExecEnv::log().warn("AdjustedSequence::originalSubSequence; sub interval: {} is not contained in contig_ref_ptr interval: {}",
+    ExecEnv::log().warn("Sub interval: {} is not contained in contig_ref_ptr interval: {}",
                         sub_interval.toString(), contigInterval().toString());
     return std::nullopt;
   }
@@ -243,7 +262,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
   auto [modified_interval, convert_result] = modified_offset_map_.lookupOriginalInterval(sub_interval);
   if (not convert_result) {
 
-    ExecEnv::log().warn("AdjustedSequence::originalSubSequence; sub interval: {} cannot be converted to zero offset interval",
+    ExecEnv::log().warn("Sub interval: {} cannot be converted to zero offset interval",
                         sub_interval.toString());
     return std::nullopt;
 
@@ -262,3 +281,18 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
 
 }
 
+std::optional<std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear>> kgl::AdjustedSequence::moveSequenceClear() {
+
+  if (not valid_modified_sequence_) {
+
+    ExecEnv::log().warn("No valid original sequence available");
+    return std::nullopt;
+  }
+
+  std::pair<DNA5SequenceLinear, DNA5SequenceLinear> seq_pair{std::move(original_sequence_), std::move(modified_sequence_)};
+
+  clear();
+
+  return seq_pair;
+
+}

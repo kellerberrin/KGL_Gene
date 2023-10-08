@@ -2,9 +2,7 @@
 // Created by kellerberrin on 3/01/18.
 //
 
-#include <memory>
 #include "kgl_seq_variant.h"
-#include "kgl_seq_coding.h"
 #include "kgl_seq_variant_db.h"
 
 
@@ -166,8 +164,7 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
     return false;
 
   }
-
-  auto contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Check offset and size.
   if ((region_offset + region_size) > contig_ref_ptr->sequence().length() or region_size > contig_ref_ptr->sequence().length()) {
@@ -219,6 +216,39 @@ bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
   }
 
   return true;
+
+}
+
+// This function moves the original (.first) and modified (.second) sequences .
+std::optional<std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear>>
+kgl::GenomeMutation::mutantRegion( const std::shared_ptr<const ContigReference>& contig_ref_ptr,
+                                   const SequenceVariantFilter& sequence_filter) {
+
+  // Convenience alias to reduce code noise.
+  const auto& contig_interval = contig_ref_ptr->sequence().interval();
+  const auto& sequence_interval = sequence_filter.sequenceInterval();
+  const auto& contig_id = contig_ref_ptr->contigId();
+
+  // Check offset and size.
+  if (not contig_interval.containsInterval(sequence_interval)) {
+
+    ExecEnv::log().warn("Sequence interval: {} not contained in contig id: {} interval: {}",
+                        sequence_interval.toString(), contig_id, contig_interval.toString());
+    return std::nullopt;
+
+  }
+
+  // And mutate the sequence.
+  AdjustedSequence adjusted_sequence;
+  if (not adjusted_sequence.updateSequence( contig_ref_ptr, sequence_filter)) {
+
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_ref_ptr: {}, interval: {}",
+                        contig_id, sequence_filter.sequenceInterval().toString());
+    return std::nullopt;
+
+  }
+
+  return adjusted_sequence.moveSequenceClear();
 
 }
 
