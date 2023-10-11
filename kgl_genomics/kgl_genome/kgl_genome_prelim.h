@@ -8,6 +8,7 @@
 #include "kgl_genome_types.h"
 
 #include "kel_interval_unsigned.h"
+#include "kel_interval_set.h"
 
 #include <memory>
 #include <string>
@@ -98,16 +99,15 @@ public:
                                                               transcription_feature_map_(std::move(feature_map)) {}
   ~TranscriptionSequence() = default;
 
+  [[nodiscard]] IntervalSetLower getFeatureIntervals() const;
   [[nodiscard]] const TranscriptionFeatureMap& getFeatureMap() const { return transcription_feature_map_; }
   [[nodiscard]] size_t codingFeatures() const { return getFeatureMap().size(); }
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   [[nodiscard]] std::shared_ptr<const Feature> getParent() const { return parent_ptr_; }
   [[nodiscard]] StrandSense strand() const;
-  [[nodiscard]] ContigOffset_t prime_5() const; // Offset of the 5 prime nucleotide closest to the sequence (strand adjusted start - 1).
-  void prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
-  [[nodiscard]] ContigOffset_t prime_3() const; // Offset of the 3 prime nucleotide closest to the sequence (strand adjusted end).
-  void prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const;
+  [[nodiscard]] OpenRightUnsigned prime5Region(ContigSize_t requested_size) const;
+  [[nodiscard]] OpenRightUnsigned prime3Region(ContigSize_t requested_size) const;
   [[nodiscard]] ContigOffset_t start() const; // Zero-based offset [start, end) of the start of the sequence - not strand adjusted.
   [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] OpenRightUnsigned interval() const { return OpenRightUnsigned(start(), end()); }

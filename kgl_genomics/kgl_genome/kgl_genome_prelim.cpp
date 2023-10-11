@@ -8,6 +8,8 @@
 #include "kgl_seq_coding.h"
 
 namespace kgl = kellerberrin::genome;
+namespace kel = kellerberrin;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sequence - Members
@@ -56,6 +58,20 @@ kgl::ContigOffset_t kgl::FeatureSequence::distance(const FeatureSequence& compar
 // TranscriptionSequence - Members
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+kel::IntervalSetLower kgl::TranscriptionSequence::getFeatureIntervals() const {
+
+  IntervalSetLower feature_intervals;
+  for (const auto& [offset, feature_ptr] : transcription_feature_map_) {
+
+    feature_intervals.insert(feature_ptr->sequence().interval());
+
+  }
+
+  return feature_intervals;
+
+}
+
+
 
 kgl::StrandSense kgl::TranscriptionSequence::strand() const {
 
@@ -93,117 +109,64 @@ kgl::ContigOffset_t kgl::TranscriptionSequence::end() const {
 }
 
 
-// offset of the nucleotide not in the coding sequence (strand adjusted).
-kgl::ContigOffset_t kgl::TranscriptionSequence::prime_5() const {
+kel::OpenRightUnsigned kgl::TranscriptionSequence::prime5Region(ContigSize_t requested_size) const {
 
   // Safety first.
   if (transcription_feature_map_.empty()) {
 
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
-    return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().end() : getGene()->sequence().begin() - 1;
-    return 0;
+    ExecEnv::log().error("Prime_5 sequence for gene id: {} is empty", getGene()->id());
+    return {0, 0};
+
   }
 
+  ContigOffset_t end_offset{0};
+  ContigOffset_t begin_offset{0};
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      return transcription_feature_map_.begin()->second->sequence().begin() - 1;
-
-    case StrandSense::REVERSE:
-      return transcription_feature_map_.rbegin()->second->sequence().end();
-
-  }
-
-  return transcription_feature_map_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
-
-}
-
-
-
-void kgl::TranscriptionSequence::prime_5_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
-
-  // Safety first.
-  if (transcription_feature_map_.empty()) {
-
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
-    begin_offset = 0;
-    size = 0;
-    return;
-
-  }
-
-  switch(strand()) {
-
-    case StrandSense::FORWARD:
-      begin_offset = transcription_feature_map_.begin()->second->sequence().begin() - requested_size;
-      size = requested_size;
+      end_offset = transcription_feature_map_.begin()->second->sequence().begin();
+      begin_offset = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(end_offset) - static_cast<SignedOffset_t>(requested_size));
       break;
 
     case StrandSense::REVERSE:
       begin_offset = transcription_feature_map_.rbegin()->second->sequence().end();
-      size = requested_size;
+      end_offset = begin_offset + requested_size;
       break;
 
   }
 
+  return { begin_offset, end_offset};
 
 }
 
 
-
-// offset of the nucleotide not in the coding seuence (strand adjusted).
-kgl::ContigOffset_t kgl::TranscriptionSequence::prime_3() const {
+kel::OpenRightUnsigned kgl::TranscriptionSequence::prime3Region(ContigSize_t requested_size) const {
 
   // Safety first.
   if (transcription_feature_map_.empty()) {
 
-    ExecEnv::log().error("TranscriptionSequence::prime_3; coding sequence for gene id: {} is empty", getGene()->id());
-    return getGene()->sequence().strand() == StrandSense::REVERSE ? getGene()->sequence().begin() - 1 : getGene()->sequence().end();
+    ExecEnv::log().error("Prime_3 sequence for gene id: {} is empty", getGene()->id());
+    return {0, 0};
+
   }
 
-
+  ContigOffset_t end_offset{0};
+  ContigOffset_t begin_offset{0};
   switch(strand()) {
-
-    case StrandSense::FORWARD:
-      return transcription_feature_map_.rbegin()->second->sequence().end();
 
     case StrandSense::REVERSE:
-      return transcription_feature_map_.begin()->second->sequence().begin() - 1;
-
-  }
-
-  return transcription_feature_map_.begin()->second->sequence().begin(); // never reached; to keep the compiler happy
-
-}
-
-
-void kgl::TranscriptionSequence::prime_3_region(ContigSize_t requested_size, ContigOffset_t& begin_offset, ContigSize_t& size) const {
-
-  // Safety first.
-  if (transcription_feature_map_.empty()) {
-
-    ExecEnv::log().error("TranscriptionSequence::prime_3_region; coding sequence for gene id: {} is empty", getGene()->id());
-    begin_offset = 0;
-    size = 0;
-    return;
-
-  }
-
-
-  switch(strand()) {
+      end_offset = transcription_feature_map_.begin()->second->sequence().begin();
+      begin_offset = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(end_offset) - static_cast<SignedOffset_t>(requested_size));
+      break;
 
     case StrandSense::FORWARD:
       begin_offset = transcription_feature_map_.rbegin()->second->sequence().end();
-      size = requested_size;
-      break;
-
-    case StrandSense::REVERSE:
-      begin_offset = transcription_feature_map_.begin()->second->sequence().begin() - requested_size;
-      size = requested_size;
+      end_offset = begin_offset + requested_size;
       break;
 
   }
 
+  return { begin_offset, end_offset};
 
 }
 
@@ -213,7 +176,6 @@ std::shared_ptr<const kgl::ContigReference> kgl::TranscriptionSequence::contig()
   return getGene()->contig_ref_ptr();
 
 }
-
 
 
 kgl::ContigSize_t kgl::TranscriptionSequence::codingNucleotides() const {

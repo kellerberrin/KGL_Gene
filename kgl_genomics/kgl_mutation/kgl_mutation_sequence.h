@@ -20,6 +20,9 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Alias to reduce code noise
+using DualSeqOpt = std::optional<std::pair<DNA5SequenceLinear, DNA5SequenceLinear>>;
+
 class AdjustedSequence {
 
 public:
@@ -46,7 +49,7 @@ public:
                                     const SequenceVariantFilter& filtered_variants);
 
   // This function moves the original (.first) and modified (.second) sequences and initializes (clears) the object.
-  std::optional<std::pair<DNA5SequenceLinear, DNA5SequenceLinear>> moveSequenceClear();
+  DualSeqOpt moveSequenceClear();
 
 private:
 

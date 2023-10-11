@@ -15,8 +15,3 @@ namespace kgl = kellerberrin::genome;
                               const std::shared_ptr<const TranscriptionSequence>&,
                               DNA5SequenceCoding&) { return true; }
 
-bool kgl::VariantMutation::mutateDNA( const OffsetVariantMap &,
-                              const std::shared_ptr<const ContigReference>&,
-                              ContigOffset_t,
-                              ContigSize_t,
-                              DNA5SequenceLinear&) { return true; }

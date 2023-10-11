@@ -366,70 +366,75 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
                                                      const ContigId_t& contig_id,
                                                      const ContigOffset_t offset,
                                                      const ContigSize_t region_size,
-                                                     const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                                     const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
+                                                     const std::shared_ptr<const GenomeDB>& genome_db_ptr,
+                                                     const std::shared_ptr<const GenomeReference>& genome_ref_ptr) {
 
   std::stringstream ss;
 
-  std::optional<std::shared_ptr<const ContigReference>> contig_opt = genome_db_ptr->getContigSequence(contig_id);
-  if (not contig_opt) {
+  auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
+  if (not contig_ref_opt) {
 
-    ExecEnv::log().error("Unexpected could not find Contig: {}", contig_id);
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_ref_ptr->genomeId());
     return "<error>";
 
   }
-  if (offset + region_size >= contig_opt.value()->sequence().length()) {
+  auto& contig_ref_ptr = contig_ref_opt.value();
+
+  if (offset + region_size >= contig_ref_ptr->sequence().length()) {
 
     ExecEnv::log().error("Offset: {} + Region Size: {} exceed the Contig: {} size: {}",
-                         offset, region_size, contig_id, contig_opt.value()->sequence().length());
+                         offset, region_size, contig_id, contig_ref_ptr->sequence().length());
     return "<error>";
 
   }
 
-  DNA5SequenceLinear mutant_sequence;
-  DNA5SequenceLinear reference_sequence;
-  OffsetVariantMap variant_map;
-
-  auto contig_db_opt = genome_variant_ptr->getContig(contig_id);
+  auto contig_db_opt = genome_db_ptr->getContig(contig_id);
   if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr->genomeId());
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr->genomeId());
     return "<error>";
 
   }
-  auto& contig_ptr = contig_db_opt.value();
+  auto& contig_db_ptr = contig_db_opt.value();
+
+
+  // Filter the mutating varinats.
   OpenRightUnsigned region_interval(offset, offset+region_size);
-  SequenceVariantFilter seq_variant_filter(contig_ptr, region_interval);
+  SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
 
-  if (GenomeMutation::mutantRegion( contig_id,
-                                    offset,
-                                    region_size,
-                                    genome_db_ptr,
-                                    seq_variant_filter.offsetVariantMap(),
-                                    reference_sequence,
-                                    mutant_sequence)) {
+  // And mutate the sequence.
+  AdjustedSequence adjusted_sequence;
+  if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
 
-    double distance = static_cast<double>(dna_distance_metric->linear_distance(reference_sequence, mutant_sequence));
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
+                        contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
+    return "<error>";
 
-    ss << genome_variant_ptr->genomeId() << delimiter;
-    ss << contig_id << delimiter;
-    ss << contig_opt.value()->sequence().length() << delimiter;
-    ss << offset << delimiter;
-    ss << region_size << delimiter;
-    ss << distance << delimiter;
-    ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;
-    std::vector<std::pair<DNA5::Alphabet, size_t>> symbol_count = reference_sequence.countSymbols();
-    for (auto const& count : symbol_count) {
+  }
 
-      ss << count.second << delimiter;
-
-    }
-
-  } else {
+  auto dual_seq_opt = adjusted_sequence.moveSequenceClear();
+  if (not dual_seq_opt) {
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
-                         genome_variant_ptr->genomeId(), contig_id, offset, region_size);
+                         genome_ref_ptr->genomeId(), contig_id, offset, region_size);
     return "<error>";
+
+  }
+  auto& [reference_sequence, mutant_sequence] = dual_seq_opt.value();
+
+  double distance = static_cast<double>(dna_distance_metric->linear_distance(reference_sequence, mutant_sequence));
+
+  ss << genome_db_ptr->genomeId() << delimiter;
+  ss << contig_id << delimiter;
+  ss << contig_ref_ptr->sequence().length() << delimiter;
+  ss << offset << delimiter;
+  ss << region_size << delimiter;
+  ss << distance << delimiter;
+  ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;
+  std::vector<std::pair<DNA5::Alphabet, size_t>> symbol_count = reference_sequence.countSymbols();
+  for (auto const& count : symbol_count) {
+
+    ss << count.second << delimiter;
 
   }
 
@@ -463,77 +468,88 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const GenomeId_t& genome,
 }
 
 
-bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig,
+bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig_id,
                                               const ContigOffset_t offset,
                                               const ContigSize_t region_size,
-                                              const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
-                                              const std::shared_ptr<const GenomeReference>& genome_db_ptr,
+                                              const std::shared_ptr<const GenomeDB>& genome_db_ptr,
+                                              const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                               const std::string& fasta_file) {
 
   std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
   std::vector<WriteFastaSequence> dna_seq_vector;
-  DNA5SequenceLinear mutant_sequence;
-  DNA5SequenceLinear reference_sequence;
-  OffsetVariantMap variant_map;
 
-  auto contig_db_opt = genome_variant_ptr->getContig(contig);
+  auto contig_db_opt = genome_db_ptr->getContig(contig_id);
   if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig, genome_variant_ptr->genomeId());
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr->genomeId());
     return false;
 
   }
-  auto& contig_ptr = contig_db_opt.value();
+  const auto& contig_db_ptr = contig_db_opt.value();
+
+  auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
+  if (not contig_db_opt) {
+
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_ref_ptr->genomeId());
+    return false;
+
+  }
+  const auto& contig_ref_ptr = contig_ref_opt.value();
+
+  // Filter the mutating variants.
   OpenRightUnsigned region_interval(offset, offset+region_size);
-  SequenceVariantFilter seq_variant_filter(contig_ptr, region_interval);
+  SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
 
+  // And mutate the sequence.
+  AdjustedSequence adjusted_sequence;
+  if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
 
-  if (GenomeMutation::mutantRegion( contig,
-                                    offset,
-                                    region_size,
-                                    genome_db_ptr,
-                                    seq_variant_filter.offsetVariantMap(),
-                                    reference_sequence,
-                                    mutant_sequence)) {
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
+                        contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
+    return false;
 
-    DNA5SequenceCoding ref_reverse_complement = reference_sequence.codingSequence(StrandSense::REVERSE);
+  }
 
-    CompareDistance_t score = dna_distance_metric->linear_distance(reference_sequence, mutant_sequence);
-
-    ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}",
-                        genome_variant_ptr->genomeId(), contig, offset, region_size, score);
-
-    auto reference_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(reference_sequence));
-    auto mutant_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(mutant_sequence));
-    auto ref_reverse_complement_ptr = std::make_shared<DNA5SequenceCoding>(std::move(ref_reverse_complement));
-
-    std::stringstream ref_fasta_ss;
-    ref_fasta_ss << "reference_" << contig << "_+_" << offset << "_" << region_size;
-    WriteFastaSequence fasta_reference(ref_fasta_ss.str(), "", reference_sequence_ptr);
-    dna_seq_vector.push_back(fasta_reference);
-
-    ref_fasta_ss.str("");
-    ref_fasta_ss << "reference_" << contig << "_-_" << offset << "_" << region_size;
-    WriteFastaSequence rev_fasta_reference(ref_fasta_ss.str(), "", ref_reverse_complement_ptr);
-    dna_seq_vector.push_back(rev_fasta_reference);
-
-    std::stringstream mutant_fasta_ss;
-    mutant_fasta_ss << "mutant_" << contig << "_" << offset << "_" << region_size;
-
-    WriteFastaSequence fasta_mutant(mutant_fasta_ss.str(), "", mutant_sequence_ptr);
-    dna_seq_vector.push_back(fasta_mutant);
-
-    if (not ParseFasta::writeFastaFile(fasta_file, dna_seq_vector)) {
-
-      ExecEnv::log().error("Problem writing to fasta file: {}", fasta_file);
-
-    }
-
-  } else {
+  auto dual_seq_opt = adjusted_sequence.moveSequenceClear();
+  if (not dual_seq_opt) {
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Offset: {}, Size: {}",
-                         genome_variant_ptr->genomeId(), contig, offset, region_size);
+                         genome_db_ptr->genomeId(), contig_id, offset, region_size);
     return false;
+
+  }
+  auto& [reference_sequence, mutant_sequence] = dual_seq_opt.value();
+
+  DNA5SequenceCoding ref_reverse_complement = reference_sequence.codingSequence(StrandSense::REVERSE);
+
+  CompareDistance_t score = dna_distance_metric->linear_distance(reference_sequence, mutant_sequence);
+
+  ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}",
+                      genome_db_ptr->genomeId(), contig_id, offset, region_size, score);
+
+  auto reference_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(reference_sequence));
+  auto mutant_sequence_ptr = std::make_shared<DNA5SequenceLinear>(std::move(mutant_sequence));
+  auto ref_reverse_complement_ptr = std::make_shared<DNA5SequenceCoding>(std::move(ref_reverse_complement));
+
+  std::stringstream ref_fasta_ss;
+  ref_fasta_ss << "reference_" << contig_id << "_+_" << offset << "_" << region_size;
+  WriteFastaSequence fasta_reference(ref_fasta_ss.str(), "", reference_sequence_ptr);
+  dna_seq_vector.push_back(fasta_reference);
+
+  ref_fasta_ss.str("");
+  ref_fasta_ss << "reference_" << contig_id << "_-_" << offset << "_" << region_size;
+  WriteFastaSequence rev_fasta_reference(ref_fasta_ss.str(), "", ref_reverse_complement_ptr);
+  dna_seq_vector.push_back(rev_fasta_reference);
+
+  std::stringstream mutant_fasta_ss;
+  mutant_fasta_ss << "mutant_" << contig_id << "_" << offset << "_" << region_size;
+
+  WriteFastaSequence fasta_mutant(mutant_fasta_ss.str(), "", mutant_sequence_ptr);
+  dna_seq_vector.push_back(fasta_mutant);
+
+  if (not ParseFasta::writeFastaFile(fasta_file, dna_seq_vector)) {
+
+    ExecEnv::log().error("Problem writing to fasta file: {}", fasta_file);
 
   }
 

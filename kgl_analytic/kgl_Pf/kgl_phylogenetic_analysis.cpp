@@ -102,7 +102,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
   auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
@@ -112,17 +112,11 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& transcript_ptr = transcript_opt.value();
+  const auto& transcript_ptr = transcript_opt.value();
+  const auto prime_5_region = transcript_ptr->prime5Region(region_size);
 
-  ContigOffset_t offset_5_prime;
-  ContigSize_t size_5_prime;
-  transcript_ptr->prime_5_region(region_size, offset_5_prime, size_5_prime);
-
-  ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at offset {}, size {}, 5 prime {}",
-                      transcript_ptr->getParent()->id(), offset_5_prime, size_5_prime, transcript_ptr->prime_5());
-
-  DNA5SequenceLinear linear_mutant_sequence;
-  DNA5SequenceLinear linear_reference_sequence;
+  ExecEnv::log().info("Analyzing the 5 Prime Region for Sequence {} at interval: {}",
+                      transcript_ptr->getParent()->id(), prime_5_region.toString());
 
   auto contig_db_opt = genome_db_ptr->getContig(contig_id);
   if (not contig_db_opt) {
@@ -131,28 +125,32 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& contig_db_ptr = contig_db_opt.value();
+  const auto& contig_db_ptr = contig_db_opt.value();
 
-  OpenRightUnsigned region_interval(offset_5_prime, offset_5_prime + size_5_prime);
-  SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
+  SequenceVariantFilter seq_variant_filter(contig_db_ptr, prime_5_region);
 
-  if (GenomeMutation::mutantRegion(contig_id,
-                                   offset_5_prime,
-                                   size_5_prime,
-                                   genome_ref_ptr,
-                                   seq_variant_filter.offsetVariantMap(),
-                                   linear_reference_sequence,
-                                   linear_mutant_sequence)) {
+  // And mutate the sequence.
+  AdjustedSequence adjusted_sequence;
+  if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
 
-    reference_sequence = linear_reference_sequence.codingSequence(transcript_ptr->strand());
-    mutant_sequence = linear_mutant_sequence.codingSequence(transcript_ptr->strand());
-
-  } else {
-
-    ExecEnv::log().warn("No valid 5 prime sequence for contig_ref_ptr: {}, offset: {}, size: {}", contig_id, offset_5_prime, size_5_prime);
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
+                        contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
     return false;
 
   }
+
+  auto dual_seq_opt = adjusted_sequence.moveSequenceClear();
+  if (not dual_seq_opt) {
+
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Interval: {}",
+                         genome_db_ptr->genomeId(), contig_id, prime_5_region.toString());
+    return false;
+
+  }
+  const auto& [ref_sequence, mod_sequence] = dual_seq_opt.value();
+
+  reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
+  mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
 
   return true;
 
@@ -176,7 +174,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
   auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
@@ -186,18 +184,11 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& transcript_ptr = transcript_opt.value();
+  const auto& transcript_ptr = transcript_opt.value();
+  const auto prime_3_interval = transcript_ptr->prime3Region(region_size);
 
-  ContigOffset_t offset_3_prime;
-  ContigSize_t size_3_prime;
-  transcript_ptr->prime_3_region(region_size, offset_3_prime, size_3_prime);
-
-  ExecEnv::log().info("Analyzing the 3 Prime Region for Sequence {} offset at {}, size {}, 3 prime offset {}",
-                      transcript_ptr->getParent()->id(), offset_3_prime, size_3_prime, transcript_ptr->prime_3());
-
-
-  DNA5SequenceLinear linear_mutant_sequence;
-  DNA5SequenceLinear linear_reference_sequence;
+  ExecEnv::log().info("Analyzing the 3 Prime Region for Sequence {} at interval: {}",
+                      transcript_ptr->getParent()->id(), prime_3_interval.toString());
 
   auto contig_db_opt = genome_db_ptr->getContig(contig_id);
   if (not contig_db_opt) {
@@ -206,28 +197,32 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
     return false;
 
   }
-  auto& contig_db_ptr = contig_db_opt.value();
+  const auto& contig_db_ptr = contig_db_opt.value();
 
-  OpenRightUnsigned region_interval(offset_3_prime, offset_3_prime + size_3_prime);
-  SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
+  SequenceVariantFilter seq_variant_filter(contig_db_ptr, prime_3_interval);
 
-  if (GenomeMutation::mutantRegion(contig_id,
-                                   offset_3_prime,
-                                   size_3_prime,
-                                   genome_ref_ptr,
-                                   seq_variant_filter.offsetVariantMap(),
-                                   linear_reference_sequence,
-                                   linear_mutant_sequence)) {
+  // And mutate the sequence.
+  AdjustedSequence adjusted_sequence;
+  if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
 
-    reference_sequence = linear_reference_sequence.codingSequence(transcript_ptr->strand());
-    mutant_sequence = linear_mutant_sequence.codingSequence(transcript_ptr->strand());
-
-  } else {
-
-    ExecEnv::log().warn("No valid 3 prime sequence for contig_ref_ptr: {}, offset: {}, size: {}", contig_id, offset_3_prime, size_3_prime);
+    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
+                        contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
     return false;
 
   }
+
+  auto dual_seq_opt = adjusted_sequence.moveSequenceClear();
+  if (not dual_seq_opt) {
+
+    ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Interval: {}",
+                         genome_db_ptr->genomeId(), contig_id, prime_3_interval.toString());
+    return false;
+
+  }
+  const auto& [ref_sequence, mod_sequence] = dual_seq_opt.value();
+
+  reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
+  mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
 
   return true;
 
@@ -836,7 +831,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     return false;
 
   }
-  auto& contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   using SNPMap = std::map<std::string, MutationItem>;
   SNPMap master_SNP_List;
@@ -864,7 +859,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
       return false;
 
     }
-    auto& transcript_ptr = transcript_opt.value();
+    const auto& transcript_ptr = transcript_opt.value();
 
     auto contig_db_opt = genome_db_ptr->getContig(contig_id);
     if (not contig_db_opt) {
@@ -873,9 +868,21 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
       return false;
 
     }
-    auto& contig_db_ptr = contig_db_opt.value();
-    OpenRightUnsigned region_interval(transcript_ptr->start(), transcript_ptr->end());
+    const auto& contig_db_ptr = contig_db_opt.value();
+
+    OpenRightUnsigned region_interval(transcript_ptr->interval());
     SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
+
+    // And mutate the sequence.
+    AdjustedSequence adjusted_sequence;
+    if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
+
+      ExecEnv::log().warn("Problem mutating region DNA sequence for contig id: {}, interval: {}",
+                          contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
+      return false;
+
+    }
+
 
     DNA5SequenceCoding reference_sequence;
     DNA5SequenceCoding mutant_sequence;

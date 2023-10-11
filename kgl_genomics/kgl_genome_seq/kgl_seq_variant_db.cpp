@@ -96,7 +96,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
     return false;
 
   }
-  auto& contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
   auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
@@ -106,7 +106,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
     return false;
 
   }
-  auto& transcript_ptr = transcript_opt.value();
+  const auto& transcript_ptr = transcript_opt.value();
 
   auto coding_dna_opt = contig_ref_ptr->codingSequence(transcript_ptr);
   if (not coding_dna_opt)  {
@@ -124,131 +124,6 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
 
   }
 
-  // Check the reference sequence for good measure.
-  if (not reference_sequence.verifySequence()) {
-
-    ExecEnv::log().error("Corrupted reference sequence: {}, gene: {}, contig_ref_ptr: {}", transcript_id, gene_id, contig_id);
-
-  }
-
-  // Check for any DNA corruption acquired by mutating the reference sequence
-  if (not mutant_sequence.verifySequence()) {
-
-    ExecEnv::log().error("Corrupted mutant sequence: {}, gene: {}, contig_ref_ptr: {}", transcript_id, gene_id, contig_id);
-    // List out the variants.
-    for (auto const& [offset, variant_ptr] : variant_map) {
-
-      ExecEnv::log().info("Variant map: {}", variant_ptr->HGVS_Phase());
-
-    }
-
-  }
-
   return true;
 
 }
-
-bool kgl::GenomeMutation::mutantRegion( const ContigId_t& contig_id,
-                                       ContigOffset_t region_offset,
-                                       ContigSize_t region_size,
-                                       const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
-                                       const OffsetVariantMap& variant_map,
-                                       DNA5SequenceLinear& reference_sequence,
-                                       DNA5SequenceLinear& mutant_sequence) {
-
-  // Get the contig_ref_ptr.
-  auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
-  if (not contig_ref_opt) {
-
-    ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
-    return false;
-
-  }
-  const auto& contig_ref_ptr = contig_ref_opt.value();
-
-  // Check offset and size.
-  if ((region_offset + region_size) > contig_ref_ptr->sequence().length() or region_size > contig_ref_ptr->sequence().length()) {
-
-    ExecEnv::log().warn("Contig offset: {} and region size: {} too large for contig_ref_ptr: {} length: {}",
-                        region_offset, region_size, contig_ref_ptr->contigId(), contig_ref_ptr->sequence().length());
-    return false;
-
-  }
-
-  // Get the reference DNA sequence
-  OpenRightUnsigned reference_interval(region_offset, region_offset+region_size);
-  auto reference_sequence_opt = contig_ref_ptr->sequence().subSequence(reference_interval);
-  if (not reference_sequence_opt) {
-
-    ExecEnv::log().warn("Problem extracting DNA sequence interval:{} for contig_ref_ptr: {}, interval: {}",
-                        reference_interval.toString(), contig_id, contig_ref_ptr->sequence_ptr()->interval().toString());
-    return false;
-
-  }
-  reference_sequence = std::move(reference_sequence_opt.value());
-  // And mutate the sequence.
-  if (not VariantMutation().mutateDNA(variant_map, contig_ref_ptr, region_offset, region_size, mutant_sequence)) {
-
-    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_ref_ptr: {}, interval: {}",
-                        contig_id, reference_interval.toString());
-    return false;
-
-  }
-
-  // Check the reference sequence for good measure.
-  if (not reference_sequence.verifySequence()) {
-
-    ExecEnv::log().error("Corrupted reference contig_ref_ptr: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
-
-  }
-
-  // Check for any DNA corruption acquired by mutating the reference sequence
-  if (not mutant_sequence.verifySequence()) {
-
-    ExecEnv::log().error("Corrupted mutant contig_ref_ptr: {}, offset: {}, size: {}", contig_id, region_offset, region_size);
-    // List out the variants.
-    for (auto const& [offset, variant_ptr] : variant_map) {
-
-      ExecEnv::log().info("Variant map: {}", variant_ptr->HGVS_Phase());
-
-    }
-
-  }
-
-  return true;
-
-}
-
-// This function moves the original (.first) and modified (.second) sequences .
-std::optional<std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear>>
-kgl::GenomeMutation::mutantRegion( const std::shared_ptr<const ContigReference>& contig_ref_ptr,
-                                   const SequenceVariantFilter& sequence_filter) {
-
-  // Convenience alias to reduce code noise.
-  const auto& contig_interval = contig_ref_ptr->sequence().interval();
-  const auto& sequence_interval = sequence_filter.sequenceInterval();
-  const auto& contig_id = contig_ref_ptr->contigId();
-
-  // Check offset and size.
-  if (not contig_interval.containsInterval(sequence_interval)) {
-
-    ExecEnv::log().warn("Sequence interval: {} not contained in contig id: {} interval: {}",
-                        sequence_interval.toString(), contig_id, contig_interval.toString());
-    return std::nullopt;
-
-  }
-
-  // And mutate the sequence.
-  AdjustedSequence adjusted_sequence;
-  if (not adjusted_sequence.updateSequence( contig_ref_ptr, sequence_filter)) {
-
-    ExecEnv::log().warn("Problem mutating region DNA sequence for contig_ref_ptr: {}, interval: {}",
-                        contig_id, sequence_filter.sequenceInterval().toString());
-    return std::nullopt;
-
-  }
-
-  return adjusted_sequence.moveSequenceClear();
-
-}
-

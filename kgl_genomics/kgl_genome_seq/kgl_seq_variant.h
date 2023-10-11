@@ -36,11 +36,6 @@ public:
                                 const std::shared_ptr<const TranscriptionSequence>& coding_sequence_ptr,
                                 DNA5SequenceCoding &dna_sequence);
 
-  [[nodiscard]] bool mutateDNA( const OffsetVariantMap &insert_variant_map,
-                                const std::shared_ptr<const ContigReference>& contig_ptr,
-                                ContigOffset_t contig_offset,
-                                ContigSize_t sequence_size,
-                                DNA5SequenceLinear& dna_sequence_ptr);
 
 private:
 

@@ -35,13 +35,6 @@ public:
                                                                        const std::shared_ptr<const ContigReference>& contig_reference_ptr,
                                                                        const OpenRightUnsigned& modified_interval);
 
-  // Given a vector of intervals, sorted them by lower() and then retrieves the modified sequence,
-  // and concatenates these in sorted sequence order.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> concatModifiedSequences(const std::vector<OpenRightUnsigned>& interval_vector) const ;
-
-  // Given a vector of intervals, sorted them by lower() and then retrieves the original sequence,
-  // and concatenates these in sorted sequence order.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
 
   // Returns a sequence of the concatenated and modified exons. Not in strand sense.
   [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedGene( const GeneIntervalStructure& gene_interval,
@@ -58,6 +51,15 @@ public:
 private:
 
   AdjustedSequence adjusted_sequence_;
+
+  // Given a vector of intervals, sorted them by lower() and then retrieves the modified sequence,
+  // and concatenates these in sorted sequence order.
+  [[nodiscard]] std::optional<DNA5SequenceLinear> concatModifiedSequences(const std::vector<OpenRightUnsigned>& interval_vector) const ;
+
+  // Given a vector of intervals, sorted them by lower() and then retrieves the original sequence,
+  // and concatenates these in sorted sequence order.
+  [[nodiscard]] std::optional<DNA5SequenceLinear> concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
+
 
 };
 

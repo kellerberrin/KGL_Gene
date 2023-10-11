@@ -281,7 +281,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
 
 }
 
-std::optional<std::pair<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear>> kgl::AdjustedSequence::moveSequenceClear() {
+kgl::DualSeqOpt kgl::AdjustedSequence::moveSequenceClear() {
 
   if (not valid_modified_sequence_) {
 
