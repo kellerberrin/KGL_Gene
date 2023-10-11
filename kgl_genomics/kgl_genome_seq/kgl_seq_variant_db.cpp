@@ -99,7 +99,7 @@ bool kgl::GenomeMutation::mutantCodingDNA( const ContigId_t& contig_id,
   const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
-  auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+  auto transcript_opt = contig_ref_ptr->getTranscription(gene_id, transcript_id);
   if (not transcript_opt) {
 
     ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);

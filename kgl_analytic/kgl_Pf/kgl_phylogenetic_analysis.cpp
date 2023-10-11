@@ -105,7 +105,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
-  auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+  auto transcript_opt = contig_ref_ptr->getTranscription(gene_id, transcript_id);
   if (not transcript_opt) {
 
     ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
@@ -177,7 +177,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the coding sequence.
-  auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+  auto transcript_opt = contig_ref_ptr->getTranscription(gene_id, transcript_id);
   if (not transcript_opt) {
 
     ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
@@ -737,7 +737,7 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     auto& contig_ref_ptr = contig_ref_opt.value();
 
     // Get the coding sequence.
-    auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+    auto transcript_opt = contig_ref_ptr->getTranscription(gene_id, transcript_id);
     if (not transcript_opt) {
 
       ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
@@ -852,7 +852,7 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     sequence_count++;
 
     // Get the coding sequence.
-    auto transcript_opt = contig_ref_ptr->getCodingSequence(gene_id, transcript_id);
+    auto transcript_opt = contig_ref_ptr->getTranscription(gene_id, transcript_id);
     if (transcript_opt) {
 
       ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);

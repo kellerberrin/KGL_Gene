@@ -58,19 +58,54 @@ kgl::ContigOffset_t kgl::FeatureSequence::distance(const FeatureSequence& compar
 // TranscriptionSequence - Members
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kel::IntervalSetLower kgl::TranscriptionSequence::getFeatureIntervals() const {
+kel::IntervalSetLower kgl::TranscriptionSequence::getExonIntervals() const {
 
-  IntervalSetLower feature_intervals;
+  IntervalSetLower exon_intervals;
   for (const auto& [offset, feature_ptr] : transcription_feature_map_) {
 
-    feature_intervals.insert(feature_ptr->sequence().interval());
+    exon_intervals.insert(feature_ptr->sequence().interval());
 
   }
 
-  return feature_intervals;
+  return exon_intervals;
 
 }
 
+// Empty for a 1 exon gene.
+kel::IntervalSetLower kgl::TranscriptionSequence::getIntronIntervals() const {
+
+  IntervalSetLower intron_set;
+  const auto exon_interval_set = getExonIntervals();
+
+  auto iter_interval = exon_interval_set.begin();
+  while (iter_interval != exon_interval_set.end()) {
+
+    auto iter_next_interval = std::ranges::next(iter_interval, 1, exon_interval_set.end());
+    if (iter_next_interval == exon_interval_set.end()) {
+
+      break;
+
+    }
+
+    if (iter_interval->disjoint(*iter_next_interval) and not iter_interval->adjacent(*iter_next_interval)) {
+
+      OpenRightUnsigned intron_interval{iter_interval->upper(), iter_next_interval->lower()};
+      auto [insert_iter, result] = intron_set.insert(intron_interval);
+      if (not result) {
+
+        ExecEnv::log().warn("Unable to enter insert intron interval: {} (duplicate)", intron_interval.toString());
+
+      }
+
+    }
+
+    iter_interval = iter_next_interval;
+
+  } // Next exon pair.
+
+  return intron_set;
+
+}
 
 
 kgl::StrandSense kgl::TranscriptionSequence::strand() const {

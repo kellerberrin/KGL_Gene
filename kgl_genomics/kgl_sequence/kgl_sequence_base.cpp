@@ -53,7 +53,6 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(cons
   }
 
   DNA5SequenceLinear sub_sequence;
-
   if (not getSubsequence(sub_interval.lower(), sub_interval.size(), sub_sequence)) {
 
     ExecEnv::log().warn("Cannot get sub-sequence: {} from sequence: {}", sub_interval.toString(), interval().toString());
@@ -107,20 +106,8 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 
 }
 
-std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
+std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(const IntervalSetLower& interval_set) const {
 
-  // Sort the intervals.
-  IntervalSetLower interval_set;
-  for (auto const& interval : interval_vector) {
-
-    auto [insert_iter, result] = interval_set.insert(interval);
-    if (not result) {
-
-      ExecEnv::log().warn("Interval: {} has a duplicate lower()", interval.toString());
-
-    }
-
-  }
 
   // Extract the modified sequences and concatenate them.
   DNA5SequenceLinear concatenated_sequence;

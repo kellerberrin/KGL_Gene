@@ -99,9 +99,9 @@ public:
                                                               transcription_feature_map_(std::move(feature_map)) {}
   ~TranscriptionSequence() = default;
 
-  [[nodiscard]] IntervalSetLower getFeatureIntervals() const;
+  [[nodiscard]] IntervalSetLower getExonIntervals() const;
+  [[nodiscard]] IntervalSetLower getIntronIntervals() const; // Empty for a 1 exon gene.
   [[nodiscard]] const TranscriptionFeatureMap& getFeatureMap() const { return transcription_feature_map_; }
-  [[nodiscard]] size_t codingFeatures() const { return getFeatureMap().size(); }
   [[nodiscard]] std::shared_ptr<const ContigReference> contig() const;
   [[nodiscard]] std::shared_ptr<const GeneFeature> getGene() const { return gene_ptr_; }
   [[nodiscard]] std::shared_ptr<const Feature> getParent() const { return parent_ptr_; }

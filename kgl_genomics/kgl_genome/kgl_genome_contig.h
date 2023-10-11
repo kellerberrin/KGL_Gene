@@ -66,7 +66,7 @@ public:
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   [[nodiscard]] std::optional<std::shared_ptr<const TranscriptionSequence>>
-    getCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& transcript_id) const;
+    getTranscription(const FeatureIdent_t& gene_id, const FeatureIdent_t& transcript_id) const;
 
   // Given a transcript return the associated coding sequence.
   [[nodiscard]] std::optional<DNA5SequenceCoding>

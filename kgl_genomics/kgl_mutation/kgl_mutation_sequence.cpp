@@ -226,11 +226,18 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
 
   }
 
+  // Ckeck if the converted interval is zero sized (the original interval was deleted).
+  if (modified_interval.empty()) {
+
+    return DNA5SequenceLinear{}; // Return empty sequence.
+
+  }
+
   // Retrieve the modified sub-sequence.
   auto sub_sequence_opt = modified_sequence_.subSequence(modified_interval);
   if (not sub_sequence_opt) {
 
-    ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified  sequence: {}",
+    ExecEnv::log().warn("Sub interval: {} cannot be extracted from modified sequence: {}",
                         modified_interval.toString(), modified_sequence_.interval().toString());
 
   }

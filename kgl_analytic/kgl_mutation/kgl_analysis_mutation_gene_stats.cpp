@@ -40,15 +40,15 @@ bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
   gene_span_ = gene_ptr->sequence().length();
   strand_ = gene_ptr->sequence().strandText();
 
-  auto sequence_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
+  auto transcript_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
 
-  sequences_ = sequence_array_ptr->size();
-  if (not sequence_array_ptr->getMap().empty()) {
+  sequences_ = transcript_array_ptr->size();
+  if (not transcript_array_ptr->getMap().empty()) {
 
-    auto& [sequence_name, seq_ptr] = *(sequence_array_ptr->getMap().begin());
-    seq_name_ = sequence_name;
-    nucleotides_ = seq_ptr->codingNucleotides();
-    exons_ = seq_ptr->codingFeatures();
+    auto& [transcript_id, transcript_ptr] = *(transcript_array_ptr->getMap().begin());
+    seq_name_ = transcript_id;
+    nucleotides_ = transcript_ptr->codingNucleotides();
+    exons_ = transcript_ptr->getFeatureMap().size();
 
   }
   auto const& attribute_map = gene_ptr->getAttributes().getMap();

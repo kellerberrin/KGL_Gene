@@ -97,7 +97,7 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
         << transcript_record.genePtr()->descriptionText() << DELIMITER_
         << transcript_record.transcriptionPtr()->start() << DELIMITER_
         << transcript_record.transcriptionPtr()->end() << DELIMITER_
-        << transcript_record.transcriptionPtr()->codingFeatures() << DELIMITER_
+        << transcript_record.transcriptionPtr()->getFeatureMap().size() << DELIMITER_
         << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
         << transcript_record.mutateStats().total_variants_ << DELIMITER_
         << transcript_record.mutateStats().duplicate_variants_ << DELIMITER_

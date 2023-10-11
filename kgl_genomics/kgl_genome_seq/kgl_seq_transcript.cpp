@@ -12,18 +12,18 @@ namespace kel = kellerberrin;
 
 
 std::pair<kgl::SequenceStats, bool>
-kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
-                                                const std::shared_ptr<const ContigReference>& contig_reference_ptr,
-                                                const OpenRightUnsigned& sequence_interval) {
+kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr) {
+
+  const auto& contig_reference_ptr = transcript_ptr_->contig();
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
-  SequenceVariantFilter filtered_variants(contig_variant_ptr, sequence_interval);
+  SequenceVariantFilter filtered_variants(contig_variant_ptr, transcript_ptr_->interval());
   size_t map_size = filtered_variants.preFilterVariants();
 
   if (not adjusted_sequence_.updateSequence(contig_reference_ptr, filtered_variants)) {
 
     ExecEnv::log().warn("Problem updating sequence: {}, variant contig: {}, reference contig_ref_ptr: {}",
-                        sequence_interval.toString(),
+                        transcript_ptr_->interval().toString(),
                         contig_variant_ptr->contigId(),
                         contig_reference_ptr->contigId());
     return {{}, false};
@@ -40,24 +40,11 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
-
-  // Sort the intervals.
-  IntervalSetLower interval_set;
-  for (auto const& interval : interval_vector) {
-
-    auto [insert_iter, result] = interval_set.insert(interval);
-    if (not result) {
-
-      ExecEnv::log().warn("Interval: {} has a duplicate lower()", interval.toString());
-
-    }
-
-  }
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene() const {
 
   // Extract the modified sequences and concatenate them.
   DNA5SequenceLinear concatenated_sequence;
-  for (auto const& sub_interval : interval_set) {
+  for (auto const& sub_interval : transcript_ptr_->getExonIntervals()) {
 
     auto modified_sequence_opt = adjusted_sequence_.modifiedSubSequence(sub_interval);
     if (not modified_sequence_opt) {
@@ -82,24 +69,11 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatModifiedSe
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatOriginalSequences(const std::vector<OpenRightUnsigned>& interval_vector) const {
-
-  // Sort the intervals.
-  IntervalSetLower interval_set;
-  for (auto const& interval : interval_vector) {
-
-    auto [insert_iter, result] = interval_set.insert(interval);
-    if (not result) {
-
-      ExecEnv::log().warn("SequenceTranscript::concatOriginalSequences; interval: {} has a duplicate lower()", interval.toString());
-
-    }
-
-  }
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene() const {
 
   // Extract the modified sequences and concatenate them.
   DNA5SequenceLinear concatenated_sequence;
-  for (auto const& sub_interval : interval_set) {
+  for (auto const& sub_interval : transcript_ptr_->getExonIntervals()) {
 
     auto modified_sequence_opt = adjusted_sequence_.originalSubSequence(sub_interval);
     if (not modified_sequence_opt) {
@@ -123,55 +97,3 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::concatOriginalSe
 
 }
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene(const GeneIntervalStructure& gene_interval,
-                                                                                const FeatureIdent_t& transcript_id) const {
-
-  auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
-  if (find_iter == gene_interval.codingTranscripts().end()) {
-
-    ExecEnv::log().warn("Could not find transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
-    return std::nullopt;
-
-  }
-
-  auto [trans_id, exon_set] = *find_iter;
-  std::vector<OpenRightUnsigned> exon_vector{exon_set.begin(), exon_set.end()};
-
-  auto sequence_opt = concatModifiedSequences(exon_vector);
-  if (not sequence_opt) {
-
-    ExecEnv::log().warn("Could not modify transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
-    return std::nullopt;
-
-  }
-
-  return sequence_opt;
-
-}
-
-
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene(const GeneIntervalStructure& gene_interval,
-                                                                                const FeatureIdent_t& transcript_id) const {
-
-  auto find_iter = gene_interval.codingTranscripts().find(transcript_id);
-  if (find_iter == gene_interval.codingTranscripts().end()) {
-
-    ExecEnv::log().warn("Could not find transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
-    return std::nullopt;
-
-  }
-
-  auto [trans_id, intron_set] = *find_iter;
-  std::vector<OpenRightUnsigned> exon_vector{intron_set.begin(), intron_set.end()};
-
-  auto sequence_opt = concatOriginalSequences(exon_vector);
-  if (not sequence_opt) {
-
-    ExecEnv::log().warn("Could not modify transcript: {} for gene: {}", transcript_id, gene_interval.getGene()->id());
-    return std::nullopt;
-
-  }
-
-  return sequence_opt;
-
-}

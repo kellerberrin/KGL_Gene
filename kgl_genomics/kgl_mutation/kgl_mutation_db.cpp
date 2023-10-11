@@ -217,7 +217,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
     return {{}, false};
 
   }
-  auto& contig_db_ptr = contig_db_opt.value();
+  const auto& contig_db_ptr = contig_db_opt.value();
 
   // And the reference genome contig_ref_ptr.
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(gene_contig_id);
@@ -229,28 +229,45 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
     return {{}, false};
 
   }
-  auto contig_ref_ptr = contig_ref_opt.value();
+  const auto contig_ref_ptr = contig_ref_opt.value();
 
   // Get the gene gene_interval
-  GeneIntervalStructure gene_struct(gene_ptr);
-  auto gene_interval = gene_struct.geneInterval();
+  auto transcript_opt = contig_ref_ptr->getTranscription(gene_ptr->id(), transcript_id);
+  if (not transcript_opt) {
 
-  SequenceTranscript modified_sequence;
-  auto [stats,  result] = modified_sequence.createModifiedSequence(contig_db_ptr, contig_ref_ptr, gene_interval);
+    ExecEnv::log().warn("Transcript: {} not found, Gene: {}, Reference Genome: {}",
+                        transcript_id, gene_ptr->id(), gene_contig_id);
 
-  auto modified_sequence_opt = modified_sequence.getModifiedGene(gene_struct, transcript_id);
-  auto original_sequence_opt = modified_sequence.getOriginalGene(gene_struct, transcript_id);
+    return {{}, false};
+
+  }
+  const auto transcript_ptr = transcript_opt.value();
+
+  SequenceTranscript modified_sequence(contig_db_ptr, transcript_ptr);
+  if (not modified_sequence.sequenceStatus()) {
+
+    ExecEnv::log().warn("Unable to generate modified seuquence for Transcript: {}, Gene: {}, Reference Genome: {}",
+                        transcript_id, gene_ptr->id(), gene_contig_id);
+
+    return {{}, false};
+
+  }
+
+  auto stats = modified_sequence.sequenceStatistics();
+
+  auto modified_sequence_opt = modified_sequence.getModifiedGene();
+  auto original_sequence_opt = modified_sequence.getOriginalGene();
 
   if (modified_sequence_opt and original_sequence_opt) {
 
-    if (gene_struct.geneType() == GeneCodingType::PROTEIN_CODING) {
+    if (transcript_ptr->codingType() == TranscriptionSequenceType::PROTEIN) {
 
       auto& modified = modified_sequence_opt.value();
-      auto modified_coding = modified.codingSequence(gene_struct.strand());
+      auto modified_coding = modified.codingSequence(transcript_ptr->strand());
       stats.modified_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(modified_coding);
 
       auto& original = original_sequence_opt.value();
-      auto original_coding = original.codingSequence(gene_struct.strand());
+      auto original_coding = original.codingSequence(transcript_ptr->strand());
       stats.original_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(original_coding);
 
     } else {

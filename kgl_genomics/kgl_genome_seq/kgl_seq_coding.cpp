@@ -15,7 +15,7 @@ kgl::CodingTranscript::intronSequence( const std::shared_ptr<const Transcription
 
   IntronMap intron_map;
 
-  auto intron_interval_set = GeneIntervalStructure::transcriptIntronIntervals(transcript_ptr);
+  const auto intron_interval_set = transcript_ptr->getIntronIntervals();
   for (auto const& intron_interval : intron_interval_set) {
 
     auto intron_sequence_opt = contig_ref_ptr->sequence().subSequence(intron_interval);
@@ -29,7 +29,7 @@ kgl::CodingTranscript::intronSequence( const std::shared_ptr<const Transcription
       return std::nullopt;
 
     }
-    auto& intron_sequence = intron_sequence_opt.value();
+    const auto& intron_sequence = intron_sequence_opt.value();
     auto intron_coding = intron_sequence.codingSequence(transcript_ptr->strand());
 
     auto intron_seq_ptr = std::make_shared<const DNA5SequenceCoding>(std::move(intron_coding));

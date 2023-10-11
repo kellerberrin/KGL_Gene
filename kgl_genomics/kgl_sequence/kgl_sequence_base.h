@@ -121,7 +121,7 @@ public:
   [[nodiscard]] std::optional<DNA5SequenceLinear> subSequence(const OpenRightUnsigned& sub_interval) const;
 
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const std::vector<OpenRightUnsigned>& interval_vector) const;
+  [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const IntervalSetLower& interval_set) const;
 
 private:
 

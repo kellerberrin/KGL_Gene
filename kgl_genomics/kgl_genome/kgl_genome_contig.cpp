@@ -51,7 +51,7 @@ std::vector<std::shared_ptr<const kgl::Feature>> kgl::ContigReference::findFeatu
 
 // Given a gene id and an mRNA id (sequence id) return the coding base sequence.
 std::optional<std::shared_ptr<const kgl::TranscriptionSequence>>
-kgl::ContigReference::getCodingSequence(const FeatureIdent_t& gene_id, const FeatureIdent_t& transcript_id) const {
+kgl::ContigReference::getTranscription(const FeatureIdent_t& gene_id, const FeatureIdent_t& transcript_id) const {
 
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec = findFeatureId(gene_id);
 
@@ -117,10 +117,8 @@ bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
 std::optional<kgl::DNA5SequenceCoding>
 kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const {
 
-  auto cds_interval_set = GeneIntervalStructure::transcriptIntervals(transcript_ptr);
-  std::vector<OpenRightUnsigned> interval_vector(cds_interval_set.begin(), cds_interval_set.end());
-
-  auto concat_sequence_opt = sequence().concatSequences(interval_vector);
+  const auto cds_interval_set = transcript_ptr->getExonIntervals();
+  auto concat_sequence_opt = sequence().concatSequences(cds_interval_set);
   if (not concat_sequence_opt) {
 
     ExecEnv::log().warn("Unable to concat sequence intervals for Gene: {}, Transcript: {}",
@@ -129,7 +127,7 @@ kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionS
     return std::nullopt; // Return an empty coding sequence.
 
   }
-  auto& concat_sequence = concat_sequence_opt.value();
+  const auto& concat_sequence = concat_sequence_opt.value();
 
   return concat_sequence.codingSequence(transcript_ptr->strand());
 
