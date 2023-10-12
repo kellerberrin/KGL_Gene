@@ -92,8 +92,9 @@ std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::
 
   if constexpr(CODING_FILTER_ACTIVE_) {
 
-    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
-    ExecEnv::log().info("Coding Population Final Filtered Size Genome count: {}, Variant Count: {}",
+// Recode the coding variants filter using gene, transcript functionality.
+//    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));
+    ExecEnv::log().info("** Coding Filter Not Active** Coding Population Final Filtered Size Genome count: {}, Variant Count: {}",
                         filtered_population_ptr->getMap().size(),
                         filtered_population_ptr->variantCount());
 

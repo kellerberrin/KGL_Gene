@@ -6,9 +6,8 @@
 #include <iomanip>
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_upgma_node.h"
-#include "kgl_genome_seq/kgl_seq_variant_db.h"
-#include "kgl_seq_variant_filter.h"
-#include "kgl_seq_coding.h"
+#include "kgl_mutation_transcript.h"
+#include "kgl_mutation_coding.h"
 
 
 
@@ -89,8 +88,6 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
     auto& contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
     const std::string& contig_id = contig_ref_ptr->contigId();
     const std::string& gene_id = transcript_ptr->getGene()->id();
-    AminoSequence mutant_sequence;
-    AminoSequence reference_sequence;
 
     auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
     if (not contig_db_opt) {
@@ -99,17 +96,18 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
       return;
 
     }
-    auto& contig_ptr = contig_db_opt.value();
-    SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
+    const auto& contig_db_ptr = contig_db_opt.value();
 
+    SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
 
-    if (GenomeMutation::mutantProteins(contig_id,
-                                       gene_id,
-                                       transcript_id,
-                                       genome_db_ptr_,
-                                       seq_variant_filter.offsetVariantMap(),
-                                       reference_sequence,
-                                       mutant_sequence)) {
+    auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+    auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+    if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+      auto reference_sequence = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+      auto mutant_sequence = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
+
 
       mutated_proteins_[gene_id] = std::make_shared<AminoSequence>(std::move(mutant_sequence));
 
@@ -147,7 +145,6 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
   const auto& transcript_ptr = transcipt_array_ptr->getFirst();
   const auto& contig_ref_ptr = transcript_ptr->getGene()->contig_ref_ptr();
   const std::string& contig_id = contig_ref_ptr->contigId();
-  const std::string& gene_id = transcript_ptr->getGene()->id();
   const std::string& transcript_id = transcript_ptr->getParent()->id();
 
   if (transcipt_array_ptr->size() > 1) {
@@ -157,9 +154,6 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
   }
 
-  AminoSequence mutant_sequence;
-  AminoSequence reference_sequence;
-
   auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
   if (not contig_db_opt) {
 
@@ -167,16 +161,17 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
     return;
 
   }
-  auto& contig_ptr = contig_db_opt.value();
-  SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
+  const auto& contig_db_ptr = contig_db_opt.value();
 
-  if (GenomeMutation::mutantProteins(contig_id,
-                                     gene_id,
-                                     transcript_id,
-                                     genome_db_ptr_,
-                                     seq_variant_filter.offsetVariantMap(),
-                                     reference_sequence,
-                                     mutated_protein_)) {
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+
+  auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+  auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+  if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+    auto reference_sequence = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+    auto mutant_sequence = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
 
   }
 
@@ -257,16 +252,19 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
     return;
 
   }
-  const auto& contig_ptr = contig_db_opt.value();
-  SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
+  const auto& contig_db_ptr = contig_db_opt.value();
 
-  if (not GenomeMutation::mutantProteins(contig_id,
-                                         gene_id,
-                                         transcript_id,
-                                         genome_db_ptr_,
-                                         seq_variant_filter.offsetVariantMap(),
-                                         reference_sequence,
-                                         mutant_sequence)) {
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+
+  auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+  auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+  if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+    auto protein_reference = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+    auto protein_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
+
+  } else {
 
     ExecEnv::log().critical("Cannot mutate transcript_ptr for : genome: {} gene: {}",
                             genome_variant_ptr_->genomeId(), gene_ptr_->id());

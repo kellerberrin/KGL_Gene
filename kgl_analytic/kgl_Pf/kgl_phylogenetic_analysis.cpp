@@ -9,9 +9,8 @@
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_seq_variant_db.h"
-#include "kgl_seq_variant_filter.h"
-#include "kgl_seq_coding.h"
+#include "kgl_mutation_variant_filter.h"
+#include "kgl_mutation_coding.h"
 #include "kgl_io_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;
@@ -373,7 +372,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
           return false;
 
         }
-        DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
+        const auto& coding_dna_sequence = coding_dna_opt.value();
 
         const std::vector<std::pair<CodingDNA5::Alphabet, size_t>> count_vector = coding_dna_sequence.countSymbols();
         out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(coding_dna_sequence, count_vector) << CSV_delimiter;
@@ -407,9 +406,6 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
         for(const auto& [genome_id, genome_db_ptr] : pop_variant_ptr->getMap()) {
 
-          DNA5SequenceCoding reference_sequence;
-          DNA5SequenceCoding mutant_sequence;
-
           auto contig_db_opt = genome_db_ptr->getContig(contig_id);
           if (not contig_db_opt) {
 
@@ -417,17 +413,17 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
             return false;
 
           }
-          auto& contig_ptr = contig_db_opt.value();
-          SequenceVariantFilter seq_variant_filter(contig_ptr, transcript_ptr->interval());
+          const auto& contig_db_ptr = contig_db_opt.value();
 
-          if (GenomeMutation::mutantCodingDNA(contig_id,
-                                              gene_ptr->id(),
-                                              transcript_id,
-                                              genome_ref_ptr,
-                                              seq_variant_filter.offsetVariantMap(),
-                                              reference_sequence,
-                                              mutant_sequence)) {
 
+          SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+          auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+          auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+          if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+            auto const& reference_sequence = reference_sequence_opt.value();
+            auto const& mutant_sequence = mutant_sequence_opt.value();
 
             switch(analysis_type) {
 
@@ -440,34 +436,17 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
               }
                 break;
 
-              case SequenceAnalysisType::SIZE:
-                out_file << mutant_sequence.length() << CSV_delimiter;
-                break;
-
-              case SequenceAnalysisType::VARIANT:
-                out_file << seq_variant_filter.offsetVariantMap().size() << CSV_delimiter;
-                break;
-
-              case SequenceAnalysisType::SNP: {
-
-                size_t snp_count = 0;
-                for (auto variant : seq_variant_filter.offsetVariantMap()) {
-
-                  if (variant.second->isSNP()) ++snp_count;
-
-                }
-
-                out_file << snp_count << CSV_delimiter;
-
-              }
-                break;
-
               case SequenceAnalysisType::ENTROPY:
                 out_file << SequenceComplexity::alphabetEntropy<CodingDNA5>(mutant_sequence, mutant_sequence.countSymbols()) << CSV_delimiter;
                 break;
 
               case SequenceAnalysisType::LEMPEL_ZIV:
                 out_file << SequenceComplexity::complexityLempelZiv(mutant_sequence) << CSV_delimiter;
+                break;
+
+              default:
+              case SequenceAnalysisType::SIZE:
+                out_file << mutant_sequence.length() << CSV_delimiter;
                 break;
 
             }
@@ -525,16 +504,16 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
     for (auto const& [gene_offset, gene_ptr] : contig_ref_ptr->getGeneMap()) {
 
       auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-      for (auto const& [sequence_id, sequence_ptr] : coding_seq_ptr->getMap()) {
+      for (auto const& [transcript_id, transcript_ptr] : coding_seq_ptr->getMap()) {
 
 
         out_file << contig_ref_ptr->contigSize() << CSV_delimiter;
         out_file << gene_ptr->id() << CSV_delimiter;
-        out_file << sequence_id << CSV_delimiter;
-        out_file << sequence_ptr->start() << CSV_delimiter;
-        out_file << sequence_ptr->codingNucleotides() << CSV_delimiter;
+        out_file << transcript_id << CSV_delimiter;
+        out_file << transcript_ptr->start() << CSV_delimiter;
+        out_file << transcript_ptr->codingNucleotides() << CSV_delimiter;
 
-        auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(sequence_ptr);
+        auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(transcript_ptr);
         if (coding_dna_opt) {
 
           DNA5SequenceCoding& verify_coding_sequence = coding_dna_opt.value();
@@ -592,19 +571,18 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
           }
           auto& contig_db_ptr = contig_db_opt.value();
-          OpenRightUnsigned region_interval(sequence_ptr->start(), sequence_ptr->end());
+          OpenRightUnsigned region_interval(transcript_ptr->start(), transcript_ptr->end());
           SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
 
-          AminoSequence amino_reference_seq;
-          AminoSequence amino_mutant;
+          SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
 
-          if (GenomeMutation::mutantProteins(contig_id,
-                                             gene_ptr->id(),
-                                             sequence_id,
-                                             genome_ref_ptr,
-                                             seq_variant_filter.offsetVariantMap(),
-                                             amino_reference_seq,
-                                             amino_mutant)) {
+          auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+          auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+          if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+            auto amino_reference_seq = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+            auto amino_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
 
             switch (contig_ref_ptr->checkValidProteinSequence(amino_mutant)) {
 
@@ -634,14 +612,14 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
                 break;
 
               default:
-                ExecEnv::log().error("Undefined sequence protein sequence type: {}", sequence_id);
+                ExecEnv::log().error("Undefined sequence protein sequence type: {}", transcript_id);
                 return false;
 
             }
 
           } else {
 
-            ExecEnv::log().error("Error Processing sequence: {}", sequence_id);
+            ExecEnv::log().error("Error Processing sequence: {}", transcript_id);
             return false;
 
           }
@@ -757,20 +735,21 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
     OpenRightUnsigned region_interval(transcript_ptr->interval());
     SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
 
-    AminoSequence amino_reference_seq;
-    AminoSequence amino_mutant;
-    if (GenomeMutation::mutantProteins(contig_id,
-                                       gene_id,
-                                       transcript_id,
-                                       genome_ref_ptr,
-                                       seq_variant_filter.offsetVariantMap(),
-                                       amino_reference_seq,
-                                       amino_mutant)) {
+    SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
 
-        EditVector edit_vector;
-        SequenceComparison().editDNAItems(amino_reference_seq.getSequenceAsString(),
-                                          amino_mutant.getSequenceAsString(),
-                                          edit_vector);
+    auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+    auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+    if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+      auto amino_reference_seq = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+      auto amino_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
+
+
+      EditVector edit_vector;
+      SequenceComparison().editDNAItems(amino_reference_seq.getSequenceAsString(),
+                                        amino_mutant.getSequenceAsString(),
+                                        edit_vector);
 
       for (auto edit_item : edit_vector) {
 
@@ -870,35 +849,14 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
     }
     const auto& contig_db_ptr = contig_db_opt.value();
 
-    OpenRightUnsigned region_interval(transcript_ptr->interval());
-    SequenceVariantFilter seq_variant_filter(contig_db_ptr, region_interval);
+    SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+    auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+    auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
 
-    // And mutate the sequence.
-    AdjustedSequence adjusted_sequence;
-    if (not adjusted_sequence.updateSequence(contig_ref_ptr, seq_variant_filter)) {
+    if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
 
-      ExecEnv::log().warn("Problem mutating region DNA sequence for contig id: {}, interval: {}",
-                          contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
-      return false;
-
-    }
-
-
-    DNA5SequenceCoding reference_sequence;
-    DNA5SequenceCoding mutant_sequence;
-    if (GenomeMutation::mutantCodingDNA(contig_id,
-                                        gene_id,
-                                        transcript_id,
-                                        genome_ref_ptr,
-                                        seq_variant_filter.offsetVariantMap(),
-                                        reference_sequence,
-                                        mutant_sequence)) {
-
-      for (auto const& [offset, variant_ptr] : seq_variant_filter.offsetVariantMap()) {
-
-        variant_file << variant_ptr->HGVS();
-
-      }
+      auto const& reference_sequence = reference_sequence_opt.value();
+      auto const& mutant_sequence = mutant_sequence_opt.value();
 
       EditVector edit_vector;
       SequenceComparison().editDNAItems(reference_sequence.getSequenceAsString(),
@@ -911,26 +869,18 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
 
         ContigOffset_t codon_index = static_cast<size_t>(edit_item.reference_offset / 3);
 
-        std::shared_ptr<const Codon> mutant_codon(std::make_shared<Codon>(mutant_sequence, codon_index));
-        std::shared_ptr<const Codon> ref_codon(std::make_shared<Codon>(reference_sequence, codon_index));
+        const Codon mutant_codon(mutant_sequence, codon_index);
+        const Codon ref_codon(reference_sequence, codon_index);
 
         mutation_item.DNA_mutation = edit_item;
-        mutation_item.reference_codon = ref_codon->getSequenceAsString();
-        mutation_item.mutation_codon = mutant_codon->getSequenceAsString();
+        mutation_item.reference_codon = ref_codon.getSequenceAsString();
+        mutation_item.mutation_codon = mutant_codon.getSequenceAsString();
 
-        mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ref_opt.value()->getAminoAcid(*ref_codon));
+        mutation_item.amino_mutation.reference_char = AminoAcid::convertToChar(contig_ref_ptr->getAminoAcid(ref_codon));
         mutation_item.amino_mutation.reference_offset = codon_index;
-        mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ref_opt.value()->getAminoAcid(*mutant_codon));
-        mutation_item.contig_id = contig_ref_opt.value()->contigId();
+        mutation_item.amino_mutation.mutant_char = AminoAcid::convertToChar(contig_ref_ptr->getAminoAcid(mutant_codon));
+        mutation_item.contig_id = contig_ref_ptr->contigId();
         ContigOffset_t contig_offset;
-/*
-        if (not genome_ref_ptr->contigOffset(contig_id, gene_id, transcript_id, mutation_item.DNA_mutation.reference_offset, contig_offset)) {
-
-          ExecEnv::log().error("Edit Item {}{}{} sequence offset out of range",
-                               mutation_item.DNA_mutation.reference_char, mutation_item.DNA_mutation.reference_offset, mutation_item.DNA_mutation.mutant_char);
-
-        }
-*/
         mutation_item.contig_offset = contig_offset;
         mutation_edit_vector.mutation_vector.push_back(mutation_item);
 
@@ -1057,7 +1007,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
                                                  const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
                                                  const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
                                                  const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                                                 const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                                 const std::shared_ptr<const GenomeReference>&,
                                                  const std::shared_ptr<const GenomeDB>& genome_db_ptr) {
 
   std::string genome_id = genome_db_ptr->genomeId();
@@ -1083,34 +1033,23 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
 
   }
   auto& contig_db_ptr = contig_db_opt.value();
-  SequenceVariantFilter seq_variant_filter(contig_db_ptr, transcript_ptr->interval());
 
+  SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
 
-  DNA5SequenceCoding reference_sequence;
-  DNA5SequenceCoding mutant_sequence;
-  if (GenomeMutation::mutantCodingDNA(contig_ptr->contigId(),
-                                      gene_id,
-                                      transcript_id,
-                                      genome_ref_ptr,
-                                      seq_variant_filter.offsetVariantMap(),
-                                      reference_sequence,
-                                      mutant_sequence)) {
+  auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+  auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+  if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+    auto const& reference_sequence = reference_sequence_opt.value();
+    auto const& mutant_sequence = mutant_sequence_opt.value();
 
     CompareDistance_t DNA_distance;
     DNA_distance = dna_distance_metric->coding_distance(reference_sequence, mutant_sequence);
     average_DNA_score += static_cast<double>(DNA_distance);
 
-  }
-
-  AminoSequence amino_reference_seq;
-  AminoSequence amino_mutant;
-  if (GenomeMutation::mutantProteins(contig_ptr->contigId(),
-                                     gene_id,
-                                     transcript_id,
-                                     genome_ref_ptr,
-                                     seq_variant_filter.offsetVariantMap(),
-                                     amino_reference_seq,
-                                     amino_mutant)) {
+    auto amino_reference_seq = contig_ptr->getAminoSequence(reference_sequence);
+    auto amino_mutant = contig_ptr->getAminoSequence(mutant_sequence);
 
     error_flag = false;
     auto reference_validity = contig_ptr->checkValidProteinSequence(amino_reference_seq) ;
@@ -1144,46 +1083,52 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
 
   }
 
+  if (modified_transcript.sequenceStatus() and reference_sequence_opt) {
 
-  std::stringstream ss;
+    auto const &reference_sequence = reference_sequence_opt.value();
 
-  ss << genome_id << delimiter;
-  ss << contig_ptr->contigId() << delimiter;
-  ss << transcript_id << delimiter;
-  ss << contig_ptr->sequence().length() << delimiter;
-  ss << sequence_offset << delimiter;
-  ss << transcript_ptr->codingNucleotides() << delimiter;
-  ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;  // GC count.
-  for (auto const& count : reference_sequence.countSymbols()) {
+    std::stringstream ss;
 
-    ss << (static_cast<double>(count.second) *100.0) / static_cast<double>(reference_sequence.length()) << delimiter;
+    ss << genome_id << delimiter;
+    ss << contig_ptr->contigId() << delimiter;
+    ss << transcript_id << delimiter;
+    ss << contig_ptr->sequence().length() << delimiter;
+    ss << sequence_offset << delimiter;
+    ss << transcript_ptr->codingNucleotides() << delimiter;
+    ss << SequenceComplexity::relativeCpGIslands(reference_sequence) << delimiter;  // GC count.
+    for (auto const &count: reference_sequence.countSymbols()) {
+
+      ss << (static_cast<double>(count.second) * 100.0) / static_cast<double>(reference_sequence.length()) << delimiter;
+
+    }
+    ss << error_flag << delimiter;
+    ss << valid_reference << delimiter;
+    ss << mutant_paths << delimiter;
+    ss << valid_paths << delimiter;
+    ss << average_score << delimiter;
+    ss << strand << delimiter;
+    ss << average_DNA_score << delimiter;
+
+
+    ss << "<NULL>" << delimiter;
+    ss << "<NULL>" << delimiter;
+    std::vector<std::string> description_vec;
+    if (not transcript_ptr->getGene()->getAttributes().getDescription(description_vec)) {
+
+      ExecEnv::log().error("Cannot get description vector for Gene: {}", transcript_ptr->getGene()->id());
+
+    }
+    for (const auto &description: description_vec) {
+
+      ss << "\"" << description << "\"";
+
+    }
+
+    return ss.str();
 
   }
-  ss << error_flag << delimiter;
-  ss << valid_reference << delimiter;
-  ss << mutant_paths << delimiter;
-  ss << valid_paths << delimiter;
-  ss << average_score << delimiter;
-  ss << strand << delimiter;
-  ss << average_DNA_score << delimiter;
 
-
-  ss << "<NULL>" << delimiter;
-  ss << "<NULL>" << delimiter;
-  std::vector<std::string> description_vec;
-  if (not transcript_ptr->getGene()->getAttributes().getDescription(description_vec)) {
-
-    ExecEnv::log().error("Cannot get description vector for Gene: {}", transcript_ptr->getGene()->id());
-
-  }
-  for (const auto &description : description_vec) {
-
-    ss << "\"" << description << "\"";
-
-  }
-
-
-  return ss.str();
+  return "Error";
 
 }
 

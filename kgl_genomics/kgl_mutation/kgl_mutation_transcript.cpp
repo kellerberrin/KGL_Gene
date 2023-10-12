@@ -2,8 +2,8 @@
 // Created by kellerberrin on 16/09/23.
 //
 
-#include "kgl_seq_transcript.h"
-#include "kgl_seq_variant_filter.h"
+#include "kgl_mutation_transcript.h"
+#include "kgl_mutation_variant_filter.h"
 #include "kgl_mutation_interval.h"
 
 
@@ -40,7 +40,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene() const {
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedLinear() const {
 
   // Extract the modified sequences and concatenate them.
   DNA5SequenceLinear concatenated_sequence;
@@ -69,7 +69,21 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedGene(
 }
 
 
-std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene() const {
+std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getModifiedCoding() const {
+
+  auto modified_linear_opt = getModifiedLinear();
+  if (not modified_linear_opt) {
+
+    return std::nullopt;
+
+  }
+  const auto& modified_linear = modified_linear_opt.value();
+
+  return modified_linear.codingSequence(transcript_ptr_->strand());
+
+}
+
+std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalLinear() const {
 
   // Extract the modified sequences and concatenate them.
   DNA5SequenceLinear concatenated_sequence;
@@ -97,3 +111,17 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalGene(
 
 }
 
+
+std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getOriginalCoding() const {
+
+  auto original_linear_opt = getOriginalLinear();
+  if (not original_linear_opt) {
+
+    return std::nullopt;
+
+  }
+  const auto& original_linear = original_linear_opt.value();
+
+  return original_linear.codingSequence(transcript_ptr_->strand());
+
+}

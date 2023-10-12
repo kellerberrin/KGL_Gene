@@ -6,7 +6,7 @@
 #define KGL_MUTATION_VARIANT_MAP_H
 
 
-#include "kgl_seq_variant_filter.h"
+#include "kgl_mutation_variant_filter.h"
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_mutation_analysis.h"

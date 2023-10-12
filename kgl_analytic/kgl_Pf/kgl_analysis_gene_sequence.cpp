@@ -5,9 +5,8 @@
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_sequence_complexity.h"
-#include "kgl_seq_variant_db.h"
-#include "kgl_seq_variant_filter.h"
-#include "kgl_seq_coding.h"
+#include "kgl_mutation_variant_filter.h"
+#include "kgl_mutation_coding.h"
 #include "kgl_io_gff_fasta.h"
 
 #include <memory>
@@ -179,7 +178,7 @@ bool kgl::GenomicSequence::mutateGene(const ContigId_t& contig,
 
 
 
-bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
+bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
                                             const FeatureIdent_t& gene,
                                             const FeatureIdent_t& sequence,
                                             const std::shared_ptr<const GenomeDB>& genome_variant_ptr,
@@ -195,7 +194,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   DNA5SequenceCoding prime5_reference;
   DNA5SequenceCoding prime5_mutant;
 
-  if (GenomicMutation::compare5Prime(contig,
+  if (GenomicMutation::compare5Prime(contig_id,
                                      gene,
                                      sequence,
                                      PRIME_REGION_SIZE,
@@ -209,7 +208,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
     gene_summary.prime5_distance = dna_distance_metric.coding_distance(prime5_reference, prime5_mutant);
 
     ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
-                        genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime5_distance);
+                        genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime5_distance);
 
     gene_summary.prime5_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime5_reference));
     gene_summary.prime5_mutant = std::make_shared<DNA5SequenceCoding>(std::move(prime5_mutant));
@@ -218,27 +217,51 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   } else {
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
-                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+                         genome_variant_ptr->genomeId(), contig_id, gene, sequence);
     return false;
 
   }
 
-  AminoSequence protein_reference;
-  AminoSequence protein_mutant;
+  auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
+  if (not contig_ref_opt) {
 
-  if (GenomeMutation::mutantProteins(contig,
-                                     gene,
-                                     sequence,
-                                     genome_ref_ptr,
-                                     gene_summary.variant_map,
-                                     protein_reference,
-                                     protein_mutant)) {
+    ExecEnv::log().warn("Could not find reference contig: {} in genome: {}", contig_id, genome_ref_ptr->genomeId());
+    return false;
 
+  }
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
+  const auto transcript_opt = contig_ref_ptr->getTranscription(gene, sequence);
+  if (not transcript_opt) {
+
+    ExecEnv::log().warn("Could not find transcript:{}, gene: {} in reference contig: {} ", sequence, gene, contig_id);
+    return false;
+
+  }
+  const auto& transcript_ptr = transcript_opt.value();
+
+  auto contig_db_opt = genome_variant_ptr->getContig(contig_id);
+  if (not contig_ref_opt) {
+
+    ExecEnv::log().warn("Could not find variant contig: {} in genome: {}", contig_id, genome_variant_ptr->genomeId());
+    return false;
+
+  }
+  const auto& contig_db_ptr = contig_db_opt.value();
+
+  SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+
+  auto reference_sequence_opt = modified_transcript.getOriginalCoding();
+  auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
+
+  if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+
+    auto protein_reference = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
+    auto protein_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
 
     gene_summary.sequence_distance = amino_distance_metric.amino_distance( protein_reference, protein_mutant);
     ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
-                        genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.sequence_distance);
+                        genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.sequence_distance);
 
     gene_summary.sequence_ptr = std::make_shared<AminoSequence>(std::move(protein_reference));
     gene_summary.sequence_mutant = std::make_shared<AminoSequence>(std::move(protein_mutant));
@@ -247,7 +270,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   } else {
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
-                        genome_variant_ptr->genomeId(), contig, gene, sequence);
+                         genome_variant_ptr->genomeId(), contig_id, gene, sequence);
     return false;
 
   }
@@ -255,7 +278,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   DNA5SequenceCoding prime3_reference;
   DNA5SequenceCoding prime3_mutant;
 
-  if (GenomicMutation::compare3Prime(contig,
+  if (GenomicMutation::compare3Prime(contig_id,
                                      gene,
                                      sequence,
                                      PRIME_REGION_SIZE,
@@ -266,7 +289,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
 
     gene_summary.prime3_distance = dna_distance_metric.coding_distance(prime3_reference, prime3_mutant);
     ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
-                        genome_variant_ptr->genomeId(), contig, gene, sequence, gene_summary.prime3_distance);
+                        genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime3_distance);
 
     gene_summary.prime3_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime3_reference));
     gene_summary.prime3_mutant = std::make_shared<DNA5SequenceCoding>(std::move(prime3_mutant));
@@ -274,7 +297,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   } else {
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
-                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+                         genome_variant_ptr->genomeId(), contig_id, gene, sequence);
     return false;
 
   }
@@ -284,7 +307,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig,
   if (not result.second) {
 
     ExecEnv::log().error("Duplicate sequence; Genome: {}, Contig: {}, Gene: {}, Sequence: {}",
-                         genome_variant_ptr->genomeId(), contig, gene, sequence);
+                         genome_variant_ptr->genomeId(), contig_id, gene, sequence);
     return false;
 
   }

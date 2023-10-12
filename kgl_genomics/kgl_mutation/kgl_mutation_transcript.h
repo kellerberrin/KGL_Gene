@@ -6,7 +6,6 @@
 #define KGL_SEQ_TRANSCRIPT_H
 
 #include "kgl_mutation_sequence.h"
-#include "kgl_seq_interval.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -42,10 +41,17 @@ public:
 
 
   // Returns a sequence of the concatenated and modified exons. Not in strand sense.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedGene() const;
+  [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedLinear() const;
 
   // Returns a sequence of the concatenated and original unmodified exons. Not in strand sense.
-  [[nodiscard]] std::optional<DNA5SequenceLinear> getOriginalGene() const;
+  [[nodiscard]] std::optional<DNA5SequenceLinear> getOriginalLinear() const;
+
+  // In strand sense. Returns a sequence of the concatenated and modified exons.
+  [[nodiscard]] std::optional<DNA5SequenceCoding> getModifiedCoding() const;
+
+  // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
+  [[nodiscard]] std::optional<DNA5SequenceCoding> getOriginalCoding() const;
+
 
   // The adjusted sequence object has the original interval, detailed internal sequence structure and s
   // modified and original sequences.

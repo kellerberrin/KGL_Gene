@@ -3,7 +3,6 @@
 //
 
 #include "kgl_analysis_PfEMP.h"
-#include "kgl_variant_filter_features.h"
 
 namespace kgl = kellerberrin::genome;
 

@@ -2,7 +2,7 @@
 // Created by kellerberrin on 26/07/23.
 //
 
-#include "kgl_seq_variant_filter.h"
+#include "kgl_mutation_variant_filter.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_variant_filter_coding.h"

@@ -138,7 +138,7 @@ public:
                                              const std::shared_ptr<const GenomeCollection>& genome_collection_ptr,
                                              const std::string& fasta_file_name);
 
-  [[nodiscard]] static bool mutateGenomeGene( const ContigId_t& contig,
+  [[nodiscard]] static bool mutateGenomeGene( const ContigId_t& contig_id,
                                               const FeatureIdent_t& gene,
                                               const FeatureIdent_t& sequence,
                                               const std::shared_ptr<const GenomeDB>& genome_variant_ptr,

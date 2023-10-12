@@ -2,8 +2,7 @@
 // Created by kellerberrin on 27/09/23.
 //
 
-#include "kgl_seq_coding.h"
-#include "kgl_seq_interval.h"
+#include "kgl_mutation_coding.h"
 
 
 namespace kgl = kellerberrin::genome;

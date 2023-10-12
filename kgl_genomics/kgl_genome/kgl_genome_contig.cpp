@@ -5,7 +5,6 @@
 
 #include "kel_exec_env.h"
 #include "kgl_genome_contig.h"
-#include "kgl_seq_interval.h"
 
 #include <ranges>
 

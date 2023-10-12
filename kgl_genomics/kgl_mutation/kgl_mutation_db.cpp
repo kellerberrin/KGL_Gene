@@ -3,12 +3,11 @@
 //
 
 #include "kgl_mutation_db.h"
-#include "kgl_variant_filter_features.h"
 #include "kgl_variant_filter_db_offset.h"
-#include "kgl_genome_seq/kgl_seq_variant_filter.h"
+#include "kgl_mutation_variant_filter.h"
 #include "kel_workflow_threads.h"
 #include "kgl_mutation_sequence.h"
-#include "kgl_genome_seq/kgl_seq_transcript.h"
+#include "kgl_mutation_transcript.h"
 
 #include <ranges>
 
@@ -255,8 +254,8 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
 
   auto stats = modified_sequence.sequenceStatistics();
 
-  auto modified_sequence_opt = modified_sequence.getModifiedGene();
-  auto original_sequence_opt = modified_sequence.getOriginalGene();
+  auto modified_sequence_opt = modified_sequence.getModifiedLinear();
+  auto original_sequence_opt = modified_sequence.getOriginalLinear();
 
   if (modified_sequence_opt and original_sequence_opt) {
 

@@ -5,7 +5,6 @@
 
 
 #include "kgl_analysis_mutation_gene.h"
-#include "kgl_genome_seq/kgl_seq_variant.h"
 
 #include <fstream>
 

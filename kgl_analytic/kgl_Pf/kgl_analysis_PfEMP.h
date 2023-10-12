@@ -11,7 +11,6 @@
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
-#include "kgl_variant_filter_features.h"
 #include "kgl_mutation_db.h"
 
 #include "kgl_analysis_PfEMP_variant.h"

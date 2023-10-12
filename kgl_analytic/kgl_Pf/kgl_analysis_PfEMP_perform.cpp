@@ -5,7 +5,7 @@
 
 #include "kgl_upgma.h"
 #include "kgl_analysis_PfEMP.h"
-#include "kgl_seq_coding.h"
+#include "kgl_mutation_coding.h"
 
 
 namespace kgl = kellerberrin::genome;
