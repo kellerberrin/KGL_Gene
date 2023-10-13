@@ -18,8 +18,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Object holds a map suitably sorted and modified variants ready to modify alinear dna sequence over the same [start, end)
-// (right open interval with a zero offset).
+// Object holds a map of suitably sorted and modified variants ready to modify a linear dna sequence
+// over the same [start, end) (right open interval with a zero offset).
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -25,7 +25,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 // The type of sequence variant filter specified.
-enum class SeqVariantFilterType { DEFAULT_SEQ_FILTER, HIGHEST_FREQ_VARIANT };
+enum class SeqVariantFilterType { DEFAULT_SEQ_FILTER, HIGHEST_FREQ_VARIANT, SNP_ONLY_VARIANT };
 
 class SequenceVariantFilter {
 

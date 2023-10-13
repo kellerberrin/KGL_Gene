@@ -101,6 +101,10 @@ void kgl::SequenceVariantFilter::selectFilterType(const std::shared_ptr<const Co
       canonicalVariants(contig_ptr, sequence_interval);
       break;
 
+    case SeqVariantFilterType::SNP_ONLY_VARIANT:
+      canonicalVariants(contig_ptr, sequence_interval);
+      break;
+
   }
 
 }

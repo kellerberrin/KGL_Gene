@@ -511,7 +511,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig_id,
   const auto& contig_db_ptr = contig_db_opt.value();
 
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
-  if (not contig_db_opt) {
+  if (not contig_ref_opt) {
 
     ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_ref_ptr->genomeId());
     return false;
