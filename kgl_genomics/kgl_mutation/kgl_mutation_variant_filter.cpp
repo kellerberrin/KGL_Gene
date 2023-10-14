@@ -5,6 +5,8 @@
 #include "kgl_mutation_variant_filter.h"
 #include "kgl_variant_filter_db_contig.h"
 #include "kgl_variant_filter_db_offset.h"
+#include "kgl_variant_filter_db_variant.h"
+
 #include "kgl_variant_filter_coding.h"
 
 #include <algorithm>
@@ -15,8 +17,9 @@ namespace kgl = kellerberrin::genome;
 
 // Returns a map of unique canonical variants
 // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
-std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::SequenceVariantFilter::getCanonicalVariants(const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                                                   const OpenRightUnsigned& variant_interval) {
+std::pair<kgl::OffsetVariantMap, kgl::FilteredVariantStats>
+kgl::SequenceVariantFilter::getCanonicalVariants(const std::shared_ptr<const ContigDB>& contig_ptr,
+                                                 const OpenRightUnsigned& variant_interval) {
 
   OffsetVariantMap offset_variant_map;
 
@@ -30,6 +33,12 @@ std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::SequenceVariantFilter::ge
   // Filter to just the variants that will modify the specified region [start, end).
   auto modify_contig_ptr = region_contig_ptr->viewFilter(ContigModifyFilter(variant_interval.lower(), variant_interval.upper()));
   // Get the count of variants modifying the region [start, end).
+  auto hetero_contig_ptr = modify_contig_ptr->viewFilter(HeterozygousFilter());
+  size_t total_interval_variants = hetero_contig_ptr->variantCount();
+  auto snp_contig_ptr = hetero_contig_ptr->viewFilter(SNPFilter());
+  size_t total_snp_variants = snp_contig_ptr->variantCount();
+  auto frame_shift_contig_ptr = hetero_contig_ptr->viewFilter(FrameShiftFilter());
+  size_t total_frame_shift = frame_shift_contig_ptr->variantCount();
 
   // Remove multiple variants, that is minor alleles (SNP) that are not homozygous that share the same offset.
   // Note that if an indel occurs at the same offset as an SNP, this is not a problem, since in canonical form ('1MnI' or '1MnD'),
@@ -74,7 +83,13 @@ std::tuple<kgl::OffsetVariantMap, size_t, size_t> kgl::SequenceVariantFilter::ge
 
   size_t non_unique_count = modify_count - offset_variant_map.size();
 
-  return { offset_variant_map, non_unique_count, upstream_deleted };
+  FilteredVariantStats filter_stats;
+  filter_stats.non_unique_count_ = non_unique_count;
+  filter_stats.upstream_deleted_ = upstream_deleted;
+  filter_stats.total_interval_variants_ = total_interval_variants;
+  filter_stats.total_snp_variants_ = total_snp_variants;
+  filter_stats.total_frame_shift_ = total_frame_shift;
+  return { offset_variant_map, filter_stats };
 
 }
 
@@ -83,10 +98,9 @@ void kgl::SequenceVariantFilter::canonicalVariants(const std::shared_ptr<const C
                                                    const OpenRightUnsigned& sequence_interval) {
 
 
-  auto [interval_map, non_unique_count, upstream_deleted] = SequenceVariantFilter::getCanonicalVariants(contig_ptr, sequence_interval);
+  const auto [interval_map, filter_stats] = SequenceVariantFilter::getCanonicalVariants(contig_ptr, sequence_interval);
   offset_variant_map_ = std::move(interval_map);
-  duplicate_variants_ = non_unique_count;
-  downstream_delete_ = upstream_deleted;
+  variant_filter_stats_ = filter_stats;
 
 }
 

@@ -55,6 +55,23 @@ bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Indels that are not mod3 in size.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool kgl::FrameShiftFilter::implementFilter(const Variant& variant) const {
+
+  if (variant.isSNP()) {
+
+    return false;
+
+  }
+
+  const auto [variant_type, modify_interval] = variant.modifyInterval();
+
+  return (modify_interval.size() % 3) != 0;
+
+}
 
 
 

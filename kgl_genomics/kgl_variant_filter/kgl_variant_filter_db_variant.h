@@ -128,7 +128,7 @@ class SNPFilter : public FilterVariants {
 
 public:
 
-  explicit SNPFilter() { filterName("SNP and MNP filter"); }
+  explicit SNPFilter() { filterName("SNP filter"); }
   ~SNPFilter() override = default;
 
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.isSNP(); }
@@ -139,6 +139,29 @@ private:
 
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Indels that are not mod3 in size.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class FrameShiftFilter : public FilterVariants {
+
+public:
+
+  explicit FrameShiftFilter() { filterName("Frame shift filter"); }
+  ~FrameShiftFilter() override = default;
+
+  [[nodiscard]] bool applyFilter(const Variant& variant) const override { return implementFilter(variant); }
+  [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FrameShiftFilter>(*this); }
+
+
+private:
+
+  [[nodiscard]] bool implementFilter(const Variant& variant) const;
+
+};
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

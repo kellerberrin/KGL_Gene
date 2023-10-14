@@ -22,6 +22,18 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // Object holds holds unique canonical variants for a specified region or transcript.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct FilteredVariantStats {
+
+  size_t total_interval_variants_{0};
+  size_t total_snp_variants_{0};
+  size_t total_frame_shift_{0};
+  size_t non_unique_count_{0};
+  size_t upstream_deleted_{0};
+
+};
+
+
 using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 // The type of sequence variant filter specified.
@@ -47,20 +59,15 @@ public:
   [[nodiscard]] SeqVariantFilterType sequenceFilterType() const { return sequence_filter_type_; }
   // The filtered variants held in an offset keyed map.
   [[nodiscard]] const OffsetVariantMap& offsetVariantMap() const { return offset_variant_map_; }
-  // Variants remove because they logically mutate the same section of DNA.
-  [[nodiscard]] size_t duplicateVariants() const { return duplicate_variants_; }
-  // Variants removed because they are downstream of an indel delete and modify deleted nucleotides.
-  [[nodiscard]] size_t downstreamDelete() const { return downstream_delete_; }
-  // All variants before filtering, includes any upstream indel delete that modifies the sequence interval.
-  [[nodiscard]] size_t preFilterVariants() const { return offset_variant_map_.size() + duplicate_variants_ + downstream_delete_; }
+  // Statistics of the variants filtered for duplicate variants and upstream deletes.
+  [[nodiscard]] const FilteredVariantStats& filterStatistics() const { return variant_filter_stats_; }
 
 private:
 
   const OpenRightUnsigned sequence_interval_;
   SeqVariantFilterType sequence_filter_type_;
   OffsetVariantMap offset_variant_map_;
-  size_t duplicate_variants_{0};
-  size_t downstream_delete_{0};
+  FilteredVariantStats variant_filter_stats_;
 
   // A margin to account for the change in offsets when converting to canonical variants.
   // Canonical offsets always increase.
@@ -72,8 +79,9 @@ private:
   void canonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr, const OpenRightUnsigned& sequence_interval);
   // Returns a map of unique canonical variants
   // Also returns the number of multiple variants found at each offset which are filtered to a single variant.
-  [[nodiscard]] static std::tuple<OffsetVariantMap, size_t, size_t> getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
-                                                                                          const OpenRightUnsigned& sequence_interval);
+  [[nodiscard]] static std::pair<OffsetVariantMap, FilteredVariantStats>
+  getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
+                        const OpenRightUnsigned& sequence_interval);
 
 
 };

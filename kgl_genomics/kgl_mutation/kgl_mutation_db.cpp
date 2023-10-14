@@ -163,27 +163,27 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
 
     // Collect statistics.
     mutate_analysis_.addGenomeRecords(genome_id,
-                                      stats.map_size_,
-                                      stats.upstream_deleted_,
+                                      stats.filter_statistics_.total_interval_variants_,
+                                      stats.filter_statistics_.upstream_deleted_,
                                       stats.modified_sequence_,
                                       stats.original_sequence_);
 
     // Calculate summary statistics.
-    mutate_stats.total_variants_ += stats.map_size_;
-    if (stats.non_unique_count_ > 0) {
+    mutate_stats.total_variants_ += stats.filter_statistics_.total_interval_variants_;
+    if (stats.filter_statistics_.non_unique_count_ > 0) {
 
-      mutate_stats.duplicate_variants_ += stats.non_unique_count_;
+      mutate_stats.duplicate_variants_ += stats.filter_statistics_.non_unique_count_;
       ++mutate_stats.duplicate_genomes_;
 
     }
-    if (stats.map_size_ > 0) {
+    if (stats.filter_statistics_.total_interval_variants_ > 0) {
 
       ++mutate_stats.mutant_genomes_;
 
     }
-    if (stats.upstream_deleted_ > 0) {
+    if (stats.filter_statistics_.upstream_deleted_ > 0) {
 
-      mutate_stats.upstream_delete_variants_ += stats.upstream_deleted_;
+      mutate_stats.upstream_delete_variants_ += stats.filter_statistics_.upstream_deleted_;
       ++mutate_stats.upstream_delete_genomes_;
 
     }
@@ -242,7 +242,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   }
   const auto& transcript_ptr = transcript_opt.value();
 
-  auto filtertype = SeqVariantFilterType::SNP_ONLY_VARIANT;
+  const auto filtertype = SeqVariantFilterType::SNP_ONLY_VARIANT;
   const SequenceTranscript modified_sequence(contig_db_ptr, transcript_ptr, filtertype);
   if (not modified_sequence.sequenceStatus()) {
 

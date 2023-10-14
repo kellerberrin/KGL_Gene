@@ -18,7 +18,6 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
   SequenceVariantFilter filtered_variants(contig_variant_ptr, transcript_ptr_->interval(), filter_type);
-  size_t map_size = filtered_variants.preFilterVariants();
 
   if (not adjusted_sequence_.updateSequence(contig_reference_ptr, filtered_variants)) {
 
@@ -31,9 +30,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
   }
 
   SequenceStats sequence_stats;
-  sequence_stats.map_size_ = map_size;
-  sequence_stats.non_unique_count_ = filtered_variants.duplicateVariants();
-  sequence_stats.upstream_deleted_ = filtered_variants.downstreamDelete();
+  sequence_stats.filter_statistics_ = filtered_variants.filterStatistics();
 
   return { sequence_stats, true};
 
