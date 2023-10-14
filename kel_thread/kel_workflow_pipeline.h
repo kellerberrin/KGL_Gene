@@ -22,7 +22,6 @@
 
 
 #include "kel_queue_tidal.h"
-#include "kel_movefunction.h"
 
 #include <future>
 #include <vector>
@@ -51,8 +50,9 @@ template<typename InputObject, typename OutputObject>
 requires std::move_constructible<InputObject> && std::move_constructible<OutputObject>
 class WorkflowPipeline {
 
-  using WorkflowFunc = MoveFunction<OutputObject(InputObject)>;
-  using WorkflowFuncPtr = std::shared_ptr<const WorkflowFunc>;
+  using WorkflowFunc = std::move_only_function<OutputObject(InputObject)>;
+  using WorkflowFuncPtr = std::shared_ptr<WorkflowFunc>;
+
   // Simple functor object is queued and consumed by the active threads.
   class QueuedFunctor {
 

@@ -20,7 +20,6 @@
 #define KEL_THREAD_POOL_H
 
 #include "kel_queue_mt_safe.h"
-#include "kel_movefunction.h"
 
 #include <functional>
 #include <future>
@@ -46,10 +45,8 @@ enum class WorkflowThreadState { ACTIVE, STOPPED};
 class WorkflowThreads
 {
 
-// Convert to std::move_only_function when compiling to c++23 standard.
-//  using ThreadFunc = std::move_only_function<void(void)>;
-  using ThreadFunc = MoveFunction<void(void)>;
-  using ThreadFuncPtr = std::unique_ptr<const ThreadFunc>;
+  using ThreadFunc = std::move_only_function<void(void)>;
+  using ThreadFuncPtr = std::unique_ptr<ThreadFunc>;
 
 public:
 

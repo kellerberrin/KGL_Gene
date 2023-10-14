@@ -4,7 +4,6 @@
 
 #include "kgl_mutation_transcript.h"
 #include "kgl_mutation_variant_filter.h"
-#include "kgl_mutation_interval.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -12,12 +11,13 @@ namespace kel = kellerberrin;
 
 
 std::pair<kgl::SequenceStats, bool>
-kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr) {
+kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
+                                                SeqVariantFilterType filter_type) {
 
   const auto& contig_reference_ptr = transcript_ptr_->contig();
 
   // Return filtered variants adjusted for duplicate variants and upstream deletes.
-  SequenceVariantFilter filtered_variants(contig_variant_ptr, transcript_ptr_->interval());
+  SequenceVariantFilter filtered_variants(contig_variant_ptr, transcript_ptr_->interval(), filter_type);
   size_t map_size = filtered_variants.preFilterVariants();
 
   if (not adjusted_sequence_.updateSequence(contig_reference_ptr, filtered_variants)) {

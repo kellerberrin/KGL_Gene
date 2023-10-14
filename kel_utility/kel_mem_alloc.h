@@ -109,7 +109,7 @@ T* AuditMemory::newMem(std::size_t mem_size)
   }
 
   // Thread safe in linux.
-  void *ptr = std::malloc(sizeof(size_t) + mem_size);
+  void *ptr = malloc(sizeof(size_t) + mem_size);
   if (ptr != nullptr) {
 
     // Don't count sizeof(size_t)
@@ -148,7 +148,7 @@ void AuditMemory::deleteMem(T* ptr)
   ++deallocations_;
   deallocated_bytes_ += deallocate_size;
   // Thread safe in linux.
-  std::free(static_cast<void*>(offset_ptr));
+  free(static_cast<void*>(offset_ptr));
 
 }
 

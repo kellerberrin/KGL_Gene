@@ -26,11 +26,13 @@ class SequenceTranscript {
 
 public:
 
+
   SequenceTranscript(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
-                     std::shared_ptr<const TranscriptionSequence> transcript_ptr )
+                     std::shared_ptr<const TranscriptionSequence> transcript_ptr,
+                     SeqVariantFilterType filter_type = SeqVariantFilterType::DEFAULT_SEQ_FILTER)
                      : transcript_ptr_(std::move(transcript_ptr)) {
 
-    const auto [statistics, status] = createModifiedSequence( contig_variant_ptr);
+    const auto [statistics, status] = createModifiedSequence( contig_variant_ptr, filter_type);
     sequence_stats_ = statistics;
     sequence_status_ = status;
 
@@ -66,7 +68,8 @@ private:
   SequenceStats sequence_stats_;
   bool sequence_status_;
 
-  [[nodiscard]] std::pair<SequenceStats, bool> createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr);
+  [[nodiscard]] std::pair<SequenceStats, bool> createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
+                                                                      SeqVariantFilterType filter_type);
 
 };
 

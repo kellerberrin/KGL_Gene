@@ -22,6 +22,7 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <cstdint>
 
 
 namespace kellerberrin {   //  organization level namespace

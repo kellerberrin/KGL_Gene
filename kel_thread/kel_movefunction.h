@@ -36,6 +36,8 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
+
 template<typename T> class MoveFunction; // Not defined.
 
 template<typename ReturnType, typename... Args> class MoveFunction<ReturnType(Args...)> {
@@ -78,6 +80,7 @@ private:
 
 };
 
+*/
 
 } // namespace
 

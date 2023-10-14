@@ -35,6 +35,7 @@ namespace kellerberrin {   //  organization level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 // Forward queue declaration.
 template<typename T> requires std::move_constructible<T> class QueueMtSafe;
 

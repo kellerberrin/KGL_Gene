@@ -228,7 +228,7 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
     return {{}, false};
 
   }
-  const auto contig_ref_ptr = contig_ref_opt.value();
+  const auto& contig_ref_ptr = contig_ref_opt.value();
 
   // Get the gene gene_interval
   auto transcript_opt = contig_ref_ptr->getTranscription(gene_ptr->id(), transcript_id);
@@ -240,9 +240,10 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
     return {{}, false};
 
   }
-  const auto transcript_ptr = transcript_opt.value();
+  const auto& transcript_ptr = transcript_opt.value();
 
-  SequenceTranscript modified_sequence(contig_db_ptr, transcript_ptr);
+  auto filtertype = SeqVariantFilterType::SNP_ONLY_VARIANT;
+  const SequenceTranscript modified_sequence(contig_db_ptr, transcript_ptr, filtertype);
   if (not modified_sequence.sequenceStatus()) {
 
     ExecEnv::log().warn("Unable to generate modified seuquence for Transcript: {}, Gene: {}, Reference Genome: {}",
