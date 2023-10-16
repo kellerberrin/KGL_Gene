@@ -10,15 +10,6 @@
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-// Simple struct to return generated sequence stats.
-struct SequenceStats {
-
-  FilteredVariantStats filter_statistics_;
-  CodingSequenceValidity original_sequence_{CodingSequenceValidity::VALID_PROTEIN};
-  CodingSequenceValidity modified_sequence_{CodingSequenceValidity::VALID_PROTEIN};
-
-};
-
 
 class SequenceTranscript {
 
@@ -31,7 +22,7 @@ public:
                      : transcript_ptr_(std::move(transcript_ptr)) {
 
     const auto [statistics, status] = createModifiedSequence( contig_variant_ptr, filter_type);
-    sequence_stats_ = statistics;
+    filter_stats_ = statistics;
     sequence_status_ = status;
 
   }
@@ -52,22 +43,31 @@ public:
   // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
   [[nodiscard]] std::optional<DNA5SequenceCoding> getOriginalCoding() const;
 
+  // In strand sense. Returns a sequence of the concatenated and modified exons.
+  // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
+  [[nodiscard]] std::pair<DNA5SequenceCoding, CodingSequenceValidity> getModifiedValidity() const;
+
+  // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
+  // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
+  [[nodiscard]] std::pair<DNA5SequenceCoding, CodingSequenceValidity> getOriginalValidity() const;
+
 
   // The adjusted sequence object has the original interval, detailed internal sequence structure and s
   // modified and original sequences.
   [[nodiscard]] const AdjustedSequence& adjustedSequence() const { return adjusted_sequence_; }
-  [[nodiscard]] const SequenceStats& sequenceStatistics() const { return sequence_stats_; }
+  [[nodiscard]] const FilteredVariantStats& filterStatistics() const { return filter_stats_; }
   [[nodiscard]] bool sequenceStatus() const { return sequence_status_; }
 
 private:
 
   AdjustedSequence adjusted_sequence_;
   std::shared_ptr<const TranscriptionSequence> transcript_ptr_;
-  SequenceStats sequence_stats_;
+  FilteredVariantStats filter_stats_;
   bool sequence_status_;
 
-  [[nodiscard]] std::pair<SequenceStats, bool> createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
-                                                                      SeqVariantFilterType filter_type);
+  [[nodiscard]] std::pair<FilteredVariantStats, bool>
+  createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr, SeqVariantFilterType filter_type);
+
 
 };
 

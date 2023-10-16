@@ -23,6 +23,8 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 struct MutateStats {
 
   size_t total_variants_{0};
+  size_t total_snp_variants_{0};
+  size_t total_frameshift_variants_{0};
   size_t total_genomes_{0};
   size_t mutant_genomes_{0};
   size_t duplicate_variants_{0};

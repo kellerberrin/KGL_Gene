@@ -10,7 +10,7 @@ namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
 
-std::pair<kgl::SequenceStats, bool>
+std::pair<kgl::FilteredVariantStats, bool>
 kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr,
                                                 SeqVariantFilterType filter_type) {
 
@@ -29,10 +29,7 @@ kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const Cont
 
   }
 
-  SequenceStats sequence_stats;
-  sequence_stats.filter_statistics_ = filtered_variants.filterStatistics();
-
-  return { sequence_stats, true};
+  return { filtered_variants.filterStatistics(), true};
 
 }
 
@@ -80,6 +77,36 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getModifiedCodin
 
 }
 
+
+
+std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTranscript::getModifiedValidity() const {
+
+  auto modified_linear_opt = getModifiedLinear();
+  if (not modified_linear_opt) {
+
+    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY};
+
+  }
+  const auto& modified_linear = modified_linear_opt.value();
+
+  auto modified_coding = modified_linear.codingSequence(transcript_ptr_->strand());
+
+  CodingSequenceValidity sequence_validity;
+  if (transcript_ptr_->codingType() == TranscriptionSequenceType::PROTEIN) {
+
+    sequence_validity = transcript_ptr_->getGene()->contig_ref_ptr()->checkValidCodingSequence(modified_coding);
+
+  } else {
+
+    sequence_validity = CodingSequenceValidity::NCRNA;
+
+  }
+
+  return {std::move(modified_coding), sequence_validity};
+
+}
+
+
 std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalLinear() const {
 
   // Extract the modified sequences and concatenate them.
@@ -121,4 +148,34 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getOriginalCodin
 
   return original_linear.codingSequence(transcript_ptr_->strand());
 
+
 }
+
+
+std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTranscript::getOriginalValidity() const {
+
+  auto original_linear_opt = getOriginalLinear();
+  if (not original_linear_opt) {
+
+    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY};
+
+  }
+  const auto& original_linear = original_linear_opt.value();
+
+  auto original_coding = original_linear.codingSequence(transcript_ptr_->strand());
+
+  CodingSequenceValidity sequence_validity;
+  if (transcript_ptr_->codingType() == TranscriptionSequenceType::PROTEIN) {
+
+    sequence_validity = transcript_ptr_->getGene()->contig_ref_ptr()->checkValidCodingSequence(original_coding);
+
+  } else {
+
+    sequence_validity = CodingSequenceValidity::NCRNA;
+
+  }
+
+  return {std::move(original_coding), sequence_validity};
+
+}
+

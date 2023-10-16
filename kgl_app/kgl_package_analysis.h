@@ -10,7 +10,7 @@
 #include "kgl_runtime_config.h"
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_analysis_all.h" // Includes all the defined active analysis objects.
+#include "kga_analysis_all.h" // Includes all the defined active analysis objects.
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

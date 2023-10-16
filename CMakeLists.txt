@@ -16,6 +16,8 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics        # Basic Genetic library
                     kel_app             # Application and logging
                     kel_math            # Mathematical Code
+                    kgl_mixture                  # Deconvolution and mixture library
+                    kgl_app
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
@@ -25,18 +27,19 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics/kgl_variant_db
                     kgl_genomics/kgl_variant_filter
                     kgl_genomics/kgl_variant_analysis
-                    kgl_genomics/kgl_mutation
                     kgl_genomics/kgl_literature
-                    kgl_mixture                  # Deconvolution and mixture library
-                    kgl_analytic                  # Genetic analysis library (top level)
+                    kgl_genomics/kgl_mutation
                     kol_ontology                  # Experimental Ontology Library
                     kol_ontology/kgl_ontology     # Higher level ontology functionality
-                    kgl_analytic/kgl_inbreed
-                    kgl_analytic/kgl_verify
-                    kgl_analytic/kgl_info
-                    kgl_analytic/kgl_Pf
-                    kgl_analytic/kgl_legacy
-                    kgl_app
+                    kga_analytic/kga_inbreed
+                    kga_analytic/kga_sequence_analysis
+                    kga_analytic/kga_info
+                    kga_analytic/kga_PfEMP
+                    kga_analytic/kga_legacy
+                    kga_analytic/kga_literature
+                    kga_analytic/kga_mutation
+                    kga_analytic/kga_template_analysis
+                    kga_analytic                  # Genetic analysis library (top level)
                     contrib/rapidjson/include # 3rd party Json parser
                     contrib/rapidxml) # 3rd party XML parser
 
@@ -494,93 +497,93 @@ set(ONTOLOGY_UNIT_TEST_FILES
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kgl_analytic/kgl_Pf/kgl_phylogenetic_analysis.h
-        kgl_analytic/kgl_Pf/kgl_phylogenetic_analysis.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.h
-        kgl_analytic/kgl_Pf/kgl_analysis_gene_sequence.cpp
-        kgl_analytic/kgl_Pf/kgl_upgma_node.h
-        kgl_analytic/kgl_Pf/kgl_upgma_node.cpp
-        kgl_analytic/kgl_legacy/kgl_rna_search.cpp
-        kgl_analytic/kgl_legacy/kgl_rna_search.h
-        kgl_analytic/kgl_legacy/kgl_ploidy_analysis.h
-        kgl_analytic/kgl_Pf/kgl_upgma_unphased.h
-        kgl_analytic/kgl_Pf/kgl_upgma_unphased.cpp
-        kgl_analytic/kgl_legacy/kgl_sequence_complexity.h
-        kgl_analytic/kgl_Pf/kgl_upgma.h
-        kgl_analytic/kgl_analysis_all.h
-        kgl_analytic/kgl_verify/kgl_analysis_null.cpp
-        kgl_analytic/kgl_verify/kgl_analysis_null.h
-        kgl_analytic/kgl_info/kgl_analysis_interval.cpp
-        kgl_analytic/kgl_info/kgl_analysis_interval.h
-        kgl_analytic/kgl_info/kgl_analysis_info_filter.cpp
-        kgl_analytic/kgl_info/kgl_analysis_info_filter.h
-        kgl_analytic/kgl_info/kgl_analysis_age.cpp
-        kgl_analytic/kgl_info/kgl_analysis_age.h
-        kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.cpp
-        kgl_analytic/kgl_legacy/kgl_legacy_Pf_analysis.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_diploid.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_diploid.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_locus.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_calc.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_freq.cpp
-        kgl_analytic/kgl_verify/kgl_analysis_verify.cpp
-        kgl_analytic/kgl_verify/kgl_analysis_verify.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_freq.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_synthetic.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_output.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_syngen.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_syngen.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_execute.h
-        kgl_analytic/kgl_analysis_virtual.h
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.cpp
-        kgl_analytic/kgl_inbreed/kgl_analysis_inbreed_args.h
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_output.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ethnic.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_clinvar.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_clinvar.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_variant.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_stats.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_ontology.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_data.cpp
-        kgl_analytic/kgl_info/kgl_analysis_json.cpp
-        kgl_analytic/kgl_info/kgl_analysis_json.h
-        kgl_analytic/kgl_literature/kgl_analysis_literature.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature.h
-        kgl_analytic/kgl_literature/kgl_analysis_literature_gene.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature_gene.h
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.cpp
-        kgl_analytic/kgl_mutation/kgl_analysis_mutation_gene_allele_pop.h
-        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.cpp
-        kgl_analytic/kgl_literature/kgl_analysis_literature_publication.h
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_distance.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_perform.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_variant.h
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_heterozygous.h
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_filter.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.cpp
-        kgl_analytic/kgl_Pf/kgl_analysis_PfEMP_FWS.h
+        kga_analytic/kga_PfEMP/kga_phylogenetic_analysis.h
+        kga_analytic/kga_PfEMP/kga_phylogenetic_analysis.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.h
+        kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.cpp
+        kga_analytic/kga_PfEMP/kga_upgma_node.h
+        kga_analytic/kga_PfEMP/kga_upgma_node.cpp
+        kga_analytic/kga_legacy/kga_rna_search.cpp
+        kga_analytic/kga_legacy/kga_rna_search.h
+        kga_analytic/kga_legacy/kga_ploidy_analysis.h
+        kga_analytic/kga_PfEMP/kga_upgma_unphased.h
+        kga_analytic/kga_PfEMP/kga_upgma_unphased.cpp
+        kga_analytic/kga_legacy/kga_sequence_complexity.h
+        kga_analytic/kga_PfEMP/kga_upgma.h
+        kga_analytic/kga_analysis_all.h
+        kga_analytic/kga_template_analysis/kga_analysis_null.cpp
+        kga_analytic/kga_template_analysis/kga_analysis_null.h
+        kga_analytic/kga_info/kga_analysis_interval.cpp
+        kga_analytic/kga_info/kga_analysis_interval.h
+        kga_analytic/kga_info/kga_analysis_info_filter.cpp
+        kga_analytic/kga_info/kga_analysis_info_filter.h
+        kga_analytic/kga_info/kga_analysis_age.cpp
+        kga_analytic/kga_info/kga_analysis_age.h
+        kga_analytic/kga_legacy/kga_legacy_Pf_analysis.cpp
+        kga_analytic/kga_legacy/kga_legacy_Pf_analysis.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_diploid.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_calc.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_diploid.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_locus.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_locus.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_calc.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_output.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_output.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_syngen.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_syngen.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.h
+        kga_analytic/kga_analysis_virtual.h
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_args.cpp
+        kga_analytic/kga_inbreed/kga_analysis_inbreed_args.h
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.h
+        kga_analytic/kga_mutation/kga_analysis_mutation.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_output.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ethnic.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ethnic.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_clinvar.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_clinvar.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_variant.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_variant.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ontology.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ontology.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_data.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_data.cpp
+        kga_analytic/kga_info/kga_analysis_json.cpp
+        kga_analytic/kga_info/kga_analysis_json.h
+        kga_analytic/kga_literature/kga_analysis_literature.cpp
+        kga_analytic/kga_literature/kga_analysis_literature.h
+        kga_analytic/kga_literature/kga_analysis_literature_gene.cpp
+        kga_analytic/kga_literature/kga_analysis_literature_gene.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.h
+        kga_analytic/kga_literature/kga_analysis_literature_publication.cpp
+        kga_analytic/kga_literature/kga_analysis_literature_publication.h
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_distance.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_perform.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.h
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.h
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_filter.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
 )
 
 # Deconvolution and mixture files.

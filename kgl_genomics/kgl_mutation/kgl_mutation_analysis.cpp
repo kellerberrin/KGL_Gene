@@ -80,6 +80,8 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
            << "Transcript CDS" << DELIMITER_
            << "Transcript Size" << DELIMITER_
            << "Total Variants" << DELIMITER_
+           << "Total SNP" << DELIMITER_
+           << "Total Frameshift" << DELIMITER_
            << "Duplicate Variants"<< DELIMITER_
            << "Duplicate Genomes"<< DELIMITER_
            << "Upstream Variants"<< DELIMITER_
@@ -100,6 +102,8 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
         << transcript_record.transcriptionPtr()->getFeatureMap().size() << DELIMITER_
         << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
         << transcript_record.mutateStats().total_variants_ << DELIMITER_
+        << transcript_record.mutateStats().total_snp_variants_ << DELIMITER_
+        << transcript_record.mutateStats().total_frameshift_variants_ << DELIMITER_
         << transcript_record.mutateStats().duplicate_variants_ << DELIMITER_
         << transcript_record.mutateStats().duplicate_genomes_ << DELIMITER_
         << transcript_record.mutateStats().upstream_delete_variants_ << DELIMITER_

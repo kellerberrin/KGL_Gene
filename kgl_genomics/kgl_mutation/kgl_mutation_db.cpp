@@ -21,6 +21,7 @@ namespace kgl = kellerberrin::genome;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
 
@@ -170,6 +171,9 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
 
     // Calculate summary statistics.
     mutate_stats.total_variants_ += stats.filter_statistics_.total_interval_variants_;
+    mutate_stats.total_snp_variants_ += stats.filter_statistics_.total_snp_variants_;
+    mutate_stats.total_frameshift_variants_ += stats.filter_statistics_.total_frame_shift_;
+
     if (stats.filter_statistics_.non_unique_count_ > 0) {
 
       mutate_stats.duplicate_variants_ += stats.filter_statistics_.non_unique_count_;
@@ -191,7 +195,7 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
     mutate_stats.modified_validity_.updateValidity(stats.modified_sequence_);
     mutate_stats.original_validity_.updateValidity(stats.original_sequence_);
 
-  }
+  } // For all futures (genomes).
 
   return mutate_stats;
 
@@ -242,9 +246,9 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
   }
   const auto& transcript_ptr = transcript_opt.value();
 
-  const auto filtertype = SeqVariantFilterType::SNP_ONLY_VARIANT;
-  const SequenceTranscript modified_sequence(contig_db_ptr, transcript_ptr, filtertype);
-  if (not modified_sequence.sequenceStatus()) {
+  const auto filtertype = SeqVariantFilterType::FRAMESHIFT_ADJUSTED;
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, filtertype);
+  if (not modified_transcript.sequenceStatus()) {
 
     ExecEnv::log().warn("Unable to generate modified seuquence for Transcript: {}, Gene: {}, Reference Genome: {}",
                         transcript_id, gene_ptr->id(), gene_contig_id);
@@ -253,36 +257,13 @@ std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(c
 
   }
 
-  auto stats = modified_sequence.sequenceStatistics();
+  auto [modified_coding, modified_validity] = modified_transcript.getModifiedValidity();
+  auto [original_coding, original_validity] = modified_transcript.getOriginalValidity();
 
-  auto modified_sequence_opt = modified_sequence.getModifiedLinear();
-  auto original_sequence_opt = modified_sequence.getOriginalLinear();
-
-  if (modified_sequence_opt and original_sequence_opt) {
-
-    if (transcript_ptr->codingType() == TranscriptionSequenceType::PROTEIN) {
-
-      auto& modified = modified_sequence_opt.value();
-      auto modified_coding = modified.codingSequence(transcript_ptr->strand());
-      stats.modified_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(modified_coding);
-
-      auto& original = original_sequence_opt.value();
-      auto original_coding = original.codingSequence(transcript_ptr->strand());
-      stats.original_sequence_ = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(original_coding);
-
-    } else {
-
-      stats.modified_sequence_ = CodingSequenceValidity::NCRNA;
-      stats.original_sequence_ = CodingSequenceValidity::NCRNA;
-
-    }
-
-  } else {
-
-    ExecEnv::log().warn("Problem mutating Gene: {}, Transcript: {}, Genome: {}",
-                        gene_ptr->id(), transcript_id, genome_db_ptr->genomeId());
-
-  }
+  SequenceStats stats;
+  stats.filter_statistics_ = modified_transcript.filterStatistics();
+  stats.modified_sequence_ = modified_validity;
+  stats.original_sequence_ = original_validity;
 
   return { stats, true};
 

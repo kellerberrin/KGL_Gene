@@ -37,7 +37,7 @@ struct FilteredVariantStats {
 using OffsetVariantMap = std::map<ContigOffset_t, std::shared_ptr<const Variant>>;
 
 // The type of sequence variant filter specified.
-enum class SeqVariantFilterType { DEFAULT_SEQ_FILTER, HIGHEST_FREQ_VARIANT, SNP_ONLY_VARIANT };
+enum class SeqVariantFilterType { DEFAULT_SEQ_FILTER, HIGHEST_FREQ_VARIANT, FRAMESHIFT_ADJUSTED, SNP_ADJUSTED };
 
 class SequenceVariantFilter {
 
@@ -82,6 +82,20 @@ private:
   [[nodiscard]] static std::pair<OffsetVariantMap, FilteredVariantStats>
   getCanonicalVariants( const std::shared_ptr<const ContigDB>& contig_ptr,
                         const OpenRightUnsigned& sequence_interval);
+
+  void FrameshiftAdjusted(const std::shared_ptr<const ContigDB>& contig_ptr, const OpenRightUnsigned& sequence_interval);
+
+  [[nodiscard]] static std::pair<OffsetVariantMap, FilteredVariantStats>
+  getFrameshiftAdjusted(const std::shared_ptr<const ContigDB>& contig_ptr,
+                        const OpenRightUnsigned& variant_interval);
+
+
+  void SNPAdjusted(const std::shared_ptr<const ContigDB>& contig_ptr, const OpenRightUnsigned& sequence_interval);
+
+  [[nodiscard]] static std::pair<OffsetVariantMap, FilteredVariantStats>
+  getSNPAdjusted(const std::shared_ptr<const ContigDB>& contig_ptr,
+                        const OpenRightUnsigned& variant_interval);
+
 
 
 };

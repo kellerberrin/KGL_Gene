@@ -24,6 +24,15 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Simple struct to return generated sequence stats.
+struct SequenceStats {
+
+  FilteredVariantStats filter_statistics_;
+  CodingSequenceValidity original_sequence_{CodingSequenceValidity::VALID_PROTEIN};
+  CodingSequenceValidity modified_sequence_{CodingSequenceValidity::VALID_PROTEIN};
+
+};
+
 
 using GeneContigMap = std::map<std::shared_ptr<const GeneFeature>, ContigId_t>;
 class MutateGenes {
