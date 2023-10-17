@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_CHECK_H
 
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_genome_collection.h"
 #include "kgl_mutation_db.h"
 
@@ -21,17 +21,19 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-class VerifyAnalysis : public VirtualAnalysis {
+class SequenceAnalysis : public VirtualAnalysis {
 
 public:
 
-  VerifyAnalysis() = default;
-  ~VerifyAnalysis() override = default;
+  SequenceAnalysis() = default;
+  ~SequenceAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "VERIFY"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<VerifyAnalysis>(); }
+  constexpr static std::string IDENT {"VERIFY"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<SequenceAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,

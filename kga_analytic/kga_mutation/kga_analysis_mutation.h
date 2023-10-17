@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_GENE_H
 
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_hsgenealogy_parser.h"
 #include "kgl_uniprot_parser.h"
 #include "kgl_variant_sort_analysis.h"
@@ -31,10 +31,12 @@ public:
   MutationAnalysis() = default;
   ~MutationAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "MUTATION"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<MutationAnalysis>(); }
+  constexpr static std::string IDENT {"MUTATION"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<MutationAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,

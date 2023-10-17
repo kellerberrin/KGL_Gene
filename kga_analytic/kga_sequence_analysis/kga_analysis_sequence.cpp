@@ -13,9 +13,9 @@ namespace kgl = kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
-                                              const ActiveParameterList& named_parameters,
-                                              const std::shared_ptr<const AnalysisResources>& resource_ptr) {
+bool kgl::SequenceAnalysis::initializeAnalysis(const std::string& work_directory,
+                                               const ActiveParameterList& named_parameters,
+                                               const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
@@ -27,7 +27,7 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
   ident_work_directory_ = work_directory + std::string("/") + ident();
   if (not Utility::createDirectory(ident_work_directory_)) {
 
-    ExecEnv::log().critical("VerifyAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
+    ExecEnv::log().critical("SequenceAnalysis::initializeAnalysis, unable to create analysis results directory: {}",
                             ident_work_directory_);
 
   }
@@ -45,7 +45,7 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
   auto pf3d7_opt = all_reference_genomes_ptr_->getOptionalGenome(PF3D7_IDENT_);
   if (not pf3d7_opt) {
 
-    ExecEnv::log().critical("VerifyAnalysis::initializeAnalysis; Reference Genome: {} required for analysis - not supplied", PF3D7_IDENT_);
+    ExecEnv::log().critical("SequenceAnalysis::initializeAnalysis; Reference Genome: {} required for analysis - not supplied", PF3D7_IDENT_);
 
   }
   genome_3D7_ptr_ = pf3d7_opt.value();
@@ -58,7 +58,7 @@ bool kgl::VerifyAnalysis::initializeAnalysis( const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
+bool kgl::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
 
   ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
@@ -74,16 +74,16 @@ bool kgl::VerifyAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_da
 
 
   // Mutate all the relevant genes in the relevant contigs.
-  ExecEnv::log().info("VerifyAnalysis::initializeAnalysis; Begin gene mutation");
+  ExecEnv::log().info("SequenceAnalysis::initializeAnalysis; Begin gene mutation");
   mutate_genes_ptr_->mutatePopulation(population_ptr);
-  ExecEnv::log().info("VerifyAnalysis::initializeAnalysis; End gene mutation");
+  ExecEnv::log().info("SequenceAnalysis::initializeAnalysis; End gene mutation");
 
   return true;
 
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::VerifyAnalysis::iterationAnalysis() {
+bool kgl::SequenceAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -92,7 +92,7 @@ bool kgl::VerifyAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::VerifyAnalysis::finalizeAnalysis() {
+bool kgl::SequenceAnalysis::finalizeAnalysis() {
 
   // Output the mutation statistics.
   std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);

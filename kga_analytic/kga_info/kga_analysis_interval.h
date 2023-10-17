@@ -8,7 +8,7 @@
 #include "kgl_runtime.h"
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kga_analysis_age.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_filter_info.h"
@@ -140,8 +140,11 @@ public:
   ~IntervalAnalysis() override = default;
 
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "INTERVAL"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<IntervalAnalysis>(); }
+  constexpr static std::string IDENT {"INTERVAL"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<IntervalAnalysis>(); }
 
 
   // Setup the analytics to process VCF data.

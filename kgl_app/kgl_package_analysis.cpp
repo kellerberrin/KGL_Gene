@@ -13,57 +13,43 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 
 
   active_analysis_.clear();
+  // There can be multiple analysis defined for a package.
   for (auto const& analysis_id : package.analysisList()) {
 
-    bool found = false;
-    for (auto const& registered_analysis_ptr : registered_analysis_) {
+    // Find the corresponding factory function.
+    auto find_iter = VirtualAnalysis::analysis_factory_map_.find(analysis_id);
+    if (find_iter != VirtualAnalysis::analysis_factory_map_.end()) {
 
-      if (not registered_analysis_ptr) {
+      auto [key_id, factory] = *find_iter;
+      std::unique_ptr<VirtualAnalysis> analysis_ptr = factory();
 
-        ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Registered Analysis is a NULL pointer");
-        continue;
+      auto result = runtime_contig_.analysisMap().find(analysis_id);
+      // Analysis parameters found.
+      if (result != runtime_contig_.analysisMap().end()) {
 
-      }
+        // Get the named parameter blocks for this analysis (if any).
+        auto [runtime_id, analysis_runtime] = *result;
+        auto defined_parameters = runtime_contig_.activeParameterList().createParameterList(analysis_runtime.parameterMap());
 
-      if (registered_analysis_ptr->ident() == analysis_id) {
+        // Initialize the analysis.
+        if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(), defined_parameters, resource_ptr)) {
 
-        found = true;
-
-        std::unique_ptr<VirtualAnalysis> analysis_ptr = registered_analysis_ptr->factory();
-
-        auto result = runtime_contig_.analysisMap().find(analysis_id);
-
-        // Analysis parameters found.
-        if (result != runtime_contig_.analysisMap().end()) {
-
-          // Get the named parameter blocks for this analysis.
-          auto defined_parameters = runtime_contig_.activeParameterList().createParameterList(result->second.parameterMap());
-
-          // Initialize.
-          if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(), defined_parameters, resource_ptr)) {
-
-            active_analysis_.emplace_back(std::move(analysis_ptr), true);
-
-          } else {
-
-            active_analysis_.emplace_back(std::move(analysis_ptr), false);  // Register but disable.
-            ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
-
-          }
+          active_analysis_.emplace_back(std::move(analysis_ptr), true);
 
         } else {
 
-          ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Could not find Runtime Parameters for Analysis: {}, further analysis discarded", analysis_id);
+          active_analysis_.emplace_back(std::move(analysis_ptr), false);  // Register but disable.
+          ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Failed to Initialize Analysis: {}, further analysis discarded", analysis_id);
 
         }
 
-        break;
+      } else {
+
+        ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Could not find Runtime Parameters for Analysis: {}, further analysis discarded", analysis_id);
 
       }
 
-    }
-
-    if (not found) {
+    } else {
 
       ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Could not find Analysis: {}. Analysis must be registered in PackageAnalysis::PackageAnalysis", analysis_id);
 

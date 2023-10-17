@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_JSON_H
 
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_json_parser.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,11 +26,12 @@ public:
   JsonAnalysis() = default;
   ~JsonAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "PARSEJSON"; }
-
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<JsonAnalysis>(); }
+  constexpr static std::string IDENT {"PARSEJSON"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<JsonAnalysis>(); }
 
   // Setup the analytics to process data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,

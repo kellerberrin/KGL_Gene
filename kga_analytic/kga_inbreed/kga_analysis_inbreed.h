@@ -6,7 +6,7 @@
 #define KGL_ANALYSIS_MUTATION_H
 
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_hsgenealogy_parser.h"
 #include "kga_analysis_inbreed_args.h"
 #include "kga_analysis_inbreed_output.h"
@@ -24,11 +24,12 @@ public:
 
   ~InbreedAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return ANALYSIS_IDENT_; }
-
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<InbreedAnalysis>(); }
+  constexpr static std::string IDENT {"INBREED"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<InbreedAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,

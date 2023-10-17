@@ -5,7 +5,7 @@
 #ifndef KGL_ANALYSIS_PFEMP_H
 #define KGL_ANALYSIS_PFEMP_H
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_genome_collection.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
@@ -30,11 +30,12 @@ public:
 
   ~PfEMPAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return PFEMPANALYSIS_IDENT_; }
-
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<PfEMPAnalysis>(); }
+  constexpr static std::string IDENT {"PfEMP"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<PfEMPAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis(const std::string &work_directory,
@@ -54,7 +55,7 @@ public:
 
 private:
 
-  constexpr static const char PFEMPANALYSIS_IDENT_[]{"kga_PfEMP"};
+  constexpr static const char PFEMPANALYSIS_IDENT_[]{"PfEMPAnalysis"};
 
   std::string ident_work_directory_;
   // Resources

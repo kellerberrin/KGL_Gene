@@ -6,7 +6,7 @@
 #define KGL_NULL_ANALYSIS_H
 
 
-#include "kga_analysis_virtual.h"
+#include "kgl_package_analysis_virtual.h"
 #include "kgl_pubmed_resource.h"
 
 
@@ -20,10 +20,13 @@ public:
   NullAnalysis() = default;
   ~NullAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "NULL"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<NullAnalysis>(); }
+  constexpr static std::string IDENT {"NULL"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<NullAnalysis>(); }
+
 
   // Setup the analytics to process VCF data.
   [[nodiscard]] bool initializeAnalysis( const std::string& work_directory,

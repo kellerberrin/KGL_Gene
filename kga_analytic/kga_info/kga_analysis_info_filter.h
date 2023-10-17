@@ -27,10 +27,12 @@ public:
   InfoFilterAnalysis() = default;
   ~InfoFilterAnalysis() override = default;
 
-  // Functions redefined in super classes
   // The ident must match the ident used in the package XML.
-  [[nodiscard]] std::string ident() const override { return "INFO_FILTER"; }
-  [[nodiscard]] std::unique_ptr<VirtualAnalysis> factory() const override { return std::make_unique<InfoFilterAnalysis>(); }
+  constexpr static std::string IDENT {"INFO_FILTER"};
+  // Need a polymorphic version to interrogate VirtualAnalysis pointers.
+  [[nodiscard]] std::string ident() const override { return IDENT; }
+  // Simple creation factory function.
+  [[nodiscard]] static std::unique_ptr<VirtualAnalysis> factory() { return std::make_unique<InfoFilterAnalysis>(); }
 
   // Setup the analytics to process VCF data.
   // This function must be redefined.

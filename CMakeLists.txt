@@ -510,7 +510,7 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_upgma_unphased.cpp
         kga_analytic/kga_legacy/kga_sequence_complexity.h
         kga_analytic/kga_PfEMP/kga_upgma.h
-        kga_analytic/kga_analysis_all.h
+        kga_analytic/kga_analysis_factory.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.h
         kga_analytic/kga_info/kga_analysis_interval.cpp
@@ -541,7 +541,7 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_syngen.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.h
-        kga_analytic/kga_analysis_virtual.h
+        kgl_app/kgl_package_analysis_virtual.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP.cpp

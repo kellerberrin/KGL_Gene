@@ -10,7 +10,7 @@
 #include "kgl_runtime_config.h"
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
-#include "kga_analysis_all.h" // Includes all the defined active analysis objects.
+#include "kgl_package_analysis_virtual.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -25,12 +25,7 @@ class PackageAnalysis {
 
 public:
 
-  explicit PackageAnalysis(const RuntimeConfiguration& runtime_contig) : runtime_contig_(runtime_contig) {
-    // Defined in "kgl_analysis_all.h"
-    registered_analysis_ = getAnalysisVector();
-
-  }
-
+  explicit PackageAnalysis(const RuntimeConfiguration& runtime_contig) : runtime_contig_(runtime_contig) {}
   ~PackageAnalysis() = default;
 
   // Setup the analytics to process data.
@@ -49,8 +44,6 @@ public:
 private:
 
   const RuntimeConfiguration runtime_contig_;
-  // All available analytics
-  VirtualAnalysisVector registered_analysis_;
   // Active analytics for this package
   mutable VirtualAnalysisArray active_analysis_;
 

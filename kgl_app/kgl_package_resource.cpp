@@ -11,6 +11,8 @@
 #include "kgl_citation_parser.h"
 #include "kgl_entrez_parser.h"
 #include "kgl_bio_pmid_parser.h"
+#include "kgl_hsgenealogy_parser.h"
+#include "kgl_pubmed_resource.h"
 
 
 namespace kgl = kellerberrin::genome;
