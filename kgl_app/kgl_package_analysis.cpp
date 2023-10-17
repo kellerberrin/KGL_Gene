@@ -16,20 +16,20 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
   for (auto const& analysis_id : package.analysisList()) {
 
     bool found = false;
-    for (auto const& registered_analysis : registered_analysis_) {
+    for (auto const& registered_analysis_ptr : registered_analysis_) {
 
-      if (not registered_analysis) {
+      if (not registered_analysis_ptr) {
 
         ExecEnv::log().error("PackageAnalysis::initializeAnalysis, Registered Analysis is a NULL pointer");
         continue;
 
       }
 
-      if (registered_analysis->ident() == analysis_id) {
+      if (registered_analysis_ptr->ident() == analysis_id) {
 
         found = true;
 
-        std::unique_ptr<VirtualAnalysis> analysis_ptr = registered_analysis->factory();
+        std::unique_ptr<VirtualAnalysis> analysis_ptr = registered_analysis_ptr->factory();
 
         auto result = runtime_contig_.analysisMap().find(analysis_id);
 
