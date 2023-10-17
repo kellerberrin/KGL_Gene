@@ -2,7 +2,7 @@
 // Created by kellerberrin on 14/08/18.
 //
 
-#include "kga_upgma_unphased.h"
+#include "kgl_upgma_unphased.h"
 
 
 namespace kgl = kellerberrin::genome;

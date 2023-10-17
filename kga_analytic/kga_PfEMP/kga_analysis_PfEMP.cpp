@@ -55,7 +55,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   genome_3D7_ptr_ = pf3d7_opt.value();
 
   // Initialize the mutate object.
-  mutate_genes_ptr_ = std::make_shared<MutateGenes>(genome_3D7_ptr_);
+  mutate_genes_ptr_ = std::make_shared<kga::MutateGenes>(genome_3D7_ptr_);
 
 //  performPFEMP1UPGMA();
 

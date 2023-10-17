@@ -5,11 +5,11 @@
 #include "kga_analysis_null.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::NullAnalysis::initializeAnalysis(const std::string& work_directory,
                                            const ActiveParameterList& named_parameters,
                                            const std::shared_ptr<const AnalysisResources>& analysis_resource_ptr) {
 
@@ -31,7 +31,7 @@ bool kgl::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kga::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
@@ -43,7 +43,7 @@ bool kgl::NullAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::NullAnalysis::iterationAnalysis() {
+bool kga::NullAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -52,7 +52,7 @@ bool kgl::NullAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::NullAnalysis::finalizeAnalysis() {
+bool kga::NullAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 

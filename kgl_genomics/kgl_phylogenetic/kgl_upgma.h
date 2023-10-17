@@ -9,7 +9,7 @@
 #define KGL_UPGMA_H
 
 
-#include "kga_upgma_node.h"
+#include "kgl_upgma_node.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

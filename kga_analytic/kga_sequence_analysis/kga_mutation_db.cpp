@@ -2,7 +2,7 @@
 // Created by kellerberrin on 6/07/23.
 //
 
-#include "kgl_mutation_db.h"
+#include "kga_mutation_db.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_mutation_variant_filter.h"
 #include "kel_workflow_threads.h"
@@ -12,6 +12,7 @@
 #include <ranges>
 
 namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
+void kga::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
 
   // Get the active contigs in this population.
@@ -53,7 +54,7 @@ void kgl::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
 }
 
 
-void kgl::MutateGenes::initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+void kga::MutateGenes::initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
@@ -73,7 +74,7 @@ void kgl::MutateGenes::initializeGeneContigMap(const std::shared_ptr<const Genom
 }
 
 
-std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::MutateGenes::contigGenes(const ContigId_t& contig_id) const {
+std::vector<std::shared_ptr<const kgl::GeneFeature>> kga::MutateGenes::contigGenes(const ContigId_t& contig_id) const {
 
   std::vector<std::shared_ptr<const GeneFeature>> gene_vector;
 
@@ -92,7 +93,7 @@ std::vector<std::shared_ptr<const kgl::GeneFeature>> kgl::MutateGenes::contigGen
 }
 
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature>& gene_ptr,
+void kga::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                          const FeatureIdent_t& transcript_id,
                                          const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
                                          const std::shared_ptr<const PopulationDB>& population_ptr,
@@ -121,7 +122,7 @@ void kgl::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+kgl::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                   const FeatureIdent_t& transcript_id,
                                                   const std::shared_ptr<const PopulationDB>& gene_population_ptr,
                                                   const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const {
@@ -132,14 +133,14 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   // The tuple is variant map, total modifying variants, multiple variants (more than 1 modifying variant per offset).
-  using FutureType = std::future<std::pair<kgl::SequenceStats, bool>>;
+  using FutureType = std::future<std::pair<SequenceStats, bool>>;
   std::vector<std::pair<FutureType, std::string>> future_vector;
 
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
-    std::future<std::pair<kgl::SequenceStats, bool>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation,
+    std::future<std::pair<SequenceStats, bool>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation,
                                                                                 genome_ptr,
                                                                                 gene_ptr,
                                                                                 transcript_id,
@@ -202,7 +203,7 @@ kgl::MutateStats kgl::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
 }
 
 
-std::pair<kgl::SequenceStats, bool> kgl::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_db_ptr,
+std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_db_ptr,
                                                                                const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                                                const FeatureIdent_t& transcript_id,
                                                                                const std::shared_ptr<const GenomeReference>& genome_ref_ptr) {

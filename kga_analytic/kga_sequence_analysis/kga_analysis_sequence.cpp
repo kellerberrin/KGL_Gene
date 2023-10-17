@@ -10,10 +10,11 @@
 #include <thread>
 
 namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::SequenceAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory,
                                                const ActiveParameterList& named_parameters,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -58,7 +59,7 @@ bool kgl::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
+bool kga::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
 
   ExecEnv::log().info("VCF File Read for Analysis Id: {} called with Variant Population", ident());
 
@@ -83,7 +84,7 @@ bool kgl::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::SequenceAnalysis::iterationAnalysis() {
+bool kga::SequenceAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -92,7 +93,7 @@ bool kgl::SequenceAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::SequenceAnalysis::finalizeAnalysis() {
+bool kga::SequenceAnalysis::finalizeAnalysis() {
 
   // Output the mutation statistics.
   std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);

@@ -5,7 +5,7 @@
 #include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
 #include "kgl_pfgenome_aux.h"
-#include "kga_upgma_node.h"
+#include "kgl_phylogenetic/kgl_upgma_node.h"
 #include "kga_phylogenetic_analysis.h"
 #include "kga_analysis_gene_sequence.h"
 #include "kga_sequence_complexity.h"

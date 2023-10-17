@@ -327,8 +327,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_Pf7.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.h
-        kgl_genomics/kgl_mutation/kgl_mutation_db.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_db.h
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_analysis.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.cpp
@@ -351,10 +349,22 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_coding.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_coding.h
+        kgl_genomics/kgl_phylogenetic/kgl_upgma_node.h
+        kgl_genomics/kgl_phylogenetic/kgl_upgma_node.cpp
+        kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.h
+        kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.cpp
+        kgl_genomics/kgl_phylogenetic/kgl_upgma.h
+
 )
 
 # 3rd party library for fast Levenshtein sequence matching.
-set(EDLIB_SOURCE_FILES contrib/edlib/edlib.cpp)
+set(EDLIB_SOURCE_FILES
+        contrib/edlib/edlib.cpp
+        contrib/rapidxml/rapidxml.h
+        contrib/rapidxml/rapidxml_iterators.h
+        contrib/rapidxml/rapidxml_print.h
+        contrib/rapidxml/rapidxml_utils.h
+)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -398,10 +408,6 @@ set(ONTOLOGY_SOURCE_FILES
         kol_ontology/kol_SimilarityInterface.h
         kol_ontology/kol_SimilarityWriter.h
         kol_ontology/kol_SimilarityCache.h
-        contrib/rapidxml/rapidxml.h
-        contrib/rapidxml/rapidxml_iterators.h
-        contrib/rapidxml/rapidxml_print.h
-        contrib/rapidxml/rapidxml_utils.h
         kol_ontology/kgl_ontology/kgl_ontology_database.h
         kol_ontology/contrib/kol_GoGraphImpl.cpp
         kol_ontology/kol_InformationFrontier.cpp
@@ -501,15 +507,10 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_phylogenetic_analysis.cpp
         kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.h
         kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.cpp
-        kga_analytic/kga_PfEMP/kga_upgma_node.h
-        kga_analytic/kga_PfEMP/kga_upgma_node.cpp
         kga_analytic/kga_legacy/kga_rna_search.cpp
         kga_analytic/kga_legacy/kga_rna_search.h
         kga_analytic/kga_legacy/kga_ploidy_analysis.h
-        kga_analytic/kga_PfEMP/kga_upgma_unphased.h
-        kga_analytic/kga_PfEMP/kga_upgma_unphased.cpp
         kga_analytic/kga_legacy/kga_sequence_complexity.h
-        kga_analytic/kga_PfEMP/kga_upgma.h
         kga_analytic/kga_analysis_factory.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.h
@@ -533,6 +534,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
+        kga_analytic/kga_sequence_analysis/kga_mutation_db.cpp
+        kga_analytic/kga_sequence_analysis/kga_mutation_db.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_output.cpp
@@ -541,7 +544,6 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_syngen.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.h
-        kgl_app/kgl_package_analysis_virtual.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP.cpp
@@ -606,6 +608,7 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_package.h
         kgl_app/kgl_package_analysis.cpp
         kgl_app/kgl_package_analysis.h
+        kgl_app/kgl_package_analysis_virtual.h
         kgl_app/kgl_runtime.cpp
         kgl_app/kgl_runtime.h
         kgl_app/kgl_runtime_config.cpp

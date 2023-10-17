@@ -5,7 +5,7 @@
 
 #include <iomanip>
 #include "kgl_sequence_compare_impl.h"
-#include "kga_upgma_node.h"
+#include "kgl_upgma_node.h"
 #include "kgl_mutation_transcript.h"
 #include "kgl_mutation_coding.h"
 

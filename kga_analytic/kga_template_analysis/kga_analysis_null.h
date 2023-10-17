@@ -10,7 +10,7 @@
 #include "kgl_pubmed_resource.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 class NullAnalysis : public VirtualAnalysis {

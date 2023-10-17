@@ -15,8 +15,6 @@
 #include "kga_analysis_literature.h"   // Analyze Pubmed literature.
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Lookup table to dynamically create analysis objects specified in package XML files.
@@ -26,21 +24,23 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VirtualAnalysis::AnalysisFactoryMap const VirtualAnalysis::analysis_factory_map_ = {
 
-{ NullAnalysis::IDENT, NullAnalysis::factory },
-{ SequenceAnalysis::IDENT, SequenceAnalysis::factory },
-{ IntervalAnalysis::IDENT, IntervalAnalysis::factory },
-{ InfoFilterAnalysis::IDENT, InfoFilterAnalysis::factory },
-{ InbreedAnalysis::IDENT, InbreedAnalysis::factory },
-{ PfEMPAnalysis::IDENT, PfEMPAnalysis::factory },
-{ MutationAnalysis::IDENT, MutationAnalysis::factory },
-{ JsonAnalysis::IDENT, JsonAnalysis::factory },
-{ LiteratureAnalysis::IDENT, LiteratureAnalysis::factory }
+namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
+
+
+kgl::VirtualAnalysis::AnalysisFactoryMap const kgl::VirtualAnalysis::analysis_factory_map_ = {
+
+{ kga::NullAnalysis::IDENT, kga::NullAnalysis::factory },
+{ kga::SequenceAnalysis::IDENT, kga::SequenceAnalysis::factory },
+{ kgl::IntervalAnalysis::IDENT, kgl::IntervalAnalysis::factory },
+{ kgl::InfoFilterAnalysis::IDENT, kgl::InfoFilterAnalysis::factory },
+{ kgl::InbreedAnalysis::IDENT, kgl::InbreedAnalysis::factory },
+{ kgl::PfEMPAnalysis::IDENT, kgl::PfEMPAnalysis::factory },
+{ kgl::MutationAnalysis::IDENT, kgl::MutationAnalysis::factory },
+{ kgl::JsonAnalysis::IDENT, kgl::JsonAnalysis::factory },
+{ kgl::LiteratureAnalysis::IDENT, kgl::LiteratureAnalysis::factory }
 
 };
 
-
-
-} //namespace
 

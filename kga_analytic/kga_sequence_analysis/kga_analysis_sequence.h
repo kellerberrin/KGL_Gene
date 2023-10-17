@@ -8,7 +8,7 @@
 
 #include "kgl_package_analysis_virtual.h"
 #include "kgl_genome_collection.h"
-#include "kgl_mutation_db.h"
+#include "kga_mutation_db.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 class SequenceAnalysis : public VirtualAnalysis {

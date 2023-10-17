@@ -12,7 +12,7 @@
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_io_gff_fasta.h"
 #include "kgl_genome_collection.h"
-#include "kgl_mutation_db.h"
+#include "kga_mutation_db.h"
 
 #include <memory>
 #include <fstream>
