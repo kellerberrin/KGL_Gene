@@ -30,15 +30,3 @@ kgl::Codon::Codon(const DNA5SequenceCoding& coding_sequence, ContigOffset_t codo
 
 }
 
-
-void kgl::Codon::modifyBase(size_t index, CodingDNA5::Alphabet base)
-{
-
-  if (index >= CODON_SIZE) {
-
-    ExecEnv::log().error("Invalid codon base index specified index:{}, must be < 3)", index);
-    return;
-  }
-  bases_[index] = base;
-
-}

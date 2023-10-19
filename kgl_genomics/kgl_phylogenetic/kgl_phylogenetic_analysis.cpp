@@ -6,9 +6,9 @@
 #include "kgl_sequence_compare.h"
 #include "kgl_pfgenome_aux.h"
 #include "kgl_phylogenetic/kgl_upgma_node.h"
-#include "kga_phylogenetic_analysis.h"
-#include "kga_analysis_gene_sequence.h"
-#include "kga_sequence_complexity.h"
+#include "kgl_phylogenetic_analysis.h"
+#include "kgl_analysis_gene_sequence.h"
+#include "kgl_sequence_complexity.h"
 #include "kgl_mutation_variant_filter.h"
 #include "kgl_mutation_coding.h"
 #include "kgl_io_gff_fasta.h"
@@ -600,8 +600,10 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
               case CodingSequenceValidity::NONSENSE_MUTATION: {
 
-                size_t valid_seq_size = contig_ref_ptr->proteinSequenceSize(amino_mutant) + 1;  // +1 to include the stop codon.
-                double proportion = (static_cast<double>(valid_seq_size) * -100.0) / static_cast<double>(amino_reference_seq.length());
+                auto [seq_validity_code, seq_validity_size] = contig_ref_ptr->proteinSequenceSize(amino_mutant);
+                // +1 to include the stop codon.
+                seq_validity_size += 1;
+                double proportion = (static_cast<double>(seq_validity_size) * -100.0) / static_cast<double>(amino_reference_seq.length());
                 out_file << proportion << CSV_delimiter;
 
               }

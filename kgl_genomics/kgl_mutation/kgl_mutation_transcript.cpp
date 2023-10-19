@@ -79,12 +79,12 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getModifiedCodin
 
 
 
-std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTranscript::getModifiedValidity() const {
+std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::SequenceTranscript::getModifiedValidity() const {
 
   auto modified_linear_opt = getModifiedLinear();
   if (not modified_linear_opt) {
 
-    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY};
+    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY, 0};
 
   }
   const auto& modified_linear = modified_linear_opt.value();
@@ -92,9 +92,13 @@ std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTra
   auto modified_coding = modified_linear.codingSequence(transcript_ptr_->strand());
 
   CodingSequenceValidity sequence_validity;
+  size_t amino_size{0};
   if (transcript_ptr_->codingType() == TranscriptionSequenceType::PROTEIN) {
 
-    sequence_validity = transcript_ptr_->getGene()->contig_ref_ptr()->checkValidCodingSequence(modified_coding);
+    const auto& contig_ref_ptr = transcript_ptr_->getGene()->contig_ref_ptr();
+    auto [validity, sequence_size] = contig_ref_ptr->codingProteinSequenceSize(modified_coding);
+    sequence_validity = validity;
+    amino_size = sequence_size;
 
   } else {
 
@@ -102,7 +106,7 @@ std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTra
 
   }
 
-  return {std::move(modified_coding), sequence_validity};
+  return {std::move(modified_coding), sequence_validity, amino_size};
 
 }
 
@@ -152,12 +156,12 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getOriginalCodin
 }
 
 
-std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTranscript::getOriginalValidity() const {
+std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::SequenceTranscript::getOriginalValidity() const {
 
   auto original_linear_opt = getOriginalLinear();
   if (not original_linear_opt) {
 
-    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY};
+    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY, 0};
 
   }
   const auto& original_linear = original_linear_opt.value();
@@ -165,9 +169,13 @@ std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTra
   auto original_coding = original_linear.codingSequence(transcript_ptr_->strand());
 
   CodingSequenceValidity sequence_validity;
+  size_t amino_size{0};
   if (transcript_ptr_->codingType() == TranscriptionSequenceType::PROTEIN) {
 
-    sequence_validity = transcript_ptr_->getGene()->contig_ref_ptr()->checkValidCodingSequence(original_coding);
+    const auto& contig_ref_ptr = transcript_ptr_->getGene()->contig_ref_ptr();
+    auto [validity, sequence_size] = contig_ref_ptr->codingProteinSequenceSize(original_coding);
+    sequence_validity = validity;
+    amino_size = sequence_size;
 
   } else {
 
@@ -175,7 +183,7 @@ std::pair<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity> kgl::SequenceTra
 
   }
 
-  return {std::move(original_coding), sequence_validity};
+  return {std::move(original_coding), sequence_validity, amino_size};
 
 }
 

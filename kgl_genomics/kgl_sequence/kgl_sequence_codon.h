@@ -34,7 +34,6 @@ public:
   }
 
   [[nodiscard]] CodingDNA5::Alphabet operator[](size_t index) const { return bases_[index]; };
-  void modifyBase(size_t index, CodingDNA5::Alphabet base);
 
   [[nodiscard]] std::string getSequenceAsString() const {
 

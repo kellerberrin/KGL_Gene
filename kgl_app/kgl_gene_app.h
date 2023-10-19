@@ -6,10 +6,10 @@
 #define KGL_PHYLOGENETIC_APP_H
 
 
-#include "kgl_genome_types.h"
-#include "kel_exec_env.h"
 #include "kgl_properties.h"
+#include "kgl_genome_types.h"
 
+#include "kel_exec_env.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -20,8 +20,8 @@ struct CmdLineArgs {
   std::string workDirectory{"./"};
   std::string logFile{"kgl_phylo.log"};
   std::string options_file{"runtime_options.xml"};
-  int max_error_count{1000};
-  int max_warn_count{1000};
+  size_t max_error_count{1000};
+  size_t max_warn_count{1000};
 
 };
 

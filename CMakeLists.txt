@@ -35,7 +35,7 @@ include_directories(/usr/local/include/spdlog/include/
                     kga_analytic/kga_sequence_analysis
                     kga_analytic/kga_info
                     kga_analytic/kga_PfEMP
-                    kga_analytic/kga_legacy
+        kgl_genomics/kgl_legacy
                     kga_analytic/kga_literature
                     kga_analytic/kga_mutation
                     kga_analytic/kga_template_analysis
@@ -354,6 +354,15 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.h
         kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.cpp
         kgl_genomics/kgl_phylogenetic/kgl_upgma.h
+        kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.cpp
+        kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.h
+        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_analysis.h
+        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_analysis.cpp
+        kgl_genomics/kgl_legacy/kgl_rna_search.cpp
+        kgl_genomics/kgl_legacy/kgl_rna_search.h
+        kgl_genomics/kgl_legacy/kgl_ploidy_analysis.h
+        kgl_genomics/kgl_legacy/kgl_sequence_complexity.h
+
 
 )
 
@@ -503,14 +512,8 @@ set(ONTOLOGY_UNIT_TEST_FILES
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kga_analytic/kga_PfEMP/kga_phylogenetic_analysis.h
-        kga_analytic/kga_PfEMP/kga_phylogenetic_analysis.cpp
-        kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.h
-        kga_analytic/kga_PfEMP/kga_analysis_gene_sequence.cpp
-        kga_analytic/kga_legacy/kga_rna_search.cpp
-        kga_analytic/kga_legacy/kga_rna_search.h
-        kga_analytic/kga_legacy/kga_ploidy_analysis.h
-        kga_analytic/kga_legacy/kga_sequence_complexity.h
+        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.h
+        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.cpp
         kga_analytic/kga_analysis_factory.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.h
@@ -520,8 +523,6 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_info/kga_analysis_info_filter.h
         kga_analytic/kga_info/kga_analysis_age.cpp
         kga_analytic/kga_info/kga_analysis_age.h
-        kga_analytic/kga_legacy/kga_legacy_Pf_analysis.cpp
-        kga_analytic/kga_legacy/kga_legacy_Pf_analysis.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_diploid.cpp
@@ -534,8 +535,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
-        kga_analytic/kga_sequence_analysis/kga_mutation_db.cpp
-        kga_analytic/kga_sequence_analysis/kga_mutation_db.h
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_mutation.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_mutation.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_output.cpp

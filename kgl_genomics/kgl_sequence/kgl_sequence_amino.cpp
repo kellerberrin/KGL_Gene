@@ -117,15 +117,21 @@ bool kgl::TranslateToAmino::checkStopCodon(const AminoSequence& amino_sequence) 
 }
 
 
-size_t kgl::TranslateToAmino::checkNonsenseMutation(const AminoSequence& amino_sequence) const {
+std::pair<size_t, bool> kgl::TranslateToAmino::firstStopSequenceSize(const AminoSequence& amino_sequence) const {
 
-  for (size_t index = 0; index < amino_sequence.length() - 1; ++index) {
+  for (size_t index = 0; index < amino_sequence.length(); ++index) {
 
-    if (table_ptr_->isStopAmino(amino_sequence.at(index))) return index;
+    if (table_ptr_->isStopAmino(amino_sequence.at(index))) {
+
+      // If found, return the length of the sequence including the stop codon.
+      return {index + 1, true};
+
+    }
 
   }
 
-  return 0;
+  // Not found, return the length of the sequence and set the flag to false.
+  return { amino_sequence.length(), false};
 
 }
 

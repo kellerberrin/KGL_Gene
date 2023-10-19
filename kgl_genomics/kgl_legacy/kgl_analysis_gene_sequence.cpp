@@ -2,9 +2,9 @@
 // Created by kellerberrin on 16/01/18.
 //
 
-#include "kga_analysis_gene_sequence.h"
-#include "kga_phylogenetic_analysis.h"
-#include "kga_sequence_complexity.h"
+#include "kgl_analysis_gene_sequence.h"
+#include "kgl_phylogenetic/kgl_phylogenetic_analysis.h"
+#include "kgl_sequence_complexity.h"
 #include "kgl_mutation_variant_filter.h"
 #include "kgl_mutation_coding.h"
 #include "kgl_io_gff_fasta.h"

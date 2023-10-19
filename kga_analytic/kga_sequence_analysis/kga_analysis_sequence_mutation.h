@@ -29,7 +29,9 @@ struct SequenceStats {
 
   FilteredVariantStats filter_statistics_;
   CodingSequenceValidity original_sequence_{CodingSequenceValidity::VALID_PROTEIN};
+  size_t original_amino_size_{0};
   CodingSequenceValidity modified_sequence_{CodingSequenceValidity::VALID_PROTEIN};
+  size_t modified_amino_size_{0};
 
 };
 

@@ -120,7 +120,8 @@ kgl::CodingSequenceValidity kgl::ContigReference::checkValidProteinSequence(cons
 
   }
 
-  if (coding_table_.checkNonsenseMutation(amino_sequence) != 0) {
+  auto [first_size, first_found] = coding_table_.firstStopSequenceSize(amino_sequence);
+  if (first_size != amino_sequence.length()) {
 
     return CodingSequenceValidity::NONSENSE_MUTATION;
 
@@ -137,28 +138,47 @@ kgl::CodingSequenceValidity kgl::ContigReference::checkValidProteinSequence(cons
 }
 
 
-size_t kgl::ContigReference::proteinSequenceSize(const AminoSequence& amino_sequence) const {
+kgl::CodingSequenceValidity
+kgl::ContigReference::checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const {
 
-  switch(checkValidProteinSequence(amino_sequence)) {
 
-    case CodingSequenceValidity::NO_START_CODON:
-      return 0;
+  auto sequence_length = coding_sequence.length();
+  if ((sequence_length % Codon::CODON_SIZE) != 0) {
 
-    case CodingSequenceValidity::NONSENSE_MUTATION:
-      return coding_table_.checkNonsenseMutation(amino_sequence);
-
-    case CodingSequenceValidity::NO_STOP_CODON:
-      return 0;
-
-    case CodingSequenceValidity::VALID_PROTEIN:
-      return amino_sequence.length();
-
-    default:
-      return 0;
+    return CodingSequenceValidity::NOT_MOD3;
 
   }
 
-  return 0; // Never reached, to keep the compiler happy.
+  auto amino_sequence = getAminoSequence(coding_sequence);
+  return checkValidProteinSequence(amino_sequence);
+
+}
+
+
+
+std::pair<kgl::CodingSequenceValidity, size_t> kgl::ContigReference::proteinSequenceSize(const AminoSequence& amino_sequence) const {
+
+  auto validity_code = checkValidProteinSequence(amino_sequence);
+  auto [first_size, first_found] = coding_table_.firstStopSequenceSize(amino_sequence);
+
+  return {validity_code, first_size}; // Never reached, to keep the compiler happy.
+
+}
+
+
+std::pair<kgl::CodingSequenceValidity, size_t>
+kgl::ContigReference::codingProteinSequenceSize(const DNA5SequenceCoding& coding_sequence) const {
+
+
+  auto sequence_length = coding_sequence.length();
+  if ((sequence_length % Codon::CODON_SIZE) != 0) {
+
+    return { CodingSequenceValidity::NOT_MOD3, Codon::codonLength(coding_sequence)};
+
+  }
+
+  auto amino_sequence = getAminoSequence(coding_sequence);
+  return proteinSequenceSize(amino_sequence);
 
 }
 

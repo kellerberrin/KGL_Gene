@@ -74,6 +74,17 @@ public:
 
   [[nodiscard]] bool settranslationTable(const std::string& table_name) { return table_ptr_->setTranslationTable(table_name); }
 
+
+  [[nodiscard]] bool checkStartCodon(const AminoSequence& amino_sequence) const;
+  [[nodiscard]] bool checkStopCodon(const AminoSequence& amino_sequence) const;
+  // Find the size of the sequence including the first stop codon.
+  // If not found, bool is false and the sequence length is returned.
+  [[nodiscard]] std::pair<size_t, bool> firstStopSequenceSize(const AminoSequence& amino_sequence) const;
+
+  [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& coding_sequence) const;
+  [[nodiscard]] AminoAcid::Alphabet getAmino(const Codon& codon) const;
+
+  // const DNA5SequenceCoding& functions.
   [[nodiscard]] Codon firstCodon(const DNA5SequenceCoding& coding_sequence) const {
 
     return Codon(coding_sequence, 0);
@@ -85,12 +96,6 @@ public:
     return table_ptr_->isStartCodon(firstCodon(coding_sequence));
 
   }
-
-  [[nodiscard]] bool checkStartCodon(const AminoSequence& amino_sequence) const;
-  [[nodiscard]] bool checkStopCodon(const AminoSequence& amino_sequence) const;
-  [[nodiscard]] size_t checkNonsenseMutation(const AminoSequence& amino_sequence) const;
-
-  [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& coding_sequence) const;
 
   [[nodiscard]] Codon lastCodon(const DNA5SequenceCoding& coding_sequence) const {
 
@@ -107,7 +112,6 @@ public:
   [[nodiscard]] size_t checkNonsenseMutation(const DNA5SequenceCoding& coding_sequence) const;
 
   [[nodiscard]] AminoAcid::Alphabet getAmino(const DNA5SequenceCoding& coding_sequence, ContigSize_t codon_index) const;
-  [[nodiscard]] AminoAcid::Alphabet getAmino(const Codon& codon) const;
 
 
 private:

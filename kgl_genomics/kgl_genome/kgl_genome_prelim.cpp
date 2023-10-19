@@ -407,7 +407,7 @@ std::unique_ptr<const kgl::TranscriptionSequenceArray> kgl::TranscriptionSequenc
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::SequenceValidityStatistics::updateValidity(CodingSequenceValidity validity) {
+void kgl::SequenceValidityStatistics::updateValidity(CodingSequenceValidity validity, size_t amino_size) {
 
   switch(validity) {
 
@@ -433,6 +433,7 @@ void kgl::SequenceValidityStatistics::updateValidity(CodingSequenceValidity vali
 
     case CodingSequenceValidity::NONSENSE_MUTATION:
       ++nonsense_mutation_;
+      nonsense_mutation_size_.push_back(static_cast<double>(amino_size));
       break;
 
     case CodingSequenceValidity::NO_STOP_CODON:

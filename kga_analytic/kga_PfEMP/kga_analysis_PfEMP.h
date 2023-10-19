@@ -11,7 +11,7 @@
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
-#include "kga_mutation_db.h"
+#include "kga_analysis_sequence_mutation.h"
 
 #include "kga_analysis_PfEMP_variant.h"
 #include "kga_analysis_PfEMP_heterozygous.h"

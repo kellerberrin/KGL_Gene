@@ -184,13 +184,14 @@ public:
   [[nodiscard]] size_t notMod3() const { return not_mod3_; }
   [[nodiscard]] size_t noStartCodon() const { return no_start_codon_; }
   [[nodiscard]] size_t nonsenseMutation() const { return nonsense_mutation_; }
+  [[nodiscard]] const std::vector<double>& nonsenseMutationSize() const { return nonsense_mutation_size_; }
   [[nodiscard]] size_t noStopCodon() const { return no_stop_codon_; }
   [[nodiscard]] size_t invalidProtein() const { return noStartCodon() + empty() + notMod3() + nonsenseMutation() +
     noStopCodon(); }
   [[nodiscard]] size_t totalProtein() const { return validProtein() + invalidProtein(); }
   [[nodiscard]] size_t totalSequence() const { return totalProtein() + ncRNA(); }
 
-  void updateValidity(CodingSequenceValidity validity);
+  void updateValidity(CodingSequenceValidity validity, size_t amino_size = 0);
   void updateTranscriptArray(const std::shared_ptr<const TranscriptionSequenceArray>& transcript_array_ptr);
   void updateTranscript(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr);
 
@@ -203,6 +204,7 @@ private:
   size_t not_mod3_{0};
   size_t no_start_codon_{0};
   size_t nonsense_mutation_{0};
+  std::vector<double> nonsense_mutation_size_;
   size_t no_stop_codon_{0};
 
 

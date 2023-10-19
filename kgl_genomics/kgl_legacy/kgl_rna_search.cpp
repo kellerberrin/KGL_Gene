@@ -2,7 +2,7 @@
 // Created by kellerberrin on 21/02/18.
 //
 
-#include "kga_rna_search.h"
+#include "kgl_rna_search.h"
 
 #include <iostream>
 

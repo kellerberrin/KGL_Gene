@@ -132,20 +132,3 @@ kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionS
 
 }
 
-
-kgl::CodingSequenceValidity
-kgl::ContigReference::checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const {
-
-
-  auto sequence_length = coding_sequence.length();
-  if ((sequence_length % Codon::CODON_SIZE) != 0) {
-
-    return CodingSequenceValidity::NOT_MOD3;
-
-  }
-
-  auto amino_sequence = getAminoSequence(coding_sequence);
-  return checkValidProteinSequence(amino_sequence);
-
-}
-

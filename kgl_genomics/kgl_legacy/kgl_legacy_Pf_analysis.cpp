@@ -10,10 +10,10 @@
 #include "kel_utility.h"
 #include "kgl_sequence_distance.h"
 #include "kgl_pfgenome_aux.h"
-#include "kga_phylogenetic_analysis.h"
-#include "kga_analysis_gene_sequence.h"
-#include "kga_rna_search.h"
-#include "kga_legacy_Pf_analysis.h"
+#include "kgl_phylogenetic/kgl_phylogenetic_analysis.h"
+#include "kgl_analysis_gene_sequence.h"
+#include "kgl_rna_search.h"
+#include "kgl_legacy_Pf_analysis.h"
 
 #include <functional>
 

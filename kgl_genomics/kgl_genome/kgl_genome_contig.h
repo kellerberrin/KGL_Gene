@@ -60,9 +60,12 @@ public:
 
 
   [[nodiscard]] static bool verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr);
-  // Returns the protein sequence as the distance in amino acids between the start codon and stop codon.
-  // No start and stop codon returns 0.
-  [[nodiscard]] size_t proteinSequenceSize(const AminoSequence& amino_sequence) const;
+  // Returns the protein sequence size in amino acids between the first codon and including the first stop codon.
+  // If no stop codon encountered, just returns the length of the sequence.
+  [[nodiscard]] std::pair<CodingSequenceValidity, size_t> proteinSequenceSize(const AminoSequence& amino_sequence) const;
+  // Check all of the above and check Mod3.
+  // If sequence is not Mod3 the size of all complete codons is returned (nonsense mutations are not checked).
+  [[nodiscard]] std::pair<CodingSequenceValidity, size_t> codingProteinSequenceSize(const DNA5SequenceCoding& coding_sequence) const;
 
   // Given a gene id and an mRNA (sequence id) return the CDS coding sequence.
   [[nodiscard]] std::optional<std::shared_ptr<const TranscriptionSequence>>
@@ -83,7 +86,7 @@ public:
   // Check all of the above and Mod3.
   [[nodiscard]] CodingSequenceValidity checkValidCodingSequence(const DNA5SequenceCoding& coding_sequence) const;
 
-  // Wire-up the contig_ref_ptr features
+  // Wire-up and verify all the defined contig features (generally uploaded from a .gff3 file).
   void verifyFeatureHierarchy();
   void verifyGeneFeatures();
 
@@ -91,9 +94,9 @@ private:
 
   ContigId_t contig_id_;
   std::string description_;
-  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The contig_ref_ptr unstranded DNA sequence.
-  GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this contig_ref_ptr.
-  TranslateToAmino coding_table_;  // Amino Acid translation table, unique for contig_ref_ptr (e.g. mitochondria)
+  std::shared_ptr<const DNA5SequenceLinear> sequence_ptr_;  // The reference contig unstranded DNA sequence.
+  GeneExonFeatures gene_exon_features_;  // All the genes and sequences defined for this reference contig.
+  TranslateToAmino coding_table_;  // Amino Acid translation table, unique for each reference contig (e.g. mitochondria)
 
 };
 

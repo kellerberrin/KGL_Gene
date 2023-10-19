@@ -8,7 +8,7 @@
 
 #include "kgl_package_analysis_virtual.h"
 #include "kgl_genome_collection.h"
-#include "kga_mutation_db.h"
+#include "kga_analysis_sequence_mutation.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

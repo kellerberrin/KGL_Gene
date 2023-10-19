@@ -2,7 +2,7 @@
 // Created by kellerberrin on 6/07/23.
 //
 
-#include "kga_mutation_db.h"
+#include "kga_analysis_sequence_mutation.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_mutation_variant_filter.h"
 #include "kel_workflow_threads.h"
@@ -258,13 +258,15 @@ std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(c
 
   }
 
-  auto [modified_coding, modified_validity] = modified_transcript.getModifiedValidity();
-  auto [original_coding, original_validity] = modified_transcript.getOriginalValidity();
+  auto [modified_coding, modified_validity, modified_amino_size] = modified_transcript.getModifiedValidity();
+  auto [original_coding, original_validity, original_amino_size] = modified_transcript.getOriginalValidity();
 
   SequenceStats stats;
   stats.filter_statistics_ = modified_transcript.filterStatistics();
   stats.modified_sequence_ = modified_validity;
+  stats.modified_amino_size_ = modified_amino_size;
   stats.original_sequence_ = original_validity;
+  stats.original_amino_size_ = original_amino_size;
 
   return { stats, true};
 

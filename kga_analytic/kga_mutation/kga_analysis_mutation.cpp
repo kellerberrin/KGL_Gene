@@ -4,7 +4,7 @@
 
 #include "kga_analysis_mutation_data.h"
 #include "kga_analysis_mutation.h"
-#include "kga_analysis_gene_sequence.h"
+#include "kgl_analysis_gene_sequence.h"
 #include "kgl_variant_filter_db_offset.h"
 
 
