@@ -7,7 +7,7 @@
 
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_mutation_analysis.h"
+#include "kga_analysis_sequence_statistics.h"
 #include "kgl_mutation_variant_map.h"
 #include "kgl_mutation_interval.h"
 #include "kgl_mutation_transcript.h"

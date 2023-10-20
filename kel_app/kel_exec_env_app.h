@@ -66,6 +66,14 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     }
 
+    new_log_ptr_ = Environment::createNewLogger();
+    if (not new_log_ptr_) {
+
+      std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " ExecEnv::runApplication - cannot create application logger" << std::endl;
+      std::exit(EXIT_FAILURE);
+
+    }
+
     // Enable ctrl-C runtime termination.
     signal(SIGINT, ctrlC);
 
@@ -85,6 +93,8 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     // Explicitly shutdown the logger.
     log_ptr_ = nullptr;
+    new_log_ptr_ = nullptr;
+
 
   } catch(std::exception& e) { // In general, unhandled exceptions should not appear here, so complain and exit.
 

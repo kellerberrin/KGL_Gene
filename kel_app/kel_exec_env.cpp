@@ -42,6 +42,24 @@ std::unique_ptr<kel::Logger> kel::ExecEnv::createLogger( const std::string& modu
 }
 
 
+std::unique_ptr<kel::NewLogger> kel::ExecEnv::createNewLogger( const std::string& module,
+                                                         const std::string& log_file,
+                                                         int max_error_messages,
+                                                         int max_warning_messages) {
+
+  std::unique_ptr<kel::NewLogger> log_ptr;
+
+  log_ptr = std::make_unique<NewLogger>(module, log_file);
+
+  log_ptr->setMaxErrorMessages(max_error_messages);
+
+  log_ptr->setMaxWarningMessages(max_warning_messages);
+
+  return log_ptr;
+
+}
+
+
 void kel::ExecEnv::ctrlC(int) {
 
   ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");

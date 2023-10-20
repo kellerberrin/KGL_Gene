@@ -40,6 +40,8 @@ public:
   static void executeApp(); // Application mainline.
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
   [[nodiscard]] static std::unique_ptr<Logger> createLogger(); // Create application logger.
+  [[nodiscard]] static std::unique_ptr<NewLogger> createNewLogger(); // Create application logger.
+
 
   [[nodiscard]] inline static const CmdLineArgs& getArgs() { return args_; }
   [[nodiscard]] inline static const RuntimeProperties& getRuntimeOptions() { return runtime_options_; }

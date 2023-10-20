@@ -2,7 +2,7 @@
 // Created by kellerberrin on 15/07/23.
 //
 
-#include "kgl_mutation_analysis.h"
+#include "kga_analysis_sequence_statistics.h"
 
 #include <fstream>
 
@@ -36,8 +36,10 @@ void kgl::MutateAnalysis::addTranscriptRecord(const TranscriptMutateRecord& reco
 void kgl::MutateAnalysis::addGenomeRecords(const GenomeId_t& genome_id,
                                            size_t total_variants,
                                            size_t multiple_variants,
-                                           CodingSequenceValidity modified,
-                                           CodingSequenceValidity original) {
+                                           CodingSequenceValidity modified_validity,
+                                           size_t modified_amino_size,
+                                           CodingSequenceValidity original_validity,
+                                           size_t original_amino_size) {
 
   auto find_iter = genome_map_.find(genome_id);
   if (find_iter == genome_map_.end()) {
@@ -54,7 +56,12 @@ void kgl::MutateAnalysis::addGenomeRecords(const GenomeId_t& genome_id,
   }
 
   auto& [map_genome, genome_contig_mutate] = *find_iter;
-  genome_contig_mutate.addRecord(total_variants, multiple_variants, modified, original);
+  genome_contig_mutate.addRecord(total_variants,
+                                 multiple_variants,
+                                 modified_validity,
+                                 modified_amino_size,
+                                 original_validity,
+                                 original_amino_size);
 
 }
 
@@ -143,9 +150,35 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
            << "Modified No Start Codon" << DELIMITER_
            << "Modified No Stop Codon" << DELIMITER_
            << "Modified Nonsense Mutation" << DELIMITER_
-           << "Total_Geromes" << '\n';
+           << "Modified Nonsense Variations" << DELIMITER_
+           << "Modified Nonsense MaxCount" << DELIMITER_
+           << "Total Genomes" << '\n';
 
   for (auto const& [key, transcript_record] : transcript_map_) {
+
+    const auto& amino_size_vector = transcript_record.mutateStats().modified_validity_.nonsenseMutationSize();
+    // Order the nonsense mutations by amino acid size (includes the stop codon).
+    std::map<size_t, size_t> amino_size_map;
+    for (size_t amino_size : amino_size_vector) {
+
+      if (amino_size_map.contains(amino_size)) {
+
+        ++(amino_size_map[amino_size]);
+
+      } else {
+
+        amino_size_map[amino_size] = 1;
+
+      }
+
+    }
+    // Now re-order by count (non-unique).
+    std::multimap<size_t, size_t> amino_count_map;
+    for (auto [size, count] : amino_size_map) {
+
+      amino_count_map.insert({count, size});
+
+    }
 
     out_file << transcript_record.genePtr()->contig_ref_ptr()->contigId() << DELIMITER_
              << transcript_record.genePtr()->id() << DELIMITER_
@@ -163,8 +196,10 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
     << transcript_record.mutateStats().modified_validity_.notMod3() << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.noStartCodon() << DELIMITER_
     << transcript_record.mutateStats().modified_validity_.noStopCodon() << DELIMITER_
-             << transcript_record.mutateStats().modified_validity_.nonsenseMutation() << DELIMITER_
-         << transcript_record.mutateStats().total_genomes_ << '\n';
+    << transcript_record.mutateStats().modified_validity_.nonsenseMutation() << DELIMITER_
+    << amino_size_map.size() << DELIMITER_
+    << (amino_size_map.empty() ? 0 : amino_count_map.crbegin()->first) << DELIMITER_
+    << transcript_record.mutateStats().total_genomes_ << '\n';
 
   }
 

@@ -9,7 +9,7 @@
 #include "kgl_mutation_variant_filter.h"
 #include "kgl_genome_genome.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_mutation_analysis.h"
+#include "kga_analysis_sequence_statistics.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

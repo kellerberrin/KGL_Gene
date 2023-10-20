@@ -168,7 +168,9 @@ kgl::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
                                       stats.filter_statistics_.total_interval_variants_,
                                       stats.filter_statistics_.upstream_deleted_,
                                       stats.modified_sequence_,
-                                      stats.original_sequence_);
+                                      stats.modified_amino_size_,
+                                      stats.original_sequence_,
+                                      stats.original_amino_size_);
 
     // Calculate summary statistics.
     mutate_stats.total_variants_ += stats.filter_statistics_.total_interval_variants_;
@@ -193,8 +195,8 @@ kgl::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
 
     }
 
-    mutate_stats.modified_validity_.updateValidity(stats.modified_sequence_);
-    mutate_stats.original_validity_.updateValidity(stats.original_sequence_);
+    mutate_stats.modified_validity_.updateValidity(stats.modified_sequence_, stats.modified_amino_size_);
+    mutate_stats.original_validity_.updateValidity(stats.original_sequence_, stats.original_amino_size_);
 
   } // For all futures (genomes).
 

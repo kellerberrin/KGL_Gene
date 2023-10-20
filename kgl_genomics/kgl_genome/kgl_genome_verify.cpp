@@ -5,8 +5,75 @@
 
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig.h"
+#include "kgl_genome_verify.h"
+
 
 namespace kgl = kellerberrin::genome;
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Simple object to hold coding sequence validity statistics.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kgl::SequenceValidityStatistics::updateValidity(CodingSequenceValidity validity, size_t amino_size) {
+
+  switch(validity) {
+
+    case CodingSequenceValidity::NCRNA:
+      ++ncRNA_;
+      break;
+
+    case CodingSequenceValidity::VALID_PROTEIN:
+      ++valid_protein_;
+      break;
+
+    case CodingSequenceValidity::EMPTY:
+      ++empty_;
+      break;
+
+    case CodingSequenceValidity::NOT_MOD3:
+      ++not_mod3_;
+      break;
+
+    case CodingSequenceValidity::NO_START_CODON:
+      ++no_start_codon_;
+      break;
+
+    case CodingSequenceValidity::NONSENSE_MUTATION:
+      ++nonsense_mutation_;
+      nonsense_mutation_size_.push_back(amino_size);
+      break;
+
+    case CodingSequenceValidity::NO_STOP_CODON:
+      ++no_stop_codon_;
+      break;
+
+  }
+
+}
+
+
+void kgl::SequenceValidityStatistics::updateTranscriptArray(const std::shared_ptr<const TranscriptionSequenceArray>& transcript_array_ptr) {
+
+  for (auto const& [trnascript_id, transcript_ptr]: transcript_array_ptr->getMap()) {
+
+    updateTranscript(transcript_ptr);
+
+  }
+
+}
+
+
+void kgl::SequenceValidityStatistics::updateTranscript(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) {
+
+  auto sequence_validity = TranscriptionSequence::checkSequenceStatus(transcript_ptr);
+  updateValidity(sequence_validity)  ;
+
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

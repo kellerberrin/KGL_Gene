@@ -7,6 +7,7 @@
 
 
 #include "kgl_genome_genome.h"
+#include "kgl_genome_verify.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -81,13 +82,15 @@ public:
 
   void addRecord(size_t total_variants,
                  size_t multiple_variants,
-                 CodingSequenceValidity modified,
-                 CodingSequenceValidity original) {
+                 CodingSequenceValidity modified_validity,
+                 size_t modified_amino_size,
+                 CodingSequenceValidity original_validity,
+                 size_t original_amino_size) {
 
     total_variants_ += total_variants;
     multiple_variants_ += multiple_variants;
-    modified_validity_.updateValidity(modified);
-    original_validity_.updateValidity(original);
+    modified_validity_.updateValidity(modified_validity, modified_amino_size);
+    original_validity_.updateValidity(original_validity, original_amino_size);
 
   }
 
@@ -116,8 +119,10 @@ public:
   void addGenomeRecords(const GenomeId_t& genome_id,
                         size_t total_variants,
                         size_t multiple_variants,
-                        CodingSequenceValidity modified,
-                        CodingSequenceValidity original);
+                        CodingSequenceValidity modified_validity,
+                        size_t modified_amino_size,
+                        CodingSequenceValidity original_validity,
+                        size_t orginal_amino_size);
 
   [[nodiscard]] const TranscriptRecordMap &getTranscriptMap() const { return transcript_map_; }
   [[nodiscard]] const GenomeRecordMap &getGenomeMap() const { return genome_map_; }

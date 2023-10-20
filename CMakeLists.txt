@@ -103,6 +103,8 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_logging.cpp
         kel_app/kel_property_tree.cpp
         kel_app/kel_property_tree.h
+        kel_app/kel_logging_new.h
+        kel_app/kel_logging_new.cpp
 )
 
 set(MATHEMATICAL_SOURCE_FILES
@@ -327,8 +329,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_Pf7.h
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.cpp
         kgl_genomics/kgl_variant_db/kgl_variant_db_variant.h
-        kgl_genomics/kgl_mutation/kgl_mutation_analysis.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_analysis.h
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.cpp
         kgl_genomics/kgl_variant_filter/kgl_variant_filter_coding.h
         kgl_genomics/kgl_mutation/kgl_mutation_variant_filter.cpp
@@ -362,7 +362,9 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_legacy/kgl_rna_search.h
         kgl_genomics/kgl_legacy/kgl_ploidy_analysis.h
         kgl_genomics/kgl_legacy/kgl_sequence_complexity.h
-
+        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.h
+        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.cpp
+        kgl_genomics/kgl_genome/kgl_genome_verify.h
 
 )
 
@@ -512,8 +514,6 @@ set(ONTOLOGY_UNIT_TEST_FILES
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
-        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.h
-        kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.cpp
         kga_analytic/kga_analysis_factory.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.h
@@ -587,6 +587,9 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_filter.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
+
 )
 
 # Deconvolution and mixture files.
