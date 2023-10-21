@@ -11,6 +11,7 @@
 #include "kgl_runtime.h"
 
 #include <string>
+#include <algorithm>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

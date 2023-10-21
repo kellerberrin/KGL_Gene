@@ -3,12 +3,6 @@
 //
 
 
-#include <iostream>
-
-#include <tuple>                        // for std::make_pair
-#include <iterator>
-#include <string>
-
 // #define SEQAN3 1
 #ifdef SEQAN3
 
@@ -22,7 +16,8 @@
 
 #include "kgl_sequence_distance_impl.h"
 #include "kel_exec_env.h"
-#include "kgl_genome_types.h"
+
+#include <cmath>
 
 namespace kgl = kellerberrin::genome;
 

@@ -11,6 +11,7 @@
 #include <vector>
 #include <optional>
 #include <algorithm>
+#include <cmath>
 
 namespace kellerberrin {   //  organization level namespace
 

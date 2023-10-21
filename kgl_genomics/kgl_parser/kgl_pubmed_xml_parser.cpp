@@ -5,6 +5,8 @@
 #include "kgl_pubmed_xml_parser.h"
 #include "kel_exec_env.h"
 
+#include <cstring>
+#include <thread>
 
 namespace kgl = kellerberrin::genome;
 

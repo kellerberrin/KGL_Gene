@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <csignal>
+#include <chrono>
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -57,17 +58,8 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     }
 
-    // Create the application logger
     log_ptr_ = Environment::createLogger();
     if (not log_ptr_) {
-
-      std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " ExecEnv::runApplication - cannot create application logger" << std::endl;
-      std::exit(EXIT_FAILURE);
-
-    }
-
-    new_log_ptr_ = Environment::createNewLogger();
-    if (not new_log_ptr_) {
 
       std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " ExecEnv::runApplication - cannot create application logger" << std::endl;
       std::exit(EXIT_FAILURE);
@@ -93,7 +85,6 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     // Explicitly shutdown the logger.
     log_ptr_ = nullptr;
-    new_log_ptr_ = nullptr;
 
 
   } catch(std::exception& e) { // In general, unhandled exceptions should not appear here, so complain and exit.

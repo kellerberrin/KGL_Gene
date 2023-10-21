@@ -21,10 +21,9 @@
 
 #include <string>
 #include <memory>
-#include <chrono>
+#include <vector>
 
 #include "kel_logging.h"
-#include "kel_logging_new.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -47,58 +46,21 @@ public:
   // Definition of this template application function is in "kel_exec_env_app.h"
   template<class Environment> static int runApplication(int argc, char const ** argv);
 
-//#define USE_NEW_LOGGER 1
-#ifdef USE_NEW_LOGGER
-
-
-  static NewLogger& log() {
-
-    if (not new_log_ptr_) {
-      std::cerr << "Critical - attempt to log to uninitialized logger.\n";
-      std::cerr << "Program exits." << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
-    return *new_log_ptr_;
-
-  }
-
-#else
-
-  static Logger& log() {
-
-    if (not log_ptr_) {
-      std::cerr << "Critical - attempt to log to uninitialized logger.\n";
-      std::cerr << "Program exits." << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
-    return *log_ptr_;
-
-  }
-
-#endif
-
+  static ExecEnvLogger& log();
   static void ctrlC(int);
-
   static std::string commandLine();
   static void setCommandTokens(int argc, char const ** argv);
   static const std::vector<std::string>& getCommandTokens() { return command_tokens_; }
 
-  static std::unique_ptr<Logger> createLogger( const std::string& module,
-                                               const std::string& log_file,
-                                               int max_error_message,
-                                               int max_warning_messages);
-
-  static std::unique_ptr<NewLogger> createNewLogger( const std::string& module,
-                                               const std::string& log_file,
-                                               int max_error_message,
-                                               int max_warning_messages);
+  static std::unique_ptr<ExecEnvLogger> createLogger(const std::string& module,
+                                                     const std::string& log_file,
+                                                     size_t max_error_message,
+                                                     size_t max_warning_messages);
 
 private:
 
   inline static std::vector<std::string> command_tokens_;
-  inline static std::unique_ptr<Logger> log_ptr_;
-  inline static std::unique_ptr<NewLogger> new_log_ptr_;
-
+  inline static std::unique_ptr<ExecEnvLogger> log_ptr_;
 
 };
 

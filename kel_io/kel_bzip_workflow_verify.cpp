@@ -20,7 +20,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
   if (not bgz_file.good()) {
 
-    ExecEnv::log().warn("BGZStreamIO::verify; Problem opening file: {}", file_name);
+    ExecEnv::log().warn("Problem opening file: {}", file_name);
     return false;
 
   }
@@ -45,7 +45,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
     // Check the header values.
     if (header_block.block_id_1 != BLOCK_ID1_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, bad header block id 1: {}, expected: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, bad header block id 1: {}, expected: {}",
                                             block_count, header_block.block_id_1, BLOCK_ID1_);
       return false;
 
@@ -53,7 +53,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (header_block.block_id_2 != BLOCK_ID2_) {
 
-      if (not silent) ExecEnv::log().error("BGZStreamIO::verify; Block count: {}, bad header block id 2: {}, expected: {}",
+      if (not silent) ExecEnv::log().error("Block count: {}, bad header block id 2: {}, expected: {}",
                                            block_count, header_block.block_id_2, BLOCK_ID2_);
       return false;
 
@@ -61,7 +61,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (header_block.subfield_id_1 != SUBFIELD_ID1_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, bad sub-field header block id 1: {}, expected: {}",
                                             block_count, header_block.subfield_id_1, SUBFIELD_ID1_);
       return false;
 
@@ -69,7 +69,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (header_block.subfield_id_2 != SUBFIELD_ID2_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, bad sub-field header block id 1: {}, expected: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, bad sub-field header block id 1: {}, expected: {}",
                                             block_count, header_block.subfield_id_2, SUBFIELD_ID2_);
       return false;
 
@@ -77,7 +77,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (header_block.length_extra_blocks != EXTRA_LENGTH_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, extra block size: {}, expected: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, extra block size: {}, expected: {}",
                                             block_count, header_block.length_extra_blocks, EXTRA_LENGTH_);
       return false;
 
@@ -87,7 +87,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
     size_t compressed_data_size = header_block.block_size - BLOCK_SIZE_ADJUST_;
     if (compressed_data_size > MAX_UNCOMPRESSED_SIZE_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, Compressed block size: {} exceeds max Ccompressed size: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, Compressed block size: {} exceeds max Ccompressed size: {}",
                                             block_count, compressed_data_size, MAX_UNCOMPRESSED_SIZE_);
       return false;
 
@@ -104,7 +104,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (trailer_block.uncompressed_size > MAX_UNCOMPRESSED_SIZE_) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, Uncompressed block size: {} exceeds max uncompressed size: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, Uncompressed block size: {} exceeds max uncompressed size: {}",
                                             block_count, trailer_block.uncompressed_size, MAX_UNCOMPRESSED_SIZE_);
       return false;
 
@@ -113,8 +113,12 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
     size_t file_position = static_cast<size_t>(bgz_file.tellg());
     if (file_position != file_offset) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Block count: {}, file tellg: {}, calc file_offset: {}",
-                                            block_count, bgz_file.tellg(), file_offset);
+      if (not silent) {
+
+        ExecEnv::log().error( "Block count: {}, file tellg: {}, calc file_offset: {}",
+                              block_count, static_cast<size_t>(bgz_file.tellg()), file_offset);
+
+      }
       return false;
 
     }
@@ -126,7 +130,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
   size_t remaining_chars = bgz_file_size - bgz_file.tellg();
   if (remaining_chars != EOF_MARKER_SIZE_) {
 
-    if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
+    if (not silent) ExecEnv::log().error( "Blocks: Verified {}, EOF Remaining bytes: {}, expected EOF remaining bytes: {}",
                                           block_count, remaining_chars, EOF_MARKER_SIZE_);
     return false;
   }
@@ -138,7 +142,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     if (EOF_MARKER_[index] != eof_marker[index]) {
 
-      if (not silent) ExecEnv::log().error( "BGZStreamIO::verify; EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
+      if (not silent) ExecEnv::log().error( "EOF marker index: {}, EOF marker byte: {}, expected byte: {}",
                                             index, eof_marker[index], EOF_MARKER_[index]);
       return false;
 

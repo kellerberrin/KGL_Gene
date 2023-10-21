@@ -6,6 +6,8 @@
 #include "kel_exec_env.h"
 #include "kgl_pubmed_xml_parser.h"  // Do not include in header files, contains 3rd party (rapidxml) references.
 
+#include <thread>
+
 
 namespace kgl = kellerberrin::genome;
 

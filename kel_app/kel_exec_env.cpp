@@ -19,37 +19,32 @@
 #include "kel_exec_env.h"
 #include "kel_utility.h"
 
+#include <iostream>
+
 
 // Define namespace alias
 namespace kel = kellerberrin;
 
+kel::ExecEnvLogger& kel::ExecEnv::log() {
 
-std::unique_ptr<kel::Logger> kel::ExecEnv::createLogger( const std::string& module,
-                                                         const std::string& log_file,
-                                                         int max_error_messages,
-                                                         int max_warning_messages) {
-
-  std::unique_ptr<kel::Logger> log_ptr;
-
-  log_ptr = std::make_unique<Logger>(module, log_file);
-
-  log_ptr->setMaxErrorMessages(max_error_messages);
-
-  log_ptr->setMaxWarningMessages(max_warning_messages);
-
-  return log_ptr;
+  if (not log_ptr_) {
+    std::cerr << "Critical - attempt to log to uninitialized logger.\n";
+    std::cerr << "Program exits." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  return *log_ptr_;
 
 }
 
 
-std::unique_ptr<kel::NewLogger> kel::ExecEnv::createNewLogger( const std::string& module,
-                                                         const std::string& log_file,
-                                                         int max_error_messages,
-                                                         int max_warning_messages) {
+std::unique_ptr<kel::ExecEnvLogger> kel::ExecEnv::createLogger(const std::string& module,
+                                                               const std::string& log_file,
+                                                               size_t max_error_messages,
+                                                               size_t max_warning_messages) {
 
-  std::unique_ptr<kel::NewLogger> log_ptr;
+  std::unique_ptr<kel::ExecEnvLogger> log_ptr;
 
-  log_ptr = std::make_unique<NewLogger>(module, log_file);
+  log_ptr = std::make_unique<ExecEnvLogger>(module, log_file);
 
   log_ptr->setMaxErrorMessages(max_error_messages);
 

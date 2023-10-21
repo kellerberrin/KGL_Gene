@@ -14,6 +14,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <cmath>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This class holds the evidence that resulted in the creation of a variant.

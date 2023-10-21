@@ -28,6 +28,7 @@
 #include <optional>
 #include <thread>
 #include <fstream>
+#include <functional>
 
 
 namespace kellerberrin {   //  organization::project level namespace

@@ -99,12 +99,10 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_exec_env.h
         kel_app/kel_exec_env.cpp
         kel_app/kel_exec_env_app.h
-        kel_app/kel_logging.h
-        kel_app/kel_logging.cpp
         kel_app/kel_property_tree.cpp
         kel_app/kel_property_tree.h
-        kel_app/kel_logging_new.h
-        kel_app/kel_logging_new.cpp
+        kel_app/kel_logging.h
+        kel_app/kel_logging.cpp
 )
 
 set(MATHEMATICAL_SOURCE_FILES

@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 #include <map>
-#include "kel_logging.h"
 #include "kgl_genome_types.h"
 
 

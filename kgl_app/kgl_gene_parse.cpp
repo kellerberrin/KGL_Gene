@@ -177,17 +177,9 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 }
 
 
-std::unique_ptr<kel::Logger> kgl::GeneExecEnv::createLogger() {
+std::unique_ptr<kel::ExecEnvLogger> kgl::GeneExecEnv::createLogger() {
 
   // Setup the Logger.
   return ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
-
-}
-
-
-std::unique_ptr<kel::NewLogger> kgl::GeneExecEnv::createNewLogger() {
-
-  // Setup the Logger.
-  return ExecEnv::createNewLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
 
 }

@@ -6,14 +6,13 @@
 #define KGL_GFF3_H
 
 
-#include <memory>
-#include <string>
-#include <map>
 #include "kgl_genome_prelim.h"
 #include "kgl_genome_genome.h"
 #include "kgl_sequence_virtual.h"
-#include "kel_logging.h"
 
+#include <memory>
+#include <string>
+#include <map>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 

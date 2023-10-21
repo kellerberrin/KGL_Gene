@@ -9,7 +9,6 @@
 
 #include <cstdint>
 #include <string>
-#include "kel_logging.h"
 #include "kgl_genome_types.h"
 #include "kel_exec_env.h"
 #include "kgl_alphabet_coding_dna5.h"

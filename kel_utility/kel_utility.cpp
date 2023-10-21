@@ -23,6 +23,7 @@
 #include <ios>
 #include <string>
 #include <numeric>
+#include <cmath>
 #include <fstream>
 #include <filesystem>
 
