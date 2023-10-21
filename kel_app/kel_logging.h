@@ -51,10 +51,12 @@ public:
   void setMaxErrorMessages(size_t max_messages) { max_error_messages_ = max_messages; } // Zero (0) is unlimited.
   void setMaxWarningMessages(size_t max_messages) { max_warn_messages_ = max_messages; } // Zero (0) is unlimited.
 
+
   template<typename... Args> void info(std::string message, Args&&... args) noexcept;
   template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept;
   template<typename... Args> void error(LogFormatLocation format_location, Args&&... args) noexcept;
   template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept;
+
 
 private:
 
