@@ -14,7 +14,21 @@
 
 namespace kellerberrin {   //  organization level namespace
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// The logger class used by the ExecEnv application execution environment which
+// provides logging functionality to all application source files.
+// The logging syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
+// Four levels of message are provided, info, warn, error and critical.
+// If a preset number of warn() messages are issued, further warnings are suppressed.
+// If a preset number of error() messages are issued, the application terminates.
+// If critical() is called the message is output and the application terminates immediately.
+// Message logging is thread-safe, however an abrupt logger initiated application termination may
+// cause a seg-fault in multi-threaded code.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// An object to automatically retrieve std::source_location information for warn, error and critical messages.
 class LogFormatLocation {
 
 public:
@@ -38,6 +52,8 @@ private:
 // Forward Declaration of the implementation PIMPL object (currently implemented using the spdlog library).
 class ExecEnvLoggerImpl;
 
+// The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
+// The logger is available to all application files that have "#include exec_env.h" in the include chain.
 class ExecEnvLogger {
 
 public:
@@ -113,7 +129,6 @@ void ExecEnvLogger::error(LogFormatLocation format_location, Args&&... args) noe
 
 }
 
-// Critical always displays the calling function.
 template<typename... Args>
 void ExecEnvLogger::critical(LogFormatLocation format_location, Args&&... args) noexcept {
 
