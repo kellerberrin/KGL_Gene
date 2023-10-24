@@ -66,7 +66,7 @@ bool kgl::InbreedParamOutput::verifyResults() const {
         auto found_genome = genome_set.find(row_genome);
         if (found_genome == genome_set.end()) {
 
-          ExecEnv::log().warn("InbreedParamOutput::verifyResults, genome ident: {} not found in column: {}", column.columnIdent());
+          ExecEnv::log().warn("InbreedParamOutput::verifyResults, genome ident: {} not found in column: {}", row_genome, column.columnIdent());
           return false;
 
         }

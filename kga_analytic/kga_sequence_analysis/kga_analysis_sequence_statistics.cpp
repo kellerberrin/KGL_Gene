@@ -5,9 +5,11 @@
 #include "kga_analysis_sequence_statistics.h"
 
 #include <fstream>
+#include <format>
 
 
 namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +21,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::MutateAnalysis::addTranscriptRecord(const TranscriptMutateRecord& record) {
+void kga::MutateAnalysis::addTranscriptRecord(const TranscriptMutateRecord& record) {
 
   std::string map_key = record.genePtr()->id() + '|' + record.transcriptionPtr()->getParent()->id();
 
@@ -33,7 +35,7 @@ void kgl::MutateAnalysis::addTranscriptRecord(const TranscriptMutateRecord& reco
 }
 
 
-void kgl::MutateAnalysis::addGenomeRecords(const GenomeId_t& genome_id,
+void kga::MutateAnalysis::addGenomeRecords(const GenomeId_t& genome_id,
                                            size_t total_variants,
                                            size_t multiple_variants,
                                            CodingSequenceValidity modified_validity,
@@ -66,7 +68,7 @@ void kgl::MutateAnalysis::addGenomeRecords(const GenomeId_t& genome_id,
 }
 
 
-void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) const {
+void kga::MutateAnalysis::printMutationTranscript(const std::string& file_name) const {
 
   std::ofstream out_file(file_name);
 
@@ -123,7 +125,7 @@ void kgl::MutateAnalysis::printMutationTranscript(const std::string& file_name) 
 }
 
 
-void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) const {
+void kga::MutateAnalysis::printMutationValidity(const std::string& file_name) const {
 
   std::ofstream out_file(file_name);
 
@@ -150,16 +152,17 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
            << "Modified No Start Codon" << DELIMITER_
            << "Modified No Stop Codon" << DELIMITER_
            << "Modified Nonsense Mutation" << DELIMITER_
-           << "Modified Nonsense Variations" << DELIMITER_
-           << "Modified Nonsense MaxCount" << DELIMITER_
+           << "Nonsense Variations" << DELIMITER_
+           << "Nonsense MaxCount" << DELIMITER_
+           << "Maxcount Position" << DELIMITER_
            << "Total Genomes" << '\n';
 
-  for (auto const& [key, transcript_record] : transcript_map_) {
+  for (auto const &[key, transcript_record]: transcript_map_) {
 
-    const auto& amino_size_vector = transcript_record.mutateStats().modified_validity_.nonsenseMutationSize();
+    const auto &amino_size_vector = transcript_record.mutateStats().modified_validity_.nonsenseMutationSize();
     // Order the nonsense mutations by amino acid size (includes the stop codon).
     std::map<size_t, size_t> amino_size_map;
-    for (size_t amino_size : amino_size_vector) {
+    for (size_t amino_size: amino_size_vector) {
 
       if (amino_size_map.contains(amino_size)) {
 
@@ -174,44 +177,58 @@ void kgl::MutateAnalysis::printMutationValidity(const std::string& file_name) co
     }
     // Now re-order by count (non-unique).
     std::multimap<size_t, size_t> amino_count_map;
-    for (auto [size, count] : amino_size_map) {
+    for (auto [size, count]: amino_size_map) {
 
       amino_count_map.insert({count, size});
 
     }
 
+    // Generate nonsense size and position stats.
+    size_t max_nonsense_count{0};
+    size_t max_nonsense_position{0};
+    double nonsense_position_percent{0.0};
+    size_t total_nucleotides = transcript_record.transcriptionPtr()->codingNucleotides();
+    size_t total_amino = total_nucleotides / 3;
+    if (not amino_size_map.empty()) {
+
+      max_nonsense_count = amino_count_map.crbegin()->first;
+      max_nonsense_position = amino_count_map.crbegin()->second;
+      // Position is amino acid count, so convert to equivalent nucleotides.
+      nonsense_position_percent =
+      (static_cast<double>(max_nonsense_position) * 100.0) / static_cast<double>(total_amino);
+
+    }
+
     out_file << transcript_record.genePtr()->contig_ref_ptr()->contigId() << DELIMITER_
              << transcript_record.genePtr()->id() << DELIMITER_
-    << transcript_record.transcriptionPtr()->getParent()->id() << DELIMITER_
-    << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_ : GeneFeature::NCRNA_GENE_)
-    << DELIMITER_
-    << transcript_record.genePtr()->descriptionText() << DELIMITER_
-    << transcript_record.transcriptionPtr()->start() << DELIMITER_
-    << transcript_record.transcriptionPtr()->codingNucleotides() << DELIMITER_
-    << transcript_record.mutateStats().total_variants_ << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.totalSequence() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.ncRNA() << DELIMITER_
-    << transcript_record.mutateStats().original_validity_.validProtein() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.validProtein()  << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.notMod3() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.noStartCodon() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.noStopCodon() << DELIMITER_
-    << transcript_record.mutateStats().modified_validity_.nonsenseMutation() << DELIMITER_
-    << amino_size_map.size() << DELIMITER_
-    << (amino_size_map.empty() ? 0 : amino_count_map.crbegin()->first) << DELIMITER_
-    << transcript_record.mutateStats().total_genomes_ << '\n';
+             << transcript_record.transcriptionPtr()->getParent()->id() << DELIMITER_
+             << (GeneFeature::proteinCoding(transcript_record.genePtr()) ? GeneFeature::PROTEIN_CODING_GENE_
+                                                                         : GeneFeature::NCRNA_GENE_)
+             << DELIMITER_
+             << transcript_record.genePtr()->descriptionText() << DELIMITER_
+             << transcript_record.transcriptionPtr()->start() << DELIMITER_
+             << total_nucleotides << DELIMITER_
+             << transcript_record.mutateStats().total_variants_ << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.totalSequence() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.ncRNA() << DELIMITER_
+             << transcript_record.mutateStats().original_validity_.validProtein() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.validProtein() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.notMod3() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.noStartCodon() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.noStopCodon() << DELIMITER_
+             << transcript_record.mutateStats().modified_validity_.nonsenseMutation() << DELIMITER_
+             << amino_size_map.size() << DELIMITER_
+             << max_nonsense_count << DELIMITER_
+             << std::format("{}/{} ({:.2f})%", max_nonsense_position, total_amino, nonsense_position_percent)
+             << DELIMITER_
+             << transcript_record.mutateStats().total_genomes_ << '\n';
 
   }
 
 }
 
 
-
-
-
-
-
-void kgl::MutateAnalysis::printGenomeContig(const std::string& file_name) const {
+void kga::MutateAnalysis::printGenomeContig(const std::string& file_name) const {
 
   std::ofstream write_file(file_name);
 

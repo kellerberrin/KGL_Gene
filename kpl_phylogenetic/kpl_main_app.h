@@ -38,7 +38,7 @@ public:
   inline static constexpr const char* MODULE_NAME = "kpl_phyloTree";
   static void executeApp(); // Application mainline.
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);  // Parse command line arguments.
-  [[nodiscard]] static std::unique_ptr<Logger> createLogger(); // Create application logger.
+  [[nodiscard]] static std::unique_ptr<ExecEnvLogger> createLogger(); // Create application logger.
 
 private:
 

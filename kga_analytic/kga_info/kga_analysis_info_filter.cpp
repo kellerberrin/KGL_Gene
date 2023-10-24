@@ -22,7 +22,7 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
   ExecEnv::log().info("Analysis Id: {} initialized with work directory: {}", ident(), work_directory);
   for (auto const& [parameter_ident, parameter_map] : named_parameters.getMap()) {
 
-    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}, value: {}", ident(), parameter_ident);
+    ExecEnv::log().info("Initialize Analysis Id: {}, initialized with parameter: {}", ident(), parameter_ident);
 
   }
 

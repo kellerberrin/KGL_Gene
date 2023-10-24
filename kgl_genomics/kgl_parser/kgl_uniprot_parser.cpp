@@ -172,7 +172,7 @@ std::vector<std::string> kgl::UniprotResource::vectorConvert(ConvertFnPtr conver
 
         } else {
 
-          ExecEnv::log().error("ParseUniprotId::parseUniprotFile, Unexpected empty uniprotkb id, {field, value} record count: {}",
+          ExecEnv::log().error("ParseUniprotId::parseUniprotFile, Unexpected empty uniprotkb id, (field, value) record count: {}",
                                attribute_map.attribute_map.size());
 
         }

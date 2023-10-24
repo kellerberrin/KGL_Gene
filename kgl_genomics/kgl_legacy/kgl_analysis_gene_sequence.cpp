@@ -207,7 +207,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
 
     gene_summary.prime5_distance = dna_distance_metric.coding_distance(prime5_reference, prime5_mutant);
 
-    ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
+    ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime5_distance);
 
     gene_summary.prime5_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime5_reference));
@@ -260,7 +260,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
     auto protein_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
 
     gene_summary.sequence_distance = amino_distance_metric.amino_distance( protein_reference, protein_mutant);
-    ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
+    ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.sequence_distance);
 
     gene_summary.sequence_ptr = std::make_shared<AminoSequence>(std::move(protein_reference));
@@ -288,7 +288,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
                                      prime3_mutant)) {
 
     gene_summary.prime3_distance = dna_distance_metric.coding_distance(prime3_reference, prime3_mutant);
-    ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}, comparison:\n{}",
+    ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime3_distance);
 
     gene_summary.prime3_reference = std::make_shared<DNA5SequenceCoding>(std::move(prime3_reference));

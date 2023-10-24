@@ -17,7 +17,7 @@ void kgl::GeneExecEnv::executeApp() {
   const CmdLineArgs &args = getArgs();
 
  // Read the XML program options.
- runtime_options_.setWorkDirectory(args_.workDirectory);
+  runtime_options_.setWorkDirectory(args_.workDirectory);
   if (not runtime_options_.readProperties(args_.options_file)) {
 
       std::string options_file_path = Utility::filePath(args_.options_file, args_.workDirectory);

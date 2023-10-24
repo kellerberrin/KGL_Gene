@@ -41,7 +41,8 @@ void kga::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
         auto transcription_array = GeneFeature::getTranscriptionSequences(gene_ptr);
         for (auto const& [transcript_id,  transcript_ptr] : transcription_array->getMap()) {
 
-          mutateTranscript( gene_ptr, transcript_id, transcript_ptr, population_ptr, genome_ptr_);
+          auto transcript_record = mutateTranscript( gene_ptr, transcript_id, transcript_ptr, population_ptr, genome_ptr_);
+          mutate_analysis_.addTranscriptRecord(transcript_record);
 
         } // For transcript
 
@@ -93,11 +94,12 @@ std::vector<std::shared_ptr<const kgl::GeneFeature>> kga::MutateGenes::contigGen
 }
 
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-void kga::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                         const FeatureIdent_t& transcript_id,
-                                         const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                                         const std::shared_ptr<const PopulationDB>& population_ptr,
-                                         const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const {
+kga::TranscriptMutateRecord
+kga::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                    const FeatureIdent_t& transcript_id,
+                                    const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
+                                    const std::shared_ptr<const PopulationDB>& population_ptr,
+                                    const std::shared_ptr<const GenomeReference>& reference_genome_ptr) {
 
 
 
@@ -115,17 +117,17 @@ void kga::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature
 
   // Multiple Offset/variant statistics for each transcript.
   TranscriptMutateRecord transcript_record( gene_ptr, transcript_ptr, mutate_stats);
-  mutate_analysis_.addTranscriptRecord(transcript_record);
+  return transcript_record;
 
 }
 
 
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
-kgl::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
+kga::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                                   const FeatureIdent_t& transcript_id,
                                                   const std::shared_ptr<const PopulationDB>& gene_population_ptr,
-                                                  const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const {
+                                                  const std::shared_ptr<const GenomeReference>& reference_genome_ptr) {
 
   // All other filters are multi-threaded for each genome.
   // Calc how many threads required.

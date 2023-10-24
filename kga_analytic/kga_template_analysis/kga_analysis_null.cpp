@@ -22,7 +22,7 @@ bool kga::NullAnalysis::initializeAnalysis(const std::string& work_directory,
 
   for (auto const& resource_ptr : analysis_resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
-    ExecEnv::log().info("Initialize for Analysis Id: {} called with Resource: {}", resource_ptr->resourceIdent());
+    ExecEnv::log().info("Initialize for Analysis Id: {} called with Resource: {}", ident(), resource_ptr->resourceIdent());
 
   }
 

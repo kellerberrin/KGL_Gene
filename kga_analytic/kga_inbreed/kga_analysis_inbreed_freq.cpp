@@ -346,7 +346,6 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMajorHeterozyg
   static std::mutex log_mutex;
   std::scoped_lock log_lock(log_mutex);
 
-  ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; did not select allele, rand: {}, sum: {}, major het freq: {}");
   for (auto const& allele : allele_frequencies_) {
 
     ExecEnv::log().warn("AlleleFreqVector::selectMajorHeterozygous; allele frequency {}, allele: {}",

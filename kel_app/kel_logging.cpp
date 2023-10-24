@@ -48,22 +48,18 @@ class ExecEnvLoggerImpl {
 public:
 
   ExecEnvLoggerImpl(const std::string &module, const std::string &log_file);
-
   ~ExecEnvLoggerImpl() = default;
 
   ExecEnvLoggerImpl(const ExecEnvLoggerImpl &) = delete;
-
   ExecEnvLoggerImpl(ExecEnvLoggerImpl &&) = delete;
-
   ExecEnvLoggerImpl &operator=(const ExecEnvLoggerImpl &) = delete;
 
   // These functions simply re-direct to the PIMPL implementation object.
-  void info(const std::string& formatted_string) noexcept;
-  void warn(const LogFormatLocation &format_location, const std::string& formatted_string) noexcept;
-  void error(const LogFormatLocation &format_location, const std::string& formatted_string) noexcept;
-  void critical(const LogFormatLocation &format_location, const std::string& formatted_string) noexcept;
-
-  spdlog::logger& getLoggerImpl() { return *log_impl_ptr_; }
+  // These functions simply re-direct to the PIMPL implementation object.
+  void formatImpl(std::string&& formatted_string, ExecEnvLogger::LoggerSeverity severity) noexcept;
+  void locationImpl(const LogFormatLocation& format_location,
+                    const std::string& formatted_string,
+                    ExecEnvLogger::LoggerSeverity severity) noexcept;
 
 private:
 
@@ -71,7 +67,9 @@ private:
 
   static constexpr const char *SPDLOG_DEFAULT_FORMAT{"%+"};  // Default format from spdlog
 
-  [[nodiscard]] static spdlog::source_loc spdLocation(const std::source_location &location);
+  [[nodiscard]] static spdlog::source_loc spdlogLocation(const std::source_location &location);
+  [[nodiscard]] static spdlog::level::level_enum spdlogSeverity(ExecEnvLogger::LoggerSeverity severity);
+
 
 };
 
@@ -91,7 +89,7 @@ kel::ExecEnvLoggerImpl::ExecEnvLoggerImpl(const std::string& module, const std::
 }
 
 
-spdlog::source_loc kel::ExecEnvLoggerImpl::spdLocation(const std::source_location &location) {
+spdlog::source_loc kel::ExecEnvLoggerImpl::spdlogLocation(const std::source_location &location) {
 
   return spdlog::source_loc{location.file_name(),
                             static_cast<std::int32_t>(location.line()),
@@ -100,35 +98,41 @@ spdlog::source_loc kel::ExecEnvLoggerImpl::spdLocation(const std::source_locatio
 }
 
 
-void kel::ExecEnvLoggerImpl::info(const std::string& formatted_message) noexcept {
+spdlog::level::level_enum kel::ExecEnvLoggerImpl::spdlogSeverity(ExecEnvLogger::LoggerSeverity severity) {
 
-  log_impl_ptr_->log(spdlog::level::info, fmt::runtime(formatted_message));
+  switch(severity) {
+
+    case ExecEnvLogger::LoggerSeverity::INFO:
+      return spdlog::level::info;
+
+    case ExecEnvLogger::LoggerSeverity::WARN:
+      return spdlog::level::warn;
+
+    case ExecEnvLogger::LoggerSeverity::ERROR:
+      return spdlog::level::err;
+
+    default:
+    case ExecEnvLogger::LoggerSeverity::CRITICAL:
+      return spdlog::level::critical;
+
+
+  }
+
+}
+
+
+void kel::ExecEnvLoggerImpl::formatImpl(std::string&& formatted_string, ExecEnvLogger::LoggerSeverity severity) noexcept {
+
+  log_impl_ptr_->log(spdlogSeverity(severity), formatted_string);
   log_impl_ptr_->flush();
 
 }
 
+void kel::ExecEnvLoggerImpl::locationImpl(const LogFormatLocation& format_location,
+                                          const std::string& formatted_string,
+                                          ExecEnvLogger::LoggerSeverity severity) noexcept {
 
-void kel::ExecEnvLoggerImpl::warn(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
-
-  log_impl_ptr_->log(spdLocation(format_location.location()), spdlog::level::warn, fmt::runtime(formatted_string));
-  log_impl_ptr_->flush();
-
-}
-
-void kel::ExecEnvLoggerImpl::error(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
-
-
-  log_impl_ptr_->log(spdLocation(format_location.location()), spdlog::level::err, fmt::runtime(formatted_string));
-  log_impl_ptr_->flush();
-
-
-}
-
-// Critical always displays the calling function.
-void kel::ExecEnvLoggerImpl::critical(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
-
-  log_impl_ptr_->log(spdLocation(format_location.location()), spdlog::level::critical, fmt::runtime(formatted_string));
-  log_impl_ptr_->log(spdLocation(format_location.location()), spdlog::level::critical, "Forced Program exit. May terminate abnormally.");
+  log_impl_ptr_->log(spdlogLocation(format_location.location()), spdlogSeverity(severity), fmt::runtime(formatted_string));
   log_impl_ptr_->flush();
 
 }
@@ -139,7 +143,6 @@ void kel::ExecEnvLoggerImpl::critical(const LogFormatLocation& format_location, 
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 kel::ExecEnvLogger::ExecEnvLogger(const std::string& module, const std::string& log_file) {
@@ -154,32 +157,19 @@ kel::ExecEnvLogger::~ExecEnvLogger() {
 
 }
 
+void kel::ExecEnvLogger::formatImpl(std::string&& formatted_string, LoggerSeverity severity) noexcept {
 
-// These functions simply re-direct to the PIMPL implementation object.
-void kel::ExecEnvLogger::infoImpl(const std::string& formatted_string) noexcept {
-
-  log_impl_ptr_->info(formatted_string);
+  log_impl_ptr_->formatImpl(std::forward<std::string&&>(formatted_string), severity);
 
 }
 
-void kel::ExecEnvLogger::warnImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
+void kel::ExecEnvLogger::locationImpl(const LogFormatLocation& format_location,
+                                      const std::string& formatted_string,
+                                      LoggerSeverity severity) noexcept {
 
-  log_impl_ptr_->warn(format_location, formatted_string);
-
-}
-
-void kel::ExecEnvLogger::errorImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
-
-  log_impl_ptr_->error(format_location, formatted_string);
+  log_impl_ptr_->locationImpl(format_location, formatted_string, severity);
 
 }
-
-void kel::ExecEnvLogger::criticalImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept {
-
-  log_impl_ptr_->critical(format_location, formatted_string);
-
-}
-
 
 bool kel::ExecEnvLogger::warnMessageLimits() {
 
@@ -188,9 +178,8 @@ bool kel::ExecEnvLogger::warnMessageLimits() {
   ++warn_message_count_;
   if (warn_message_count_ == max_warn_messages_) {
 
-    log_impl_ptr_->getLoggerImpl().log(spdlog::level::warn, "Maximum warning messages: {} issued.", max_warn_messages_);
-    log_impl_ptr_->getLoggerImpl().log(spdlog::level::warn, "Further warning messages will be suppressed.");
-    log_impl_ptr_->getLoggerImpl().flush();
+    formatImpl(std::format("Maximum warning messages: {} issued.", max_warn_messages_), LoggerSeverity::WARN);
+    formatImpl(std::format("Further warning messages will be suppressed."),  LoggerSeverity::WARN);
 
   }
 
@@ -211,9 +200,8 @@ bool kel::ExecEnvLogger::errorMessageLimits() {
   ++error_message_count_;
   if (max_error_messages_ > 0 and error_message_count_ > max_error_messages_) {
 
-    log_impl_ptr_->getLoggerImpl().log(spdlog::level::err, "Maximum error messages: {} issued.", max_error_messages_);
-    log_impl_ptr_->getLoggerImpl().log(spdlog::level::err, "Forced Program exit. May terminate abnormally.");
-    log_impl_ptr_->getLoggerImpl().flush();
+    formatImpl(std::format("Maximum error messages: {} issued.", max_error_messages_), LoggerSeverity::ERROR);
+    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::ERROR);
     std::exit(EXIT_FAILURE);
 
   }

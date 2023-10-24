@@ -28,15 +28,15 @@ namespace kellerberrin {   //  organization level namespace
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// An object to automatically retrieve std::source_location information for warn, error and critical messages.
+// An object to retrieve std::source_location information.
 class LogFormatLocation {
 
 public:
 
   template<typename String>
-  LogFormatLocation(const String &format,
+  LogFormatLocation(const String& format,
                     const std::source_location &location = std::source_location::current())
-  : format_{format}, location_(location) {}
+  : format_(format), location_(location) {}
   ~LogFormatLocation() = default;
 
   [[nodiscard]] const std::string& format() const {return format_; }
@@ -48,6 +48,8 @@ private:
   const std::source_location location_;
 
 };
+
+
 
 // Forward Declaration of the implementation PIMPL object (currently implemented using the spdlog library).
 class ExecEnvLoggerImpl;
@@ -66,12 +68,113 @@ public:
 
   void setMaxErrorMessages(size_t max_messages) { max_error_messages_ = max_messages; } // Zero (0) is unlimited.
   void setMaxWarningMessages(size_t max_messages) { max_warn_messages_ = max_messages; } // Zero (0) is unlimited.
+  enum class LoggerSeverity { INFO, WARN, ERROR, CRITICAL };
+
+// Select between message location information or compile-time argument checking.
+#define EXECENV_LOGGER_INFO_LOCATION 1
+#ifdef EXECENV_LOGGER_INFO_LOCATION
+
+  template<typename... Args> void info(LogFormatLocation format_location, Args &&...args) noexcept {
+
+    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
+    locationImpl(format_location, formatted_message, LoggerSeverity::INFO);
+
+  }
+
+#else
+
+  template<typename... Args> void info(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::INFO);
+
+  }
+
+#endif
+
+// Select between message location information or compile-time argument checking.
+#define EXECENV_LOGGER_WARN_LOCATION 1
+#ifdef EXECENV_LOGGER_WARN_LOCATION
+
+  template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept {
+
+    if (warnMessageLimits()) {
+
+      std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
+      locationImpl(format_location, formatted_message, LoggerSeverity::WARN);
+
+    }
+
+  }
+
+#else
+
+  template<typename... Args> void warn(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    if (warnMessageLimits()) {
+
+      formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::WARN);
+
+    }
+
+  }
+
+#endif
+
+// Select between message location information or compile-time argument checking.
+#define EXECENV_LOGGER_ERROR_LOCATION 1
+#ifdef EXECENV_LOGGER_ERROR_LOCATION
 
 
-  template<typename... Args> void info(std::string message, Args&&... args) noexcept;
-  template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept;
-  template<typename... Args> void error(LogFormatLocation format_location, Args&&... args) noexcept;
-  template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept;
+  template<typename... Args> void error(LogFormatLocation format_location, Args&&... args) noexcept {
+
+    if (errorMessageLimits()) {
+
+      std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
+      locationImpl(format_location, formatted_message, LoggerSeverity::ERROR);
+
+    }
+
+  }
+
+
+#else
+
+  template<typename... Args> void error(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    if (errorMessageLimits()) {
+
+      formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::ERROR);
+
+    }
+
+  }
+
+#endif
+
+// Select between message location information or compile-time argument checking.
+#define EXECENV_LOGGER_CRITICAL_LOCATION 1
+#ifdef EXECENV_LOGGER_CRITICAL_LOCATION
+
+  template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept {
+
+    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
+    locationImpl(format_location, formatted_message, LoggerSeverity::CRITICAL);
+    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    std::exit(EXIT_FAILURE);
+
+  }
+
+#else
+
+  template<typename... Args> void critical(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::CRITICAL);
+    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    std::exit(EXIT_FAILURE);
+
+  }
+
+#endif
 
 
 private:
@@ -87,56 +190,12 @@ private:
   bool errorMessageLimits(); // Forces program termination after max error messages reached.
 
   // These functions simply re-direct to the PIMPL implementation object.
-  void infoImpl(const std::string& formatted_string) noexcept;
-  void warnImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept;
-  void errorImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept;
-  void criticalImpl(const LogFormatLocation& format_location, const std::string& formatted_string) noexcept;
+  void formatImpl(std::string&& formatted_string, LoggerSeverity severity) noexcept;
+  void locationImpl(const LogFormatLocation& format_location,
+                    const std::string& formatted_string,
+                    LoggerSeverity severity) noexcept;
 
 };
-
-
-
-template<typename... Args>
-void ExecEnvLogger::info(std::string message, Args&&... args) noexcept {
-
-  std::string formatted_message = std::vformat(message, std::make_format_args(args...));
-  infoImpl(formatted_message);
-
-}
-
-
-template<typename... Args>
-void ExecEnvLogger::warn(LogFormatLocation format_location, Args&&... args) noexcept {
-
-  if (warnMessageLimits()) {
-
-    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
-    warnImpl(format_location, formatted_message);
-
-  }
-
-}
-
-template<typename... Args>
-void ExecEnvLogger::error(LogFormatLocation format_location, Args&&... args) noexcept {
-
-  if (errorMessageLimits()) {
-
-    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
-    errorImpl(format_location, formatted_message);
-
-  }
-
-}
-
-template<typename... Args>
-void ExecEnvLogger::critical(LogFormatLocation format_location, Args&&... args) noexcept {
-
-  std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
-  criticalImpl(format_location, formatted_message);
-  std::exit(EXIT_FAILURE);
-
-}
 
 
 

@@ -32,12 +32,13 @@ namespace kellerberrin {   //  organization level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Specifies the application runtime object.
 // This header file must be included in the source file containing the "main" program entry point.
+//
+// The runApplication() function sets up the static environment object.
+// It provides logging and commandline arguments to the application object. The function is a template so that
+// different applications may be easily specified.
+//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// The runApplication() function sets up the static environment object.
-// and provides logging and commandline arguments to the
-// application object. The function is a template so that
-// different applications may be easily specified.
 
 template<class Environment>
 int ExecEnv::runApplication(int argc, char const ** argv) {

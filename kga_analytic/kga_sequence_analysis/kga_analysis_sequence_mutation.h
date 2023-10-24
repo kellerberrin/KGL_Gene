@@ -48,34 +48,32 @@ public:
   }
   ~MutateGenes() = default;
   // Return the id of all genes from a particular contig_ref_ptr.
-  std::vector<std::shared_ptr<const GeneFeature>> contigGenes(const ContigId_t& contig_id) const;
+  [[nodiscard]] std::vector<std::shared_ptr<const GeneFeature>> contigGenes(const ContigId_t& contig_id) const;
   // Mutate the population.
   void mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr);
   // Access the mutation analysis object.
-  const MutateAnalysis& mutateAnalysis() const { return mutate_analysis_; }
+  [[nodiscard]] const MutateAnalysis& mutateAnalysis() const { return mutate_analysis_; }
 
 private:
 
   std::shared_ptr<const GenomeReference> genome_ptr_;
   GeneContigMap gene_contig_map_;
-  mutable MutateAnalysis mutate_analysis_;
+  MutateAnalysis mutate_analysis_;
 
   void initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
 
   // Process a gene and transcript.
-  void mutateTranscript(const std::shared_ptr<const GeneFeature>& gene_ptr,
-                        const FeatureIdent_t& transcript_id,
-                        const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
-                        const std::shared_ptr<const PopulationDB>& population,
-                        const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const;
-
-
+  TranscriptMutateRecord mutateTranscript(const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                          const FeatureIdent_t& transcript_id,
+                                          const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
+                                          const std::shared_ptr<const PopulationDB>& population,
+                                          const std::shared_ptr<const GenomeReference>& reference_genome_ptr);
 
   // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
   MutateStats mutateGenomes( const std::shared_ptr<const GeneFeature>& gene_ptr,
                              const FeatureIdent_t& transcript_id,
                              const std::shared_ptr<const PopulationDB>& gene_population_ptr,
-                             const std::shared_ptr<const GenomeReference>& reference_genome_ptr) const;
+                             const std::shared_ptr<const GenomeReference>& reference_genome_ptr);
 
   // Multi-threaded function, statistics and other objects returned in RegionReturn.
   static std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_db_ptr,
