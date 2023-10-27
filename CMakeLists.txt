@@ -22,6 +22,7 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
                     kgl_genomics/kgl_database
+                    kgl_genomics/kgl_phylogenetic
                     kgl_genomics/kgl_genome
                     kgl_genomics/kgl_genome_io
                     kgl_genomics/kgl_variant_db
@@ -35,7 +36,7 @@ include_directories(/usr/local/include/spdlog/include/
                     kga_analytic/kga_sequence_analysis
                     kga_analytic/kga_info
                     kga_analytic/kga_PfEMP
-        kgl_genomics/kgl_legacy
+                    kgl_genomics/kgl_legacy
                     kga_analytic/kga_literature
                     kga_analytic/kga_mutation
                     kga_analytic/kga_template_analysis
@@ -188,8 +189,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_alphabet_coding_dna5.cpp
         kgl_genomics/kgl_evidence/kgl_variant_evidence.h
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
-        kgl_genomics/kgl_sequence/kgl_statistics_upgma.h
-        kgl_genomics/kgl_sequence/kgl_statistics_upgma.cpp
+        kgl_genomics/kgl_phylogenetic/kgl_statistics_upgma.h
+        kgl_genomics/kgl_phylogenetic/kgl_statistics_upgma.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
@@ -216,8 +217,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome/kgl_genome_contig_feature.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.h
-        kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.cpp
-        kgl_genomics/kgl_sequence/kgl_phylogenetic_tree.h
+        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_tree.cpp
+        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_tree.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.h

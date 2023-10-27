@@ -143,7 +143,7 @@ bool kgl::Feature::verifyMod3(const TranscriptionFeatureMap& feature_map) const 
 
   }
 
-  if ((coding_sequence_length % Codon::CODON_SIZE) != 0) {
+  if (Codon::codonRemainder(coding_sequence_length) != 0) {
 
     result = false;
 
@@ -210,7 +210,7 @@ kgl::ContigReference::checkValidCodingSequence(const DNA5SequenceCoding& coding_
 
 
   auto sequence_length = coding_sequence.length();
-  if ((sequence_length % Codon::CODON_SIZE) != 0) {
+  if (Codon::codonRemainder(sequence_length) != 0) {
 
     return CodingSequenceValidity::NOT_MOD3;
 
@@ -238,7 +238,7 @@ kgl::ContigReference::codingProteinSequenceSize(const DNA5SequenceCoding& coding
 
 
   auto sequence_length = coding_sequence.length();
-  if ((sequence_length % Codon::CODON_SIZE) != 0) {
+  if (Codon::codonRemainder(sequence_length) != 0) {
 
     return { CodingSequenceValidity::NOT_MOD3, Codon::codonLength(coding_sequence)};
 

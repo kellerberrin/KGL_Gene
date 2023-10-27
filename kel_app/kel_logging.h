@@ -71,7 +71,7 @@ public:
   enum class LoggerSeverity { INFO, WARN, ERROR, CRITICAL };
 
 // Select between message location information or compile-time argument checking.
-#define EXECENV_LOGGER_INFO_LOCATION 1
+//#define EXECENV_LOGGER_INFO_LOCATION 1
 #ifdef EXECENV_LOGGER_INFO_LOCATION
 
   template<typename... Args> void info(LogFormatLocation format_location, Args &&...args) noexcept {

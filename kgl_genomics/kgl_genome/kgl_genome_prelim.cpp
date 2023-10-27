@@ -6,6 +6,9 @@
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig.h"
 
+#include <ranges>
+
+
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
@@ -76,19 +79,12 @@ kel::IntervalSetLower kgl::TranscriptionSequence::getIntronIntervals() const {
   IntervalSetLower intron_set;
   const auto exon_interval_set = getExonIntervals();
 
-  auto iter_interval = exon_interval_set.begin();
-  while (iter_interval != exon_interval_set.end()) {
+  // Iterate across a sliding window of high and low exons.
+  for (auto const& [low_exon, high_exon] : std::ranges::views::pairwise(exon_interval_set)) {
 
-    auto iter_next_interval = std::ranges::next(iter_interval, 1, exon_interval_set.end());
-    if (iter_next_interval == exon_interval_set.end()) {
+    if (low_exon.disjoint(high_exon) and not low_exon.adjacent(high_exon)) {
 
-      break;
-
-    }
-
-    if (iter_interval->disjoint(*iter_next_interval) and not iter_interval->adjacent(*iter_next_interval)) {
-
-      OpenRightUnsigned intron_interval{iter_interval->upper(), iter_next_interval->lower()};
+      OpenRightUnsigned intron_interval{low_exon.upper(), high_exon.lower()};
       auto [insert_iter, result] = intron_set.insert(intron_interval);
       if (not result) {
 
@@ -98,9 +94,7 @@ kel::IntervalSetLower kgl::TranscriptionSequence::getIntronIntervals() const {
 
     }
 
-    iter_interval = iter_next_interval;
-
-  } // Next exon pair.
+  }
 
   return intron_set;
 
@@ -169,7 +163,11 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::prime5Region(ContigSize_t req
 
   }
 
-  return { begin_offset, end_offset};
+  OpenRightUnsigned prime_5_interval{ begin_offset, end_offset};
+  // Ensure the interval is within the contig.
+  prime_5_interval = prime_5_interval.intersection(contig()->sequence().interval());
+
+  return prime_5_interval;
 
 }
 
@@ -200,7 +198,49 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::prime3Region(ContigSize_t req
 
   }
 
-  return { begin_offset, end_offset};
+  OpenRightUnsigned prime_3_interval{ begin_offset, end_offset};
+  // Ensure the interval is within the contig.
+  prime_3_interval = prime_3_interval.intersection(contig()->sequence().interval());
+
+  return { prime_3_interval};
+
+}
+
+kel::OpenRightUnsigned kgl::TranscriptionSequence::extendInterval(ContigSize_t request_5_extend, ContigSize_t request_3_extend) const {
+
+  // Extend the transcript by the 3_prime buffer.
+  auto const transcript_interval =  interval();
+  auto extended_interval = transcript_interval;
+
+  if (request_5_extend > 0) {
+
+    auto const prime_5_interval = prime3Region(request_5_extend);
+    extended_interval = prime_5_interval.merge(extended_interval);
+    if (extended_interval.empty() or extended_interval.size() <= transcript_interval.size()) {
+
+      ExecEnv::log().warn("5 prime interval: {}, does not extend transcript interval: {}, transcript: {}",
+                          prime_5_interval.toString(), transcript_interval.toString(), getParent()->id());
+      return {0, 0};
+
+    }
+
+  }
+
+  if (request_3_extend > 0) {
+
+    auto prime_3_interval = prime3Region(request_3_extend);
+    extended_interval = extended_interval.merge(prime_3_interval);
+    if (extended_interval.empty() or extended_interval.size() <= transcript_interval.size()) {
+
+      ExecEnv::log().warn("3 prime interval: {}, does not extend transcript interval: {}, transcript: {}",
+                          prime_3_interval.toString(), transcript_interval.toString(),  getParent()->id());
+      return {0, 0};
+
+    }
+
+  }
+
+  return extended_interval;
 
 }
 

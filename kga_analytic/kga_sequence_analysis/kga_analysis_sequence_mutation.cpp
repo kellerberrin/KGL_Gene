@@ -251,7 +251,7 @@ std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(c
   }
   const auto& transcript_ptr = transcript_opt.value();
 
-  const auto filtertype = SeqVariantFilterType::FRAMESHIFT_ADJUSTED;
+  const auto filtertype = SeqVariantFilterType::HIGHEST_FREQ_VARIANT;
   const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, filtertype);
   if (not modified_transcript.sequenceStatus()) {
 
@@ -262,7 +262,7 @@ std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(c
 
   }
 
-  auto [modified_coding, modified_validity, modified_amino_size] = modified_transcript.getModifiedValidity();
+  auto [modified_coding, modified_validity, modified_amino_size] = modified_transcript.getModifiedAdjustedValidity();
   auto [original_coding, original_validity, original_amino_size] = modified_transcript.getOriginalValidity();
 
   SequenceStats stats;

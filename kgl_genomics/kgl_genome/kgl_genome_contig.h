@@ -53,11 +53,11 @@ public:
 
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
   [[nodiscard]] const std::string& description() const { return description_; }
-  [[nodiscard]] const DNA5SequenceLinear& sequence() const { return *sequence_ptr_; }
   [[nodiscard]] const TranslateToAmino& codingTable() const { return coding_table_; }
+
+  [[nodiscard]] const DNA5SequenceLinear& sequence() const { return *sequence_ptr_; }
   [[nodiscard]] std::shared_ptr<const DNA5SequenceLinear> sequence_ptr() const { return sequence_ptr_; }
   [[nodiscard]] ContigSize_t contigSize() const { return sequence_ptr_->length(); }
-
 
   [[nodiscard]] static bool verifyGene(const std::shared_ptr<const GeneFeature>& gene_ptr);
   // Returns the protein sequence size in amino acids between the first codon and including the first stop codon.

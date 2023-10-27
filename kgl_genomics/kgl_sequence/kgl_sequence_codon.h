@@ -54,6 +54,7 @@ public:
   }
 
   static constexpr ContigSize_t CODON_SIZE = 3;
+  static size_t codonRemainder(ContigSize_t size) { return size % CODON_SIZE; }
 
 private:
 

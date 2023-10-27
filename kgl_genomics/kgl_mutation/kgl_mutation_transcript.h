@@ -47,11 +47,16 @@ public:
   // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
   // The size_t returns the size of the amino sequence including the first stop sequence.
   [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getModifiedValidity() const;
+  // Adjust for mod3.
+  [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getModifiedAdjustedValidity() const;
 
   // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
   // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
   // The size_t returns the size of the amino sequence including the first stop sequence.
   [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getOriginalValidity() const;
+
+
+
 
 
   // The adjusted sequence object has the original interval, detailed internal sequence structure and s
@@ -66,9 +71,17 @@ private:
   std::shared_ptr<const TranscriptionSequence> transcript_ptr_;
   FilteredVariantStats filter_stats_;
   bool sequence_status_;
+  constexpr static const ContigOffset_t PRIME_3_BUFFER_{200} ;
+  OpenRightUnsigned prime_3_extend_{0, 0};   // The returned extension may not be the requested extension.
+  constexpr static const ContigOffset_t PRIME_5_BUFFER_{0} ;
+  OpenRightUnsigned prime_5_extend_{0, 0};   // The returned extension may not be the requested extension.
 
   [[nodiscard]] std::pair<FilteredVariantStats, bool>
   createModifiedSequence(const std::shared_ptr<const ContigDB>& contig_variant_ptr, SeqVariantFilterType filter_type);
+  // Try to adjust the coding sequence to create a viable protein sequence (adjust mod3 and no stop).
+  [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedAdjusted() const;
+  [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getValidity(DNA5SequenceLinear&& linear_coding) const;
+
 
 
 };

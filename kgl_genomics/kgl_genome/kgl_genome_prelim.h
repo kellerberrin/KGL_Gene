@@ -108,6 +108,7 @@ public:
   [[nodiscard]] StrandSense strand() const;
   [[nodiscard]] OpenRightUnsigned prime5Region(ContigSize_t requested_size) const;
   [[nodiscard]] OpenRightUnsigned prime3Region(ContigSize_t requested_size) const;
+  [[nodiscard]] OpenRightUnsigned extendInterval(ContigSize_t request_5_extend, ContigSize_t request_3_extend) const;
   [[nodiscard]] ContigOffset_t start() const; // Zero-based offset [start, end) of the start of the sequence - not strand adjusted.
   [[nodiscard]] ContigOffset_t end() const; // Zero-based offset [start, end) of the end of the sequence (last nucleotide + 1) - not strand adjusted.
   [[nodiscard]] OpenRightUnsigned interval() const { return OpenRightUnsigned(start(), end()); }
