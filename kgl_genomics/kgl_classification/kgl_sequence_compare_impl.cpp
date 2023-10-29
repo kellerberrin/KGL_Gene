@@ -5,7 +5,7 @@
 
 
 #include <iostream>
-#include <edlib.h>
+#include "edlib.h"
 
 
 #include "kgl_sequence_compare_impl.h"

@@ -12,7 +12,7 @@
 
 #endif
 
-#include <edlib.h>
+#include "edlib.h"
 
 #include "kgl_sequence_distance_impl.h"
 #include "kel_exec_env.h"

@@ -6,7 +6,7 @@
 #include <boost/numeric/ublas/triangular.hpp>
 
 #include "kel_exec_env.h"
-#include "kgl_statistics_upgma.h"
+#include "kgl_distance_tree_upgma.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -21,13 +21,13 @@ namespace bnu = boost::numeric::ublas;
 
 using DistanceMatrixImplType = bnu::triangular_matrix<kgl::DistanceType_t, bnu::strict_lower>;
 
-class kgl::DistanceMatrix::BoostDistanceMatrix {
+class kgl::DistanceMatrix::DistanceMatrixImpl {
 
 public:
 
-  explicit BoostDistanceMatrix(size_t matrix_size) : lower_triangular_(matrix_size, matrix_size) {}
-  explicit BoostDistanceMatrix(const BoostDistanceMatrix&) = default;
-  ~BoostDistanceMatrix() = default;
+  explicit DistanceMatrixImpl(size_t matrix_size) : lower_triangular_(matrix_size, matrix_size) {}
+  explicit DistanceMatrixImpl(const DistanceMatrixImpl&) = default;
+  ~DistanceMatrixImpl() = default;
 
   size_t size() const { return lower_triangular_.size1(); }
   void resize(size_t new_size) { lower_triangular_.resize(new_size, new_size, false); }
@@ -41,7 +41,7 @@ private:
 };
 
 
-kgl::DistanceType_t kgl::DistanceMatrix::BoostDistanceMatrix::getDistance(size_t i, size_t j) const {
+kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::getDistance(size_t i, size_t j) const {
 
   if (i >= size() or i >= size()) {
 
@@ -66,7 +66,7 @@ kgl::DistanceType_t kgl::DistanceMatrix::BoostDistanceMatrix::getDistance(size_t
 
 }
 
-void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
+void kgl::DistanceMatrix::DistanceMatrixImpl::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
 
   if (i >= size() or i >= size()) {
 
@@ -99,11 +99,11 @@ void kgl::DistanceMatrix::BoostDistanceMatrix::setDistance(size_t i, size_t j, k
 // Public class of the UPGMA calculateDistance matrix.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::DistanceMatrix::DistanceMatrix() : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(1)) {}
+kgl::DistanceMatrix::DistanceMatrix() : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(1)) {}
 
-kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(matrix_size)) {}
+kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(matrix_size)) {}
 
-kgl::DistanceMatrix::DistanceMatrix(const DistanceMatrix& copy) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::BoostDistanceMatrix>(*copy.diagonal_impl_ptr_)) {}
+kgl::DistanceMatrix::DistanceMatrix(const DistanceMatrix& copy) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(*copy.diagonal_impl_ptr_)) {}
 
 kgl::DistanceMatrix::~DistanceMatrix() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete PIMPL type.
 
@@ -221,7 +221,7 @@ kgl::DistanceType_t kgl::DistanceMatrix::maximum(size_t& i, size_t& j) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-size_t kgl::UPGMAMatrix::getLeafCount(size_t leaf_idx) const {
+size_t kgl::DistanceTreeUPGMA::getLeafCount(size_t leaf_idx) const {
 
   if (leaf_idx >= node_vector_ptr_->size()) {
 
@@ -234,15 +234,15 @@ size_t kgl::UPGMAMatrix::getLeafCount(size_t leaf_idx) const {
 }
 
 
-kgl::DistanceType_t kgl::UPGMAMatrix::distance(std::shared_ptr<PhyloNode> row_node,
-                                     std::shared_ptr<PhyloNode> column_node) const {
+kgl::DistanceType_t kgl::DistanceTreeUPGMA::distance(std::shared_ptr<TreeDistanceNode> row_node,
+                                                     std::shared_ptr<TreeDistanceNode> column_node) const {
 
   return row_node->node()->distance(column_node->node());
 
 }
 
 
-void kgl::UPGMAMatrix::initializeDistance() {
+void kgl::DistanceTreeUPGMA::initializeDistance() {
 
   for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
 
@@ -259,7 +259,7 @@ void kgl::UPGMAMatrix::initializeDistance() {
 }
 
 
-void kgl::UPGMAMatrix::normalizeDistance() {
+void kgl::DistanceTreeUPGMA::normalizeDistance() {
 
   rescaleDistance();
   identityZeroDistance();
@@ -268,7 +268,7 @@ void kgl::UPGMAMatrix::normalizeDistance() {
 
 
 
-void kgl::UPGMAMatrix::identityZeroDistance() {
+void kgl::DistanceTreeUPGMA::identityZeroDistance() {
 
   for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
 
@@ -287,7 +287,7 @@ void kgl::UPGMAMatrix::identityZeroDistance() {
 }
 
 
-void kgl::UPGMAMatrix::rescaleDistance() {
+void kgl::DistanceTreeUPGMA::rescaleDistance() {
 
   size_t row;
   size_t column;
@@ -320,7 +320,7 @@ void kgl::UPGMAMatrix::rescaleDistance() {
 
 // Reduces the calculateDistance matrix.
 // The reduced column is the left most column (column, j index = 0)
-void kgl::UPGMAMatrix::reduceDistance(size_t i, size_t j) {
+void kgl::DistanceTreeUPGMA::reduceDistance(size_t i, size_t j) {
 
   // Save and resize
   DistanceMatrix temp_distance(distance_matrix_);
@@ -388,11 +388,11 @@ void kgl::UPGMAMatrix::reduceDistance(size_t i, size_t j) {
 
 
 
-bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
+bool kgl::DistanceTreeUPGMA::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
 
-  std::shared_ptr<PhyloNodeVector> temp_node_vector_ptr(std::make_shared<PhyloNodeVector>());
-  std::shared_ptr<PhyloNode> column_node = nullptr;
-  std::shared_ptr<PhyloNode> row_node = nullptr;
+  std::shared_ptr<DistanceNodeVector> temp_node_vector_ptr(std::make_shared<DistanceNodeVector>());
+  std::shared_ptr<TreeDistanceNode> column_node = nullptr;
+  std::shared_ptr<TreeDistanceNode> row_node = nullptr;
 
   for (size_t idx = 0; idx < node_vector_ptr_->size(); idx++) {
 
@@ -427,7 +427,7 @@ bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t mini
   row_node->distance(row_distance);
   DistanceType_t column_distance = node_distance - column_node->distance();
   column_node->distance(column_distance);
-  std::shared_ptr<PhyloNode> merged_node(std::make_shared<PhyloNode>(row_node->node()));
+  std::shared_ptr<TreeDistanceNode> merged_node(std::make_shared<TreeDistanceNode>(row_node->node()));
   merged_node->distance(node_distance);
   merged_node->addOutNode(row_node);
   merged_node->addOutNode(column_node);
@@ -440,7 +440,7 @@ bool kgl::UPGMAMatrix::reduceNode(size_t row, size_t column, DistanceType_t mini
 }
 
 
-void kgl::UPGMAMatrix::UPGMATree() {
+void kgl::DistanceTreeUPGMA::UPGMATree() {
 
   while (node_vector_ptr_->size() > 1) {
 
@@ -457,7 +457,7 @@ void kgl::UPGMAMatrix::UPGMATree() {
 }
 
 
-bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
+bool kgl::DistanceTreeUPGMA::writeNewick(const std::string& file_name) const {
 
   std::ofstream newick_file;
 
@@ -487,7 +487,7 @@ bool kgl::UPGMAMatrix::writeNewick(const std::string& file_name) const {
 }
 
 
-void kgl::UPGMAMatrix::writeNode(const std::shared_ptr<PhyloNode>& node, std::ofstream& newick_file) const {
+void kgl::DistanceTreeUPGMA::writeNode(const std::shared_ptr<TreeDistanceNode>& node, std::ofstream& newick_file) const {
 
   if (node->outNodes().size() > 0) {
 

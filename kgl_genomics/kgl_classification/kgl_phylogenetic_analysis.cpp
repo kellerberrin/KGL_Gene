@@ -5,12 +5,11 @@
 #include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
 #include "kgl_pfgenome_aux.h"
-#include "kgl_phylogenetic/kgl_upgma_node.h"
+#include "kgl_distance_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
 #include "kgl_mutation_variant_filter.h"
-#include "kgl_mutation_coding.h"
 #include "kgl_io_gff_fasta.h"
 
 namespace kgl = kellerberrin::genome;

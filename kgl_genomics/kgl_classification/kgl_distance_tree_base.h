@@ -51,19 +51,19 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Used by the classification functions.
-class PhyloNode;  // fwd.
-using PhyloNodeVector = std::vector<std::shared_ptr<PhyloNode>>;
-using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<PhyloNode>>;
+class TreeDistanceNode;  // fwd.
+using DistanceNodeVector = std::vector<std::shared_ptr<TreeDistanceNode>>;
+using OutNodes = std::multimap<DistanceType_t , std::shared_ptr<TreeDistanceNode>>;
 
-class PhyloNode {
+class TreeDistanceNode {
 
 public:
 
-  explicit PhyloNode(std::shared_ptr<const VirtualDistanceNode> node) : node_(node), distance_(0.0) {}
-  ~PhyloNode() = default;
+  explicit TreeDistanceNode(std::shared_ptr<const VirtualDistanceNode> node) : node_(node), distance_(0.0) {}
+  ~TreeDistanceNode() = default;
 
-  void addOutNode(std::shared_ptr<PhyloNode> node) {
-    out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<PhyloNode>>(node->distance(), node));
+  void addOutNode(std::shared_ptr<TreeDistanceNode> node) {
+    out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<TreeDistanceNode>>(node->distance(), node));
   }
 
   [[nodiscard]] DistanceType_t distance() const { return distance_; }
@@ -90,15 +90,15 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class DistanceTree {
+class DistanceTreeBase {
 
 public:
 
-  DistanceTree() {}
-  virtual ~DistanceTree() = default;
+  DistanceTreeBase() {}
+  virtual ~DistanceTreeBase() = default;
 
 
-  virtual void calculateTree(std::shared_ptr<PhyloNodeVector> node_vector_ptr) = 0;
+  virtual void calculateTree(std::shared_ptr<DistanceNodeVector> node_vector_ptr) = 0;
 
   virtual bool writeNewick(const std::string &file_name) const = 0;
 

@@ -22,7 +22,7 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
                     kgl_genomics/kgl_database
-                    kgl_genomics/kgl_phylogenetic
+                    kgl_genomics/kgl_classification
                     kgl_genomics/kgl_genome
                     kgl_genomics/kgl_genome_io
                     kgl_genomics/kgl_variant_db
@@ -189,19 +189,19 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_alphabet_coding_dna5.cpp
         kgl_genomics/kgl_evidence/kgl_variant_evidence.h
         kgl_genomics/kgl_evidence/kgl_variant_evidence.cpp
-        kgl_genomics/kgl_phylogenetic/kgl_statistics_upgma.h
-        kgl_genomics/kgl_phylogenetic/kgl_statistics_upgma.cpp
+        kgl_genomics/kgl_classification/kgl_distance_tree_upgma.h
+        kgl_genomics/kgl_classification/kgl_distance_tree_upgma.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
         kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.cpp
-        kgl_genomics/kgl_sequence/kgl_sequence_compare.h
-        kgl_genomics/kgl_sequence/kgl_sequence_compare_impl.h
-        kgl_genomics/kgl_sequence/kgl_sequence_compare_impl.cpp
-        kgl_genomics/kgl_sequence/kgl_sequence_distance.h
-        kgl_genomics/kgl_sequence/kgl_sequence_distance_impl.h
-        kgl_genomics/kgl_sequence/kgl_sequence_distance_impl.cpp
+        kgl_genomics/kgl_classification/kgl_sequence_compare.h
+        kgl_genomics/kgl_classification/kgl_sequence_compare_impl.h
+        kgl_genomics/kgl_classification/kgl_sequence_compare_impl.cpp
+        kgl_genomics/kgl_classification/kgl_sequence_distance.h
+        kgl_genomics/kgl_classification/kgl_sequence_distance_impl.h
+        kgl_genomics/kgl_classification/kgl_sequence_distance_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_pf_impl.h
         kgl_genomics/kgl_parser/kgl_variant_factory_pf_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.h
@@ -217,8 +217,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome/kgl_genome_contig_feature.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.h
-        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_tree.cpp
-        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_tree.h
+        kgl_genomics/kgl_classification/kgl_distance_tree_base.cpp
+        kgl_genomics/kgl_classification/kgl_distance_tree_base.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.h
@@ -346,17 +346,15 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_coding.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_coding.h
-        kgl_genomics/kgl_phylogenetic/kgl_upgma_node.h
-        kgl_genomics/kgl_phylogenetic/kgl_upgma_node.cpp
-        kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.h
-        kgl_genomics/kgl_phylogenetic/kgl_upgma_unphased.cpp
-        kgl_genomics/kgl_phylogenetic/kgl_upgma.h
+        kgl_genomics/kgl_classification/kgl_distance_sequence.h
+        kgl_genomics/kgl_classification/kgl_distance_sequence.cpp
+        kgl_genomics/kgl_classification/kgl_distance_genome.h
+        kgl_genomics/kgl_classification/kgl_distance_genome.cpp
+        kgl_genomics/kgl_classification/kgl_upgma_create.h
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.h
-        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_analysis.h
-        kgl_genomics/kgl_phylogenetic/kgl_phylogenetic_analysis.cpp
+        kgl_genomics/kgl_classification/kgl_phylogenetic_analysis.h
+        kgl_genomics/kgl_classification/kgl_phylogenetic_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_rna_search.cpp
         kgl_genomics/kgl_legacy/kgl_rna_search.h
         kgl_genomics/kgl_legacy/kgl_ploidy_analysis.h

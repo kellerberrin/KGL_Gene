@@ -5,7 +5,7 @@
 #ifndef KGL_STATISTICS_UPGMA_H
 #define KGL_STATISTICS_UPGMA_H
 
-#include "kgl_phylogenetic_tree.h"
+#include "kgl_distance_tree_base.h"
 #include "kgl_runtime_resource.h"
 #include "kel_utility.h"
 #include "kgl_sequence_distance.h"
@@ -39,8 +39,8 @@ public:
 
 private:
 
-  class BoostDistanceMatrix;       // Forward declaration of the boost strict diagonal implementation class
-  std::unique_ptr<BoostDistanceMatrix> diagonal_impl_ptr_;    // PIMPL
+  class DistanceMatrixImpl;       // Forward declaration of the boost strict diagonal implementation class
+  std::unique_ptr<DistanceMatrixImpl> diagonal_impl_ptr_;    // PIMPL
 
 
 };
@@ -51,15 +51,15 @@ private:
 // UPGMA Distance matrix
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UPGMAMatrix : public DistanceTree {
+class DistanceTreeUPGMA : public DistanceTreeBase {
 
 public:
 
-  explicit UPGMAMatrix() = default;
-  ~UPGMAMatrix() override = default;
+  explicit DistanceTreeUPGMA() = default;
+  ~DistanceTreeUPGMA() override = default;
 
 
-  void calculateTree(std::shared_ptr<PhyloNodeVector> node_vector_ptr) override {
+  void calculateTree(std::shared_ptr<DistanceNodeVector> node_vector_ptr) override {
 
     node_vector_ptr_ = node_vector_ptr;
     distance_matrix_.resize(node_vector_ptr->size());
@@ -72,19 +72,19 @@ public:
 
 private:
 
-  [[nodiscard]] DistanceType_t distance(std::shared_ptr<PhyloNode> row_node, std::shared_ptr<PhyloNode> column_node) const;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<TreeDistanceNode> row_node, std::shared_ptr<TreeDistanceNode> column_node) const;
   void initializeDistance();
   virtual void normalizeDistance();
   void rescaleDistance();
   void identityZeroDistance();
   bool reduceNode(size_t row, size_t column, DistanceType_t minimum);
   void reduceDistance(size_t i, size_t j);
-  void writeNode(const std::shared_ptr<PhyloNode>& node, std::ofstream& newick_file) const;
+  void writeNode(const std::shared_ptr<TreeDistanceNode>& node, std::ofstream& newick_file) const;
   [[nodiscard]] size_t getLeafCount(size_t leaf_idx) const;
   void UPGMATree();
 
   DistanceMatrix distance_matrix_;
-  std::shared_ptr<PhyloNodeVector> node_vector_ptr_;
+  std::shared_ptr<DistanceNodeVector> node_vector_ptr_;
 
 };
 

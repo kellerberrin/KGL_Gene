@@ -2,25 +2,24 @@
 // Created by kellerberrin on 14/08/18.
 //
 
-#include "kgl_upgma_unphased.h"
+#include "kgl_distance_genome.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 // This routine counts the the number of variants that are in one genome but not the other - the variant difference.
 // Unfortunately the logic here is somewhat complex, be careful when modifying.
-kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const {
+kgl::DistanceType_t kgl::GenomeDistance::distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const {
 
-  std::shared_ptr<const UPGMAUnphasedDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAUnphasedDistance>(distance_node);
-
+  std::shared_ptr<const GenomeDistance> node_ptr = std::dynamic_pointer_cast<const GenomeDistance>(distance_node);
   if (not node_ptr) {
 
-    ExecEnv::log().error("UPGMAUnphasedDistance::distance(), Unexpected error, could not up-cast node pointer");
+    ExecEnv::log().error("Unexpected error, could not up-cast node pointer");
     return 1.0;
 
   }
 
-  ExecEnv::log().info("UPGMAUnphasedDistance; counting different variants between genome: {} and genome: {}",
+  ExecEnv::log().info("Counting different variants between genome: {} and genome: {}",
                       genome_variant_ptr_->genomeId(), node_ptr->genome_variant_ptr_->genomeId());
 
   size_t distance = 0;
@@ -144,7 +143,7 @@ kgl::DistanceType_t kgl::UPGMAUnphasedDistance::distance(std::shared_ptr<const V
 
   }
 
-  ExecEnv::log().info("UPGMAUnphasedDistance; counted {} different variants between genome: {} and genome: {}",
+  ExecEnv::log().info("GenomeDistance; counted {} different variants between genome: {} and genome: {}",
                       distance, genome_variant_ptr_->genomeId(), node_ptr->genome_variant_ptr_->genomeId());
 
   return static_cast<DistanceType_t >(distance);

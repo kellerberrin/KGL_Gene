@@ -9,7 +9,7 @@
 #include "kgl_sequence_distance.h"
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
-#include "kgl_statistics_upgma.h"
+#include "kgl_distance_tree_upgma.h"
 #include "kgl_sequence_distance.h"
 
 
@@ -25,22 +25,22 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 using MutatedProteinMap = std::map<FeatureIdent_t , std::shared_ptr<const AminoSequence>>;
 
-class UPGMAProteinDistance : public VirtualDistanceNode {
+class ProteinDistance : public VirtualDistanceNode {
 
 public:
 
-  UPGMAProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                       std::shared_ptr<const GenomeDB> genome_variant_ptr,
-                       std::shared_ptr<const GenomeReference> genome_db_ptr,
-                       const std::string& protein_family) : sequence_distance_(sequence_distance),
+  ProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+                  std::shared_ptr<const GenomeDB> genome_variant_ptr,
+                  std::shared_ptr<const GenomeReference> genome_db_ptr,
+                  const std::string& protein_family) : sequence_distance_(sequence_distance),
                                                             protein_family_(protein_family),
                                                             genome_variant_ptr_(genome_variant_ptr),
                                                             genome_db_ptr_(genome_db_ptr) {
     mutateProteins();
 
   }
-  UPGMAProteinDistance(const UPGMAProteinDistance&) = default;
-  ~UPGMAProteinDistance() override = default;
+  ProteinDistance(const ProteinDistance&) = default;
+  ~ProteinDistance() override = default;
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
@@ -80,15 +80,15 @@ private:
 // Generates a comparison for each gene. Local or Global Amino
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UPGMAGeneDistance : public VirtualDistanceNode {
+class GeneDistance : public VirtualDistanceNode {
 
 public:
 
-  UPGMAGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                    std::shared_ptr<const GenomeDB> genome_variant_ptr,
-                    std::shared_ptr<const GenomeReference> genome_db_ptr,
-                    std::shared_ptr<const GeneFeature> gene_ptr,
-                    const std::string& protein_family) : sequence_distance_(sequence_distance),
+  GeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+               std::shared_ptr<const GenomeDB> genome_variant_ptr,
+               std::shared_ptr<const GenomeReference> genome_db_ptr,
+               std::shared_ptr<const GeneFeature> gene_ptr,
+               const std::string& protein_family) : sequence_distance_(sequence_distance),
                                                          protein_family_(protein_family),
                                                          genome_variant_ptr_(genome_variant_ptr),
                                                          gene_ptr_(gene_ptr),
@@ -96,7 +96,7 @@ public:
     mutateProtein();
 
   }
-  ~UPGMAGeneDistance() override = default;
+  ~GeneDistance() override = default;
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
@@ -135,7 +135,7 @@ protected:
 // Compares a single gene between isolate genomes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UPGMAATP4Distance : public UPGMAGeneDistance {
+class UPGMAATP4Distance : public GeneDistance {
 
 public:
 
@@ -143,11 +143,11 @@ public:
                          std::shared_ptr<const GenomeDB> genome_variant_ptr,
                          std::shared_ptr<const GenomeReference> genome_db_ptr,
                          std::shared_ptr<const GeneFeature> gene_ptr,
-                         const std::string& protein_family) :  UPGMAGeneDistance(sequence_distance,
-                                                                                 genome_variant_ptr,
-                                                                                 genome_db_ptr,
-                                                                                 gene_ptr,
-                                                                                 protein_family) {
+                         const std::string& protein_family) : GeneDistance(sequence_distance,
+                                                                           genome_variant_ptr,
+                                                                           genome_db_ptr,
+                                                                           gene_ptr,
+                                                                           protein_family) {
 
   }
 

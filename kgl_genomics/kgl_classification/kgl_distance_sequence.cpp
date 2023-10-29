@@ -5,9 +5,8 @@
 
 #include <iomanip>
 #include "kgl_sequence_compare_impl.h"
-#include "kgl_upgma_node.h"
+#include "kgl_distance_sequence.h"
 #include "kgl_mutation_transcript.h"
-#include "kgl_mutation_coding.h"
 
 
 
@@ -22,9 +21,9 @@ namespace kgl = kellerberrin::genome;
 
 
 
-kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
-  std::shared_ptr<const UPGMAProteinDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAProteinDistance>(distance_node);
+  std::shared_ptr<const ProteinDistance> node_ptr = std::dynamic_pointer_cast<const ProteinDistance>(distance_node);
 
   if (not node_ptr) {
 
@@ -62,7 +61,7 @@ kgl::DistanceType_t kgl::UPGMAProteinDistance::distance(std::shared_ptr<const Vi
 }
 
 
-void kgl::UPGMAProteinDistance::mutateProteins() {
+void kgl::ProteinDistance::mutateProteins() {
 
   mutated_proteins_.clear();
   for (auto const& [contig_id, contig_ptr] : genome_db_ptr_->getMap()) {
@@ -80,7 +79,7 @@ void kgl::UPGMAProteinDistance::mutateProteins() {
 }
 
 
-void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_ptr) {
+void kgl::ProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_ptr) {
 
   auto transcript_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr);
   for (auto const& [transcript_id, transcript_ptr] : transcript_array_ptr->getMap()) {
@@ -122,16 +121,16 @@ void kgl::UPGMAProteinDistance::getProtein(std::shared_ptr<const GeneFeature> ge
 // Mutates a single gene and compares to other selected genes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::UPGMAGeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
-                                        std::shared_ptr<const GenomeReference> ,
-                                        const std::string& ) {
+bool kgl::GeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
+                                   std::shared_ptr<const GenomeReference> ,
+                                   const std::string& ) {
 
   return false;
 
 }
 
 
-void kgl::UPGMAGeneDistance::mutateProtein() {
+void kgl::GeneDistance::mutateProtein() {
 
   auto transcipt_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
 
@@ -177,13 +176,13 @@ void kgl::UPGMAGeneDistance::mutateProtein() {
 
 }
 
-kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
+kgl::DistanceType_t kgl::GeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
-  std::shared_ptr<const UPGMAGeneDistance> node_ptr = std::dynamic_pointer_cast<const UPGMAGeneDistance>(distance_node);
+  std::shared_ptr<const GeneDistance> node_ptr = std::dynamic_pointer_cast<const GeneDistance>(distance_node);
 
   if (not node_ptr) {
 
-    ExecEnv::log().error("UPGMAGeneDistance::distance; Unexpected error, could not down-cast node pointer to UPGMAGeneDistance");
+    ExecEnv::log().error("GeneDistance::distance; Unexpected error, could not down-cast node pointer to GeneDistance");
     return 1.0;
 
   }
@@ -192,7 +191,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const Virtu
   CompareDistance_t contig_score = sequence_distance_->amino_distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("UPGMAGeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {} calculateDistance: {}, Gene Family: {}",
+  ExecEnv::log().info("GeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {} calculateDistance: {}, Gene Family: {}",
                       genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
                       sequence_distance_->distanceType(), total_distance, protein_family_);
 
@@ -201,7 +200,7 @@ kgl::DistanceType_t kgl::UPGMAGeneDistance::distance(std::shared_ptr<const Virtu
 }
 
 
-void kgl::UPGMAGeneDistance::writeNode(std::ostream& outfile) const {
+void kgl::GeneDistance::writeNode(std::ostream& outfile) const {
 
   std::stringstream ss;
 
