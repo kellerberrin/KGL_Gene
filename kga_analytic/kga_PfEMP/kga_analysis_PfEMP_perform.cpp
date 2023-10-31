@@ -33,8 +33,12 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
     geneFamilyUPGMA(genome_ref_ptr, var_gene_vector, newick_file_name, PFEMP1_FAMILY_);
 
     ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, Var Genes: {}, Rifin Genes: {}, Stevor: {}, Surfin: {}, RUF6: {}, ncRNA: {}",
-                        var_gene_vector.size(), rifin_gene_vector.size(), stevor_gene_vector.size(),
-                        rifin_gene_vector.size(), ruf6_gene_vector.size(), ncRNA_gene_vector.size());
+                        var_gene_vector.size(),
+                        rifin_gene_vector.size(),
+                        stevor_gene_vector.size(),
+                        rifin_gene_vector.size(),
+                        ruf6_gene_vector.size(),
+                        ncRNA_gene_vector.size());
 
     newick_file_name = NEWICK_ + std::string(RUF6_FAMILY_) + genome_ref_id + NEWICK_EXT_;
     newick_file_name = Utility::filePath(newick_file_name, ident_work_directory_);
@@ -218,8 +222,6 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
       auto intron_map = transcript_ptr->getIntronIntervals();
       const auto& contig_sequence = gene_ptr->contig_ref_ptr()->sequence();
 
-      StrandSense strand = transcript_ptr->strand();
-
       // Only add genes with valid coding sequences (no pseudo genes).
       auto sequence_validity = gene_ptr->contig_ref_ptr()->checkValidCodingSequence(coding_dna_sequence);
       if (TranscriptionSequence::checkValidProtein(sequence_validity)) {
@@ -235,7 +237,12 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
             return;
 
           }
-          const auto& intron_sequence = first_intron_opt.value();
+          const auto& intron_sequence_linear = first_intron_opt.value();
+          // Get the intron in the coding sense.
+          StrandSense strand = transcript_ptr->strand();
+          auto intron_sequence_coding = intron_sequence_linear.codingSequence(strand);
+          // Down convert back to linear DNA5 (retains coding sense).
+          auto intron_sequence = DNA5SequenceLinear::downConvertToLinear(intron_sequence_coding);
 
           std::stringstream pss;
           std::vector<ContigOffset_t> offset_vec = intron_sequence.findAll(i_promoter);

@@ -2,49 +2,17 @@
 // Created by kellerberrin on 16/12/17.
 //
 
-#ifndef KGL_STATISTICS_UPGMA_H
-#define KGL_STATISTICS_UPGMA_H
+#ifndef KGL_DISTANCE_TREE_UPGMA_H
+#define KGL_DISTANCE_TREE_UPGMA_H
 
+#include "kel_utility.h"
 #include "kgl_distance_tree_base.h"
 #include "kgl_runtime_resource.h"
-#include "kel_utility.h"
 #include "kgl_sequence_distance.h"
 #include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Distance matrix. Implements the PIMPL pattern to isolate Boost functionality.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class DistanceMatrix {
-
-public:
-
-  explicit DistanceMatrix();
-  explicit DistanceMatrix(size_t matrix_size);
-  explicit DistanceMatrix(const DistanceMatrix& copy);
-  virtual ~DistanceMatrix();  // Do not use the default destructor, see PIMPL fwd decl below.
-
-
-  [[nodiscard]] DistanceType_t minimum(size_t& i, size_t& j) const;
-  [[nodiscard]] DistanceType_t maximum(size_t& i, size_t& j) const;
-  void setDistance(size_t i, size_t j, DistanceType_t distance);
-  [[nodiscard]] DistanceType_t getDistance(size_t i, size_t j) const;
-
-  [[nodiscard]] size_t size() const;
-  void resize(size_t new_size);
-
-private:
-
-  class DistanceMatrixImpl;       // Forward declaration of the boost strict diagonal implementation class
-  std::unique_ptr<DistanceMatrixImpl> diagonal_impl_ptr_;    // PIMPL
-
-
-};
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +42,7 @@ private:
 
   [[nodiscard]] DistanceType_t distance(std::shared_ptr<TreeDistanceNode> row_node, std::shared_ptr<TreeDistanceNode> column_node) const;
   void initializeDistance();
-  virtual void normalizeDistance();
-  void rescaleDistance();
+  void normalizeDistance();
   void identityZeroDistance();
   bool reduceNode(size_t row, size_t column, DistanceType_t minimum);
   void reduceDistance(size_t i, size_t j);
@@ -92,4 +59,4 @@ private:
 }   // end namespace
 
 
-#endif //KGL_STATISTICS_UPGMA_H
+#endif //KGL_DISTANCE_TREE_UPGMA_H

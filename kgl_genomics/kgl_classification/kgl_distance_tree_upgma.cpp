@@ -2,219 +2,11 @@
 // Created by kellerberrin on 16/12/17.
 //
 
-
-#include <boost/numeric/ublas/triangular.hpp>
-
 #include "kel_exec_env.h"
 #include "kgl_distance_tree_upgma.h"
 
 
 namespace kgl = kellerberrin::genome;
-namespace bnu = boost::numeric::ublas;
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation of a strict lower triangular calculateDistance matrix using the Boost library.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-using DistanceMatrixImplType = bnu::triangular_matrix<kgl::DistanceType_t, bnu::strict_lower>;
-
-class kgl::DistanceMatrix::DistanceMatrixImpl {
-
-public:
-
-  explicit DistanceMatrixImpl(size_t matrix_size) : lower_triangular_(matrix_size, matrix_size) {}
-  explicit DistanceMatrixImpl(const DistanceMatrixImpl&) = default;
-  ~DistanceMatrixImpl() = default;
-
-  size_t size() const { return lower_triangular_.size1(); }
-  void resize(size_t new_size) { lower_triangular_.resize(new_size, new_size, false); }
-  kgl::DistanceType_t getDistance(size_t i, size_t j) const;
-  void setDistance(size_t i, size_t j, kgl::DistanceType_t distance);
-
-private:
-
-  DistanceMatrixImplType lower_triangular_;
-
-};
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::DistanceMatrixImpl::getDistance(size_t i, size_t j) const {
-
-  if (i >= size() or i >= size()) {
-
-    ExecEnv::log().error("Index too large i: {}, j:{} for calculateDistance matrix size: {}", i, j, size());
-    return 0;
-
-  }
-
-  if (i == j) {
-
-    return 0;
-
-  }
-
-  if (j > i) {
-
-    std::swap(i, j);
-
-  }
-
-  return lower_triangular_(i,j);
-
-}
-
-void kgl::DistanceMatrix::DistanceMatrixImpl::setDistance(size_t i, size_t j, kgl::DistanceType_t distance) {
-
-  if (i >= size() or i >= size()) {
-
-    ExecEnv::log().error("Index too large i: {}, j:{} for calculateDistance matrix size: {}", i, j, size());
-    return;
-
-  }
-
-  if (i == j) {
-
-    return;
-
-  }
-
-  if (j > i) {
-
-    std::swap(i, j);
-
-  }
-
-  lower_triangular_(i,j) = distance;
-
-}
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Public class of the UPGMA calculateDistance matrix.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-kgl::DistanceMatrix::DistanceMatrix() : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(1)) {}
-
-kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(matrix_size)) {}
-
-kgl::DistanceMatrix::DistanceMatrix(const DistanceMatrix& copy) : diagonal_impl_ptr_(std::make_unique<kgl::DistanceMatrix::DistanceMatrixImpl>(*copy.diagonal_impl_ptr_)) {}
-
-kgl::DistanceMatrix::~DistanceMatrix() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete PIMPL type.
-
-
-size_t kgl::DistanceMatrix::size() const {
-
-  return diagonal_impl_ptr_->size();
-
-}
-
-
-void kgl::DistanceMatrix::resize(size_t new_size) {
-
-  diagonal_impl_ptr_->resize(new_size);
-
-}
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::getDistance(size_t i, size_t j) const {
-
-  return diagonal_impl_ptr_->getDistance( i, j);
-
-}
-
-void kgl::DistanceMatrix::setDistance(size_t i, size_t j, DistanceType_t value) {
-
-  diagonal_impl_ptr_->setDistance( i, j, value);
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Distance Implementation functions.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::minimum(size_t& i, size_t& j) const {
-
-  bool first_pass = true;
-  kgl::DistanceType_t min_distance = 0;
-  for (size_t row = 0; row < size(); ++row) {
-
-    for (size_t column = 0; column < row; ++column) {
-
-      if (first_pass) {
-
-        min_distance = getDistance( row, column);
-        i = row;
-        j = column;
-        first_pass = false;
-
-      } else {
-
-        kgl::DistanceType_t check_min = getDistance( row, column);
-        if (check_min < min_distance) {
-
-          min_distance = check_min;
-          i = row;
-          j = column;
-
-        }
-
-      }
-
-    }
-
-  }
-
-  return min_distance;
-
-}
-
-
-
-kgl::DistanceType_t kgl::DistanceMatrix::maximum(size_t& i, size_t& j) const {
-
-  bool first_pass = true;
-  kgl::DistanceType_t max_distance = 0;
-  for (size_t row = 0; row < size(); ++row) {
-
-    for (size_t column = 0; column < row; ++column) {
-
-      if (first_pass) {
-
-        max_distance = getDistance( row, column);
-        i = row;
-        j = column;
-        first_pass = false;
-
-      } else {
-
-        kgl::DistanceType_t check_max = getDistance( row, column);
-        if (check_max > max_distance) {
-
-          max_distance = check_max;
-          i = row;
-          j = column;
-
-        }
-
-      }
-
-    }
-
-  }
-
-  return max_distance;
-
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UPGMA Distance matrix
@@ -261,11 +53,10 @@ void kgl::DistanceTreeUPGMA::initializeDistance() {
 
 void kgl::DistanceTreeUPGMA::normalizeDistance() {
 
-  rescaleDistance();
+  distance_matrix_.normalizeDistance();
   identityZeroDistance();
 
 }
-
 
 
 void kgl::DistanceTreeUPGMA::identityZeroDistance() {
@@ -287,45 +78,14 @@ void kgl::DistanceTreeUPGMA::identityZeroDistance() {
 }
 
 
-void kgl::DistanceTreeUPGMA::rescaleDistance() {
-
-  size_t row;
-  size_t column;
-  DistanceType_t min = distance_matrix_.minimum(row, column);
-  DistanceType_t max = distance_matrix_.maximum(row, column);
-  DistanceType_t range = max - min;
-
-  if (range == 0.0) {
-
-    ExecEnv::log().error("UPGMAMatrix::normalizeDistance() calculateDistance range for all nodes is zero");
-    return;
-
-  }
-
-  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
-
-    for (size_t column = 0; column < row; column++) {
-
-      DistanceType_t raw_distance = distance_matrix_.getDistance(row, column);
-      DistanceType_t adj_distance = (raw_distance - min) / range;
-      distance_matrix_.setDistance(row, column, adj_distance);
-
-    }
-
-  }
-
-}
-
-
-
 // Reduces the calculateDistance matrix.
 // The reduced column is the left most column (column, j index = 0)
 void kgl::DistanceTreeUPGMA::reduceDistance(size_t i, size_t j) {
 
   // Save and resize
-  DistanceMatrix temp_distance(distance_matrix_);
-
   size_t reduce_size = distance_matrix_.size() - 1;
+
+  DistanceMatrix temp_distance(std::move(distance_matrix_));
 
   distance_matrix_.resize(reduce_size);
 
@@ -335,9 +95,9 @@ void kgl::DistanceTreeUPGMA::reduceDistance(size_t i, size_t j) {
 
     if (row != i and row != j) {
 
-      kgl::DistanceType_t i_leaf = getLeafCount(i);
-      kgl::DistanceType_t j_leaf = getLeafCount(j);
-      kgl::DistanceType_t calc_dist = (i_leaf * temp_distance.getDistance(row, i)) + (j_leaf * temp_distance.getDistance(row, j));
+      auto i_leaf = static_cast<DistanceType_t>(getLeafCount(i));
+      auto j_leaf = static_cast<DistanceType_t>(getLeafCount(j));
+      DistanceType_t calc_dist = (i_leaf * temp_distance.getDistance(row, i)) + (j_leaf * temp_distance.getDistance(row, j));
       calc_dist = calc_dist / (i_leaf + j_leaf);
       distance_matrix_.setDistance(idx_row, 0, calc_dist);
       ++idx_row;
@@ -444,9 +204,7 @@ void kgl::DistanceTreeUPGMA::UPGMATree() {
 
   while (node_vector_ptr_->size() > 1) {
 
-    size_t row = 0;
-    size_t column = 0;
-    DistanceType_t min = distance_matrix_.minimum(row, column);
+    auto [min, row, column] = distance_matrix_.minimum();
 
     reduceDistance(row, column);
 

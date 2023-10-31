@@ -2,8 +2,8 @@
 // Created by kellerberrin on 23/05/19.
 //
 
-#ifndef KGL_PHYLOGENETIC_TREE_H
-#define KGL_PHYLOGENETIC_TREE_H
+#ifndef KGL_DISTANCE_TREE_H
+#define KGL_DISTANCE_TREE_H
 
 
 #include <memory>
@@ -12,6 +12,7 @@
 #include <fstream>
 
 #include "kel_exec_env.h"
+#include "kgl_distance_matrix.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -20,8 +21,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Virtual Distance class implemented elsewhere that actually calculates the Phylo tree calculateDistance.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using DistanceType_t = double;
 
 class VirtualDistanceNode {
 
@@ -113,4 +112,4 @@ protected:
 }   // end namespace
 
 
-#endif //KGL_PHYLOGENETIC_TREE_H
+#endif //KGL_DISTANCE_TREE_H

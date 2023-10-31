@@ -362,6 +362,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.h
         kgl_genomics/kgl_legacy/kgl_analysis_gene_sequence.cpp
         kgl_genomics/kgl_genome/kgl_genome_verify.h
+        kgl_genomics/kgl_classification/kgl_distance_matrix.cpp
+        kgl_genomics/kgl_classification/kgl_distance_matrix.h
+        kgl_genomics/kgl_classification/kgl_distance_matrix_triangular.h
+        kgl_genomics/kgl_classification/kgl_distance_matrix_array.h
 
 )
 
