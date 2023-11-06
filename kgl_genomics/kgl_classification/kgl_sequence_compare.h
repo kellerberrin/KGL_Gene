@@ -211,62 +211,6 @@ private:
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation of Comparison algorithms
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-class MyerHirschbergGlobal: public GlobalAminoSequenceCompare, public GlobalDNASequenceCompare {
-
-public:
-
-  MyerHirschbergGlobal() = default;
-  virtual ~MyerHirschbergGlobal() = default;
-
-  [[nodiscard]] std::string compareType() const override { return "MyerHirschberg Global"; }
-
-private:
-
-  [[nodiscard]] CompareScore_t compareImpl( const VirtualSequence& sequenceA,
-                                            const VirtualSequence& sequenceB,
-                                            std::string& compare_str) const override {
-
-    return SequenceComparison().MyerHirschbergGlobal(sequenceA.getSequenceAsString(),
-                                                       sequenceB.getSequenceAsString(),
-                                                       compare_str);
-
-  }
-
-};
-
-
-
-
-class MyerHirschbergLocal: public LocalAminoSequenceCompare, public LocalDNASequenceCompare {
-
-public:
-
-  MyerHirschbergLocal() = default;
-  virtual ~MyerHirschbergLocal() = default;
-
-  [[nodiscard]] std::string compareType() const override { return "MyerHirschberg Local"; }
-
-private:
-
-  [[nodiscard]] CompareScore_t compareImpl( const VirtualSequence& sequenceA,
-                                            const VirtualSequence& sequenceB,
-                                            std::string& compare_str) const override {
-
-    return SequenceComparison().MyerHirschbergLocal(sequenceA.getSequenceAsString(),
-                                                      sequenceB.getSequenceAsString(),
-                                                      compare_str);
-
-  }
-
-};
-
-
 
 class DNALocalAffineGap: public LocalDNASequenceCompare {
 

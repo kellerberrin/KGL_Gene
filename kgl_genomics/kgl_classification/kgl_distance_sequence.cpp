@@ -24,7 +24,6 @@ namespace kgl = kellerberrin::genome;
 kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const ProteinDistance> node_ptr = std::dynamic_pointer_cast<const ProteinDistance>(distance_node);
-
   if (not node_ptr) {
 
     ExecEnv::log().error("UPGMAProteinDistance::distance; Unexpected error, could not down-cast node pointer to UPGMAProteinDistance");
@@ -37,11 +36,11 @@ kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const Virtual
 
   for (auto const& [protein_id, protein_ptr] : getMap()) {
 
-    auto result = node_ptr->getMap().find(protein_id);
+    auto find_iter = node_ptr->getMap().find(protein_id);
+    if (find_iter != node_ptr->getMap().end()) {
 
-    if (result != node_ptr->getMap().end()) {
-
-      CompareDistance_t contig_distance = sequence_distance_->amino_distance(*protein_ptr, *result->second);
+      auto const& [feature_id, amino_sequence_ptr] = *find_iter;
+      CompareDistance_t contig_distance = sequence_distance_->amino_distance(*protein_ptr, *amino_sequence_ptr);
       total_distance += contig_distance;
       ++gene_count;
 
@@ -64,7 +63,7 @@ kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const Virtual
 void kgl::ProteinDistance::mutateProteins() {
 
   mutated_proteins_.clear();
-  for (auto const& [contig_id, contig_ptr] : genome_db_ptr_->getMap()) {
+  for (auto const& [contig_id, contig_ptr] : genome_ref_ptr_->getMap()) {
 
     for (auto const& [gene_id, gene_ptr] : contig_ptr->getGeneMap()) {
 
@@ -88,10 +87,10 @@ void kgl::ProteinDistance::getProtein(std::shared_ptr<const GeneFeature> gene_pt
     const std::string& contig_id = contig_ref_ptr->contigId();
     const std::string& gene_id = transcript_ptr->getGene()->id();
 
-    auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+    auto contig_db_opt = genome_db_ptr_->getContig(contig_id);
     if (not contig_db_opt) {
 
-      ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
+      ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr_->genomeId());
       return;
 
     }
@@ -137,7 +136,7 @@ void kgl::GeneDistance::mutateProtein() {
   if (transcipt_array_ptr->empty()) {
 
     ExecEnv::log().critical("Gene contains no coding transcript_ptr : genome: {} gene: {}",
-                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+                            genome_db_ptr_->genomeId(), gene_ptr_->id());
 
   }
 
@@ -149,14 +148,14 @@ void kgl::GeneDistance::mutateProtein() {
   if (transcipt_array_ptr->size() > 1) {
 
     ExecEnv::log().warn("Genome: {} gene: {} contains: {} sequences using transcript_ptr: {}",
-                        genome_variant_ptr_->genomeId(), gene_ptr_->id(), transcipt_array_ptr->size(), transcript_id);
+                        genome_db_ptr_->genomeId(), gene_ptr_->id(), transcipt_array_ptr->size(), transcript_id);
 
   }
 
-  auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+  auto contig_db_opt = genome_db_ptr_->getContig(contig_id);
   if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr_->genomeId());
     return;
 
   }
@@ -179,7 +178,6 @@ void kgl::GeneDistance::mutateProtein() {
 kgl::DistanceType_t kgl::GeneDistance::distance(std::shared_ptr<const VirtualDistanceNode>  distance_node) const {
 
   std::shared_ptr<const GeneDistance> node_ptr = std::dynamic_pointer_cast<const GeneDistance>(distance_node);
-
   if (not node_ptr) {
 
     ExecEnv::log().error("GeneDistance::distance; Unexpected error, could not down-cast node pointer to GeneDistance");
@@ -187,12 +185,11 @@ kgl::DistanceType_t kgl::GeneDistance::distance(std::shared_ptr<const VirtualDis
 
   }
 
-
   CompareDistance_t contig_score = sequence_distance_->amino_distance(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   ExecEnv::log().info("GeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {} calculateDistance: {}, Gene Family: {}",
-                      genome_variant_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
+                      genome_db_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
                       sequence_distance_->distanceType(), total_distance, protein_family_);
 
   return total_distance;
@@ -202,13 +199,7 @@ kgl::DistanceType_t kgl::GeneDistance::distance(std::shared_ptr<const VirtualDis
 
 void kgl::GeneDistance::writeNode(std::ostream& outfile) const {
 
-  std::stringstream ss;
-
-  double contig_proportion = static_cast<double>(gene_ptr_->sequence().begin()) / static_cast<double>(gene_ptr_->contig_ref_ptr()->contigSize());
-  contig_proportion = contig_proportion * 100.0;
-  ss << gene_ptr_->id() << "_" << std::setprecision(3) << contig_proportion;
-
-  outfile << ss.str();
+  outfile << std::format("{}_{}", genome_db_ptr_->genomeId(), gene_ptr_->id());
 
 }
 
@@ -224,7 +215,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   if (transcript_array_ptr->empty()) {
 
     ExecEnv::log().critical("write_node(), Gene contains no coding transcript_ptr : genome: {} gene: {}",
-                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+                            genome_db_ptr_->genomeId(), gene_ptr_->id());
 
   }
 
@@ -237,17 +228,17 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   if (transcript_array_ptr->size() > 1) {
 
     ExecEnv::log().warn("Genome: {} gene: {} contains: {} sequences using transcript_ptr: {}",
-                        genome_variant_ptr_->genomeId(), gene_id, transcript_array_ptr->size(), transcript_id);
+                        genome_db_ptr_->genomeId(), gene_id, transcript_array_ptr->size(), transcript_id);
 
   }
 
   AminoSequence mutant_sequence;
   AminoSequence reference_sequence;
 
-  auto contig_db_opt = genome_variant_ptr_->getContig(contig_id);
+  auto contig_db_opt = genome_db_ptr_->getContig(contig_id);
   if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_variant_ptr_->genomeId());
+    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr_->genomeId());
     return;
 
   }
@@ -266,13 +257,13 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   } else {
 
     ExecEnv::log().critical("Cannot mutate transcript_ptr for : genome: {} gene: {}",
-                            genome_variant_ptr_->genomeId(), gene_ptr_->id());
+                            genome_db_ptr_->genomeId(), gene_ptr_->id());
 
   }
 
   std::stringstream ss;
 
-  ss << genome_variant_ptr_->genomeId();
+  ss << genome_db_ptr_->genomeId();
 
   outfile << ss.str();
 
@@ -430,10 +421,16 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
   }
 
 
-
+  DistanceType_t direct_distance = Distance::LevenshteinLocal(amino_sequence_, node_ptr->amino_sequence_);
   CompareDistance_t contig_score = sequence_distance_->amino_distance(amino_sequence_, node_ptr->amino_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
+
+  if (direct_distance != total_distance) {
+
+    ExecEnv::log().warn("Direct Distance {} not equal Total Distance: {}", direct_distance, total_distance);
+
+  }
 
   if (verbose) {
 

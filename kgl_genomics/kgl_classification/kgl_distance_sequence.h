@@ -30,12 +30,12 @@ class ProteinDistance : public VirtualDistanceNode {
 public:
 
   ProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                  std::shared_ptr<const GenomeDB> genome_variant_ptr,
-                  std::shared_ptr<const GenomeReference> genome_db_ptr,
-                  const std::string& protein_family) : sequence_distance_(sequence_distance),
-                                                            protein_family_(protein_family),
-                                                            genome_variant_ptr_(genome_variant_ptr),
-                                                            genome_db_ptr_(genome_db_ptr) {
+                  std::shared_ptr<const GenomeDB> genome_db_ptr,
+                  std::shared_ptr<const GenomeReference> genome_ref_ptr,
+                  std::string protein_family) : sequence_distance_(std::move(sequence_distance)),
+                                                genome_db_ptr_(std::move(genome_db_ptr)),
+                                                genome_ref_ptr_(std::move(genome_ref_ptr)),
+                                                protein_family_(std::move(protein_family)) {
     mutateProteins();
 
   }
@@ -44,31 +44,25 @@ public:
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ostream& outfile) const override { outfile << genome_db_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
-
-  constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
-  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
-  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
-  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
-  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";  // A 1 member metabolic family for comparison.
-  constexpr static const char* SYMBOLIC_ATP4_FAMILY = "ATP4";  // PfATP4
 
 private:
 
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  std::shared_ptr<const GenomeDB> genome_db_ptr_;
+  std::shared_ptr<const GenomeReference> genome_ref_ptr_;
   std::string protein_family_;
-  std::shared_ptr<const GenomeDB> genome_variant_ptr_;
-  std::shared_ptr<const GenomeReference> genome_db_ptr_;
+
   MutatedProteinMap mutated_proteins_;
 
   void mutateProteins();
   void getProtein(std::shared_ptr<const GeneFeature> gene_ptr);
-  const MutatedProteinMap& getMap() const { return  mutated_proteins_; }
-  const GenomeId_t& genomeId() const { return genome_variant_ptr_->genomeId(); }
-  const GeneOntology& ontology() const { return genome_db_ptr_->geneOntology(); }
+  [[nodiscard]] const MutatedProteinMap& getMap() const { return mutated_proteins_; }
+  [[nodiscard]] const GenomeId_t& genomeId() const { return genome_db_ptr_->genomeId(); }
+  [[nodiscard]] const GeneOntology& ontology() const { return genome_ref_ptr_->geneOntology(); }
 
 };
 
@@ -85,14 +79,15 @@ class GeneDistance : public VirtualDistanceNode {
 public:
 
   GeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-               std::shared_ptr<const GenomeDB> genome_variant_ptr,
-               std::shared_ptr<const GenomeReference> genome_db_ptr,
+               std::shared_ptr<const GenomeDB> genome_db_ptr,
+               std::shared_ptr<const GenomeReference> genome_ref_ptr,
                std::shared_ptr<const GeneFeature> gene_ptr,
-               const std::string& protein_family) : sequence_distance_(sequence_distance),
-                                                         protein_family_(protein_family),
-                                                         genome_variant_ptr_(genome_variant_ptr),
-                                                         gene_ptr_(gene_ptr),
-                                                         genome_db_ptr_(genome_db_ptr)  {
+               std::string protein_family) : sequence_distance_(std::move(sequence_distance)),
+                                             genome_db_ptr_(std::move(genome_db_ptr)),
+                                             genome_ref_ptr_(std::move(genome_ref_ptr)),
+                                             gene_ptr_(std::move(gene_ptr)),
+                                             protein_family_(std::move(protein_family)) {
+
     mutateProtein();
 
   }
@@ -102,28 +97,22 @@ public:
   // Function to tag the nodes. Override as necessary.
   void writeNode(std::ostream& outfile) const override;
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
-  static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
-                         std::shared_ptr<const GenomeReference> genome_db_ptr,
-                         const std::string& protein_family);
-
-  constexpr static const char* PROTEIN_FAMILY_WILDCARD = "*";
-  constexpr static const char* SYMBOLIC_VAR_FAMILY = "VAR";
-  constexpr static const char* SYMBOLIC_RIFIN_FAMILY = "RIF";
-  constexpr static const char* SYMBOLIC_MAURER_FAMILY = "MC-2TM";
-  constexpr static const char* SYMBOLIC_Na_H_FAMILY = "NHE";  // A 1 member metabolic family for comparison.
-  constexpr static const char* SYMBOLIC_ATP4_FAMILY = "ATP4";  // PfATP4
+  [[nodiscard]] static bool geneFamily(std::shared_ptr<const GeneFeature> gene_ptr,
+                                       std::shared_ptr<const GenomeReference> genome_db_ptr,
+                                       const std::string& protein_family);
 
 
 protected:
 
   std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
-  AminoSequence mutated_protein_;
-  std::string protein_family_;
-  std::shared_ptr<const GenomeDB> genome_variant_ptr_;
+  std::shared_ptr<const GenomeDB> genome_db_ptr_;
+  std::shared_ptr<const GenomeReference> genome_ref_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
-  std::shared_ptr<const GenomeReference> genome_db_ptr_;
+  std::string protein_family_;
+
+  AminoSequence mutated_protein_;
 
   void mutateProtein();
 
@@ -192,7 +181,7 @@ protected:
   std::shared_ptr<const GeneFeature> gene_ptr_;
   std::string protein_family_;
 
-  std::shared_ptr<const TranscriptionSequence>  getCodingSequence();
+  [[nodiscard]] std::shared_ptr<const TranscriptionSequence>  getCodingSequence();
 
 };
 
@@ -205,19 +194,17 @@ public:
   DNAGeneDistance(std::shared_ptr<const LinearDNASequenceDistance> sequence_distance,
                   std::shared_ptr<const GenomeReference> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
-                  const std::string& protein_family)
-                  : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family),
-                  sequence_distance_(sequence_distance) {
+                  std::string protein_family)
+                  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)),
+                  sequence_distance_(std::move(sequence_distance)) {
 
     getExonSequence(); // Distance of the
 
   }
-
-  explicit DNAGeneDistance(const DNAGeneDistance&) = default;
   ~DNAGeneDistance() override = default;
 
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 
 private:
@@ -225,7 +212,7 @@ private:
   std::shared_ptr<const LinearDNASequenceDistance> sequence_distance_;
   DNA5SequenceLinear linear_sequence_;
 
-  void  getExonSequence();
+  void getExonSequence();
 
 };
 
@@ -235,13 +222,12 @@ class AminoGeneDistance : public ReferenceGeneDistance {
 public:
 
   AminoGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                  std::shared_ptr<const GenomeReference> genome_db_ptr,
-                  std::shared_ptr<const GeneFeature> gene_ptr,
-                  const std::string& protein_family)
-  : ReferenceGeneDistance(genome_db_ptr, gene_ptr, protein_family) {
+                    std::shared_ptr<const GenomeReference> genome_db_ptr,
+                    std::shared_ptr<const GeneFeature> gene_ptr,
+                    std::string protein_family)
+  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)) {
 
     sequence_distance_ = std::dynamic_pointer_cast<const AminoSequenceDistance>(sequence_distance);
-
     if (not sequence_distance_) {
 
       ExecEnv::log().critical("AminoGeneDistance::AminoGeneDistance; distance metric: {} is not a superclass of 'LocalAminoSequenceDistance'",
@@ -256,7 +242,7 @@ public:
   ~AminoGeneDistance() override = default;
 
   // Pure Virtual calculates the distance between nodes.
-  DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
+  [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 
@@ -266,6 +252,8 @@ private:
   void  getAminoSequence();
 
 };
+
+
 
 
 

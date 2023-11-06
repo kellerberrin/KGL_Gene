@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include "kgl_genome_types.h"
+#include "kgl_sequence_virtual.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -41,6 +42,45 @@ private:
 
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Distance {
+
+public:
+
+  Distance() = delete;
+
+  static CompareDistance_t LevenshteinGlobal(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
+
+    return SequenceDistanceImpl().LevenshteinGlobal(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
+
+  }
+
+  static CompareDistance_t LevenshteinLocal(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
+
+    return SequenceDistanceImpl().LevenshteinLocal(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
+
+  }
+
+
+  static CompareDistance_t globalblosum80Distance(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
+
+    return SequenceDistanceImpl().globalblosum80Distance(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
+
+  }
+
+
+  static CompareDistance_t localblosum80Distance(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
+
+    return SequenceDistanceImpl().localblosum80Distance(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
+
+  }
+
+};
 
 
 

@@ -35,10 +35,6 @@ public:
   virtual void writeNode(std::ostream& outfile) const = 0;
   // Pure Virtual calculates the calculateDistance between nodes.
   [[nodiscard]] virtual DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const = 0;
-  // Two identical distance node objects (same const void*) have zero calculateDistance.
-  // This function is only re-defined and used if the calculateDistance metric needs to set a particular
-  // condition for a zero distance. Most calculateDistance metrics will not need to re-define this function.
-  [[nodiscard]] virtual bool zeroDistance(std::shared_ptr<const VirtualDistanceNode> node) const;
 
 private:
 
@@ -58,12 +54,10 @@ class TreeDistanceNode {
 
 public:
 
-  explicit TreeDistanceNode(std::shared_ptr<const VirtualDistanceNode> node) : node_(node), distance_(0.0) {}
+  explicit TreeDistanceNode(std::shared_ptr<const VirtualDistanceNode> node) : node_(std::move(node)), distance_(0.0) {}
   ~TreeDistanceNode() = default;
 
-  void addOutNode(std::shared_ptr<TreeDistanceNode> node) {
-    out_nodes_.insert(std::pair<DistanceType_t , std::shared_ptr<TreeDistanceNode>>(node->distance(), node));
-  }
+  void addOutNode(const std::shared_ptr<TreeDistanceNode>& node) { out_nodes_.insert({node->distance(), node}); }
 
   [[nodiscard]] DistanceType_t distance() const { return distance_; }
   void distance(DistanceType_t update) { distance_ = update; }
@@ -72,7 +66,7 @@ public:
   [[nodiscard]] const OutNodes& outNodes() const { return out_nodes_; }
 
   [[nodiscard]] bool isLeaf() const { return outNodes().empty(); }
-  // Recursively counts the total number of leaf nodes, returns 1 if this is a node
+  // Recursively counts the total number of leaf nodes, returns 1 if this is a leaf node
   [[nodiscard]] size_t leafNodeCount() const;
 
 private:
@@ -93,15 +87,15 @@ class DistanceTreeBase {
 
 public:
 
-  DistanceTreeBase() {}
+  DistanceTreeBase() = default;
   virtual ~DistanceTreeBase() = default;
 
 
   virtual void calculateTree(std::shared_ptr<DistanceNodeVector> node_vector_ptr) = 0;
 
-  virtual bool writeNewick(const std::string &file_name) const = 0;
+  [[nodiscard]] virtual bool writeNewick(const std::string &file_name) const = 0;
 
-protected:
+private:
 
 
 };

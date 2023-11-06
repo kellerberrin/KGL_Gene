@@ -11,7 +11,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Implementation of a strict lower triangular calculateDistance matrix using the Boost library.
+// Implementation of a symmetric n * n matrix as an upper triangular matrix implemented with std::vector.
+// The size of the std::vector is k = ((n + 1) * n) / 2.
+// Searches for maximum and minimum elements are reduced to O(k * log k) using std::sort.
+// However at the expense of copying the std::vector O(k).
+// Indexing the linear representation, std::vector of the symmetric n x n matrix if is:
+// If row > column std::swap(row, column)
+// index = (( row * ((2 * n) - row + 1) / 2) + column;
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -25,14 +31,29 @@ concept NumericTypeArray = std::integral<T> || std::floating_point<T>;
 template <NumericTypeArray MatrixValue>
 class DistanceMatrixArray {
 
-  [[nodiscard]] static size_t lower_triangle_size(size_t n) { return ((n+1) * n) / 2; };
-  [[nodiscard]] size_t lower_triangle_index(size_t row, size_t column) const {
+  [[nodiscard]] static size_t upper_triangle_size(size_t n) { return ((n + 1) * n) / 2; };
+  // Index the std::vector as if it where a symmetric n * n matrix.
+  [[nodiscard]] size_t upper_triangle_index_alt(size_t row, size_t column) const {
 
-    if (column > row) std::swap(row, column);
+    if (row > column) std::swap(row, column);
 
-    return row * matrix_size_ + ((row * (row-1)) / 2) + column;
+    return ((row * ((2 * matrix_size_) - row + 1)) / 2) + column;
 
   };
+
+
+//  [ (i-1) * n – (i-2)*(i-1) / 2] + (j – i)
+// row = i - 1; i = row + 1; j = column + 1
+// subs [ row * n – (row-1)*(row) / 2] + (column - row)
+  [[nodiscard]] size_t upper_triangle_index(size_t row, size_t column) const {
+
+    if (row > column) std::swap(row, column);
+
+    return (row * matrix_size_) - (((row - 1) * row) / 2) + column - row;
+
+  };
+
+
 
   struct AuxMatrixArray{
 
@@ -44,11 +65,11 @@ class DistanceMatrixArray {
 
   std::vector<AuxMatrixArray> createAuxArray() const {
 
-    std::vector<AuxMatrixArray> aux_array(lower_triangular_.size());
+    std::vector<AuxMatrixArray> aux_array(upper_triangular_.size());
 
-    for (size_t idx = 0; idx < lower_triangular_.size(); ++idx) {
+    for (size_t idx = 0; idx < upper_triangular_.size(); ++idx) {
 
-      aux_array[idx].value_ = lower_triangular_[idx];
+      aux_array[idx].value_ = upper_triangular_[idx];
 
     }
 
@@ -56,7 +77,7 @@ class DistanceMatrixArray {
 
       for (size_t column = row; column < matrix_size_; ++column) {
 
-        size_t vector_index = lower_triangle_index(row, column);
+        size_t vector_index = upper_triangle_index(row, column);
         aux_array[vector_index].row_ = row;
         aux_array[vector_index].column_ = column;
 
@@ -77,8 +98,8 @@ public:
   [[nodiscard]] size_t size() const { return matrix_size_; }
   void resize(size_t new_size) {
 
-    size_t vector_size = lower_triangle_size(new_size);
-    lower_triangular_.resize( vector_size, 0.0 );
+    size_t vector_size = upper_triangle_size(new_size);
+    upper_triangular_.resize(vector_size, 0.0 );
     matrix_size_ = new_size;
 
   }
@@ -102,7 +123,7 @@ public:
 
 private:
 
-  std::vector<MatrixValue> lower_triangular_;
+  std::vector<MatrixValue> upper_triangular_;
   size_t matrix_size_;
 
 };
@@ -117,16 +138,16 @@ MatrixValue DistanceMatrixArray<MatrixValue>::getDistance(size_t row, size_t col
 
   }
 
-  size_t vector_index = lower_triangle_index(row, column);
+  size_t vector_index = upper_triangle_index(row, column);
 
-  if (vector_index >= lower_triangular_.size()) {
+  if (vector_index >= upper_triangular_.size()) {
 
-    ExecEnv::log().error("Index too large: {}, for vector size: {}", vector_index, lower_triangular_.size());
+    ExecEnv::log().error("Index too large: {}, for vector size: {}", vector_index, upper_triangular_.size());
     return 0;
 
   }
 
-  return lower_triangular_[vector_index];
+  return upper_triangular_[vector_index];
 
 }
 
@@ -140,16 +161,17 @@ void DistanceMatrixArray<MatrixValue>::setDistance(size_t row, size_t column, Ma
 
   }
 
-  size_t vector_index = lower_triangle_index(row, column);
+  size_t vector_index = upper_triangle_index(row, column);
 
-  if (vector_index >= lower_triangular_.size()) {
+  if (vector_index >= upper_triangular_.size()) {
 
-    ExecEnv::log().error("Index too large: {}, for vector size: {}", vector_index, lower_triangular_.size());
+    ExecEnv::log().error("Index too large: {} for vector size: {}, Row: {}, Column: {}, matrix size: {}",
+                         vector_index, upper_triangular_.size(), row, column, matrix_size_);
     return;
 
   }
 
-  lower_triangular_[vector_index] = distance;
+  upper_triangular_[vector_index] = distance;
 
 }
 
@@ -157,7 +179,7 @@ void DistanceMatrixArray<MatrixValue>::setDistance(size_t row, size_t column, Ma
 template <NumericTypeArray MatrixValue>
 std::tuple<MatrixValue, size_t, size_t> DistanceMatrixArray<MatrixValue>::minimum() const {
 
-  if (lower_triangular_.empty()) {
+  if (upper_triangular_.empty()) {
 
     ExecEnv::log().error("Matrix vector is zero sized");
     return { 0.0, 0, 0};
@@ -177,7 +199,7 @@ std::tuple<MatrixValue, size_t, size_t> DistanceMatrixArray<MatrixValue>::minimu
 template <NumericTypeArray MatrixValue>
 std::tuple<MatrixValue, size_t, size_t> DistanceMatrixArray<MatrixValue>::maximum() const {
 
-  if (lower_triangular_.empty()) {
+  if (upper_triangular_.empty()) {
 
     ExecEnv::log().error("Matrix vector is zero sized");
     return { 0.0, 0, 0};
@@ -198,7 +220,7 @@ std::tuple<MatrixValue, size_t, size_t> DistanceMatrixArray<MatrixValue>::maximu
 template <NumericTypeArray MatrixValue>
 std::pair<MatrixValue, MatrixValue> DistanceMatrixArray<MatrixValue>::max_min() const {
 
-  std::vector<MatrixValue> vector_copy(lower_triangular_);
+  std::vector<MatrixValue> vector_copy(upper_triangular_);
   std::sort(vector_copy.begin(), vector_copy.begin());
 
   if (vector_copy.empty()) {
@@ -255,14 +277,14 @@ void DistanceMatrixArray<MatrixValue>::normalizeDistance() {
 
   if (range == 0.0) {
 
-    ExecEnv::log().error("CcalculateDistance range for all nodes is zero");
+    ExecEnv::log().error("CalculateDistance range for all nodes is zero");
     return;
 
   }
 
   for (size_t row = 0; row < size(); ++row) {
 
-    for (size_t column = 0; column < row; column++) {
+    for (size_t column = row; column < size(); column++) {
 
       MatrixValue raw_distance = getDistance(row, column);
       MatrixValue adj_distance = (raw_distance - min) / range;

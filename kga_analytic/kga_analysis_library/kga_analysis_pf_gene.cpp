@@ -1,19 +1,21 @@
 //
-// Created by kellerberrin on 6/04/23.
+// Created by kellerberrin on 3/11/23.
 //
 
 
 #include "kgl_upgma_create.h"
-#include "kga_analysis_PfEMP.h"
+#include "kga_analysis_pf_gene.h"
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
+void kga::AnalysisGenePf::performGeneAnalysis(const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                              const std::string& ident_work_directory_) {
 
-  for (auto const& [genome_ref_id, genome_ref_ptr] : all_reference_genomes_ptr_->getMap()) {
+    const std::string& genome_ref_id = genome_ref_ptr->genomeId();
 
     std::string intron_file_name = INTRON_ + genome_ref_id + INTRON_EXT_;
     intron_file_name = Utility::filePath(intron_file_name, ident_work_directory_);
@@ -23,7 +25,7 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
     auto rifin_gene_vector = getGeneVector(genome_ref_ptr, RIFIN_FAMILY_);
     auto stevor_gene_vector = getGeneVector(genome_ref_ptr, STEVOR_FAMILY_);
     auto surfin_gene_vector = getGeneVector(genome_ref_ptr, SURFIN_FAMILY_);
-    auto ncRNA_gene_vector = getncRNAGeneVector(genome_ref_ptr);
+    auto ncRNA_gene_vector = getncRNAGeneVector(genome_ref_ptr, RUF6_FAMILY_);
 
     varIntron(var_gene_vector, intron_file_name);
 
@@ -32,7 +34,7 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
 
     geneFamilyUPGMA(genome_ref_ptr, var_gene_vector, newick_file_name, PFEMP1_FAMILY_);
 
-    ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, Var Genes: {}, Rifin Genes: {}, Stevor: {}, Surfin: {}, RUF6: {}, ncRNA: {}",
+    ExecEnv::log().info("performGeneAnalysis, Var Genes: {}, Rifin Genes: {}, Stevor: {}, Surfin: {}, RUF6: {}, ncRNA: {}",
                         var_gene_vector.size(),
                         rifin_gene_vector.size(),
                         stevor_gene_vector.size(),
@@ -46,27 +48,25 @@ void kgl::PfEMPAnalysis::performPFEMP1UPGMA() {
     for (auto const& gene_ptr : ncRNA_gene_vector) {
 
       size_t radius{25000};
-      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, genome: {}, ncRNA gene: {}, genetype: {}, radius: {}, var: {}, rifin: {} surfin: {} surfin: {}"
-          , genome_ref_id, gene_ptr->id(), gene_ptr->type(), radius
-          , proximityGenes(radius, gene_ptr, var_gene_vector).size()
-          , proximityGenes(radius, gene_ptr, rifin_gene_vector).size()
-          , proximityGenes(radius, gene_ptr, surfin_gene_vector).size()
-          , proximityGenes(radius, gene_ptr, stevor_gene_vector).size());
+      ExecEnv::log().info("PperformGeneAnalysis, genome: {}, ncRNA gene: {}, genetype: {}, radius: {}, var: {}, rifin: {} surfin: {} surfin: {}"
+      , genome_ref_id, gene_ptr->id(), gene_ptr->type(), radius
+      , proximityGenes(radius, gene_ptr, var_gene_vector).size()
+      , proximityGenes(radius, gene_ptr, rifin_gene_vector).size()
+      , proximityGenes(radius, gene_ptr, surfin_gene_vector).size()
+      , proximityGenes(radius, gene_ptr, stevor_gene_vector).size());
 
-      ExecEnv::log().info("PfEMPAnalysis::performPFEMP1UPGMA, ncRNA feature: {}", gene_ptr->featureText());
+      ExecEnv::log().info("performGeneAnalysis, ncRNA feature: {}", gene_ptr->featureText());
 
     }
 
-    //    geneFamilyUPGMA(genome_ref_ptr, ruf6_gene_vector, newick_file_name, RUF6_FAMILY_);
-
-  }
+    geneFamilyUPGMA(genome_ref_ptr, ruf6_gene_vector, newick_file_name, RUF6_FAMILY_);
 
 
 }
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
-    , const std::string& desc_uc_text) const {
+kgl::GeneVector kga::AnalysisGenePf::getGeneVector(const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                                   const std::string& desc_uc_text) {
 
   GeneVector gene_vector;
 
@@ -94,9 +94,9 @@ kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
 }
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+kgl::GeneVector kga::AnalysisGenePf::getncRNAGeneVector(const std::shared_ptr<const GenomeReference>& genome_ptr,
                                                         const std::string& desc_uc_text,
-                                                        size_t max_size) const {
+                                                        size_t max_size) {
 
   GeneVector gene_vector;
   size_t contig_count{0};
@@ -125,10 +125,9 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
 }
 
 
-
-[[nodiscard]] kgl::GeneVector kgl::PfEMPAnalysis::proximityGenes(size_t radius,
-                                                                 const std::shared_ptr<const GeneFeature>& target_ptr,
-                                                                 const GeneVector& gene_vector) const {
+kgl::GeneVector kga::AnalysisGenePf::proximityGenes(size_t radius,
+                                                    const std::shared_ptr<const GeneFeature>& target_ptr,
+                                                    const GeneVector& gene_vector) {
 
   GeneVector same_contig;
   for (auto const& gene_ptr : gene_vector) {
@@ -164,8 +163,8 @@ kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
 
 
 
-void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
-                                    const std::string& intron_file_name) const {
+void kga::AnalysisGenePf::varIntron(const GeneVector& gene_vector,
+                                    const std::string& intron_file_name) {
 
   std::shared_ptr<const LevenshteinLocal> sequence_distance_ptr(std::make_shared<const LevenshteinLocal>());
 
@@ -297,17 +296,17 @@ void kgl::PfEMPAnalysis::varIntron( const GeneVector& gene_vector,
 
   } // Is family member.
 
-  ExecEnv::log().info("PfEMPAnalysis::varIntron, processed genes: {}", gene_vector.size());
+  ExecEnv::log().info("varIntron, processed genes: {}", gene_vector.size());
 
 }
 
 
 
 // Function (not variadic) to combine the UPGMAMatrix and UPGMADistanceNode to compare a family of reference genes (unmutated)
-void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
+void kga::AnalysisGenePf::geneFamilyUPGMA(const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const GeneVector& gene_vector,
                                           const std::string& newick_file_name,
-                                          const std::string& family_text) const {
+                                          const std::string& family_text) {
 
   std::shared_ptr<const LevenshteinLocal> sequence_distance_ptr(std::make_shared<const LevenshteinLocal>());
   DistanceTreeUPGMA upgma_distance;
@@ -319,30 +318,34 @@ void kgl::PfEMPAnalysis::geneFamilyUPGMA( const std::shared_ptr<const GenomeRefe
     auto coding_seq_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
     if (coding_seq_ptr->empty()) {
 
-      ExecEnv::log().critical("Gene contains no coding sequence : gene: {}", gene_ptr->id());
+      ExecEnv::log().error("Gene contains no coding sequence : gene: {}", gene_ptr->id());
+      return;
 
     }
-    std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr = coding_seq_ptr->getFirst();
 
-    auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(coding_sequence_ptr);
-    if (coding_dna_opt) {
+    for (auto const& [transcript_id, transcript_ptr] : coding_seq_ptr->getMap()) {
 
-      DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
-      std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance_ptr,
-                                                                                          genome_ptr,
-                                                                                          gene_ptr,
-                                                                                          family_text));
+      auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(transcript_ptr);
+      if (coding_dna_opt) {
 
-      if (coding_dna_sequence.length() >= MIN_SEQUENCE_LENGTH_) {
+        const DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
+        std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance_ptr,
+                                                                                            genome_ptr,
+                                                                                            gene_ptr,
+                                                                                            family_text));
 
-        std::shared_ptr<TreeDistanceNode> phylo_node_ptr(std::make_shared<TreeDistanceNode>(distance_ptr));
-        node_vector_ptr->push_back(phylo_node_ptr);
+        if (coding_dna_sequence.length() >= MIN_SEQUENCE_LENGTH_) {
 
-      } // min length
+          std::shared_ptr<TreeDistanceNode> phylo_node_ptr(std::make_shared<TreeDistanceNode>(distance_ptr));
+          node_vector_ptr->push_back(phylo_node_ptr);
 
-    } // 1 intron
+        } // min length
 
-  } // Valid Gene.
+      } // Valid coding sequence
+
+    }
+
+  } // All Genes.
 
   // Calculate.
   upgma_distance.calculateTree(node_vector_ptr);

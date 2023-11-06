@@ -24,19 +24,19 @@ class GenomeDistance : public VirtualDistanceNode {
 
 public:
 
-  GenomeDistance(std::shared_ptr<const GenomeDB> genome_variant_ptr) : genome_variant_ptr_(std::move(genome_variant_ptr)) {}
+  explicit GenomeDistance(std::shared_ptr<const GenomeDB> genome_db_ptr) : genome_db_ptr_(std::move(genome_db_ptr)) {}
   GenomeDistance(const GenomeDistance&) = default;
   ~GenomeDistance() override = default;
 
   // UPGMA Classification functions
   // Function to tag the nodes. Override as necessary.
-  void writeNode(std::ostream& outfile) const override { outfile << genome_variant_ptr_->genomeId(); }
+  void writeNode(std::ostream& outfile) const override { outfile << genome_db_ptr_->genomeId(); }
   // Pure Virtual calculates the distance between nodes.
   [[nodiscard]] DistanceType_t distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const override;
 
 private:
 
-  std::shared_ptr<const GenomeDB> genome_variant_ptr_;
+  std::shared_ptr<const GenomeDB> genome_db_ptr_;
 
 };
 

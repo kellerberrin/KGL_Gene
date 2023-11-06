@@ -30,13 +30,14 @@ include_directories(/usr/local/include/spdlog/include/
                     kgl_genomics/kgl_variant_analysis
                     kgl_genomics/kgl_literature
                     kgl_genomics/kgl_mutation
+                    kgl_genomics/kgl_legacy
                     kol_ontology                  # Experimental Ontology Library
                     kol_ontology/kgl_ontology     # Higher level ontology functionality
                     kga_analytic/kga_inbreed
                     kga_analytic/kga_sequence_analysis
                     kga_analytic/kga_info
                     kga_analytic/kga_PfEMP
-                    kgl_genomics/kgl_legacy
+                    kga_analytic/kga_analysis_library
                     kga_analytic/kga_literature
                     kga_analytic/kga_mutation
                     kga_analytic/kga_template_analysis
@@ -580,7 +581,7 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_literature/kga_analysis_literature_publication.cpp
         kga_analytic/kga_literature/kga_analysis_literature_publication.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_distance.cpp
-        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_perform.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_gene_vector.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.cpp
@@ -590,6 +591,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
+        kga_analytic/kga_analysis_library/kga_analysis_pf_gene.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_pf_gene.h
 
 )
 

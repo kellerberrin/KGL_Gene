@@ -55,8 +55,6 @@ public:
 
 private:
 
-  constexpr static const char PFEMPANALYSIS_IDENT_[]{"PfEMPAnalysis"};
-
   std::string ident_work_directory_;
   // Resources
   std::shared_ptr<const Pf7SampleResource> Pf7_sample_ptr_;
@@ -79,19 +77,6 @@ private:
   constexpr static const bool SNP_FILTER_ACTIVE_{false};  // Only SNP variants
   constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
-  void performPFEMP1UPGMA();
-
-  // Available Parameters
-  constexpr static const char *NEWICK_FILE_ = "NewickFile";
-  constexpr static const char *INTRON_FILE_ = "IntronFile";
-
-  // Intron promoter sequences.
-  constexpr static const char *I_PROMOTER_ = "TGTATGTG";
-  constexpr static const char *I_COMPLEMENT_PROMOTER_ = "ACATACAC";
-  constexpr static const char *I_5_PROMOTER_ = "TCATA";
-
-  // Min seq size for UPGMA analysis.
-  constexpr static const size_t MIN_SEQUENCE_LENGTH_ = 10;
   // Gene family ident.
   constexpr static const char *PFEMP1_FAMILY_ = "PFEMP1";
   constexpr static const char *RUF6_FAMILY_ = "RUF6";
@@ -112,13 +97,8 @@ private:
   CalcFWS calc_fws_;
 
   // File name constants.
-  constexpr static const char *NEWICK_{"newick_"};
-  constexpr static const char *NEWICK_EXT_{".txt"};
-  constexpr static const char *INTRON_{"intron_"};
-  constexpr static const char *INTRON_EXT_{".csv"};
   constexpr static const char *VARIANT_COUNT_{"gene_variant_"};
   constexpr static const char *VARIANT_COUNT_EXT_{".csv"};
-  constexpr static const char CSV_DELIMITER_ = ',';
 
   // Return a vector of genes that have a particular text fragment in the description.
   [[nodiscard]] GeneVector getGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr, const std::string &description_text) const;
@@ -126,18 +106,6 @@ private:
   [[nodiscard]] GeneVector getncRNAGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr,
                                               const std::string &desc_uc_text = "",
                                               size_t max_size = 0) const;
-
-  [[nodiscard]] GeneVector proximityGenes(size_t radius,
-                                          const std::shared_ptr<const GeneFeature> &target_ptr,
-                                          const GeneVector &gene_vector) const;
-
-  // Analyze the introns of Var family genes.
-  void varIntron(const GeneVector &gene_vector, const std::string &intron_file) const;
-
-  void geneFamilyUPGMA(const std::shared_ptr<const GenomeReference> &genome_ptr,
-                       const GeneVector &gene_vector,
-                       const std::string &upgma_file_name,
-                       const std::string &family_text) const;
 
   void checkDistanceMatrix(const std::shared_ptr<const PopulationDB> &all_population_ptr,
                            const std::shared_ptr<const PopulationDB> &filtered_population_ptr) const;

@@ -3,8 +3,8 @@
 //
 
 #include "kga_analysis_sequence.h"
+#include "kga_analysis_pf_gene.h"
 #include "kgl_variant_filter_db_variant.h"
-#include "kgl_variant_filter_db_offset.h"
 
 #include <chrono>
 #include <thread>
@@ -53,6 +53,9 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
 
   // Initialize the mutate object.
   mutate_genes_ptr_ = std::make_shared<MutateGenes>(genome_3D7_ptr_);
+
+  // Do the UPGMA stuff.
+  AnalysisGenePf::performGeneAnalysis(genome_3D7_ptr_, ident_work_directory_);
 
   return true;
 

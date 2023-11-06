@@ -20,17 +20,17 @@ kgl::DistanceType_t kgl::GenomeDistance::distance(std::shared_ptr<const VirtualD
   }
 
   ExecEnv::log().info("Counting different variants between genome: {} and genome: {}",
-                      genome_variant_ptr_->genomeId(), node_ptr->genome_variant_ptr_->genomeId());
+                      genome_db_ptr_->genomeId(), node_ptr->genome_db_ptr_->genomeId());
 
   size_t distance = 0;
 
   // iterate through all the contigs and count mismatching variants.
-  for (auto contig : genome_variant_ptr_->getMap()) {
+  for (auto contig : genome_db_ptr_->getMap()) {
 
-    auto cmp_contig_iter = node_ptr->genome_variant_ptr_->getMap().find(contig.first);
+    auto cmp_contig_iter = node_ptr->genome_db_ptr_->getMap().find(contig.first);
 
     // Corresponding contig_ref_ptr not found.
-    if (cmp_contig_iter == node_ptr->genome_variant_ptr_->getMap().end()) {
+    if (cmp_contig_iter == node_ptr->genome_db_ptr_->getMap().end()) {
 
       distance += contig.second->variantCount();
       continue;
@@ -144,7 +144,7 @@ kgl::DistanceType_t kgl::GenomeDistance::distance(std::shared_ptr<const VirtualD
   }
 
   ExecEnv::log().info("GenomeDistance; counted {} different variants between genome: {} and genome: {}",
-                      distance, genome_variant_ptr_->genomeId(), node_ptr->genome_variant_ptr_->genomeId());
+                      distance, genome_db_ptr_->genomeId(), node_ptr->genome_db_ptr_->genomeId());
 
   return static_cast<DistanceType_t >(distance);
 

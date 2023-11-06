@@ -13,13 +13,13 @@ namespace kgl = kellerberrin::genome;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This is to fudge around the forward declaration of the PIMPL implementation class.
-// There must be a better way of achieving this with a more elegant syntax.
+// This is a fudge around the forward declaration of the PIMPL implementation class.
+// There must be a better and more elegant way of achieving this.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//using DistanceMatrixImplBase = kgl::DistanceMatrixTriangular<kgl::DistanceType_t>;
-using DistanceMatrixImplBase = kgl::DistanceMatrixArray<kgl::DistanceType_t>;
+using DistanceMatrixImplBase = kgl::DistanceMatrixTriangular<kgl::DistanceType_t>;
+//using DistanceMatrixImplBase = kgl::DistanceMatrixArray<kgl::DistanceType_t>;
 
 
 class kgl::DistanceMatrixImpl : public DistanceMatrixImplBase {
