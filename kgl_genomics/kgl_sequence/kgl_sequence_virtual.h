@@ -29,6 +29,10 @@ public:
   virtual ~VirtualSequence() = default;
 
   [[nodiscard]] virtual std::string getSequenceAsString() const = 0;
+  [[nodiscard]] virtual const char* getSequenceAsPtr() const = 0;
+  [[nodiscard]] virtual ContigSize_t length() const = 0;
+
+
 
 };
 
@@ -63,10 +67,13 @@ public:
   [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_string_[offset]; }
   void clear() { alphabet_string_.clear(); }
 
-  [[nodiscard]] ContigSize_t length() const { return alphabet_string_.length(); }
+  [[nodiscard]] ContigSize_t length() const override { return alphabet_string_.length(); }
   [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_string_.length() }; }
 
   [[nodiscard]] std::string getSequenceAsString() const override { return alphabet_string_.str(); }
+  // Assumes that sequence alphabets map onto ascii char types. Avoids a sequence byte copy.
+  [[nodiscard]] const char* getSequenceAsPtr() const override { return alphabet_string_.c_str(); }
+
   [[nodiscard]] const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
   // Check for memory corruption.

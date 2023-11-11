@@ -8,7 +8,6 @@
 
 
 #include "kel_utility.h"
-#include "kgl_sequence_distance.h"
 #include "kgl_pfgenome_aux.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
@@ -180,8 +179,8 @@ ExecEnv::log().info("**********Completed Analysis: {} **************", result->f
 
 void kgl::PhylogeneticAnalysis::performSequence() {
 
-
-  std::shared_ptr<const DNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  // Select distance metric.
+  CodingDistanceMetric dna_distance_metric{LevenshteinGlobalCoding};
 
   std::string coding_file = Utility::filePath("All_DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
   if (not kgl::GenomicMutation::outputDNASequenceCSV(coding_file,
@@ -221,7 +220,7 @@ void kgl::PhylogeneticAnalysis::performSequence() {
 
   }
 
-  std::shared_ptr<const AminoSequenceDistance> amino_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  AminoDistanceMetric amino_distance_metric{LevenshteinGlobalAmino};
 
   coding_file = Utility::filePath("All_Amino_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";
   if (not kgl::GenomicMutation::outputAminoSequenceCSV(coding_file, amino_distance_metric,

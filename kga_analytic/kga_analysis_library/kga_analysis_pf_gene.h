@@ -7,6 +7,7 @@
 
 
 #include "kgl_genome_feature.h"
+#include "kgl_genome_genome.h"
 
 
 namespace kellerberrin::genome::analysis {   //  organization::project level namespace

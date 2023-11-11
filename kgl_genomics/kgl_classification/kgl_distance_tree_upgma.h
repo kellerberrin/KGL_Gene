@@ -8,7 +8,6 @@
 #include "kel_utility.h"
 #include "kgl_distance_tree_base.h"
 #include "kgl_runtime_resource.h"
-#include "kgl_sequence_distance.h"
 #include "kgl_variant_db_population.h"
 
 

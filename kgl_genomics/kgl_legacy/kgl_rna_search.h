@@ -6,7 +6,6 @@
 #define KGL_RNA_SEARCH_H
 
 
-#include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"

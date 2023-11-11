@@ -3,8 +3,11 @@
 //
 
 
-#include "kgl_upgma_create.h"
 #include "kga_analysis_pf_gene.h"
+#include "kgl_distance_tree_upgma.h"
+#include "kgl_sequence_distance_impl.h"
+#include "kgl_distance_sequence.h"
+#include "kel_utility.h"
 
 
 namespace kga = kellerberrin::genome::analysis;
@@ -166,8 +169,6 @@ kgl::GeneVector kga::AnalysisGenePf::proximityGenes(size_t radius,
 void kga::AnalysisGenePf::varIntron(const GeneVector& gene_vector,
                                     const std::string& intron_file_name) {
 
-  std::shared_ptr<const LevenshteinLocal> sequence_distance_ptr(std::make_shared<const LevenshteinLocal>());
-
   // Open a file to receive csv delimited intron information.
   std::ofstream intron(intron_file_name);
   if (not intron.good()) {
@@ -308,7 +309,7 @@ void kga::AnalysisGenePf::geneFamilyUPGMA(const std::shared_ptr<const GenomeRefe
                                           const std::string& newick_file_name,
                                           const std::string& family_text) {
 
-  std::shared_ptr<const LevenshteinLocal> sequence_distance_ptr(std::make_shared<const LevenshteinLocal>());
+  AminoDistanceMetric sequence_distance_metric{LevenshteinLocalAmino};
   DistanceTreeUPGMA upgma_distance;
 
   std::shared_ptr<DistanceNodeVector> node_vector_ptr(std::make_shared<DistanceNodeVector>());
@@ -329,7 +330,7 @@ void kga::AnalysisGenePf::geneFamilyUPGMA(const std::shared_ptr<const GenomeRefe
       if (coding_dna_opt) {
 
         const DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
-        std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance_ptr,
+        std::shared_ptr<AminoGeneDistance> distance_ptr(std::make_shared<AminoGeneDistance>(sequence_distance_metric,
                                                                                             genome_ptr,
                                                                                             gene_ptr,
                                                                                             family_text));

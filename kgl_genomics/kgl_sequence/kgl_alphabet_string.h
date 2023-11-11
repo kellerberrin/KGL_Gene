@@ -180,6 +180,9 @@ public:
   }
 
   [[nodiscard]] std::string str() const { return convertToCharString(); }
+  // Yes, this is as dodgy as it looks. But if Alphabets are always implemented as char (byte) sized objects it should be ok.
+  // The motivation is to avoid the overhead of the byte copy of convertToCharString() above.
+  [[nodiscard]] const char* c_str() const { return reinterpret_cast<const char*>(base_string_.c_str()); }
 
   bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 

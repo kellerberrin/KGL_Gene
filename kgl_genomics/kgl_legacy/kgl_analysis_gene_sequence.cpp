@@ -186,8 +186,8 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
 
 
   GeneSummary gene_summary;
-  LevenshteinGlobal dna_distance_metric;
-  LevenshteinGlobal amino_distance_metric;
+  CodingDistanceMetric dna_distance_metric{LevenshteinGlobalCoding};
+  AminoDistanceMetric amino_distance_metric{LevenshteinGlobalAmino};
   gene_summary.genome = genome_variant_ptr->genomeId();
 
   DNA5SequenceCoding prime5_reference;
@@ -204,7 +204,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
 
 
 
-    gene_summary.prime5_distance = dna_distance_metric.coding_distance(prime5_reference, prime5_mutant);
+    gene_summary.prime5_distance = dna_distance_metric(prime5_reference, prime5_mutant);
 
     ExecEnv::log().info("5PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime5_distance);
@@ -258,7 +258,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
     auto protein_reference = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
     auto protein_mutant = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
 
-    gene_summary.sequence_distance = amino_distance_metric.amino_distance( protein_reference, protein_mutant);
+    gene_summary.sequence_distance = amino_distance_metric( protein_reference, protein_mutant);
     ExecEnv::log().info("Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.sequence_distance);
 
@@ -286,7 +286,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
                                      prime3_reference,
                                      prime3_mutant)) {
 
-    gene_summary.prime3_distance = dna_distance_metric.coding_distance(prime3_reference, prime3_mutant);
+    gene_summary.prime3_distance = dna_distance_metric(prime3_reference, prime3_mutant);
     ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",
                         genome_variant_ptr->genomeId(), contig_id, gene, sequence, gene_summary.prime3_distance);
 
@@ -319,7 +319,7 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
 
 bool kgl::GenomicSequence::mutateAllRegions(const std::string& file_name,
                                             ContigSize_t region_size,
-                                            const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                            LinearDistanceMetric dna_distance_metric,
                                             const std::shared_ptr<const PopulationDB>& pop_variant_ptr,
                                             const std::shared_ptr<const GenomeReference>& genome_db_ptr) {
 
@@ -384,7 +384,7 @@ std::string kgl::GenomicSequence::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
-                                                     const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                                     LinearDistanceMetric dna_distance_metric,
                                                      const ContigId_t& contig_id,
                                                      const ContigOffset_t offset,
                                                      const ContigSize_t region_size,
@@ -444,7 +444,7 @@ std::string kgl::GenomicSequence::outputGenomeRegion(char delimiter,
   }
   auto& [reference_sequence, mutant_sequence] = dual_seq_opt.value();
 
-  double distance = static_cast<double>(dna_distance_metric->linear_distance(reference_sequence, mutant_sequence));
+  double distance = static_cast<double>(dna_distance_metric(reference_sequence, mutant_sequence));
 
   ss << genome_db_ptr->genomeId() << delimiter;
   ss << contig_id << delimiter;
@@ -497,7 +497,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig_id,
                                               const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                               const std::string& fasta_file) {
 
-  std::shared_ptr<const LinearDNASequenceDistance> dna_distance_metric(std::make_shared<const LevenshteinGlobal>());
+  LinearDistanceMetric dna_distance_metric{LevenshteinGlobalLinear};
   std::vector<WriteFastaSequence> dna_seq_vector;
 
   auto contig_db_opt = genome_db_ptr->getContig(contig_id);
@@ -544,7 +544,7 @@ bool kgl::GenomicSequence::mutateGenomeRegion(const ContigId_t& contig_id,
 
   DNA5SequenceCoding ref_reverse_complement = reference_sequence.codingSequence(StrandSense::REVERSE);
 
-  CompareDistance_t score = dna_distance_metric->linear_distance(reference_sequence, mutant_sequence);
+  CompareDistance_t score = dna_distance_metric(reference_sequence, mutant_sequence);
 
   ExecEnv::log().info("Genome: {}, Contig: {}, Offset: {} Size: {} score: {}",
                       genome_db_ptr->genomeId(), contig_id, offset, region_size, score);

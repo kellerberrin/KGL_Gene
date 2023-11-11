@@ -1,13 +1,13 @@
 //
-// Created by kellerberrin on 30/01/18.
+// Created by kellerberrin on 11/11/23.
 //
 
+#include "kgl_distance_sequence.h"
 
-#include <iomanip>
+
 #include "kgl_sequence_compare_impl.h"
 #include "kgl_distance_sequence.h"
 #include "kgl_mutation_transcript.h"
-
 
 
 namespace kgl = kellerberrin::genome;
@@ -40,7 +40,7 @@ kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const Virtual
     if (find_iter != node_ptr->getMap().end()) {
 
       auto const& [feature_id, amino_sequence_ptr] = *find_iter;
-      CompareDistance_t contig_distance = sequence_distance_->amino_distance(*protein_ptr, *amino_sequence_ptr);
+      CompareDistance_t contig_distance = sequence_distance_(*protein_ptr, *amino_sequence_ptr);
       total_distance += contig_distance;
       ++gene_count;
 
@@ -53,8 +53,8 @@ kgl::DistanceType_t kgl::ProteinDistance::distance(std::shared_ptr<const Virtual
 
   }
 
-  ExecEnv::log().info("UPGMAProteinDistance::distance; Genome: {}, Genome: {}; {} distance: {}, Gene Family: {}, Gene Count: {}",
-                      genomeId(), node_ptr->genomeId(), sequence_distance_->distanceType(), total_distance, protein_family_, gene_count);
+  ExecEnv::log().info("UPGMAProteinDistance::distance; Genome: {}, Genome: {}; distance: {}, Gene Family: {}, Gene Count: {}",
+                      genomeId(), node_ptr->genomeId(), total_distance, protein_family_, gene_count);
   return total_distance;
 
 }
@@ -68,7 +68,7 @@ void kgl::ProteinDistance::mutateProteins() {
     for (auto const& [gene_id, gene_ptr] : contig_ptr->getGeneMap()) {
 
 
-        getProtein(gene_ptr);
+      getProtein(gene_ptr);
 
 
     }
@@ -185,12 +185,11 @@ kgl::DistanceType_t kgl::GeneDistance::distance(std::shared_ptr<const VirtualDis
 
   }
 
-  CompareDistance_t contig_score = sequence_distance_->amino_distance(mutated_protein_, node_ptr->mutated_protein_);
+  CompareDistance_t contig_score = sequence_distance_(mutated_protein_, node_ptr->mutated_protein_);
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
-  ExecEnv::log().info("GeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {} calculateDistance: {}, Gene Family: {}",
-                      genome_db_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(),
-                      sequence_distance_->distanceType(), total_distance, protein_family_);
+  ExecEnv::log().info("GeneDistance::distance; Genome: {}, Gene: {}, Gene: {}; {}, Gene Family: {}",
+                      genome_db_ptr_->genomeId(), gene_ptr_->id(), node_ptr->gene_ptr_->id(), total_distance, protein_family_);
 
   return total_distance;
 
@@ -350,23 +349,23 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
   bool verbose = false;
   if (verbose) {
 
-    ExecEnv::log().info("calculateDistance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                        sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+    ExecEnv::log().info("calculateDistance(); Comparing | {}({}), {}({}) |; Gene Family: {}",
+                        gene_ptr_->id(), linear_sequence_.length(),
                         node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(), protein_family_);
   }
 
 
-  CompareDistance_t contig_score = sequence_distance_->linear_distance(linear_sequence_, node_ptr->linear_sequence_);
+  CompareDistance_t contig_score = sequence_distance_(linear_sequence_, node_ptr->linear_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
 
   if (verbose) {
 
-    ExecEnv::log().info("calculateDistance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                        sequence_distance_->distanceType(), gene_ptr_->id(), linear_sequence_.length(),
+    ExecEnv::log().info("calculateDistance(); {}({}), {}({}) |  =  {}; Gene Family: {}",
+                        gene_ptr_->id(), linear_sequence_.length(),
                         node_ptr->gene_ptr_->id(), node_ptr->linear_sequence_.length(),
                         total_distance, protein_family_);
-    
+
   }
 
 
@@ -411,35 +410,9 @@ kgl::DistanceType_t kgl::AminoGeneDistance::distance(std::shared_ptr<const Virtu
 
   }
 
-  bool verbose = false;
-  if (verbose) {
-
-    ExecEnv::log().info("calculateDistance();  {} Comparing | {}({}), {}({}) |; Gene Family: {}",
-                        sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
-                        node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(), protein_family_);
-
-  }
-
-
-  DistanceType_t direct_distance = Distance::LevenshteinLocal(amino_sequence_, node_ptr->amino_sequence_);
-  CompareDistance_t contig_score = sequence_distance_->amino_distance(amino_sequence_, node_ptr->amino_sequence_);
+  CompareDistance_t contig_score = sequence_distance_(amino_sequence_, node_ptr->amino_sequence_);
 
   DistanceType_t total_distance = static_cast<DistanceType_t>(contig_score);
-
-  if (direct_distance != total_distance) {
-
-    ExecEnv::log().warn("Direct Distance {} not equal Total Distance: {}", direct_distance, total_distance);
-
-  }
-
-  if (verbose) {
-
-    ExecEnv::log().info("calculateDistance();  {} | {}({}), {}({}) |  =  {}; Gene Family: {}",
-                          sequence_distance_->distanceType(), gene_ptr_->id(), amino_sequence_.length(),
-                          node_ptr->gene_ptr_->id(), node_ptr->amino_sequence_.length(),
-                          total_distance, protein_family_);
-
-  }
 
 
   return total_distance;

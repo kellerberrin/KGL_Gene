@@ -13,6 +13,7 @@
 #include "kgl_io_gff_fasta.h"
 #include "kgl_pfgenome_aux.h"
 #include "kgl_sequence_compare_impl.h"
+#include "kgl_sequence_distance_impl.h"
 
 
 
@@ -119,20 +120,21 @@ public:
 
 
   [[nodiscard]] static bool outputRegionCSV( const std::string &file_name,
-                                             const std::shared_ptr<const DNASequenceDistance>& dna_distance_metric,
-                                             const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                             LinearDistanceMetric linear_dna_distance_metric,
+                                             CodingDistanceMetric coding_dna_distance_metric,
+                                             AminoDistanceMetric amino_distance_metric,
                                              const std::shared_ptr<const GenomeReference>& genome_db,
                                              const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
 
   [[nodiscard]]  static bool outputDNASequenceCSV( const std::string &file_name,
                                                    SequenceAnalysisType analysis_type,
-                                                   const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
+                                                   CodingDistanceMetric dna_distance_metric,
                                                    const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                    const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
   [[nodiscard]]  static bool outputAminoSequenceCSV( const std::string &file_name,
-                                                     const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                     AminoDistanceMetric amino_distance_metric,
                                                      const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                      const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
 
@@ -157,8 +159,8 @@ private:
   [[nodiscard]] static std::string outputSequenceHeader(char delimiter, const std::shared_ptr<const PopulationDB>& pop_variant_ptr);
   [[nodiscard]] static std::string outputRegionHeader(char delimiter);
   [[nodiscard]] static std::string outputSequence( char delimiter,
-                                                   const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
-                                                   const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                   CodingDistanceMetric dna_distance_metric,
+                                                   AminoDistanceMetric amino_distance_metric,
                                                    const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
                                                    const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                    const std::shared_ptr<const GenomeDB>& genome_db_ptr);

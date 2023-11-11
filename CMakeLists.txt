@@ -200,7 +200,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_sequence_compare.h
         kgl_genomics/kgl_classification/kgl_sequence_compare_impl.h
         kgl_genomics/kgl_classification/kgl_sequence_compare_impl.cpp
-        kgl_genomics/kgl_classification/kgl_sequence_distance.h
         kgl_genomics/kgl_classification/kgl_sequence_distance_impl.h
         kgl_genomics/kgl_classification/kgl_sequence_distance_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_pf_impl.h
@@ -347,8 +346,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
-        kgl_genomics/kgl_classification/kgl_distance_sequence.h
-        kgl_genomics/kgl_classification/kgl_distance_sequence.cpp
         kgl_genomics/kgl_classification/kgl_distance_genome.h
         kgl_genomics/kgl_classification/kgl_distance_genome.cpp
         kgl_genomics/kgl_classification/kgl_upgma_create.h
@@ -367,6 +364,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_distance_matrix.h
         kgl_genomics/kgl_classification/kgl_distance_matrix_triangular.h
         kgl_genomics/kgl_classification/kgl_distance_matrix_array.h
+        kgl_genomics/kgl_classification/kgl_distance_sequence.cpp
+        kgl_genomics/kgl_classification/kgl_distance_sequence.h
 
 )
 

@@ -10,79 +10,103 @@
 #include <string>
 #include <map>
 #include "kgl_genome_types.h"
-#include "kgl_sequence_virtual.h"
+#include "kgl_sequence_amino.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
 
 
-class SequenceDistanceImpl {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Distance is conceptually different from comparison.
+// 1. Distances are always normalized for sequence length.
+// For local distances, this is the size of the match.
+// For global distances, this is the length of the sequences.
+// 2. Distances are always positive or zero.
+// 3. Distances are symmetric, d(x,y) = d(y,x)
+// 4. Distances observe the triangle inequality, d(x,y) + d(y,z) >= d(x,z)
+// 5. Distances are returned as a CompareDistance_t which is a double.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-public:
-
-  explicit SequenceDistanceImpl();
-  ~SequenceDistanceImpl();
-
-  // Distance
-
-  [[nodiscard]] CompareDistance_t LevenshteinGlobal(const std::string& sequenceA, const std::string& sequenceB) const;
-
-  [[nodiscard]] CompareDistance_t LevenshteinLocal(const std::string& sequenceA, const std::string& sequenceB) const;
-
-  [[nodiscard]] CompareDistance_t globalblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
-
-  [[nodiscard]] CompareDistance_t localblosum80Distance(const std::string& sequenceA, const std::string& sequenceB) const;
-
-private:
-
-  class SequenceManipImpl;       // Forward declaration of the Sequence Manipulation implementation class
-  std::unique_ptr<SequenceManipImpl> sequence_manip_impl_ptr_;    // Sequence Manipulation PIMPL
-
-
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class Distance {
-
-public:
-
-  Distance() = delete;
-
-  static CompareDistance_t LevenshteinGlobal(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
-
-    return SequenceDistanceImpl().LevenshteinGlobal(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
-
-  }
-
-  static CompareDistance_t LevenshteinLocal(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
-
-    return SequenceDistanceImpl().LevenshteinLocal(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
-
-  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  static CompareDistance_t globalblosum80Distance(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
 
-    return SequenceDistanceImpl().globalblosum80Distance(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
+CompareDistance_t LevenshteinGlobalImpl(const char* sequenceA,
+                                        size_t sequenceA_size,
+                                        const char* sequenceB,
+                                        size_t sequenceB_size);
 
-  }
+template<typename Seq>
+CompareDistance_t LevenshteinGlobalImpl(const Seq& sequenceA, const Seq& sequenceB) {
+
+  return LevenshteinGlobalImpl(sequenceA.getSequenceAsPtr(),
+                               sequenceA.length(),
+                               sequenceB.getSequenceAsPtr(),
+                               sequenceB.length());
+
+}
+
+CompareDistance_t LevenshteinLocalImpl(const char* sequenceA,
+                                       size_t sequenceA_size,
+                                       const char* sequenceB,
+                                       size_t sequenceB_size);
+
+template<typename Seq>
+CompareDistance_t LevenshteinLocalImpl(const Seq& sequenceA, const Seq& sequenceB) {
+
+  return LevenshteinLocalImpl(sequenceA.getSequenceAsPtr(),
+                              sequenceA.length(),
+                              sequenceB.getSequenceAsPtr(),
+                              sequenceB.length());
+
+}
+
+template<typename Seq>
+CompareDistance_t globalblosum80Impl(const Seq&, const Seq&) {
+
+  return 0.0;
+
+}
+
+template<typename Seq>
+CompareDistance_t localblosum80Impl(const Seq&, const Seq&) {
+
+  return 0.0;
+
+}
 
 
-  static CompareDistance_t localblosum80Distance(const VirtualSequence& sequenceA, const VirtualSequence& sequenceB) {
-
-    return SequenceDistanceImpl().localblosum80Distance(sequenceA.getSequenceAsString(), sequenceB.getSequenceAsString());
-
-  }
-
-};
+template<typename Seq>
+using SequenceDistanceMetric = std::function<CompareDistance_t(const Seq&, const Seq&)>;
 
 
+using VirtualDistanceMetric = SequenceDistanceMetric<VirtualSequence>;
+
+inline static const VirtualDistanceMetric LevenshteinGlobalVirtual{LevenshteinGlobalImpl<VirtualSequence>};
+inline static const VirtualDistanceMetric LevenshteinLocalVirtual{LevenshteinLocalImpl<VirtualSequence>};
+
+using AminoDistanceMetric = SequenceDistanceMetric<AminoSequence>;
+
+inline static const AminoDistanceMetric LevenshteinGlobalAmino{LevenshteinGlobalImpl<AminoSequence>};
+inline static const AminoDistanceMetric LevenshteinLocalAmino{LevenshteinLocalImpl<AminoSequence>};
+inline static const AminoDistanceMetric globalblosum80Amino{globalblosum80Impl<AminoSequence>};
+inline static const AminoDistanceMetric localblosum80Amino{localblosum80Impl<AminoSequence>};
+
+
+using CodingDistanceMetric = SequenceDistanceMetric<DNA5SequenceCoding>;
+
+inline static const CodingDistanceMetric LevenshteinGlobalCoding{LevenshteinGlobalImpl<DNA5SequenceCoding>};
+inline static const CodingDistanceMetric LevenshteinLocalCoding{LevenshteinLocalImpl<DNA5SequenceCoding>};
+
+using LinearDistanceMetric = SequenceDistanceMetric<DNA5SequenceLinear>;
+
+inline static const LinearDistanceMetric LevenshteinGlobalLinear{LevenshteinGlobalImpl<DNA5SequenceLinear>};
+inline static const LinearDistanceMetric LevenshteinLocalLinear{LevenshteinLocalImpl<DNA5SequenceLinear>};
 
 }   // end namespace
 

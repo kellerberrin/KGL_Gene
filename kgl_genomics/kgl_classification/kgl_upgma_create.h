@@ -8,8 +8,8 @@
 #ifndef KGL_UPGMA_H
 #define KGL_UPGMA_H
 
-
-#include "kgl_distance_sequence.h"
+#include "kgl_distance_tree_base.h"
+#include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -56,7 +56,7 @@ void PopulationDistanceTree(DistanceTreeBase& distance_tree,
 
   for (auto genome : pop_variant_ptr->getMap()) {
 
-    std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance, genome.second, genome_db_ptr, args...));
+    std::shared_ptr<T> distance_ptr(std::make_shared<T>(sequence_distance, genome.second, genome_db_ptr, std::forward(args)...));
     std::shared_ptr<TreeDistanceNode> phylo_node_ptr(std::make_shared<TreeDistanceNode>(distance_ptr));
     node_vector_ptr->push_back(phylo_node_ptr);
 
@@ -96,7 +96,7 @@ void GeneDistanceTree(DistanceTreeBase& distance_tree,
                                                               genome_db_ptr,
                                                               gene.second,
                                                               protein_family,
-                                                              args...));
+                                                              std::forward(args)...));
           std::shared_ptr<TreeDistanceNode> phylo_node_ptr(std::make_shared<TreeDistanceNode>(distance_ptr));
           node_vector_ptr->push_back(phylo_node_ptr);
 
@@ -143,7 +143,7 @@ void GenePhyloTree(DistanceTreeBase& distance_tree,
                                                               genome_db_ptr,
                                                               gene.second,
                                                               protein_family,
-                                                              args...));
+                                                              std::forward(args)...));
           std::shared_ptr<TreeDistanceNode> phylo_node_ptr(std::make_shared<TreeDistanceNode>(distance_ptr));
           node_vector_ptr->push_back(phylo_node_ptr);
 

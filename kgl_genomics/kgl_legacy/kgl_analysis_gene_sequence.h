@@ -7,12 +7,12 @@
 
 
 
-#include "kgl_sequence_distance.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_io_gff_fasta.h"
 #include "kgl_genome_collection.h"
 #include "kga_analysis_sequence_mutation.h"
+#include "kgl_sequence_distance_impl.h"
 
 #include <memory>
 #include <fstream>
@@ -119,14 +119,14 @@ public:
 
   [[nodiscard]] static bool mutateAllRegions( const std::string& file_name,
                                               ContigSize_t region_size,
-                                              const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                              LinearDistanceMetric dna_distance_metric,
                                               const std::shared_ptr<const PopulationDB>& population_ptr,
                                               const std::shared_ptr<const GenomeReference>& genome_db_ptr);
 
   [[nodiscard]] static std::string outputRegionHeader(char delimiter);
 
   [[nodiscard]] static std::string outputGenomeRegion( char delimiter,
-                                                       const std::shared_ptr<const LinearDNASequenceDistance>& dna_distance_metric,
+                                                       LinearDistanceMetric dna_distance_metric,
                                                        const ContigId_t& contig_id,
                                                        const ContigOffset_t offset,
                                                        const ContigSize_t region_size,

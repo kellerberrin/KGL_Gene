@@ -1,16 +1,15 @@
 //
-// Created by kellerberrin on 30/01/18.
+// Created by kellerberrin on 11/11/23.
 //
 
-#ifndef KGL_UPGMA_NODE_H
-#define KGL_UPGMA_NODE_H
+#ifndef KGL_KGL_DISTANCE_SEQUENCE_H
+#define KGL_KGL_DISTANCE_SEQUENCE_H
 
 
-#include "kgl_sequence_distance.h"
+#include "kgl_sequence_distance_impl.h"
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_distance_tree_upgma.h"
-#include "kgl_sequence_distance.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -29,7 +28,7 @@ class ProteinDistance : public VirtualDistanceNode {
 
 public:
 
-  ProteinDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+  ProteinDistance(AminoDistanceMetric sequence_distance,
                   std::shared_ptr<const GenomeDB> genome_db_ptr,
                   std::shared_ptr<const GenomeReference> genome_ref_ptr,
                   std::string protein_family) : sequence_distance_(std::move(sequence_distance)),
@@ -51,7 +50,7 @@ public:
 
 private:
 
-  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  AminoDistanceMetric sequence_distance_;
   std::shared_ptr<const GenomeDB> genome_db_ptr_;
   std::shared_ptr<const GenomeReference> genome_ref_ptr_;
   std::string protein_family_;
@@ -78,7 +77,7 @@ class GeneDistance : public VirtualDistanceNode {
 
 public:
 
-  GeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+  GeneDistance(AminoDistanceMetric sequence_distance,
                std::shared_ptr<const GenomeDB> genome_db_ptr,
                std::shared_ptr<const GenomeReference> genome_ref_ptr,
                std::shared_ptr<const GeneFeature> gene_ptr,
@@ -106,7 +105,7 @@ public:
 
 protected:
 
-  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  AminoDistanceMetric sequence_distance_;
   std::shared_ptr<const GenomeDB> genome_db_ptr_;
   std::shared_ptr<const GenomeReference> genome_ref_ptr_;
   std::shared_ptr<const GeneFeature> gene_ptr_;
@@ -128,15 +127,15 @@ class UPGMAATP4Distance : public GeneDistance {
 
 public:
 
-  UPGMAATP4Distance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
-                         std::shared_ptr<const GenomeDB> genome_variant_ptr,
-                         std::shared_ptr<const GenomeReference> genome_db_ptr,
-                         std::shared_ptr<const GeneFeature> gene_ptr,
-                         const std::string& protein_family) : GeneDistance(sequence_distance,
-                                                                           genome_variant_ptr,
-                                                                           genome_db_ptr,
-                                                                           gene_ptr,
-                                                                           protein_family) {
+  UPGMAATP4Distance(AminoDistanceMetric sequence_distance,
+                    std::shared_ptr<const GenomeDB> genome_variant_ptr,
+                    std::shared_ptr<const GenomeReference> genome_db_ptr,
+                    std::shared_ptr<const GeneFeature> gene_ptr,
+                    const std::string& protein_family) : GeneDistance(sequence_distance,
+                                                                      genome_variant_ptr,
+                                                                      genome_db_ptr,
+                                                                      gene_ptr,
+                                                                      protein_family) {
 
   }
 
@@ -191,12 +190,12 @@ class DNAGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  DNAGeneDistance(std::shared_ptr<const LinearDNASequenceDistance> sequence_distance,
+  DNAGeneDistance(LinearDistanceMetric sequence_distance,
                   std::shared_ptr<const GenomeReference> genome_db_ptr,
                   std::shared_ptr<const GeneFeature> gene_ptr,
                   std::string protein_family)
-                  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)),
-                  sequence_distance_(std::move(sequence_distance)) {
+  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)),
+    sequence_distance_(std::move(sequence_distance)) {
 
     getExonSequence(); // Distance of the
 
@@ -209,7 +208,7 @@ public:
 
 private:
 
-  std::shared_ptr<const LinearDNASequenceDistance> sequence_distance_;
+  LinearDistanceMetric sequence_distance_;
   DNA5SequenceLinear linear_sequence_;
 
   void getExonSequence();
@@ -221,19 +220,12 @@ class AminoGeneDistance : public ReferenceGeneDistance {
 
 public:
 
-  AminoGeneDistance(std::shared_ptr<const AminoSequenceDistance> sequence_distance,
+  AminoGeneDistance(AminoDistanceMetric sequence_distance,
                     std::shared_ptr<const GenomeReference> genome_db_ptr,
                     std::shared_ptr<const GeneFeature> gene_ptr,
                     std::string protein_family)
-  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)) {
-
-    sequence_distance_ = std::dynamic_pointer_cast<const AminoSequenceDistance>(sequence_distance);
-    if (not sequence_distance_) {
-
-      ExecEnv::log().critical("AminoGeneDistance::AminoGeneDistance; distance metric: {} is not a superclass of 'LocalAminoSequenceDistance'",
-                              sequence_distance->distanceType());
-
-    }
+  : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)),
+    sequence_distance_(sequence_distance) {
 
     getAminoSequence();
 
@@ -246,7 +238,7 @@ public:
 
 private:
 
-  std::shared_ptr<const AminoSequenceDistance> sequence_distance_;
+  AminoDistanceMetric sequence_distance_;
   AminoSequence amino_sequence_;
 
   void  getAminoSequence();
@@ -255,9 +247,8 @@ private:
 
 
 
-
-
 }   // end namespace genome
 
 
-#endif //KGL_UPGMA_NODE_H
+
+#endif //KGL_KGL_DISTANCE_SEQUENCE_H

@@ -2,10 +2,8 @@
 // Created by kellerberrin on 17/11/17.
 //
 
-#include "kgl_sequence_distance.h"
 #include "kgl_sequence_compare.h"
 #include "kgl_pfgenome_aux.h"
-#include "kgl_distance_sequence.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"
 #include "kgl_sequence_complexity.h"
@@ -228,8 +226,9 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
 
 
 bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
-                                           const std::shared_ptr<const DNASequenceDistance>& dna_distance_metric,
-                                           const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                           LinearDistanceMetric linear_dna_distance_metric,
+                                           CodingDistanceMetric coding_dna_distance_metric,
+                                           AminoDistanceMetric amino_distance_metric,
                                            const std::shared_ptr<const GenomeReference>& genome_db,
                                            const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
@@ -289,7 +288,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
           }
 
           out_file << GenomicSequence::outputGenomeRegion(CSV_delimiter,
-                                                          dna_distance_metric,
+                                                          linear_dna_distance_metric,
                                                           contig_id,
                                                           front_porch_offset,
                                                           front_porch_size,
@@ -297,7 +296,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
                                                           genome_db);
           out_file << CSV_delimiter;
           out_file << outputSequence(CSV_delimiter,
-                                     dna_distance_metric,
+                                     coding_dna_distance_metric,
                                      amino_distance_metric,
                                      sequence_ptr,
                                      genome_db,
@@ -323,7 +322,7 @@ bool kgl::GenomicMutation::outputRegionCSV(const std::string &file_name,
 
 bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
                                                 SequenceAnalysisType analysis_type,
-                                                const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
+                                                CodingDistanceMetric dna_distance_metric,
                                                 const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                 const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
@@ -429,7 +428,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
               case SequenceAnalysisType::DNA: {
 
                 CompareDistance_t DNA_distance;
-                DNA_distance = dna_distance_metric->coding_distance(reference_sequence, mutant_sequence);
+                DNA_distance = dna_distance_metric(reference_sequence, mutant_sequence);
                 out_file << DNA_distance << CSV_delimiter;
 
               }
@@ -478,7 +477,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
 
 
 bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
-                                                  const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                  AminoDistanceMetric amino_distance_metric,
                                                   const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
                                                   const std::shared_ptr<const PopulationDB>& pop_variant_ptr) {
 
@@ -587,7 +586,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
 
               case CodingSequenceValidity::VALID_PROTEIN: {
 
-                CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
+                CompareDistance_t amino_distance = amino_distance_metric(amino_reference_seq, amino_mutant);
                 out_file << amino_distance << CSV_delimiter;
 
               }
@@ -1005,8 +1004,8 @@ std::string kgl::GenomicMutation::outputRegionHeader(char delimiter) {
 
 
 std::string kgl::GenomicMutation::outputSequence(char delimiter,
-                                                 const std::shared_ptr<const CodingDNASequenceDistance>& dna_distance_metric,
-                                                 const std::shared_ptr<const AminoSequenceDistance>& amino_distance_metric,
+                                                 CodingDistanceMetric dna_distance_metric,
+                                                 AminoDistanceMetric amino_distance_metric,
                                                  const std::shared_ptr<const TranscriptionSequence>& transcript_ptr,
                                                  const std::shared_ptr<const GenomeReference>&,
                                                  const std::shared_ptr<const GenomeDB>& genome_db_ptr) {
@@ -1046,7 +1045,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
     auto const& mutant_sequence = mutant_sequence_opt.value();
 
     CompareDistance_t DNA_distance;
-    DNA_distance = dna_distance_metric->coding_distance(reference_sequence, mutant_sequence);
+    DNA_distance = dna_distance_metric(reference_sequence, mutant_sequence);
     average_DNA_score += static_cast<double>(DNA_distance);
 
     auto amino_reference_seq = contig_ptr->getAminoSequence(reference_sequence);
@@ -1056,7 +1055,7 @@ std::string kgl::GenomicMutation::outputSequence(char delimiter,
     auto reference_validity = contig_ptr->checkValidProteinSequence(amino_reference_seq) ;
     valid_reference = TranscriptionSequence::checkValidProtein(reference_validity);
 
-    CompareDistance_t amino_distance = amino_distance_metric->amino_distance(amino_reference_seq, amino_mutant);
+    CompareDistance_t amino_distance = amino_distance_metric(amino_reference_seq, amino_mutant);
     auto sequence_validity = contig_ptr->checkValidProteinSequence(amino_mutant) ;
     bool valid_sequence = TranscriptionSequence::checkValidProtein(sequence_validity);
     if (valid_sequence) {

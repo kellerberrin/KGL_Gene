@@ -9,7 +9,6 @@
 #include "kgl_runtime_resource.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_distance_tree_upgma.h"
-#include "kgl_sequence_distance.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
