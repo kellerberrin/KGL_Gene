@@ -3,20 +3,14 @@
 //
 
 
-
-#include <iostream>
-#include "edlib.h"
-
-
 #include "kgl_sequence_compare_impl.h"
 #include "kel_exec_env.h"
 #include "kgl_genome_types.h"
 
+#include "edlib.h"
+
 
 namespace kgl = kellerberrin::genome;
-
-// The use of the seqan library is deprecated and needs to be replaced (possibly with seqan3)
-// #define USE_SEQAN 1
 
 
 class kgl::SequenceComparison::SequenceManipImpl {
@@ -27,9 +21,6 @@ public:
   ~SequenceManipImpl() = default;
 
 
-  kgl::CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
-  kgl::CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
-  kgl::CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   void editDNAItems(const std::string& reference,
                     const std::string& mutant,
@@ -42,32 +33,6 @@ private:
 };
 
 
-kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergGlobal(const std::string&,
-                                                                                     const std::string&,
-                                                                                     std::string&) const {
-
-  return 0;
-
-}
-
-
-kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::MyerHirschbergLocal(const std::string&,
-                                                                                    const std::string&,
-                                                                                    std::string&) const {
-
-  return 0;
-
-}
-
-
-kgl::CompareScore_t kgl::SequenceComparison::SequenceManipImpl::DNALocalAffineGap(const std::string&,
-                                                                                  const std::string&,
-                                                                                  std::string&) const {
-  return 0;
-
-}
-
-
 void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(const std::string& reference,
                                                               const std::string& mutant,
                                                               EditVector& edit_vector) const {
@@ -75,11 +40,9 @@ void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(const std::string&
   createEditItems(reference, mutant, edit_vector);
   createEditItemsEdlib(reference, mutant, check_edit_vector);
 
-  bool match = true;
   if (edit_vector.size() != check_edit_vector.size()) {
 
     ExecEnv::log().error("Edit vector size mis-match, edit_vector size: {}, check edit vector size: {}", edit_vector.size(), check_edit_vector.size());
-    match = false;
 
   } else {
 
@@ -95,20 +58,12 @@ void kgl::SequenceComparison::SequenceManipImpl::editDNAItems(const std::string&
         ExecEnv::log().error("Edit item mis-match, edit_vector: {}{}{}, check edit vector: {}{}{}",
                              edit_vector[index].reference_char, edit_vector[index].reference_offset, edit_vector[index].mutant_char,
                              check_edit_vector[index].reference_char, check_edit_vector[index].reference_offset, check_edit_vector[index].mutant_char);
-        match = false;
       }
 
     }
 
   }
 
-  if (not match) {
-
-    std::string compare_str;
-    MyerHirschbergGlobal(reference, mutant, compare_str);
-    ExecEnv::log().info("Edit vector mis-match sequence comparison:\n {}", compare_str);
-
-  }
 
 
 }
@@ -192,27 +147,6 @@ kgl::EditVector kgl::SequenceComparison::SequenceManipImpl::createEditItems(cons
 
 kgl::SequenceComparison::SequenceComparison() : sequence_manip_impl_ptr_(std::make_unique<kgl::SequenceComparison::SequenceManipImpl>()) {}
 kgl::SequenceComparison::~SequenceComparison() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
-
-// Comparison
-
-kgl::CompareScore_t kgl::SequenceComparison::MyerHirschbergGlobal(const std::string& sequenceA,
-                                                                    const std::string& sequenceB,
-                                                                    std::string& compare_str) const {
-
-  return sequence_manip_impl_ptr_->MyerHirschbergGlobal(sequenceA, sequenceB, compare_str);
-
-}
-
-
-
-kgl::CompareScore_t kgl::SequenceComparison::DNALocalAffineGap(const std::string& sequenceA,
-                                                                   const std::string& sequenceB,
-                                                                   std::string& compare_str) const {
-
-  return sequence_manip_impl_ptr_->DNALocalAffineGap(sequenceA, sequenceB, compare_str);
-
-}
-
 
 
 void kgl::SequenceComparison::editDNAItems(const std::string& reference,

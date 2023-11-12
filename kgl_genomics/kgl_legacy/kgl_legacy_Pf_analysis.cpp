@@ -363,31 +363,31 @@ if (not GenomicMutation::outputAminoMutationCSV(amino_mutation_file,
 void kgl::PhylogeneticAnalysis::performRNA() {
 
 
-RNAAnalysis rna_analysis;
+  RNAAnalysis rna_analysis;
 
-if (not rna_analysis.getRNARegions("Pf3D7_04_v3",
-                           956848,
-                           135,
-                           StrandSense::FORWARD,
-                           "Pf3D7_04_v3",
-                           (958066 - 1000),
-                           9000,
-                           StrandSense::FORWARD,
-                                   genome_collection_ptr_->getGenome(analysis_genome))) {
+  if (not rna_analysis.getRNARegions("Pf3D7_04_v3",
+                             956848,
+                             135,
+                             StrandSense::FORWARD,
+                             "Pf3D7_04_v3",
+                             (958066 - 1000),
+                             9000,
+                             StrandSense::FORWARD,
+                                     genome_collection_ptr_->getGenome(analysis_genome))) {
 
-  ExecEnv::log().error("Problem performing RNA analysis");
+    ExecEnv::log().error("Problem performing RNA analysis");
 
-}
+  }
 
-std::shared_ptr<const LocalDNASequenceCompare>  compare_metric_ptr(std::make_shared<const DNALocalAffineGap>());
+  LinearDistanceMetric  compare_metric{LevenshteinLocalLinear};
 
-if (not rna_analysis.compareRNARegion(0, 24, 1, compare_metric_ptr)) {
+  if (not rna_analysis.compareRNARegion(0, 24, 1, compare_metric)) {
 
-  ExecEnv::log().error("Problem performing RNA analysis");
+    ExecEnv::log().error("Problem performing RNA analysis");
 
-}
+  }
 
-rna_analysis.showResults(2);
+  rna_analysis.showResults(2);
 
 
 }

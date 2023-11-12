@@ -95,7 +95,7 @@ bool kgl::RNAAnalysis::getRNARegions(const ContigId_t& rna_contig,
 bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start,
                                         ContigSize_t rna_region_subsize,
                                         ContigSize_t rna_region_comparison_increment,
-                                        const std::shared_ptr<const LocalDNASequenceCompare>& dna_compare_metric) {
+                                        LinearDistanceMetric dna_compare_metric) {
 
 
   size_t counter = 0;
@@ -117,7 +117,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
     DNA5SequenceLinear& rna_sub_region = rna_sub_region_opt.value();
 
     std::string compare_str;
-    CompareScore_t score = dna_compare_metric->compare(rna_target_, rna_sub_region, compare_str);
+    CompareScore_t score = dna_compare_metric(rna_target_, rna_sub_region);
 
     CompareScore_t index_score = score * -1;
 

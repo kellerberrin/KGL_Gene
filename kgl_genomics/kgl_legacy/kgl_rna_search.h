@@ -5,10 +5,9 @@
 #ifndef KGL_RNA_SEARCH_H
 #define KGL_RNA_SEARCH_H
 
-
-#include "kgl_sequence_compare.h"
 #include "kgl_variant_db_population.h"
 #include "kgl_variant_filter_db_variant.h"
+#include "kgl_sequence_distance_impl.h"
 #include "kgl_io_gff_fasta.h"
 
 #include <memory>
@@ -55,7 +54,7 @@ public:
   [[nodiscard]] bool compareRNARegion( ContigSize_t rna_region_comparison_start,
                                        ContigSize_t rna_region_subsize,
                                        ContigSize_t rna_region_comparison_increment,
-                                       const std::shared_ptr<const LocalDNASequenceCompare>& dna_compare_metric);
+                                       LinearDistanceMetric dna_compare_metric);
 
   void showResults(size_t limit);
 

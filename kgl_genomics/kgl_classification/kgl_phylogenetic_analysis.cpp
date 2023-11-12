@@ -1,8 +1,6 @@
 //
 // Created by kellerberrin on 17/11/17.
 //
-
-#include "kgl_sequence_compare.h"
 #include "kgl_pfgenome_aux.h"
 #include "kgl_phylogenetic_analysis.h"
 #include "kgl_analysis_gene_sequence.h"

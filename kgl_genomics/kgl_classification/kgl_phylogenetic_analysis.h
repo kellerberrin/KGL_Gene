@@ -12,8 +12,8 @@
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_io_gff_fasta.h"
 #include "kgl_pfgenome_aux.h"
-#include "kgl_sequence_compare_impl.h"
 #include "kgl_sequence_distance_impl.h"
+#include "kgl_sequence_compare_impl.h"
 
 
 

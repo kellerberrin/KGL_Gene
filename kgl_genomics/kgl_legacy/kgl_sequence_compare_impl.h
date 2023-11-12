@@ -48,13 +48,6 @@ public:
   explicit SequenceComparison();
   ~SequenceComparison();
 
-  // Comparison
-
-  [[nodiscard]] CompareScore_t MyerHirschbergGlobal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
-
-  [[nodiscard]] CompareScore_t MyerHirschbergLocal(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
-
-  [[nodiscard]] CompareScore_t DNALocalAffineGap(const std::string& sequenceA, const std::string& sequenceB, std::string& compare_str) const;
 
   // Compare sequences in mutation format.
   void editDNAItems(const std::string& reference,

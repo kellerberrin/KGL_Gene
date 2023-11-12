@@ -197,9 +197,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_table_organism.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.cpp
-        kgl_genomics/kgl_classification/kgl_sequence_compare.h
-        kgl_genomics/kgl_classification/kgl_sequence_compare_impl.h
-        kgl_genomics/kgl_classification/kgl_sequence_compare_impl.cpp
+        kgl_genomics/kgl_legacy/kgl_sequence_compare_impl.h
+        kgl_genomics/kgl_legacy/kgl_sequence_compare_impl.cpp
         kgl_genomics/kgl_classification/kgl_sequence_distance_impl.h
         kgl_genomics/kgl_classification/kgl_sequence_distance_impl.cpp
         kgl_genomics/kgl_parser/kgl_variant_factory_pf_impl.h
@@ -348,7 +347,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
         kgl_genomics/kgl_classification/kgl_distance_genome.h
         kgl_genomics/kgl_classification/kgl_distance_genome.cpp
-        kgl_genomics/kgl_classification/kgl_upgma_create.h
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.h
         kgl_genomics/kgl_classification/kgl_phylogenetic_analysis.h
