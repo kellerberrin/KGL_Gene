@@ -8,11 +8,11 @@
 #include "kga_analysis_PfEMP.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Quality filter the variants using read depth, VQSLOD and other statistics
-std::shared_ptr<kgl::PopulationDB> kgl::PfEMPAnalysis::qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) {
+std::shared_ptr<kgl::PopulationDB> kga::PfEMPAnalysis::qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) {
 
 
   size_t unfiltered_count = unfiltered_population_ptr->variantCount();

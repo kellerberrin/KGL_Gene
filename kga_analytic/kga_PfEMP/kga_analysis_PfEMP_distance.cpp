@@ -6,11 +6,11 @@
 #include "kga_analysis_PfEMP.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
-void kgl::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
+void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const PopulationDB>& all_population_ptr,
                                               const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////

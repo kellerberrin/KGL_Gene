@@ -8,11 +8,11 @@
 #include "kga_analysis_literature_publication.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::LiteratureAnalysis::initializeAnalysis(const std::string& work_directory,
                                                  const ActiveParameterList& named_parameters,
                                                  const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -75,7 +75,7 @@ bool kgl::LiteratureAnalysis::initializeAnalysis(const std::string& work_directo
 
 
 // Perform pre-processing (generally just type casting) for each file read into the analysis object.
-bool kgl::LiteratureAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kga::LiteratureAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
@@ -109,7 +109,7 @@ bool kgl::LiteratureAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> dat
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::LiteratureAnalysis::iterationAnalysis() {
+bool kga::LiteratureAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -118,7 +118,7 @@ bool kgl::LiteratureAnalysis::iterationAnalysis() {
 }
 
 // All file data has been presented, finalize analysis and write results.
-bool kgl::LiteratureAnalysis::finalizeAnalysis() {
+bool kga::LiteratureAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 

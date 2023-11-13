@@ -15,7 +15,7 @@
 #include "kgl_variant_filter_info.h"
 #include "kga_analysis_age.h"
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 

@@ -20,7 +20,7 @@
 #include "kga_analysis_mutation_gene_allele_pop.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -9,11 +9,11 @@
 #include <fstream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
-void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
+void kga::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const PopulationDB> &gene_population_ptr,
                                                      const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr,
                                                      const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr) {
 
@@ -58,7 +58,7 @@ void kgl::HeteroHomoZygous::analyzeVariantPopulation(const std::shared_ptr<const
 }
 
 
-void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<const OffsetDB>& offset_ptr,
+void kga::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<const OffsetDB>& offset_ptr,
                                                        VariantAnalysisType& analysis_record) {
 
   if (offset_ptr->getVariantArray().empty()) {
@@ -105,7 +105,7 @@ void kgl::HeteroHomoZygous::updateVariantAnalysisType( const std::shared_ptr<con
 }
 
 
-void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, const LocationSummaryMap& location_summary) {
+void kga::HeteroHomoZygous::write_variant_results(const std::string& file_name, const LocationSummaryMap& location_summary) {
 
   std::ofstream analysis_file(file_name);
 
@@ -231,7 +231,7 @@ void kgl::HeteroHomoZygous::write_variant_results(const std::string& file_name, 
 }
 
 
-kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vector<GenomeId_t>& sample_vector) const {
+kga::VariantAnalysisType kga::HeteroHomoZygous::aggregateResults(const std::vector<GenomeId_t>& sample_vector) const {
 
   VariantAnalysisType analysis_summary;
   std::set<GenomeId_t> sample_set(sample_vector.begin(), sample_vector.end());
@@ -263,7 +263,7 @@ kgl::VariantAnalysisType kgl::HeteroHomoZygous::aggregateResults(const std::vect
 }
 
 
-kgl:: LocationSummaryMap kgl::HeteroHomoZygous::location_summary( const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
+kga:: LocationSummaryMap kga::HeteroHomoZygous::location_summary( const std::shared_ptr<const Pf7SampleResource>& Pf7_sample_ptr,
                                                                   const std::shared_ptr<const Pf7SampleLocation>& Pf7_physical_distance_ptr,
                                                                   double radius_km,
                                                                   const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr) const {
@@ -359,7 +359,7 @@ kgl:: LocationSummaryMap kgl::HeteroHomoZygous::location_summary( const std::sha
 }
 
 
-void kgl::HeteroHomoZygous::UpdateSampleLocation(const LocationSummaryMap& location_summary_map) {
+void kga::HeteroHomoZygous::UpdateSampleLocation(const LocationSummaryMap& location_summary_map) {
 
   for (auto& [genome_id, contig_map] : variant_analysis_map_) {
 
@@ -415,7 +415,7 @@ void kgl::HeteroHomoZygous::UpdateSampleLocation(const LocationSummaryMap& locat
 
 
 
-void kgl::HeteroHomoZygous::write_location_results(const std::string& file_name, const LocationSummaryMap& summary_map) const {
+void kga::HeteroHomoZygous::write_location_results(const std::string& file_name, const LocationSummaryMap& summary_map) const {
 
   std::ofstream analysis_file(file_name);
 

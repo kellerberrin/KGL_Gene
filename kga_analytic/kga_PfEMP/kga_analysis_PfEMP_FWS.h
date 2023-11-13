@@ -10,7 +10,7 @@
 #include "kgl_variant_db_variant.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 enum class AlleleFrequencyBins: size_t { PERCENT_0_5 = 0,
                                 PERCENT_5_10 = 1,

@@ -5,12 +5,12 @@
 #include "kga_analysis_mutation_gene_ethnic.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
 
-bool kgl::GeneEthnicitySex::genomeAnalysis(const GenomeId_t& genome_id,
+bool kga::GeneEthnicitySex::genomeAnalysis(const GenomeId_t& genome_id,
                                            size_t count,
                                            const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
@@ -86,7 +86,7 @@ bool kgl::GeneEthnicitySex::genomeAnalysis(const GenomeId_t& genome_id,
 }
 
 
-void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+void kga::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   // Generate the template populations.
   std::map<std::string, size_t> population_map;
@@ -111,7 +111,7 @@ void kgl::GeneEthnicitySex::updatePopulations(const std::shared_ptr<const HsGeno
 }
 
 
-void kgl::GeneEthnicitySex::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                          std::ostream& out_file,
                                          char output_delimiter) const {
 
@@ -140,14 +140,14 @@ void kgl::GeneEthnicitySex::writeHeader( const std::shared_ptr<const HsGenomeAux
 
 
 
-void kgl::GeneEthnicitySex::writeSexHeader( std::ostream& out_file, char output_delimiter) const {
+void kga::GeneEthnicitySex::writeSexHeader( std::ostream& out_file, char output_delimiter) const {
 
   out_file << header_prefix_ << "Male" << output_delimiter
            << header_prefix_ << "Female";
 
 }
 
-void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                                  std::ostream& out_file,
                                                  char output_delimiter) const {
 
@@ -166,7 +166,7 @@ void kgl::GeneEthnicitySex::writeSuperPopHeader( const std::shared_ptr<const HsG
 
 }
 
-void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -187,13 +187,13 @@ void kgl::GeneEthnicitySex::writePopHeader( const std::shared_ptr<const HsGenome
 
 
 
-void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writeOutput(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                         std::ostream& out_file,
                                         char output_delimiter) const {
 
   if (display_flags_ & DISPLAY_SEX_FLAG) {
 
-    kgl::GeneEthnicitySex::writeSex(out_file, output_delimiter);
+    GeneEthnicitySex::writeSex(out_file, output_delimiter);
     out_file << output_delimiter;
 
   }
@@ -216,7 +216,7 @@ void kgl::GeneEthnicitySex::writeOutput(const std::shared_ptr<const HsGenomeAux>
 }
 
 
-void kgl::GeneEthnicitySex::writeSex( std::ostream& out_file,
+void kga::GeneEthnicitySex::writeSex( std::ostream& out_file,
                                       char output_delimiter) const {
 
   out_file << male_ << output_delimiter
@@ -225,7 +225,7 @@ void kgl::GeneEthnicitySex::writeSex( std::ostream& out_file,
 }
 
 
-void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                            std::ostream& out_file,
                                            char output_delimiter) const {
 
@@ -251,7 +251,7 @@ void kgl::GeneEthnicitySex::writeSuperPop( const std::shared_ptr<const HsGenomeA
 }
 
 
-void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneEthnicitySex::writePop( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                       std::ostream& out_file,
                                       char output_delimiter) const {
 
@@ -277,7 +277,7 @@ void kgl::GeneEthnicitySex::writePop( const std::shared_ptr<const HsGenomeAux>& 
 }
 
 
-size_t kgl::GeneEthnicitySex::superPopulationCount(const std::string& super_population) const {
+size_t kga::GeneEthnicitySex::superPopulationCount(const std::string& super_population) const {
 
   auto result = super_population_.find(super_population);
   if (result == super_population_.end()) {
@@ -295,7 +295,7 @@ size_t kgl::GeneEthnicitySex::superPopulationCount(const std::string& super_popu
 }
 
 
-size_t kgl::GeneEthnicitySex::populationCount(const std::string& population) const {
+size_t kga::GeneEthnicitySex::populationCount(const std::string& population) const {
 
   auto result = population_.find(population);
   if (result == population_.end()) {
@@ -312,7 +312,7 @@ size_t kgl::GeneEthnicitySex::populationCount(const std::string& population) con
 
 }
 
-size_t kgl::GeneEthnicitySex::superPopulationTotal() const {
+size_t kga::GeneEthnicitySex::superPopulationTotal() const {
 
   size_t total{0};
   for (auto const& [population, count] : super_population_) {
@@ -325,7 +325,7 @@ size_t kgl::GeneEthnicitySex::superPopulationTotal() const {
 
 }
 
-size_t kgl::GeneEthnicitySex::populationTotal() const {
+size_t kga::GeneEthnicitySex::populationTotal() const {
 
 
   size_t total{0};
@@ -339,7 +339,7 @@ size_t kgl::GeneEthnicitySex::populationTotal() const {
 
 }
 
-bool kgl::GeneEthnicitySex::auditTotals() const {
+bool kga::GeneEthnicitySex::auditTotals() const {
 
   if (superPopulationTotal() != populationTotal()) {
 

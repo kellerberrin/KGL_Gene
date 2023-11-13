@@ -10,10 +10,10 @@
 
 #include <fstream>
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
-void kgl::GenerateGeneAllele::initialize( const std::vector<std::string>& symbol_gene_list,
+void kga::GenerateGeneAllele::initialize( const std::vector<std::string>& symbol_gene_list,
                                           const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
                                           const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr,
                                           const std::shared_ptr<const CitationResource>& allele_citation_ptr,
@@ -46,7 +46,7 @@ void kgl::GenerateGeneAllele::initialize( const std::vector<std::string>& symbol
 }
 
 
-void kgl::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
+void kga::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
   std::vector<std::string> ensembl_list;
   for (auto const& [ensembl, symbol] : ensembl_symbol_map_) {
@@ -82,7 +82,7 @@ void kgl::GenerateGeneAllele::addGeneCitedVariants(const std::shared_ptr<const S
 
 }
 
-void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
+void kga::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<const SortedVariantAnalysis>& sorted_variants) {
 
   // To save space only add citations that are relevant to the disease MeSH code.
   for (auto const& [ensembl_id, variant_ptr] : *(sorted_variants->ensemblMap())) {
@@ -112,7 +112,7 @@ void kgl::GenerateGeneAllele::addDiseaseCitedVariants(const std::shared_ptr<cons
 }
 
 
-bool kgl::GenerateGeneAllele::citationsExist(const std::string& rs_identifier) const {
+bool kga::GenerateGeneAllele::citationsExist(const std::string& rs_identifier) const {
 
   if (not rs_identifier.empty()) {
 
@@ -125,7 +125,7 @@ bool kgl::GenerateGeneAllele::citationsExist(const std::string& rs_identifier) c
 }
 
 
-std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
+std::set<std::string> kga::GenerateGeneAllele::getCitations(const std::string& rs_identifier) const {
 
   std::set<std::string> allele_pmid_set;
   if (not rs_identifier.empty()) {
@@ -144,7 +144,7 @@ std::set<std::string> kgl::GenerateGeneAllele::getCitations(const std::string& r
 
 }
 
-std::set<std::string> kgl::GenerateGeneAllele::getDiseaseCitations(const std::string& rs_identifier) const {
+std::set<std::string> kga::GenerateGeneAllele::getDiseaseCitations(const std::string& rs_identifier) const {
 
   std::set<std::string> allele_disease_set;
 
@@ -162,7 +162,7 @@ std::set<std::string> kgl::GenerateGeneAllele::getDiseaseCitations(const std::st
 
 
 
-void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, char delimiter) {
+void kga::GenerateGeneAllele::writeHeader(std::ofstream& outfile, char delimiter) {
 
   outfile << "SymbolGeneId" << delimiter
           << "EnsemblGeneId" << delimiter
@@ -193,7 +193,7 @@ void kgl::GenerateGeneAllele::writeHeader(std::ofstream& outfile, char delimiter
 }
 
 
-void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char delimiter) const {
+void kga::GenerateGeneAllele::writeOutput(const std::string& output_file, char delimiter) const {
 
   std::ofstream out_file(output_file);
 
@@ -323,7 +323,7 @@ void kgl::GenerateGeneAllele::writeOutput(const std::string& output_file, char d
 }
 
 
-std::map<std::string, std::string> kgl::GenerateGeneAllele::retrieveVepFields( const std::shared_ptr<const Variant>& variant_ptr,
+std::map<std::string, std::string> kga::GenerateGeneAllele::retrieveVepFields( const std::shared_ptr<const Variant>& variant_ptr,
                                                                                const std::vector<std::string>& field_list) {
 
   static std::vector<std::pair<std::string, size_t>> field_indicies;
@@ -398,7 +398,7 @@ std::map<std::string, std::string> kgl::GenerateGeneAllele::retrieveVepFields( c
 }
 
 
-void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& output_file) {
+void kga::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& output_file) {
 
   std::ofstream out_file(output_file);
 
@@ -486,7 +486,7 @@ void kgl::GenerateGeneAllele::writeLiteratureAlleleSummary(const std::string& ou
 
 
 // For each Allele print all the relevant publications.
-void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& output_file) {
+void kga::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& output_file) {
 
   std::ofstream out_file(output_file);
 
@@ -550,7 +550,7 @@ void kgl::GenerateGeneAllele::writeAlleleLiteratureSummary(const std::string& ou
 
 
 
-std::pair<std::string, std::string> kgl::GenerateGeneAllele::generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const {
+std::pair<std::string, std::string> kga::GenerateGeneAllele::generateGeneCodes(const std::vector<std::string>& ensembl_entrez_codes) const {
 
 
 

@@ -5,12 +5,12 @@
 #include "kga_analysis_literature_gene.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
 // Perform the genetic analysis per iteration.
-void kgl::GeneLiterature::defineGenes( const std::shared_ptr<const GenomeReference>& genome_ptr,
+void kga::GeneLiterature::defineGenes( const std::shared_ptr<const GenomeReference>& genome_ptr,
                                        const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
                                        const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr) {
 
@@ -51,7 +51,7 @@ void kgl::GeneLiterature::defineGenes( const std::shared_ptr<const GenomeReferen
 
 
 
-void kgl::GeneLiterature::updatePMIDStatistics( const std::set<std::string>& disease_pmid_set,
+void kga::GeneLiterature::updatePMIDStatistics( const std::set<std::string>& disease_pmid_set,
                                                 const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
 
   size_t gene_disease_count{0};
@@ -90,7 +90,7 @@ void kgl::GeneLiterature::updatePMIDStatistics( const std::set<std::string>& dis
 
 
 // Ranks the publications by number of gene references.
-void kgl::GeneLiterature::outputGenePmid(const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
+void kga::GeneLiterature::outputGenePmid(const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
                                          const std::string& literature_directory,
                                          size_t pmid_count) const {
 
@@ -132,7 +132,7 @@ void kgl::GeneLiterature::outputGenePmid(const std::shared_ptr<const PubmedReque
 }
 
 
-void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
+void kga::GeneLiterature::writeGenePublications( std::ostream& out_file,
                                                  const GeneCharacteristic& gene,
                                                  const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr) {
 
@@ -205,7 +205,7 @@ void kgl::GeneLiterature::writeGenePublications( std::ostream& out_file,
 
 
 // Ranks the publications by number of gene references.
-void kgl::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
+void kga::GeneLiterature::outputPmidGene( const std::shared_ptr<const PubmedRequester>& pubmed_requestor_ptr,
                                           const std::string& literature_directory,
                                           size_t max_genes,
                                           size_t min_genes,

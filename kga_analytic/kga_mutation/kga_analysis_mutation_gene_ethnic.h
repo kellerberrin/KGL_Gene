@@ -11,7 +11,7 @@
 #include "kgl_variant_db_population.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 

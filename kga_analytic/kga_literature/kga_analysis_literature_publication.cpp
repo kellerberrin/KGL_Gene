@@ -7,11 +7,12 @@
 
 #include <fstream>
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
 
-void kgl::PublicationLiterature::writeAuthorAnalysis(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeAuthorAnalysis(const std::string& literature_directory) {
 
   std::string author_file{"author_analysis.csv"};
   std::string author_file_path = Utility::filePath(author_file, literature_directory);
@@ -64,7 +65,7 @@ void kgl::PublicationLiterature::writeAuthorAnalysis(const std::string& literatu
 
 
 
-void kgl::PublicationLiterature::writeYearAnalysis(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeYearAnalysis(const std::string& literature_directory) {
 
   std::string year_file{"year_analysis.csv"};
   std::string year_file_path = Utility::filePath(year_file, literature_directory);
@@ -118,7 +119,7 @@ void kgl::PublicationLiterature::writeYearAnalysis(const std::string& literature
 
 
 
-void kgl::PublicationLiterature::writeJournalAnalysis(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeJournalAnalysis(const std::string& literature_directory) {
 
   std::string journal_file{"journal_analysis.csv"};
   std::string journal_file_path = Utility::filePath(journal_file, literature_directory);
@@ -170,7 +171,7 @@ void kgl::PublicationLiterature::writeJournalAnalysis(const std::string& literat
 }
 
 
-void kgl::PublicationLiterature::writeCitationPeriod(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeCitationPeriod(const std::string& literature_directory) {
 
   std::string citation_period_file{"citation_period_analysis.csv"};
   std::string citation_file_path = Utility::filePath(citation_period_file, literature_directory);
@@ -201,7 +202,7 @@ void kgl::PublicationLiterature::writeCitationPeriod(const std::string& literatu
 
 
 
-void kgl::PublicationLiterature::writeCitationVariance(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeCitationVariance(const std::string& literature_directory) {
 
   std::string citation_variance_file{"citation_variance_analysis.csv"};
   std::string citation_file_path = Utility::filePath(citation_variance_file, literature_directory);
@@ -231,7 +232,7 @@ void kgl::PublicationLiterature::writeCitationVariance(const std::string& litera
 }
 
 
-std::shared_ptr<const kgl::PublicationSummary> kgl::PublicationLiterature::mostRecentPublication() {
+std::shared_ptr<const kgl::PublicationSummary> kga::PublicationLiterature::mostRecentPublication() {
 
   LiteratureAnalysis literature_analysis(publication_map_);
 
@@ -276,7 +277,7 @@ std::shared_ptr<const kgl::PublicationSummary> kgl::PublicationLiterature::mostR
 
 }
 
-void kgl::PublicationLiterature::writeCitationQuantiles(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeCitationQuantiles(const std::string& literature_directory) {
 
 
   std::string citation_quantile_file{"citation_quantile_analysis.csv"};
@@ -318,7 +319,7 @@ void kgl::PublicationLiterature::writeCitationQuantiles(const std::string& liter
 
 
 
-void kgl::PublicationLiterature::writeCitationHistogram(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeCitationHistogram(const std::string& literature_directory) {
 
   std::string citation_histogram_file{"citation_histogram_analysis.csv"};
   std::string citation_file_path = Utility::filePath(citation_histogram_file, literature_directory);
@@ -345,7 +346,7 @@ void kgl::PublicationLiterature::writeCitationHistogram(const std::string& liter
 
 }
 
-void kgl::PublicationLiterature::writeCitationData(const std::string& literature_directory) {
+void kga::PublicationLiterature::writeCitationData(const std::string& literature_directory) {
 
   std::string citation_data_file{"citation_data_analysis.csv"};
   std::string citation_file_path = Utility::filePath(citation_data_file, literature_directory);
@@ -377,7 +378,7 @@ void kgl::PublicationLiterature::writeCitationData(const std::string& literature
 }
 
 
-void kgl::PublicationLiterature::writePublicationCitations(const std::string &literature_directory, const std::string &publication_pmid) {
+void kga::PublicationLiterature::writePublicationCitations(const std::string &literature_directory, const std::string &publication_pmid) {
 
   std::string citation_data_file = publication_pmid;
   citation_data_file += "citation_history.csv";

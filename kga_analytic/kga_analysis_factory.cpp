@@ -33,13 +33,13 @@ kgl::VirtualAnalysis::AnalysisFactoryMap const kgl::VirtualAnalysis::analysis_fa
 
 { kga::NullAnalysis::IDENT, kga::NullAnalysis::factory },
 { kga::SequenceAnalysis::IDENT, kga::SequenceAnalysis::factory },
-{ kgl::IntervalAnalysis::IDENT, kgl::IntervalAnalysis::factory },
-{ kgl::InfoFilterAnalysis::IDENT, kgl::InfoFilterAnalysis::factory },
+{ kga::IntervalAnalysis::IDENT, kga::IntervalAnalysis::factory },
+{ kga::InfoFilterAnalysis::IDENT, kga::InfoFilterAnalysis::factory },
 { kgl::InbreedAnalysis::IDENT, kgl::InbreedAnalysis::factory },
-{ kgl::PfEMPAnalysis::IDENT, kgl::PfEMPAnalysis::factory },
-{ kgl::MutationAnalysis::IDENT, kgl::MutationAnalysis::factory },
-{ kgl::JsonAnalysis::IDENT, kgl::JsonAnalysis::factory },
-{ kgl::LiteratureAnalysis::IDENT, kgl::LiteratureAnalysis::factory }
+{ kga::PfEMPAnalysis::IDENT, kga::PfEMPAnalysis::factory },
+{ kga::MutationAnalysis::IDENT, kga::MutationAnalysis::factory },
+{ kga::JsonAnalysis::IDENT, kga::JsonAnalysis::factory },
+{ kga::LiteratureAnalysis::IDENT, kga::LiteratureAnalysis::factory }
 
 };
 

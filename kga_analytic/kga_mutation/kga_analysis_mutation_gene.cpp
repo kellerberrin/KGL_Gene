@@ -10,11 +10,11 @@
 
 #include <memory_resource>
 
-
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 namespace kol = kellerberrin::ontology;
 
-void kgl::GenomeMutation::analysisType() {
+void kga::GenomeMutation::analysisType() {
 
   std::string member_text;
   switch(gene_membership_) {
@@ -39,7 +39,7 @@ void kgl::GenomeMutation::analysisType() {
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target_genes,
+bool kga::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target_genes,
                                           const std::shared_ptr<const GenomeReference>& genome_ptr,
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                           const std::shared_ptr<const kol::OntologyDatabase>& ontology_db_ptr,
@@ -116,7 +116,7 @@ bool kgl::GenomeMutation::genomeAnalysis( const std::vector<std::string>& target
 
 }
 
-void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& disease_pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
+void kga::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& disease_pmid_set, const std::shared_ptr<const BioPMIDFileData>& bio_pmid_ptr) {
 
   for (auto& gene_data : gene_vector_) {
 
@@ -147,7 +147,7 @@ void kgl::GenomeMutation::updatePMIDStatistics(const std::set<std::string>& dise
 }
 
 
-bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
+bool kga::GenomeMutation::variantAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr,
                                           const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                           const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                           const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
@@ -213,7 +213,7 @@ bool kgl::GenomeMutation::variantAnalysis(const std::shared_ptr<const Population
 }
 
 
-kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
+kga::GeneMutation kga::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                                          const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
@@ -306,17 +306,17 @@ kgl::GeneMutation kgl::GenomeMutation::geneSpanAnalysis( const std::shared_ptr<c
 
 
 // Gets variants over the whole gene span.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
+std::shared_ptr<const kgl::ContigDB> kga::GenomeMutation::getGeneSpan(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
-  std::shared_ptr<const kgl::ContigDB> subset_contig = contig_ptr->viewFilter(ContigModifyFilter(gene_char.geneBegin(), gene_char.geneEnd()));
+  std::shared_ptr<const ContigDB> subset_contig = contig_ptr->viewFilter(ContigModifyFilter(gene_char.geneBegin(), gene_char.geneEnd()));
 
   return subset_contig;
 
 }
 
 // Get variants only occurring within codingFeatures for all mRNA sequences.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
+std::shared_ptr<const kgl::ContigDB> kga::GenomeMutation::getGeneExon(const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                       const GeneCharacteristic& gene_char) {
 
   std::shared_ptr<ContigDB> gene_contig(std::make_shared<ContigDB>(contig_ptr->contigId()));
@@ -339,7 +339,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneExon(const std:
 
 
 // Get variants matching the ensembl.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const std::shared_ptr<const ContigDB>& contig_ptr,
+std::shared_ptr<const kgl::ContigDB> kga::GenomeMutation::getGeneEnsembl( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                           const EnsemblIndexMap& ensembl_index_map,
                                                                           const GeneCharacteristic& gene_char) {
 
@@ -395,7 +395,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsembl( const 
 
 
 // Set up Ensembl map.
-void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_index_map,
+void kga::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_index_map,
                                                  const GeneCharacteristic& gene_char,
                                                  EnsemblHashMap& ensembl_hash_map,
                                                  ContigOffset_t& lower_bound,
@@ -455,7 +455,7 @@ void kgl::GenomeMutation::getGeneEnsemblHashMap( const EnsemblIndexMap& ensembl_
 
 
 // Get variants matching the ensembl.
-std::shared_ptr<const kgl::ContigDB> kgl::GenomeMutation::getGeneEnsemblAlt( const std::shared_ptr<const ContigDB>& contig_ptr,
+std::shared_ptr<const kgl::ContigDB> kga::GenomeMutation::getGeneEnsemblAlt( const std::shared_ptr<const ContigDB>& contig_ptr,
                                                                              const EnsemblHashMap& ensembl_hash_map,
                                                                              const GeneCharacteristic& gene_char) {
 

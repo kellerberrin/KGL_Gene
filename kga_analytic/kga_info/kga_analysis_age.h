@@ -8,7 +8,7 @@
 #include "kgl_variant_db.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A matrix of heterozygous vs homozygous variant counts
@@ -188,9 +188,9 @@ private:
 } // namespace
 
 
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::InfoAgeAnalysis& age_analysis);
+std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::analysis::InfoAgeAnalysis& age_analysis);
 
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::AgeSortedMap& sorted_age_analysis);
+std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::analysis::AgeSortedMap& sorted_age_analysis);
 
 
 

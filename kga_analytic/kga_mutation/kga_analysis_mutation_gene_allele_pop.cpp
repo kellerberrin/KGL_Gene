@@ -6,10 +6,10 @@
 #include "kgl_literature_filter.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
-void kgl::GeneratePopulationAllele::initialize( const std::shared_ptr<const HsGenomeAux>& genome_aux_ptr,
+void kga::GeneratePopulationAllele::initialize( const std::shared_ptr<const HsGenomeAux>& genome_aux_ptr,
                                                 const std::shared_ptr<const UniprotResource>& uniprot_nomenclature_ptr,
                                                 const std::shared_ptr<const EntrezResource>& entrez_nomenclature_ptr,
                                                 const std::shared_ptr<const CitationResource>& allele_citation_ptr,
@@ -28,7 +28,7 @@ void kgl::GeneratePopulationAllele::initialize( const std::shared_ptr<const HsGe
 }
 
 
-void kgl::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disease_allele_map) {
+void kga::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disease_allele_map) {
 
   for (auto const& [allele, pmid_set] : disease_allele_map) {
 
@@ -63,7 +63,7 @@ void kgl::GeneratePopulationAllele::addDiseaseAlleles(const DBCitationMap& disea
 }
 
 
-void kgl::GeneratePopulationAllele::processPopulation( const std::shared_ptr<const PopulationDB>& population_ptr,
+void kga::GeneratePopulationAllele::processPopulation( const std::shared_ptr<const PopulationDB>& population_ptr,
                                                        const std::shared_ptr<const SortedVariantAnalysis>& sorted_variant_ptr) {
 
   ExecEnv::log().info("Begin analyzing Literature Population: {}, with Genomes: {}", population_ptr->populationId(), population_ptr->getMap().size());
@@ -127,7 +127,7 @@ void kgl::GeneratePopulationAllele::processPopulation( const std::shared_ptr<con
 
 }
 
-kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::getGenomePublications( std::shared_ptr<const GenomeDB> genome_ptr,
+kga::GeneratePopulationAllele::ThreadReturnType kga::GeneratePopulationAllele::getGenomePublications( std::shared_ptr<const GenomeDB> genome_ptr,
                                                                                                       std::shared_ptr<const DBCitationMap> disease_cited_alleles_ptr) {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ kgl::GeneratePopulationAllele::ThreadReturnType kgl::GeneratePopulationAllele::g
 }
 
 
-void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output_file) const {
+void kga::GeneratePopulationAllele::writePopLiterature(const std::string& output_file) const {
 
 
   std::ofstream out_file(output_file);
@@ -304,7 +304,7 @@ void kgl::GeneratePopulationAllele::writePopLiterature(const std::string& output
 }
 
 
-std::set<std::string> kgl::GeneratePopulationAllele::getDiseaseCitations(const std::string& rs_identifier) const {
+std::set<std::string> kga::GeneratePopulationAllele::getDiseaseCitations(const std::string& rs_identifier) const {
 
   std::set<std::string> allele_disease_set;
 
@@ -325,7 +325,7 @@ std::set<std::string> kgl::GeneratePopulationAllele::getDiseaseCitations(const s
 }
 
 
-std::pair<std::string, std::string> kgl::GeneratePopulationAllele::generateGeneCodes(const std::set<std::string>& gene_id_set) const {
+std::pair<std::string, std::string> kga::GeneratePopulationAllele::generateGeneCodes(const std::set<std::string>& gene_id_set) const {
 
 
   std::set<std::string> symbol_set;

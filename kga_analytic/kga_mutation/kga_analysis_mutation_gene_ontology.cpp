@@ -7,6 +7,7 @@
 #include "kgl_gene_cache_ontology.h"
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
@@ -16,7 +17,7 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::OntologyCache::OntologyCache( const std::vector<std::string>& gene_vector,
+kga::OntologyCache::OntologyCache( const std::vector<std::string>& gene_vector,
                                    const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                                    const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
 
@@ -25,7 +26,7 @@ kgl::OntologyCache::OntologyCache( const std::vector<std::string>& gene_vector,
 }
 
 
-kgl::OntologyCache::~OntologyCache() {
+kga::OntologyCache::~OntologyCache() {
 
 
   gene_cache_ptr_ = nullptr;
@@ -33,7 +34,7 @@ kgl::OntologyCache::~OntologyCache() {
 }
 
 
-void kgl::OntologyCache::initializeOntology( const std::vector<std::string>& gene_vector,
+void kga::OntologyCache::initializeOntology( const std::vector<std::string>& gene_vector,
                                              const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                                              const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {
 
@@ -42,75 +43,75 @@ void kgl::OntologyCache::initializeOntology( const std::vector<std::string>& gen
 }
 
 
-double kgl::OntologyCache::setSimilarityBP(const std::string& gene) const {
+double kga::OntologyCache::setSimilarityBP(const std::string& gene) const {
 
   return gene_cache_ptr_->setSimilarityBP(gene);
 
 }
 
 
-double kgl::OntologyCache::setSimilarityMF(const std::string& gene) const {
+double kga::OntologyCache::setSimilarityMF(const std::string& gene) const {
 
   return gene_cache_ptr_->setSimilarityMF(gene);
 
 }
 
 
-double kgl::OntologyCache::setSimilarityCC(const std::string& gene) const {
+double kga::OntologyCache::setSimilarityCC(const std::string& gene) const {
 
   return gene_cache_ptr_->setSimilarityCC(gene);
 
 }
 
-bool kgl::OntologyCache::isTargetGene(const std::string& gene) const {
+bool kga::OntologyCache::isTargetGene(const std::string& gene) const {
 
   return gene_cache_ptr_->isTargetGene(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxMFSim(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxMFSim(const std::string& gene) const {
 
   return gene_cache_ptr_->maxMFSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxBPSim(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxBPSim(const std::string& gene) const {
 
   return gene_cache_ptr_->maxBPSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxCCSim(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxCCSim(const std::string& gene) const {
 
   return gene_cache_ptr_->maxCCSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxFunMFBPSim(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxFunMFBPSim(const std::string& gene) const {
 
   return gene_cache_ptr_->maxFunMFBPSim(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxMFInfo(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxMFInfo(const std::string& gene) const {
 
   return gene_cache_ptr_->maxMFInfo(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxBPInfo(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxBPInfo(const std::string& gene) const {
 
   return gene_cache_ptr_->maxBPInfo(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxCCInfo(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxCCInfo(const std::string& gene) const {
 
   return gene_cache_ptr_->maxCCInfo(gene);
 
 }
 
-std::pair<std::string, double> kgl::OntologyCache::maxFunMFBPInfo(const std::string& gene) const {
+std::pair<std::string, double> kga::OntologyCache::maxFunMFBPInfo(const std::string& gene) const {
 
   return gene_cache_ptr_->maxFunMFBPInfo(gene);
 
@@ -122,7 +123,7 @@ std::pair<std::string, double> kgl::OntologyCache::maxFunMFBPInfo(const std::str
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void kgl::OntologyStats::processOntologyStats(const std::string& gene_id,
+void kga::OntologyStats::processOntologyStats(const std::string& gene_id,
                                               const OntologyCache& ontology_cache) {
 
   score_BP_ = ontology_cache.setSimilarityBP(gene_id);
@@ -199,7 +200,7 @@ void kgl::OntologyStats::processOntologyStats(const std::string& gene_id,
 
 
 
-void kgl::OntologyStats::writeOntology(std::ostream& out_file, char output_delimiter) const {
+void kga::OntologyStats::writeOntology(std::ostream& out_file, char output_delimiter) const {
 
   out_file << score_BP_ << output_delimiter
       << score_MF_ << output_delimiter
@@ -226,7 +227,7 @@ void kgl::OntologyStats::writeOntology(std::ostream& out_file, char output_delim
 
 }
 
-void kgl::OntologyStats::writeOntologyHeader(std::ostream& out_file, char output_delimiter) const {
+void kga::OntologyStats::writeOntologyHeader(std::ostream& out_file, char output_delimiter) const {
 
   out_file << "ScoreBP" << output_delimiter
            << "ScoreMF" << output_delimiter

@@ -6,10 +6,11 @@
 #include "kga_analysis_PfEMP.h"
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
+kgl::GeneVector kga::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
     , const std::string& desc_uc_text) const {
 
   GeneVector gene_vector;
@@ -38,7 +39,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
 }
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+kgl::GeneVector kga::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
                                                         const std::string& desc_uc_text,
                                                         size_t max_size) const {
 

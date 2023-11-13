@@ -11,11 +11,12 @@
 #include <fstream>
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
 
-void kgl::GenomeGeneVariantAnalysis::setGeneVector(const GeneVector& gene_vector) {
+void kga::GenomeGeneVariantAnalysis::setGeneVector(const GeneVector& gene_vector) {
 
   gene_vector_ = gene_vector;
 
@@ -23,7 +24,7 @@ void kgl::GenomeGeneVariantAnalysis::setGeneVector(const GeneVector& gene_vector
 
 
 // Get variants only occurring within codingFeatures for all mRNA sequences.
-void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr) {
+void kga::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const PopulationDB>& population_ptr) {
 
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
@@ -94,7 +95,7 @@ void kgl::GenomeGeneVariantAnalysis::getGeneVariants(const std::shared_ptr<const
 }
 
 
-void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant_file_name) {
+void kga::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant_file_name) {
 
   std::ofstream variant_file(variant_file_name);
 
@@ -241,7 +242,7 @@ void kgl::GenomeGeneVariantAnalysis::writeGeneResults(const std::string& variant
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::GeneGenomeAnalysis::GeneGenomeAnalysis(std::shared_ptr<const GeneFeature> gene_ptr,
+kga::GeneGenomeAnalysis::GeneGenomeAnalysis(std::shared_ptr<const GeneFeature> gene_ptr,
                                             const std::shared_ptr<const ContigDB>& gene_unique_variants)
                                             : gene_ptr_(std::move(gene_ptr)),
                                               gene_genome_analysis_ptr_(std::make_shared<GenomeCountMap>()) {
@@ -251,7 +252,7 @@ kgl::GeneGenomeAnalysis::GeneGenomeAnalysis(std::shared_ptr<const GeneFeature> g
 
 }
 
-bool kgl::GeneGenomeAnalysis::addVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+bool kga::GeneGenomeAnalysis::addVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   auto variant_hash = variant_ptr->HGVS();
   auto genome_count_ptr = std::make_shared<GenomeCount>();
@@ -267,7 +268,7 @@ bool kgl::GeneGenomeAnalysis::addVariant(const std::shared_ptr<const Variant>& v
 
 }
 
-void kgl::GeneGenomeAnalysis::analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
+void kga::GeneGenomeAnalysis::analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
 
   for (auto const& [gene_genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
 
@@ -343,7 +344,7 @@ void kgl::GeneGenomeAnalysis::analyzeGenePopulation(const std::shared_ptr<const 
 
 }
 
-kgl::GenomeCountSorted kgl::GeneGenomeAnalysis::getCountSorted() const {
+kga::GenomeCountSorted kga::GeneGenomeAnalysis::getCountSorted() const {
 
   GenomeCountSorted count_sorted_map;
   for (auto& [variant_str, count_ptr] : *gene_genome_analysis_ptr_) {
@@ -356,9 +357,9 @@ kgl::GenomeCountSorted kgl::GeneGenomeAnalysis::getCountSorted() const {
 
 }
 
-std::vector<std::shared_ptr<const kgl::GenomeCount>> kgl::GeneGenomeAnalysis::getSingletonVariants() const {
+std::vector<std::shared_ptr<const kga::GenomeCount>> kga::GeneGenomeAnalysis::getSingletonVariants() const {
 
-  std::vector<std::shared_ptr<const kgl::GenomeCount>> singletons;
+  std::vector<std::shared_ptr<const GenomeCount>> singletons;
   for (auto& [variant_str, count_ptr] : *gene_genome_analysis_ptr_) {
 
     if (count_ptr->genome_set_.size() == 1) {
@@ -373,7 +374,7 @@ std::vector<std::shared_ptr<const kgl::GenomeCount>> kgl::GeneGenomeAnalysis::ge
 
 }
 
-std::set<kgl::GenomeId_t> kgl::GeneGenomeAnalysis::getSingletonGenomes() const {
+std::set<kgl::GenomeId_t> kga::GeneGenomeAnalysis::getSingletonGenomes() const {
 
   std::set<GenomeId_t> singleton_genomes;
   for (auto& [variant_str, count_ptr] : *gene_genome_analysis_ptr_) {
@@ -397,7 +398,7 @@ std::set<kgl::GenomeId_t> kgl::GeneGenomeAnalysis::getSingletonGenomes() const {
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
+void kga::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
 
   for (auto const& [genome_id, gene_genome_ptr] : gene_population_ptr->getMap()) {
 
@@ -449,7 +450,7 @@ void kgl::GenotypeAnalysis::analyzeGenePopulation(const std::shared_ptr<const Po
 }
 
 
-size_t kgl::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>& genotype) {
+size_t kga::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>& genotype) {
 
   struct GenotypeVariants {
 
@@ -482,7 +483,7 @@ size_t kgl::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>
 
 }
 
-kgl::GenotypeCountSorted kgl::GenotypeAnalysis::getCountSorted() const {
+kga::GenotypeCountSorted kga::GenotypeAnalysis::getCountSorted() const {
 
   GenotypeCountSorted  count_sorted_map;
   for (auto const& [geno_hash, genotype_ptr] : genotype_map_) {
@@ -496,7 +497,7 @@ kgl::GenotypeCountSorted kgl::GenotypeAnalysis::getCountSorted() const {
 }
 
 // The gini coefficient
-double kgl::GenotypeAnalysis::Gini() const {
+double kga::GenotypeAnalysis::Gini() const {
 
   const size_t genotype_count = genotype_map_.size() + 1; // categories.
   if (genotype_count <= 1) {
@@ -539,7 +540,7 @@ double kgl::GenotypeAnalysis::Gini() const {
 }
 
 // A modified Shannon entropy measure for different category (genotype) counts.
-double kgl::GenotypeAnalysis::HRel() const {
+double kga::GenotypeAnalysis::HRel() const {
 
   const size_t genotype_count = genotype_map_.size() + 1; // categories.
   if (genotype_count <= 1) {
@@ -588,7 +589,7 @@ double kgl::GenotypeAnalysis::HRel() const {
 }
 
 // Index of qualitative variation.
-double kgl::GenotypeAnalysis::IQV() const {
+double kga::GenotypeAnalysis::IQV() const {
 
   const size_t genotype_count = genotype_map_.size() + 1; // categories.
   if (genotype_count <= 1) {

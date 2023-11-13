@@ -7,14 +7,16 @@
 
 #include <numeric>
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 
 
-double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
+double kga::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
 
 
   std::optional<kgl::InfoDataVariant> field_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
@@ -43,7 +45,7 @@ double kgl::InfoAgeAnalysis::processField(const std::shared_ptr<const Variant>& 
 
 
 
-std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
+std::vector<double> kga::InfoAgeAnalysis::processBin(const std::shared_ptr<const Variant>& variant_ptr, const std::string& field_name) {
 
 
   std::optional<kgl::InfoDataVariant> bin_info_opt = InfoEvidenceAnalysis::getInfoData(*variant_ptr, field_name);
@@ -65,7 +67,7 @@ std::vector<double> kgl::InfoAgeAnalysis::processBin(const std::shared_ptr<const
 }
 
 
-bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+bool kga::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   ++variant_count_;
 
@@ -206,7 +208,7 @@ bool kgl::InfoAgeAnalysis::processVariant(const std::shared_ptr<const Variant>& 
 }
 
 
-void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
+void kga::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
 
   size_t index = 0;
   for (auto age : age_analysis.hom_age_vector_) {
@@ -229,7 +231,7 @@ void kgl::InfoAgeAnalysis::addAgeAnalysis(const InfoAgeAnalysis& age_analysis) {
 }
 
 
-double kgl::InfoAgeAnalysis::sumHomozygous() const {
+double kga::InfoAgeAnalysis::sumHomozygous() const {
 
   double sum = 0;
   for (auto age : hom_age_vector_) {
@@ -242,7 +244,7 @@ double kgl::InfoAgeAnalysis::sumHomozygous() const {
 
 }
 
-double kgl::InfoAgeAnalysis::sumHeterozygous() const {
+double kga::InfoAgeAnalysis::sumHeterozygous() const {
 
   double sum = 0;
   for (auto age : het_age_vector_) {
@@ -256,7 +258,7 @@ double kgl::InfoAgeAnalysis::sumHeterozygous() const {
 }
 
 
-double kgl::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
+double kga::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
 
   size_t index = 0;
   double sum = 0.0;
@@ -271,7 +273,7 @@ double kgl::InfoAgeAnalysis::ageWeightedSumHomozygous() const {
 
 }
 
-double kgl::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
+double kga::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
 
   double sum = 0;
   size_t index = 0;
@@ -289,13 +291,13 @@ double kgl::InfoAgeAnalysis::ageWeightedSumHeterozygous() const {
 
 
 // Utility function writes results to a stream.
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::InfoAgeAnalysis& age_analysis) {
+std::ostream& operator<<(std::ostream& ostream, const kga::InfoAgeAnalysis& age_analysis) {
 
   ostream << "Age Analysis, " << age_analysis.title() << ", Variant Count: " << age_analysis.variantCount()
           << ", het/hom ratio all: " << age_analysis.heteroHomoRatioAll() << '\n';
   ostream << "hom Av Age: " <<  age_analysis.averageHomozygousAge() << ", het Av Age: " << age_analysis.averageHeterozygousAge() << '\n';
 
-  ostream << kgl::InfoAgeAnalysis::header() << '\n';
+  ostream << kga::InfoAgeAnalysis::header() << '\n';
   ostream << "hom, ";
   for (auto const age : age_analysis.ageHomozygousVector()) {
 
@@ -354,7 +356,7 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
   }
 
   ostream << '\n' << '\n';
-  ostream << kgl::InfoAgeAnalysis::header() << '\n';
+  ostream << kga::InfoAgeAnalysis::header() << '\n';
 
   double matrix_sum = age_analysis.hetHomMatrix().sum();
   // Update the het/hom matrix
@@ -389,7 +391,7 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::Info
 // Average Age sorted multimap of variants.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool kgl::AgeSortedMap::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+bool kga::AgeSortedMap::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   std::shared_ptr<InfoAgeAnalysis> age_analysis_ptr(std::make_shared<InfoAgeAnalysis>("Age Sorted Analysis"));
 
@@ -418,7 +420,7 @@ bool kgl::AgeSortedMap::processVariant(const std::shared_ptr<const Variant>& var
 }
 
 
-kgl::AgeMultiMap kgl::AgeSortedMap::ageFilter(double top_percentile, double bottom_percentile, const AgeMultiMap& age_map) const {
+kga::AgeMultiMap kga::AgeSortedMap::ageFilter(double top_percentile, double bottom_percentile, const AgeMultiMap& age_map) const {
 
   auto size = static_cast<double>(age_map.size());
 
@@ -444,7 +446,7 @@ kgl::AgeMultiMap kgl::AgeSortedMap::ageFilter(double top_percentile, double bott
 }
 
 
-std::pair<double, double> kgl::AgeSortedMap::ageStatistics(const AgeMultiMap& age_map) const {
+std::pair<double, double> kga::AgeSortedMap::ageStatistics(const AgeMultiMap& age_map) const {
 
   std::vector<double> average_age_vector;
   average_age_vector.reserve(age_map.size());
@@ -460,7 +462,7 @@ std::pair<double, double> kgl::AgeSortedMap::ageStatistics(const AgeMultiMap& ag
 }
 
 
-kgl::InfoAgeAnalysis kgl::AgeSortedMap::aggregateAnalysis(const AgeMultiMap& age_map,const std::string& title) const {
+kga::InfoAgeAnalysis kga::AgeSortedMap::aggregateAnalysis(const AgeMultiMap& age_map,const std::string& title) const {
 
   InfoAgeAnalysis aggregate_analysis(title);
 
@@ -479,7 +481,7 @@ kgl::InfoAgeAnalysis kgl::AgeSortedMap::aggregateAnalysis(const AgeMultiMap& age
 
 
 // Formatted output to file.
-std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::AgeSortedMap& age_sorted_map) {
+std::ostream& operator<<(std::ostream& ostream, const kga::AgeSortedMap& age_sorted_map) {
 
 
   std::pair<double, double> hom_stats = age_sorted_map.homozygousAgeStatistics();
@@ -499,7 +501,7 @@ std::ostream& operator<<(std::ostream& ostream, const kellerberrin::genome::AgeS
   for (double lower_filter = 0.0; lower_filter < 0.99; lower_filter += 0.1) {
 
     double upper_filter = lower_filter + 0.1;
-    kgl::AgeSortedMap filtered_age_sorted_map( age_sorted_map.ageFilterHomozygous(upper_filter, lower_filter),
+    kga::AgeSortedMap filtered_age_sorted_map( age_sorted_map.ageFilterHomozygous(upper_filter, lower_filter),
                                                age_sorted_map.ageFilterHeterozygous(upper_filter, lower_filter),
                                                age_sorted_map.ageFilterCombined(upper_filter, lower_filter));
     hom_stats = filtered_age_sorted_map.homozygousAgeStatistics();

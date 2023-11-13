@@ -5,11 +5,12 @@
 #include "kga_analysis_json.h"
 #include "kgl_json_parser.h"
 
-namespace kgl = kellerberrin::genome;
+namespace kga= kellerberrin::genome::analysis;
+namespace kgl= kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::JsonAnalysis::initializeAnalysis( const std::string& work_directory,
+bool kga::JsonAnalysis::initializeAnalysis( const std::string& work_directory,
                                               const ActiveParameterList& named_parameters,
                                               const std::shared_ptr<const AnalysisResources>&) {
 
@@ -31,7 +32,7 @@ bool kgl::JsonAnalysis::initializeAnalysis( const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::JsonAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kga::JsonAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("Analysis Id: {}, read file: {}", ident(), data_ptr->fileId());
 
@@ -69,7 +70,7 @@ bool kgl::JsonAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr)
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::JsonAnalysis::iterationAnalysis() {
+bool kga::JsonAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -78,7 +79,7 @@ bool kgl::JsonAnalysis::iterationAnalysis() {
 }
 
 // All Json files have been presented, write citation file as a 2 column flat file.
-bool kgl::JsonAnalysis::finalizeAnalysis() {
+bool kga::JsonAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
@@ -112,7 +113,7 @@ bool kgl::JsonAnalysis::finalizeAnalysis() {
 }
 
 
-std::shared_ptr<const kgl::DBCitationMap> kgl::JsonAnalysis::parseJsonFile(std::string json_file) {
+std::shared_ptr<const kgl::DBCitationMap> kga::JsonAnalysis::parseJsonFile(std::string json_file) {
 
   std::shared_ptr<DBCitationMap> citation_map_ptr(std::make_shared<DBCitationMap>());
 
@@ -128,7 +129,7 @@ std::shared_ptr<const kgl::DBCitationMap> kgl::JsonAnalysis::parseJsonFile(std::
 }
 
 
-bool kgl::JsonAnalysis::writeAppendCitations(const DBCitationMap& citation_map) const {
+bool kga::JsonAnalysis::writeAppendCitations(const DBCitationMap& citation_map) const {
 
   // Append to existing file.
   std::ofstream citation_file(citation_file_name_ , std::fstream::out | std::fstream::app);

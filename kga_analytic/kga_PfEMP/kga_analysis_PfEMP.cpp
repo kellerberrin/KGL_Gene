@@ -4,11 +4,12 @@
 
 #include "kga_analysis_PfEMP.h"
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
                                             const ActiveParameterList& named_parameters,
                                             const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -69,7 +70,7 @@ bool kgl::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
+bool kga::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called for file: {}", ident(), base_data_ptr->fileId());
 
@@ -111,7 +112,7 @@ bool kgl::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
 }
 // Perform the genetic analysis per iteration.
-bool kgl::PfEMPAnalysis::iterationAnalysis() {
+bool kga::PfEMPAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -120,7 +121,7 @@ bool kgl::PfEMPAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::PfEMPAnalysis::finalizeAnalysis() {
+bool kga::PfEMPAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
@@ -179,7 +180,7 @@ bool kgl::PfEMPAnalysis::finalizeAnalysis() {
 
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::GeneVector kga::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
   auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
@@ -198,7 +199,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<cons
 
 }
 
-kgl::GeneVector kgl::PfEMPAnalysis::getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::GeneVector kga::PfEMPAnalysis::getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
   auto trna_gene_vector = getncRNAGeneVector(genome_ptr, TRNA_FAMILY_);
@@ -210,7 +211,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getTranslationGenes(const std::shared_ptr<co
 }
 
 
-kgl::GeneVector kgl::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
+kgl::GeneVector kga::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   GeneVector all_genes;
   for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
@@ -227,7 +228,7 @@ kgl::GeneVector kgl::PfEMPAnalysis::getAllGenes(const std::shared_ptr<const Geno
 
 }
 
-void kgl::PfEMPAnalysis::testPhysicalDistances() {
+void kga::PfEMPAnalysis::testPhysicalDistances() {
 
   ExecEnv::log().info("Number of Locations: {}", Pf7_physical_distance_ptr_->locationMap().size());
 

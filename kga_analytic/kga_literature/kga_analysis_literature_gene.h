@@ -14,7 +14,7 @@
 #include "kga_analysis_mutation_gene_stats.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

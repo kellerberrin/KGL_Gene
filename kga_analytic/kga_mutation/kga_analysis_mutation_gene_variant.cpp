@@ -10,9 +10,9 @@
 #include "kel_distribution.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
-void kgl::GeneVariants::initializeEthnic(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
+void kga::GeneVariants::initializeEthnic(const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
   ethnic_lof_.setDisplay("LOF_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
   ethnic_high_.setDisplay("HIGH_", (GeneEthnicitySex::DISPLAY_SEX_FLAG | GeneEthnicitySex::DISPLAY_SUPER_POP_FLAG));
@@ -27,7 +27,7 @@ void kgl::GeneVariants::initializeEthnic(const std::shared_ptr<const HsGenomeAux
 }
 
 
-void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
+void kga::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
                                             const std::shared_ptr<const ContigDB>& span_variant_ptr,
                                             const std::shared_ptr<const PopulationDB>& unphased_population_ptr,
                                             const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
@@ -128,7 +128,7 @@ void kgl::GeneVariants::processVariantStats(const GenomeId_t& genome_id,
 
 
 
-kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
+kga::VepInfo kga::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigDB>& span_contig,
                                              const std::shared_ptr<const PopulationDB>& unphased_population_ptr) {
 
   VepInfo vep_info;
@@ -169,7 +169,7 @@ kgl::VepInfo kgl::GeneVariants::geneSpanVep( const std::shared_ptr<const ContigD
 }
 
 
-size_t kgl::GeneVariants::vepCount( const std::shared_ptr<const ContigDB>& vep_contig,
+size_t kga::GeneVariants::vepCount( const std::shared_ptr<const ContigDB>& vep_contig,
                                     const std::string& vep_field_ident,
                                     const std::string& vep_field_value) {
 
@@ -189,7 +189,7 @@ size_t kgl::GeneVariants::vepCount( const std::shared_ptr<const ContigDB>& vep_c
 }
 
 
-bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
+bool kga::GeneVariants::processSummaryStatistics( const std::shared_ptr<const PopulationDB> &population_ptr,
                                                   const GeneEthnicitySex& ethnic_statistics,
                                                   const std::string& gene) {
 
@@ -304,7 +304,7 @@ bool kgl::GeneVariants::processSummaryStatistics( const std::shared_ptr<const Po
 
 }
 
-void kgl::GeneVariants::initializeSummaryStatistics( const GeneEthnicitySex& ethnic_statistics) {
+void kga::GeneVariants::initializeSummaryStatistics( const GeneEthnicitySex& ethnic_statistics) {
 
   if (upper_tail_.size() == ethnic_statistics.superPopulation().size()
       and lower_tail_.size() == ethnic_statistics.superPopulation().size()) {

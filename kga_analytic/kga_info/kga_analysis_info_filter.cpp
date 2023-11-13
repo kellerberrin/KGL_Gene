@@ -11,11 +11,12 @@
 ///
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_directory,
+bool kga::InfoFilterAnalysis::initializeAnalysis( const std::string& work_directory,
                                                   const ActiveParameterList& named_parameters,
                                                   const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -49,7 +50,7 @@ bool kgl::InfoFilterAnalysis::initializeAnalysis( const std::string& work_direct
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kga::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   // Analysis currently only defined for Gnomad 2.1
   auto file_characteristic = data_ptr->dataCharacteristic();
@@ -96,7 +97,7 @@ bool kgl::InfoFilterAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> dat
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::InfoFilterAnalysis::iterationAnalysis() {
+bool kga::InfoFilterAnalysis::iterationAnalysis() {
 
 // No operations for an iteration.
 
@@ -105,7 +106,7 @@ bool kgl::InfoFilterAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
+bool kga::InfoFilterAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize Analysis called for Analysis Id: {}", ident());
 
@@ -114,7 +115,7 @@ bool kgl::InfoFilterAnalysis::finalizeAnalysis() {
 }
 
 
-bool kgl::InfoFilterAnalysis::getParameters( const std::string& work_directory,
+bool kga::InfoFilterAnalysis::getParameters( const std::string& work_directory,
                                              const ActiveParameterList& named_parameters) {
 
 
@@ -157,7 +158,7 @@ bool kgl::InfoFilterAnalysis::getParameters( const std::string& work_directory,
 }
 
 std::shared_ptr<kgl::PopulationDB>
-kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_population) {
+kga::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_population) {
 
 
   size_t unfiltered = vcf_population->variantCount();
@@ -194,7 +195,7 @@ kgl::InfoFilterAnalysis::qualityFilter( std::shared_ptr<const PopulationDB> vcf_
 }
 
 
-bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::PopulationDB> vcf_population) {
+bool kga::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::PopulationDB> vcf_population) {
 
 
   std::ofstream outfile(output_file_name_,  std::ofstream::out | std::ofstream::app);
@@ -261,7 +262,7 @@ bool kgl::InfoFilterAnalysis::performAnalysis( std::shared_ptr<const kgl::Popula
 }
 
 
-void kgl::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const PopulationDB> vcf_population) {
+void kga::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const PopulationDB> vcf_population) {
 
   // Investigate vep field values.
   InfoEvidenceAnalysis::vepSubFieldValues("Consequence", vcf_population);
@@ -296,7 +297,7 @@ void kgl::InfoFilterAnalysis::listAvailableInfoFields(std::shared_ptr<const Popu
 }
 
 
-void kgl::InfoFilterAnalysis::filterByAge( std::shared_ptr<const PopulationDB> vcf_population,
+void kga::InfoFilterAnalysis::filterByAge( std::shared_ptr<const PopulationDB> vcf_population,
                                            std::ostream& result_file) {
 
   ExecEnv::log().info("Perform Homo/Hetero analysis with average variant ages filtered to 10 deciles.");
@@ -312,7 +313,7 @@ void kgl::InfoFilterAnalysis::filterByAge( std::shared_ptr<const PopulationDB> v
 }
 
 
-void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
+void kga::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
                                             const std::vector<double>& field_values,
                                             std::shared_ptr<const PopulationDB> vcf_population,
                                             std::ostream& result_file) {
@@ -347,7 +348,7 @@ void kgl::InfoFilterAnalysis::analyzeField( const std::string& info_field_ident,
 
 
 
-void kgl::InfoFilterAnalysis::analyzeFilteredPopulation( const BaseFilter& filter,
+void kga::InfoFilterAnalysis::analyzeFilteredPopulation( const BaseFilter& filter,
                                                          std::shared_ptr<const PopulationDB> vcf_population,
                                                          std::ostream& result_file) {
 

@@ -9,10 +9,10 @@
 #include <fstream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
-void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population) {
+void kga::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& population) {
 
   ExecEnv::log().info("CalcFWS::calcFwsStatistics; total population variants: {}", population->variantCount());
 
@@ -38,7 +38,7 @@ void kgl::CalcFWS::calcFwsStatistics(const std::shared_ptr<const PopulationDB>& 
 
 }
 
-void kgl::CalcFWS::updateVariantFWSMap(const std::shared_ptr<const PopulationDB>& population) {
+void kga::CalcFWS::updateVariantFWSMap(const std::shared_ptr<const PopulationDB>& population) {
 
   VariantDBVariant variant_db_variant(population);
 
@@ -69,7 +69,7 @@ void kgl::CalcFWS::updateVariantFWSMap(const std::shared_ptr<const PopulationDB>
 
 }
 
-void kgl::CalcFWS::updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>& freq_population, size_t freq_bin) {
+void kga::CalcFWS::updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>& freq_population, size_t freq_bin) {
 
   VariantDBVariant variant_db_variant(freq_population);
 
@@ -101,7 +101,7 @@ void kgl::CalcFWS::updateGenomeFWSMap(const std::shared_ptr<const PopulationDB>&
 }
 
 
-std::pair<double, double> kgl::CalcFWS::getFrequency(AlleleFrequencyBins bin_type) {
+std::pair<double, double> kga::CalcFWS::getFrequency(AlleleFrequencyBins bin_type) {
 
   switch(bin_type) {
 
@@ -144,7 +144,7 @@ std::pair<double, double> kgl::CalcFWS::getFrequency(AlleleFrequencyBins bin_typ
 
 }
 
-void kgl::CalcFWS::writeGenomeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const {
+void kga::CalcFWS::writeGenomeResults(const std::shared_ptr<const Pf7FwsResource>& Pf7_fws_ptr, const std::string& file_name) const {
 
   std::ofstream analysis_file(file_name);
 
@@ -240,7 +240,7 @@ void kgl::CalcFWS::writeGenomeResults(const std::shared_ptr<const Pf7FwsResource
 }
 
 
-void kgl::CalcFWS::writeVariantResults(const std::string& file_name) const {
+void kga::CalcFWS::writeVariantResults(const std::string& file_name) const {
 
   std::ofstream analysis_file(file_name);
 

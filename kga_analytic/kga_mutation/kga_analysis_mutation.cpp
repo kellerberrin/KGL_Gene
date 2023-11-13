@@ -8,11 +8,11 @@
 #include "kgl_variant_filter_db_offset.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::MutationAnalysis::initializeAnalysis(const std::string& work_directory,
                                                const ActiveParameterList& named_parameters,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -86,7 +86,7 @@ bool kgl::MutationAnalysis::initializeAnalysis(const std::string& work_directory
 
 
 
-bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters) {
+bool kga::MutationAnalysis::getParameters(const ActiveParameterList& named_parameters) {
 
   for (auto const& named_block : named_parameters.getMap()) {
 
@@ -156,7 +156,7 @@ bool kgl::MutationAnalysis::getParameters(const ActiveParameterList& named_param
 
 
 // Perform pre-processing (generally just type casting) for each file read into the analysis object.
-bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
+bool kga::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_ptr) {
 
   ExecEnv::log().info("File Read for Analysis Id: {} called with file: {}", ident(), data_ptr->fileId());
 
@@ -250,7 +250,7 @@ bool kgl::MutationAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::MutationAnalysis::iterationAnalysis() {
+bool kga::MutationAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Default Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -326,7 +326,7 @@ bool kgl::MutationAnalysis::iterationAnalysis() {
 }
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::MutationAnalysis::finalizeAnalysis() {
+bool kga::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 

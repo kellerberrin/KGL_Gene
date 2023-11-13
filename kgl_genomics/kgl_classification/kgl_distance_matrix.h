@@ -30,9 +30,9 @@ public:
   // Tuple returns value, row index, column index in that order.
   [[nodiscard]] std::tuple<DistanceType_t, size_t, size_t> minimum() const;
   [[nodiscard]] std::tuple<DistanceType_t, size_t, size_t> maximum() const;
-  // the .first element is the maximum value, the .second element is the minmum value.
+  // the .first element is the maximum value, the .second element is the minimum value.
   [[nodiscard]] std::pair<DistanceType_t, DistanceType_t> max_min() const;
-  // the .first element is the maximum value, the .second element is the minmum value.
+  // the .first element is the maximum value, the .second element is the minimum value.
   [[nodiscard]] std::pair<DistanceType_t, DistanceType_t> max_min_diagonal() const;
 
 

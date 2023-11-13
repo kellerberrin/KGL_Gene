@@ -10,12 +10,12 @@
 #include <fstream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stores primarily Gnomad statistical data per interval. This object returns zeroes for Info fields not available.
 
-void kgl::InfoIntervalData::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
+void kga::InfoIntervalData::processVariant(const std::shared_ptr<const Variant>& variant_ptr) {
 
   if (variant_ptr->filterVariant(vep_impact_filter_)) {
 
@@ -54,7 +54,7 @@ void kgl::InfoIntervalData::processVariant(const std::shared_ptr<const Variant>&
 }
 
 
-double kgl::InfoIntervalData::variantFrequencyPercentile(double percentile) const {
+double kga::InfoIntervalData::variantFrequencyPercentile(double percentile) const {
 
 
   std::optional<std::pair<double, std::shared_ptr<const Variant>>> freq_opt = freq_percentile_.percentile(percentile);
@@ -70,7 +70,7 @@ double kgl::InfoIntervalData::variantFrequencyPercentile(double percentile) cons
 }
 
 
-size_t kgl::InfoIntervalData::variantsCountGEQPercent(double percent) const {
+size_t kga::InfoIntervalData::variantsCountGEQPercent(double percent) const {
 
   std::shared_ptr<const Variant> dummy_variant;
   size_t variant_count = freq_percentile_.findGEQCount(percent, dummy_variant);
@@ -80,7 +80,7 @@ size_t kgl::InfoIntervalData::variantsCountGEQPercent(double percent) const {
 }
 
 
-double kgl::InfoIntervalData::variantAgePercentile(double percentile) const {
+double kga::InfoIntervalData::variantAgePercentile(double percentile) const {
 
   std::optional<std::pair<double, std::shared_ptr<const Variant>>> age_opt = age_percentile_.percentile(percentile);
 
@@ -96,7 +96,7 @@ double kgl::InfoIntervalData::variantAgePercentile(double percentile) const {
 
 
 
-double kgl::InfoIntervalData::variantHetHomPercentile(double percentile) const {
+double kga::InfoIntervalData::variantHetHomPercentile(double percentile) const {
 
   std::optional<std::pair<double, std::shared_ptr<const Variant>>> het_hom_opt = het_hom_percentile_.percentile(percentile);
 
@@ -114,7 +114,7 @@ double kgl::InfoIntervalData::variantHetHomPercentile(double percentile) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IntervalData members.
 
-void kgl::IntervalData::addArrayVariantCount(size_t size) {
+void kga::IntervalData::addArrayVariantCount(size_t size) {
 
   if (size < ARRAY_VARIANT_COUNT_) {
 
@@ -130,7 +130,7 @@ void kgl::IntervalData::addArrayVariantCount(size_t size) {
 
 }
 
-void kgl::IntervalData::emptyIntervalOffset(const ContigOffset_t& previous_variant_offset, const ContigOffset_t& variant_offset) {
+void kga::IntervalData::emptyIntervalOffset(const ContigOffset_t& previous_variant_offset, const ContigOffset_t& variant_offset) {
 
   if (variant_offset < offset() or variant_offset >= (offset() + interval())) {
 
@@ -161,7 +161,7 @@ void kgl::IntervalData::emptyIntervalOffset(const ContigOffset_t& previous_varia
 
 }
 
-double kgl::IntervalData::meanEmptyInterval() const {
+double kga::IntervalData::meanEmptyInterval() const {
 
   return static_cast<double>(sum_empty_interval_) / static_cast<double>(variant_offset_count_ + 1);
 
@@ -172,7 +172,7 @@ double kgl::IntervalData::meanEmptyInterval() const {
 
 
 // Setup the analytics to process VCF data. Returning false disables the analysis.
-bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
+bool kga::IntervalAnalysis::initializeAnalysis( const std::string& work_directory,
                                                 const ActiveParameterList& named_parameters,
                                                 const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -220,7 +220,7 @@ bool kgl::IntervalAnalysis::initializeAnalysis( const std::string& work_director
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_base_ptr) {
+bool kga::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_base_ptr) {
 
 
   // Superclass the population
@@ -253,14 +253,14 @@ bool kgl::IntervalAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_
 }
 
 // All VCF data has been presented, finalize analysis
-bool kgl::IntervalAnalysis::finalizeAnalysis() {
+bool kga::IntervalAnalysis::finalizeAnalysis() {
 
   return true;
 
 }
 
 
-bool kgl::IntervalAnalysis::getParameters(const ActiveParameterList& named_parameters) {
+bool kga::IntervalAnalysis::getParameters(const ActiveParameterList& named_parameters) {
 
 
   for (auto const& named_block : named_parameters.getMap()) {
@@ -312,7 +312,7 @@ bool kgl::IntervalAnalysis::getParameters(const ActiveParameterList& named_param
 
 }
 
-void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeReference> genome) {
+void kga::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeReference> genome) {
 
   for (auto const& [contig_id, contig_ptr] : genome->getMap()) {
 
@@ -338,7 +338,7 @@ void kgl::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 }
 
 
-bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const PopulationDB> population_ptr) {
+bool kga::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const PopulationDB> population_ptr) {
 
    // We are profiling variants against a reference genome. Therefore we need to compress the population of variants
   // into a single genome.
@@ -416,7 +416,7 @@ bool kgl::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const Populatio
 }
 
 
-bool kgl::IntervalAnalysis::writeResults( std::shared_ptr<const GenomeReference> genome_db,
+bool kga::IntervalAnalysis::writeResults( std::shared_ptr<const GenomeReference> genome_db,
                                           const std::string& output_file,
                                           bool display_sequence,
                                           char delimiter) const {
@@ -450,7 +450,7 @@ bool kgl::IntervalAnalysis::writeResults( std::shared_ptr<const GenomeReference>
 }
 
 
-bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bool display_sequence) const {
+bool kga::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bool display_sequence) const {
 
   output << "Contig" << delimiter;
   output << "Interval_start" << delimiter;
@@ -508,7 +508,7 @@ bool kgl::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
 }
 
 
-bool kgl::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> genome_db,
+bool kga::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> genome_db,
                                        bool display_sequence,
                                        std::ostream& output,
                                        char delimiter) const {

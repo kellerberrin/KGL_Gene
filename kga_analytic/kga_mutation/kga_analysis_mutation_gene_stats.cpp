@@ -5,12 +5,12 @@
 #include "kga_analysis_mutation_gene_stats.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
+bool kga::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFeature>& gene_ptr,
                                               const GenomeId_t& genome_id,
                                               const std::string& name,
                                               const std::string& hgnc_id,

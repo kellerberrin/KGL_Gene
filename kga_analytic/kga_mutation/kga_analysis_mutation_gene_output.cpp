@@ -9,13 +9,13 @@
 #include <fstream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+bool kga::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                        const std::string& output_file_name,
                                        char output_delimiter) const {
 
@@ -63,7 +63,7 @@ bool kgl::GenomeMutation::writeOutput( const std::shared_ptr<const HsGenomeAux>&
 }
 
 
-void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_delimiter) const {
+void kga::GeneCharacteristic::writeGene(std::ostream& out_file, char output_delimiter) const {
 
   out_file << genome_ << output_delimiter
            << contig_ << output_delimiter
@@ -106,7 +106,7 @@ void kgl::GeneCharacteristic::writeGene(std::ostream& out_file, char output_deli
 
 
 
-void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char output_delimiter) const {
+void kga::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char output_delimiter) const {
 
   out_file << "Genome" << output_delimiter
            << "Contig" << output_delimiter
@@ -135,7 +135,7 @@ void kgl::GeneCharacteristic::writeGeneHeader(std::ostream& out_file, char outpu
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+bool kga::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -188,7 +188,7 @@ bool kgl::GeneVariants::writeVariantOutput( const std::shared_ptr<const HsGenome
 
 
 
-void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                             std::ostream& out_file,
                                             char output_delimiter) const {
 
@@ -235,7 +235,7 @@ void kgl::GeneVariants::writeVariantHeader( const std::shared_ptr<const HsGenome
 
 
 
-void kgl::GenomeMutation::writeHeader(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GenomeMutation::writeHeader(const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                       std::ostream& out_file,
                                       char output_delimiter,
                                       const GeneMutation& gene_mutation) {

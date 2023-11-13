@@ -17,8 +17,7 @@
 #include "kga_analysis_PfEMP_heterozygous.h"
 #include "kga_analysis_PfEMP_FWS.h"
 
-namespace kga = kellerberrin::genome::analysis;
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 class PfEMPAnalysis : public VirtualAnalysis {
@@ -65,7 +64,7 @@ private:
   constexpr static const char PF3D7_IDENT_[]{"Pf3D7_64"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
-  std::shared_ptr<kga::MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
+  std::shared_ptr<MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
   // Filter constants.
   constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.

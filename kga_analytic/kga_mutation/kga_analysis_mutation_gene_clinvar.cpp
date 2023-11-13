@@ -9,6 +9,7 @@
 #include "kgl_variant_filter_db_offset.h"
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
@@ -21,7 +22,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                      std::ostream& out_file,
                                      char output_delimiter) const {
 
@@ -49,7 +50,7 @@ void kgl::GeneClinvar::writeOutput(  const std::shared_ptr<const HsGenomeAux>& g
 }
 
 
-void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
+void kga::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& genome_aux_data,
                                     std::ostream& out_file,
                                     char output_delimiter) const {
 
@@ -63,7 +64,7 @@ void kgl::GeneClinvar::writeHeader( const std::shared_ptr<const HsGenomeAux>& ge
 }
 
 
-void kgl::GeneClinvar:: processClinvar( const GenomeId_t& genome_id,
+void kga::GeneClinvar:: processClinvar( const GenomeId_t& genome_id,
                                         const ContigId_t& contig_id,
                                         const std::shared_ptr<const PopulationDB>& clinvar_population_ptr,
                                         const std::shared_ptr<const ContigDB>& gene_variants,
@@ -81,7 +82,7 @@ void kgl::GeneClinvar:: processClinvar( const GenomeId_t& genome_id,
 }
 
 
-void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
+void kga::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
                                        const std::shared_ptr<const ContigDB>& subject_variants,
                                        const std::shared_ptr<const HsGenomeAux>& genome_aux_data) {
 
@@ -111,7 +112,7 @@ void kgl::GeneClinvar::processClinvar( const GenomeId_t& genome_id,
 }
 
 
-std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const ContigId_t& contig_id,
+std::shared_ptr<const kgl::ContigDB> kga::GeneClinvar::getClinvarContig( const ContigId_t& contig_id,
                                                                          const std::shared_ptr<const PopulationDB>& clinvar_population_ptr) {
 
   std::shared_ptr<ContigDB> null_contig_ptr(std::make_shared<ContigDB>(contig_id));
@@ -143,7 +144,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::getClinvarContig( const C
 
 
 
-std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::shared_ptr<const ContigDB> clinvar_contig) {
+std::shared_ptr<const kgl::ContigDB> kga::GeneClinvar::FilterPathogenic(std::shared_ptr<const ContigDB> clinvar_contig) {
 
   auto substringLambda = [](const std::string& field_str)->bool {
 
@@ -156,7 +157,7 @@ std::shared_ptr<const kgl::ContigDB> kgl::GeneClinvar::FilterPathogenic(std::sha
 }
 
 
-std::vector<kgl::ClinvarInfo> kgl::GeneClinvar::clinvarInfo(const std::shared_ptr<const ContigDB>& clinvar_contig_ptr) {
+std::vector<kga::ClinvarInfo> kga::GeneClinvar::clinvarInfo(const std::shared_ptr<const ContigDB>& clinvar_contig_ptr) {
 
   std::vector<ClinvarInfo> clinvarVector;
 

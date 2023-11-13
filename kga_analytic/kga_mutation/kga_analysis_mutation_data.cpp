@@ -5,9 +5,9 @@
 #include "kga_analysis_mutation_data.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
-const std::vector<std::string> kgl::MutationAnalysisData::OMIMGeneSymbol() {
+const std::vector<std::string> kga::MutationAnalysisData::OMIMGeneSymbol() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : omim_ensembl_symbol_) {
@@ -20,7 +20,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::OMIMGeneSymbol() {
 
 }
 
-const std::vector<std::string> kgl::MutationAnalysisData::OMIMGeneEnsembl() {
+const std::vector<std::string> kga::MutationAnalysisData::OMIMGeneEnsembl() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : omim_ensembl_symbol_) {
@@ -34,7 +34,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::OMIMGeneEnsembl() {
 }
 
 // Malaria active genes harvested from the Uniprot website.
-const std::vector<std::string> kgl::MutationAnalysisData::UniprotGeneSymbol() {
+const std::vector<std::string> kga::MutationAnalysisData::UniprotGeneSymbol() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : uniprot_ensembl_symbol_) {
@@ -48,7 +48,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::UniprotGeneSymbol() {
 }
 
 // Malaria active genes harvested from the Uniprot website.
-const std::vector<std::string> kgl::MutationAnalysisData::UniprotGeneEnsembl() {
+const std::vector<std::string> kga::MutationAnalysisData::UniprotGeneEnsembl() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : uniprot_ensembl_symbol_) {
@@ -64,7 +64,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::UniprotGeneEnsembl() {
 
 
 // From the OMIM entry #611162 available at https://www.omim.org/entry/611162
-const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData::omim_ensembl_symbol_{
+const std::vector<std::pair<std::string, std::string>> kga::MutationAnalysisData::omim_ensembl_symbol_{
 
     {"ENSG00000162692", "VCAM1"},
     {"ENSG00000162706", "CADM3"},
@@ -99,7 +99,7 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 };
 
 // From the Uniprot website.
-const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData::uniprot_ensembl_symbol_ = {
+const std::vector<std::pair<std::string, std::string>> kga::MutationAnalysisData::uniprot_ensembl_symbol_ = {
 
     {"ENSG00000213088", "ACKR1"},
     {"ENSG00000072694", "FCGR2B"},
@@ -129,7 +129,7 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 
 
 // Malaria active genes harvested from the Uniprot website.
-const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GeneSymbol() {
+const std::vector<std::string> kga::MutationAnalysisData::adHocLILRB1GeneSymbol() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : adhoc_LILRB1_ensembl_symbol_) {
@@ -143,7 +143,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GeneSymbol(
 }
 
 // Malaria active genes harvested from the Uniprot website.
-const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GenesEnsembl() {
+const std::vector<std::string> kga::MutationAnalysisData::adHocLILRB1GenesEnsembl() {
 
   std::vector<std::string> gene_vector;
   for (auto const&[ensembl, symbol] : adhoc_LILRB1_ensembl_symbol_) {
@@ -158,7 +158,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::adHocLILRB1GenesEnsemb
 
 
 // Used in adhoc LILRB1 gene  polymorphism analysis (chromosome 19).
-const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData::adhoc_LILRB1_ensembl_symbol_ = {
+const std::vector<std::pair<std::string, std::string>> kga::MutationAnalysisData::adhoc_LILRB1_ensembl_symbol_ = {
 
     { "ENSG00000276452", "LILRB1"},  // LILRB1
     { "ENSG00000276163", "LAIR1" },  //  LAIR1
@@ -183,7 +183,7 @@ const std::vector<std::pair<std::string, std::string>> kgl::MutationAnalysisData
 };
 
 // Used in adhoc polymorphism analysis (chromosome 19).
-const std::vector<std::string> kgl::MutationAnalysisData::alt_LILRB1_ensembl_symbol_ = {
+const std::vector<std::string> kga::MutationAnalysisData::alt_LILRB1_ensembl_symbol_ = {
 
     "ENSG00000167613",   // Alt  LAIR1
     "ENSG00000104972", // Alt LILRB1
@@ -212,7 +212,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::alt_LILRB1_ensembl_sym
 
 
 // Used in adhoc FCGR gene  polymorphism analysis (chromosome 1).
-const std::vector<std::string> kgl::MutationAnalysisData::adhoc_FCGR_ensembl_symbol_ = {
+const std::vector<std::string> kga::MutationAnalysisData::adhoc_FCGR_ensembl_symbol_ = {
 
     "ENSG00000150337",   // FCGR1A
     "ENSG00000143226",   // FCGR2A
@@ -223,7 +223,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::adhoc_FCGR_ensembl_sym
 };
 
 // The list of genes to be analyzed variant by variant. Must be ensembl codes (for now).
-const std::vector<std::string> kgl::MutationAnalysisData::ontology_derived_gene_list_{
+const std::vector<std::string> kga::MutationAnalysisData::ontology_derived_gene_list_{
 
     "ENSG00000284690", "ENSG00000282992", "ENSG00000275019", "ENSG00000262576", "ENSG00000256797",
     "ENSG00000254521", "ENSG00000213402", "ENSG00000204345", "ENSG00000198178", "ENSG00000196371",
@@ -235,7 +235,7 @@ const std::vector<std::string> kgl::MutationAnalysisData::ontology_derived_gene_
 
 };
 
-const std::vector<std::string> kgl::MutationAnalysisData::malaria_MeSH_list_{
+const std::vector<std::string> kga::MutationAnalysisData::malaria_MeSH_list_{
 /*
   "MESH:D008288",  // Malaria (Main Subject).
   "MESH:D016779",  // Cerebral Malaria

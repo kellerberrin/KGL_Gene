@@ -28,13 +28,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 // 5. Distances are returned as a CompareDistance_t which is a double.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 CompareDistance_t LevenshteinGlobalImpl(const char* sequenceA,
                                         size_t sequenceA_size,
@@ -80,9 +73,20 @@ CompareDistance_t localblosum80Impl(const Seq&, const Seq&) {
 
 }
 
-
+// Define the distance function object.
 template<typename Seq>
-using SequenceDistanceMetric = std::function<CompareDistance_t(const Seq&, const Seq&)>;
+using SequenceDistanceMetricFn = std::function<CompareDistance_t(const Seq&, const Seq&)>;
+
+// Delete the default constructor.
+// The distance function object must be initialized.
+template<typename Seq>
+class SequenceDistanceMetric : public SequenceDistanceMetricFn<Seq> {
+
+public:
+  using SequenceDistanceMetricFn<Seq>::SequenceDistanceMetricFn;
+  SequenceDistanceMetric() = delete;
+
+};
 
 
 using VirtualDistanceMetric = SequenceDistanceMetric<VirtualSequence>;
