@@ -9,7 +9,7 @@
 #include "kel_optimize.h"
 #include "kgl_variant_db_freq.h"
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 

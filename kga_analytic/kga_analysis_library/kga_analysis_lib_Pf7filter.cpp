@@ -5,14 +5,15 @@
 
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_filter_Pf7.h"
-#include "kga_analysis_PfEMP.h"
+#include "kga_analysis_lib_Pf7filter.h"
 
 
 namespace kga = kellerberrin::genome::analysis;
+namespace kgl = kellerberrin::genome;
 
 
 // Quality filter the variants using read depth, VQSLOD and other statistics
-std::shared_ptr<kgl::PopulationDB> kga::PfEMPAnalysis::qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) {
+std::shared_ptr<kgl::PopulationDB> kga::FilterPf7::qualityFilter(const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) const {
 
 
   size_t unfiltered_count = unfiltered_population_ptr->variantCount();
@@ -24,7 +25,7 @@ std::shared_ptr<kgl::PopulationDB> kga::PfEMPAnalysis::qualityFilter(const std::
 
   auto filtered_qc_population_ptr = unfiltered_population_ptr;
   size_t qc_count{0};
-  if constexpr (FILTER_QC_ACTIVE_) {
+  if (filter_qc_active_) {
     // Shallow filter only.
     filtered_qc_population_ptr = Pf7_sample_ptr_->filterPassQCGenomes(unfiltered_population_ptr);
 
@@ -43,15 +44,15 @@ std::shared_ptr<kgl::PopulationDB> kga::PfEMPAnalysis::qualityFilter(const std::
   }
 
   auto monoclonal_population_ptr = filtered_qc_population_ptr;
-  if constexpr (FILTER_FWS_ACTIVE_) {
+  if (filter_fws_active_) {
 
     // Shallow filter only.
-    monoclonal_population_ptr = Pf7_fws_ptr_->viewFilterFWS(FwsFilterType::GREATER_EQUAL, FWS_MONOCLONAL_THRESHOLD, filtered_qc_population_ptr);
+    monoclonal_population_ptr = Pf7_fws_ptr_->viewFilterFWS(FwsFilterType::GREATER_EQUAL, fws_monoclonal_threshold_, filtered_qc_population_ptr);
 
     size_t monoclonal_count = monoclonal_population_ptr->variantCount();
     double mono_filtered = 100.0 * (static_cast<double>(qc_count - monoclonal_count) / static_cast<double>(qc_count));
     ExecEnv::log().info("Filter MonoClonal FWS: {}, Genome Count: {},Variant Count: {}, filtered: {:.2f}%",
-                        FWS_MONOCLONAL_THRESHOLD,
+                        fws_monoclonal_threshold_,
                         monoclonal_population_ptr->getMap().size(),
                         monoclonal_count,
                         mono_filtered);
@@ -64,33 +65,33 @@ std::shared_ptr<kgl::PopulationDB> kga::PfEMPAnalysis::qualityFilter(const std::
   P7VariantFilter::printStats();
 
   // AF Frequency Filter.
-  if constexpr (AF_FILTER_ACTIVE_) {
+  if (af_filter_active_) {
 
-    P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter af_frequency_filter(FreqInfoField::AF, variant_frequency_cutoff_);
     P7FrequencyFilter::initializeStats();
     filtered_population_ptr = filtered_population_ptr->viewFilter(af_frequency_filter);
-    P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter::printStats(variant_frequency_cutoff_);
 
   }
 
   // MLEAF Frequency Filter (redundant).
-  if constexpr (MLEAF_FILTER_ACTIVE_) {
+  if (mleaf_filter_active_) {
 
-    P7FrequencyFilter mleaf_frequency_filter(FreqInfoField::MLEAF, VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter mleaf_frequency_filter(FreqInfoField::MLEAF, variant_frequency_cutoff_);
     P7FrequencyFilter::initializeStats();
     filtered_population_ptr = filtered_population_ptr->viewFilter(mleaf_frequency_filter);
-    P7FrequencyFilter::printStats(VARIANT_FREQUENCY_CUTOFF_);
+    P7FrequencyFilter::printStats(variant_frequency_cutoff_);
 
   }
 
   // Filter for snp only.
-  if constexpr (SNP_FILTER_ACTIVE_) {
+  if (snp_filter_active_) {
 
     filtered_population_ptr = filtered_population_ptr->viewFilter(SNPFilter());
 
   }
 
-  if constexpr(CODING_FILTER_ACTIVE_) {
+  if (coding_filter_active_) {
 
 // Recode the coding variants filter using gene, transcript functionality.
 //    filtered_population_ptr = filtered_population_ptr->viewFilter(FilterAllCodingVariants(genome_3D7_ptr_));

@@ -8,6 +8,7 @@
 #include "kel_workflow_threads.h"
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
@@ -17,7 +18,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
-std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigDB> unphased_contig_ptr,
+std::vector<kga::AlleleFreqVector> kga::RetrieveLociiVector::getAllelesFromTo( std::shared_ptr<const ContigDB> unphased_contig_ptr,
                                                                                const std::string& super_population,
                                                                                const LociiVectorArguments& arguments) {
 
@@ -72,7 +73,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesFromTo( s
 
 
 
-std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigDB> unphased_contig_ptr,
+std::vector<kgl::ContigOffset_t> kga::RetrieveLociiVector::getLociiFromTo(std::shared_ptr<const ContigDB> unphased_contig_ptr,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
@@ -101,7 +102,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiFromTo(std::s
 
 
 
-std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigDB> unphased_contig_ptr,
+std::vector<kga::AlleleFreqVector> kga::RetrieveLociiVector::getAllelesCount( std::shared_ptr<const ContigDB> unphased_contig_ptr,
                                                                               const std::string& super_population,
                                                                               const LociiVectorArguments& arguments) {
 
@@ -155,7 +156,7 @@ std::vector<kgl::AlleleFreqVector> kgl::RetrieveLociiVector::getAllelesCount( st
 }
 
 
-std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigDB> unphased_contig_ptr,
+std::vector<kgl::ContigOffset_t> kga::RetrieveLociiVector::getLociiCount( std::shared_ptr<const ContigDB> unphased_contig_ptr,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& arguments) {
 
@@ -188,7 +189,7 @@ std::vector<kgl::ContigOffset_t> kgl::RetrieveLociiVector::getLociiCount( std::s
 //
 
 
-kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const PopulationDB> population_ptr,
+kga::ContigLocusMap kga::InbreedSampling::getPopulationLocusMap(  std::shared_ptr<const PopulationDB> population_ptr,
                                                                   const LociiVectorArguments& locii_args) {
 
   ContigLocusMap contig_locus_map;
@@ -221,7 +222,7 @@ kgl::ContigLocusMap kgl::InbreedSampling::getPopulationLocusMap(  std::shared_pt
 }
 
 
-kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const PopulationDB> unphased_ptr,
+kga::LocusMap kga::InbreedSampling::getPopulationLocus(std::shared_ptr<const PopulationDB> unphased_ptr,
                                                        const ContigId_t& contig_id,
                                                        const LociiVectorArguments& locii_args) {
 
@@ -259,7 +260,7 @@ kgl::LocusMap kgl::InbreedSampling::getPopulationLocus(std::shared_ptr<const Pop
 // Get a list of hom/het SNPs with a specified locii_spacing to minimise linkage dis-equilibrium
 // and at a specified frequency for the super population. Used as a template for calculating
 // the inbreeding coefficient and sample relatedness
-kgl::InbreedSampling::LocusReturnPair kgl::InbreedSampling::getLocusList( std::shared_ptr<const PopulationDB> unphased_ptr,
+kga::InbreedSampling::LocusReturnPair kga::InbreedSampling::getLocusList( std::shared_ptr<const PopulationDB> unphased_ptr,
                                                                           const ContigId_t& contig_id,
                                                                           const std::string& super_population,
                                                                           const LociiVectorArguments& locii_args) {

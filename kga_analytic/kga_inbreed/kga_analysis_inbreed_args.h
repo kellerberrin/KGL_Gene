@@ -13,7 +13,7 @@
 #include <string>
 #include <algorithm>
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 

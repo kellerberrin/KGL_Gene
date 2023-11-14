@@ -3,7 +3,7 @@
 //
 
 #include "kga_analysis_sequence.h"
-#include "kga_analysis_pf_gene.h"
+#include "kga_analysis_lib_Pfgene.h"
 #include "kgl_variant_filter_db_variant.h"
 
 #include <chrono>

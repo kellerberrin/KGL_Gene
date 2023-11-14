@@ -3,7 +3,7 @@
 //
 
 
-#include "kga_analysis_pf_gene.h"
+#include "kga_analysis_lib_Pfgene.h"
 #include "kgl_distance_tree_upgma.h"
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_distance_sequence.h"

@@ -22,6 +22,7 @@ bool kga::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
 
   Pf7_sample_ptr_ = resource_ptr->getSingleResource<const Pf7SampleResource>(ResourceProperties::PF7SAMPLE_RESOURCE_ID_);
   Pf7_fws_ptr_ = resource_ptr->getSingleResource<const Pf7FwsResource>(ResourceProperties::PF7FWS_RESOURCE_ID_);
+  filterPf7_ptr = std::make_shared<const FilterPf7>(Pf7_sample_ptr_, Pf7_fws_ptr_);
   Pf7_genetic_distance_ptr_ = resource_ptr->getSingleResource<const Pf7GeneticDistanceResource>(ResourceProperties::PF7DISTANCE_RESOURCE_ID_);
   Pf7_physical_distance_ptr_ = std::make_shared<const Pf7SampleLocation>(*Pf7_sample_ptr_);
 
@@ -84,7 +85,7 @@ bool kga::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 
   }
 
-  auto filtered_population_ptr = qualityFilter(population_ptr);
+  auto filtered_population_ptr = filterPf7_ptr->qualityFilter(population_ptr);
 
   ExecEnv::log().info("Population Returned Filtered Size Genome count: {}, Variant Count: {}",
                       filtered_population_ptr->getMap().size(),

@@ -17,6 +17,16 @@ namespace kgl = kellerberrin::genome;
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Define the PIMPL implementation to be the kgl::OntologyGeneCache object.
+class kga::OntologyCache::OntologyGeneCache : public kgl::OntologyGeneCache {
+
+public:
+  using kgl::OntologyGeneCache::OntologyGeneCache;
+
+};
+
+
 kga::OntologyCache::OntologyCache( const std::vector<std::string>& gene_vector,
                                    const std::shared_ptr<const kol::TermAnnotation>& annotation_ptr,
                                    const std::shared_ptr<const kol::GoGraph>& go_graph_ptr) {

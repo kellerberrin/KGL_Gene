@@ -10,7 +10,7 @@
 #include "kga_analysis_inbreed_args.h"
 
 
-namespace kellerberrin::genome {   //  organization::project level namespace
+namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
 

@@ -11,11 +11,11 @@
 #include <iostream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Calculate the Population Inbreeding Coefficient
-bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
+bool kga::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
                                                    const PopulationDB& diploid_population,
                                                    const HsGenomeGenealogyData& ped_data,
                                                    InbreedParamOutput& param_output) {
@@ -80,7 +80,7 @@ bool kgl::InbreedingAnalysis::populationInbreeding(std::shared_ptr<const Populat
 
 
 
-kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const PopulationDB> unphased_ptr,
+kga::ResultsMap kga::InbreedingAnalysis::populationInbreedingSample( std::shared_ptr<const PopulationDB> unphased_ptr,
                                                                      const PopulationDB& diploid_population,
                                                                      const HsGenomeGenealogyData& ped_data,
                                                                      const InbreedingParameters& parameters) {
@@ -95,7 +95,7 @@ kgl::ResultsMap kgl::InbreedingAnalysis::populationInbreedingSample( std::shared
 
 
 
-kgl::ResultsMap kgl::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
+kga::ResultsMap kga::InbreedingAnalysis::processResults( const ContigLocusMap& contig_locus_map,
                                                          const PopulationDB& diploid_population,
                                                          const HsGenomeGenealogyData& ped_data,
                                                          const InbreedingParameters& parameters) {

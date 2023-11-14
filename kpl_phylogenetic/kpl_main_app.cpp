@@ -17,7 +17,7 @@ void kpl::PhyloExecEnv::executeApp() {
 }
 
 
-std::unique_ptr<kel::Logger> kpl::PhyloExecEnv::createLogger() {
+std::unique_ptr<kel::ExecEnvLogger> kpl::PhyloExecEnv::createLogger() {
 
   return ExecEnv::createLogger(MODULE_NAME, args_.logFile, args_.max_error_count, args_.max_warn_count);
 

@@ -51,7 +51,7 @@ public:
   }
 
   // Create application logger.
-  [[nodiscard]] static std::unique_ptr<kel::Logger> createLogger() {
+  [[nodiscard]] static std::unique_ptr<kel::ExecEnvLogger> createLogger() {
 
     return kel::ExecEnv::createLogger(MODULE_NAME, LOG_FILE, MAX_ERROR_MESSAGES, MAX_WARNING_MESSAGES);
 

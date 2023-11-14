@@ -2,7 +2,6 @@
 // Created by kellerberrin on 5/5/20.
 //
 
-// Includes all of the analytic header files for convenience.
 
 #include "kga_analysis_null.h" // The "do nothing" class and a template for additional analysis objects.
 #include "kga_analysis_sequence.h" // Does "correctness" verification on any specified data files (duplicate variants etc).
@@ -35,7 +34,7 @@ kgl::VirtualAnalysis::AnalysisFactoryMap const kgl::VirtualAnalysis::analysis_fa
 { kga::SequenceAnalysis::IDENT, kga::SequenceAnalysis::factory },
 { kga::IntervalAnalysis::IDENT, kga::IntervalAnalysis::factory },
 { kga::InfoFilterAnalysis::IDENT, kga::InfoFilterAnalysis::factory },
-{ kgl::InbreedAnalysis::IDENT, kgl::InbreedAnalysis::factory },
+{ kga::InbreedAnalysis::IDENT, kga::InbreedAnalysis::factory },
 { kga::PfEMPAnalysis::IDENT, kga::PfEMPAnalysis::factory },
 { kga::MutationAnalysis::IDENT, kga::MutationAnalysis::factory },
 { kga::JsonAnalysis::IDENT, kga::JsonAnalysis::factory },

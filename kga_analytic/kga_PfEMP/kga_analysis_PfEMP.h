@@ -9,6 +9,7 @@
 #include "kgl_genome_collection.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
+#include "kga_analysis_lib_Pf7filter.h"
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
 #include "kga_analysis_sequence_mutation.h"
@@ -58,6 +59,7 @@ private:
   // Resources
   std::shared_ptr<const Pf7SampleResource> Pf7_sample_ptr_;
   std::shared_ptr<const Pf7FwsResource> Pf7_fws_ptr_;
+  std::shared_ptr<const FilterPf7> filterPf7_ptr;
   std::shared_ptr<const Pf7GeneticDistanceResource> Pf7_genetic_distance_ptr_;
   constexpr static const double SAMPLE_LOCATION_RADIUS_{0.0};
   std::shared_ptr<const Pf7SampleLocation> Pf7_physical_distance_ptr_;
@@ -66,15 +68,6 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   std::shared_ptr<MutateGenes> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
-  // Filter constants.
-  constexpr static const bool CODING_FILTER_ACTIVE_{true}; // Restrict to gene coding areas only.
-  constexpr static const bool FILTER_QC_ACTIVE_{true};
-  constexpr static const bool FILTER_FWS_ACTIVE_{true};
-  constexpr static const double FWS_MONOCLONAL_THRESHOLD{0.95};
-  constexpr static const bool MLEAF_FILTER_ACTIVE_{false};
-  constexpr static const bool AF_FILTER_ACTIVE_{false};
-  constexpr static const bool SNP_FILTER_ACTIVE_{false};  // Only SNP variants
-  constexpr static const double VARIANT_FREQUENCY_CUTOFF_{0.0};
 
   // Gene family ident.
   constexpr static const char *PFEMP1_FAMILY_ = "PFEMP1";
@@ -117,8 +110,6 @@ private:
 
   [[nodiscard]] GeneVector getTranslationGenes(const std::shared_ptr<const GenomeReference> &genome_ptr);
 
-  // Quality filter the variants using read depth, VQSLOD and other statistics
-  std::shared_ptr<kgl::PopulationDB> qualityFilter(const std::shared_ptr<const PopulationDB> &unfiltered_population);
 
 };
 

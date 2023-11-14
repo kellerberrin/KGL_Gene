@@ -583,13 +583,14 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.h
-        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_filter.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_Pf7filter.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
-        kga_analytic/kga_analysis_library/kga_analysis_pf_gene.cpp
-        kga_analytic/kga_analysis_library/kga_analysis_pf_gene.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_Pf7filter.h
 
 )
 

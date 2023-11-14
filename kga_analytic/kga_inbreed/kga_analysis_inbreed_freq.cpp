@@ -10,12 +10,12 @@
 #include <fstream>
 #include <algorithm>
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 namespace kel = kellerberrin;
 
 
 
-kgl::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
+kga::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
                                         const std::string& frequency_field) {
 
   // Loop through the variants in the locus..
@@ -58,7 +58,7 @@ kgl::AlleleFreqVector::AlleleFreqVector(const OffsetDBArray& variant_vector,
 
 
 
-bool kgl::AlleleFreqVector::checkValidAlleleVector() {
+bool kga::AlleleFreqVector::checkValidAlleleVector() {
 
   double allele_sum = sumAlleleFrequencies();
   double check_allele_sum = allele_sum - 1.0;
@@ -75,7 +75,7 @@ bool kgl::AlleleFreqVector::checkValidAlleleVector() {
 }
 
 
-bool kgl::AlleleFreqVector::checkDuplicates() const {
+bool kga::AlleleFreqVector::checkDuplicates() const {
 
   size_t minor_allele_count = allele_frequencies_.size();
 
@@ -97,7 +97,7 @@ bool kgl::AlleleFreqVector::checkDuplicates() const {
 
 }
 
-double kgl::AlleleFreqVector::sumAlleleFrequencies() const {
+double kga::AlleleFreqVector::sumAlleleFrequencies() const {
 
   double sum_allele_freq{0.0};
   for (auto const& allele_freq : allele_frequencies_) {
@@ -110,13 +110,13 @@ double kgl::AlleleFreqVector::sumAlleleFrequencies() const {
 
 }
 
-double kgl::AlleleFreqVector::minorAlleleFrequencies() const {
+double kga::AlleleFreqVector::minorAlleleFrequencies() const {
 
   return std::clamp(sumAlleleFrequencies(), 0.0, 1.0);
 
 }
 
-double kgl::AlleleFreqVector::majorAlleleFrequency() const {
+double kga::AlleleFreqVector::majorAlleleFrequency() const {
 
   return std::clamp((1.0 - minorAlleleFrequencies()), 0.0, 1.0);
 
@@ -124,7 +124,7 @@ double kgl::AlleleFreqVector::majorAlleleFrequency() const {
 
 
 
-kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::unadjustedAlleleClassFrequencies(double inbreeding) const {
+kga::AlleleClassFrequencies  kga::AlleleFreqVector::unadjustedAlleleClassFrequencies(double inbreeding) const {
 
   static std::mutex log_mutex;
   std::vector<double> minor_allele_frequencies;
@@ -205,7 +205,7 @@ kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::unadjustedAlleleClassFrequen
 }
 
 
-kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::alleleClassFrequencies(double inbreeding) const {
+kga::AlleleClassFrequencies  kga::AlleleFreqVector::alleleClassFrequencies(double inbreeding) const {
 
 
   AlleleClassFrequencies  class_freqs = unadjustedAlleleClassFrequencies(inbreeding);
@@ -218,7 +218,7 @@ kgl::AlleleClassFrequencies  kgl::AlleleFreqVector::alleleClassFrequencies(doubl
 
 
 // Randomly select an allele class outcome based on a unit [0, 1] random number.
-kgl::AlleleClassType kgl::AlleleFreqVector::selectAlleleClass(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
+kga::AlleleClassType kga::AlleleFreqVector::selectAlleleClass(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
 
   double sum_freqs = class_freqs.minorHomozygous();
 
@@ -261,7 +261,7 @@ kgl::AlleleClassType kgl::AlleleFreqVector::selectAlleleClass(double unit_rand, 
 }
 
 
-std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorHomozygous(double unit_rand,
+std::optional<kga::AlleleFreqRecord> kga::AlleleFreqVector::selectMinorHomozygous(double unit_rand,
                                                                                   const AlleleClassFrequencies& class_freqs) const {
 
   if (allele_frequencies_.empty()) {
@@ -305,7 +305,7 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMinorHomozygou
 
 
 // Randomly select a major heterozygous allele based on a unit [0,1] random number, std::nullopt if error (no minor allele).
-std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMajorHeterozygous(double unit_rand,
+std::optional<kga::AlleleFreqRecord> kga::AlleleFreqVector::selectMajorHeterozygous(double unit_rand,
                                                                                     const AlleleClassFrequencies& class_freqs) const {
 
   if (allele_frequencies_.empty()) {
@@ -358,8 +358,8 @@ std::optional<kgl::AlleleFreqRecord> kgl::AlleleFreqVector::selectMajorHeterozyg
 
 
 // Randomly select a pair of distinct minor alleles based on two random numbers, std::nullopt if error (not two minor alleles).
-std::optional<std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord>>
-kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
+std::optional<std::pair<kga::AlleleFreqRecord, kga::AlleleFreqRecord>>
+kga::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleClassFrequencies& class_freqs) const {
 
   if (allele_frequencies_.size() < 2) {
 
@@ -377,7 +377,7 @@ kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleCla
 
   if (allele_frequencies_.size() == 2) {
 
-    std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> pair_alleles{ allele_frequencies_.front(), allele_frequencies_.back() };
+    std::pair<AlleleFreqRecord, AlleleFreqRecord> pair_alleles{ allele_frequencies_.front(), allele_frequencies_.back() };
     return pair_alleles;
 
   }
@@ -395,7 +395,7 @@ kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleCla
       allele_freq_sum += het_prob / class_freqs.minorHeterozygous();
       if (unit_rand <= allele_freq_sum) {
 
-        std::pair<kgl::AlleleFreqRecord, kgl::AlleleFreqRecord> pair_alleles{ allele_frequencies_[idx1], allele_frequencies_[idx2] };
+        std::pair<AlleleFreqRecord, AlleleFreqRecord> pair_alleles{ allele_frequencies_[idx1], allele_frequencies_[idx2] };
         return pair_alleles;
 
       }
@@ -422,8 +422,8 @@ kgl::AlleleFreqVector::selectMinorHeterozygous(double unit_rand, const AlleleCla
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::pair<std::vector<kgl::AlleleFreqInfo>, kgl::LocusResults>
-kgl::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
+std::pair<std::vector<kga::AlleleFreqInfo>, kga::LocusResults>
+kga::InbreedingCalculation::generateFrequencies(const GenomeId_t& genome_id,
                                                 const std::shared_ptr<const ContigDB>& contig_ptr,
                                                 const std::string& super_population_field,
                                                 const std::shared_ptr<const ContigDB>& locus_list) {

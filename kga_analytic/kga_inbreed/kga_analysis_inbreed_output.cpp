@@ -11,10 +11,10 @@
 #include <iostream>
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
-std::string kgl::InbreedingResultColumn::generateIdent(const ContigId_t& contig_id, ContigOffset_t lower, ContigOffset_t upper) {
+std::string kga::InbreedingResultColumn::generateIdent(const ContigId_t& contig_id, ContigOffset_t lower, ContigOffset_t upper) {
 
   std::stringstream ss;
 
@@ -26,7 +26,7 @@ std::string kgl::InbreedingResultColumn::generateIdent(const ContigId_t& contig_
 
 
 // Consistency check; all columns have the same row structure.
-bool kgl::InbreedParamOutput::verifyResults() const {
+bool kga::InbreedParamOutput::verifyResults() const {
 
   if (column_results_.empty()) {
 
@@ -82,7 +82,7 @@ bool kgl::InbreedParamOutput::verifyResults() const {
 }
 
 
-bool kgl::InbreedingOutput::writeNoPedResults(const InbreedParamOutput& output_results, const std::string& file_path) {
+bool kga::InbreedingOutput::writeNoPedResults(const InbreedParamOutput& output_results, const std::string& file_path) {
 
 
   if (output_results.getColumns().empty()) {
@@ -180,7 +180,7 @@ bool kgl::InbreedingOutput::writeNoPedResults(const InbreedParamOutput& output_r
 }
 
 
-bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_results,
+bool kga::InbreedingOutput::writePedResults( const InbreedParamOutput& output_results,
                                              const HsGenomeGenealogyData& ped_data,
                                              const std::string& file_path) {
 
@@ -305,7 +305,7 @@ bool kgl::InbreedingOutput::writePedResults( const InbreedParamOutput& output_re
 
 
 
-bool kgl::InbreedingOutput::writeSynthetic(const InbreedParamOutput& output_results, const std::string& file_path) {
+bool kga::InbreedingOutput::writeSynthetic(const InbreedParamOutput& output_results, const std::string& file_path) {
 
 
   if (output_results.getColumns().empty()) {

@@ -11,12 +11,13 @@
 #include <algorithm>
 
 
+namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
 
 std::shared_ptr<const kgl::PopulationDB>
-kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
+kga::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
                                                     double upper_inbreeding,
                                                     double step_inbreeding,
                                                     const std::string& super_population,
@@ -198,7 +199,7 @@ kgl::InbreedSynthetic::generateSyntheticPopulation( double lower_inbreeding,
 
 
 // Generate an inbreeding encoded synthetic genome
-kgl::GenomeId_t kgl::InbreedSynthetic::generateSyntheticGenomeId( double inbreeding,
+kgl::GenomeId_t kga::InbreedSynthetic::generateSyntheticGenomeId( double inbreeding,
                                                                   const std::string& super_population,
                                                                   size_t counter) {
 
@@ -222,7 +223,7 @@ kgl::GenomeId_t kgl::InbreedSynthetic::generateSyntheticGenomeId( double inbreed
 }
 
 // Recreate the inbreeding coefficient from the synthetic genome id.
-std::pair<bool, double> kgl::InbreedSynthetic::generateInbreeding(const GenomeId_t& genome_id) {
+std::pair<bool, double> kga::InbreedSynthetic::generateInbreeding(const GenomeId_t& genome_id) {
 
   // Decode the inbreeding coefficient.
   bool valid_value = false;

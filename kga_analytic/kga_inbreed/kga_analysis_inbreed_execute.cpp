@@ -8,12 +8,12 @@
 #include "kgl_variant_filter_db_variant.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const PopulationDB> diploid_population,
+bool kga::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const PopulationDB> diploid_population,
                                                      std::shared_ptr<const PopulationDB> unphased_population,
                                                      std::shared_ptr<const HsGenomeGenealogyData> ped_data,
                                                      InbreedParamOutput& parameters) {
@@ -49,7 +49,7 @@ bool kgl::ExecuteInbreedingAnalysis::executeAnalysis(std::shared_ptr<const Popul
 
 
 // Perform the genetic analysis per iteration.
-bool kgl::ExecuteInbreedingAnalysis::processDiploid(std::shared_ptr<const PopulationDB> diploid_population,
+bool kga::ExecuteInbreedingAnalysis::processDiploid(std::shared_ptr<const PopulationDB> diploid_population,
                                                     std::shared_ptr<const PopulationDB> unphased_population,
                                                     std::shared_ptr<const HsGenomeGenealogyData> ped_data,
                                                     InbreedParamOutput& parameters) {
@@ -62,7 +62,7 @@ bool kgl::ExecuteInbreedingAnalysis::processDiploid(std::shared_ptr<const Popula
 }
 
 // Perform an inbreeding analysis of a synthetic population.
-bool kgl::ExecuteInbreedingAnalysis::processSynthetic(std::shared_ptr<const PopulationDB> unphased_population,
+bool kga::ExecuteInbreedingAnalysis::processSynthetic(std::shared_ptr<const PopulationDB> unphased_population,
                                                       InbreedParamOutput& parameters) {
 
   SyntheticAnalysis::syntheticInbreeding(unphased_population, parameters);

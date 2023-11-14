@@ -10,16 +10,6 @@
 #include "kga_analysis_mutation_gene_stats.h"
 
 
-
-namespace kol = kellerberrin::ontology;
-
-namespace kellerberrin::genome {
-
-// Forward decl of ontology functionality for PIMPL pattern.
-  class OntologyGeneCache;
-
-};
-
 namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 
@@ -61,6 +51,8 @@ public:
 
 private:
 
+  // Forward decl of ontology functionality for PIMPL pattern.
+  class OntologyGeneCache;
   std::shared_ptr<const OntologyGeneCache> gene_cache_ptr_;
 
 

@@ -6,13 +6,13 @@
 #include "kel_utility.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 // This function extracts the values from the parsed XML file and constructs the analysis arguments.
-std::vector<kgl::InbreedingParameters> kgl::InbreedArguments::extractParameters(const ActiveParameterList& named_parameters) {
+std::vector<kga::InbreedingParameters> kga::InbreedArguments::extractParameters(const ActiveParameterList& named_parameters) {
 
 
-  std::vector<kgl::InbreedingParameters> param_vector;
+  std::vector<kga::InbreedingParameters> param_vector;
 
   for (auto const& named_block : named_parameters.getMap()) {
 

@@ -11,11 +11,11 @@
 
 #include <fstream>
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Setup the analytics to process VCF data.
-bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
+bool kga::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
                                               const ActiveParameterList& named_parameters,
                                               const std::shared_ptr<const AnalysisResources>& resource_ptr) {
 
@@ -40,7 +40,7 @@ bool kgl::InbreedAnalysis::initializeAnalysis(const std::string& work_directory,
 }
 
 // This function superclasses the data objects and stores them for further use.
-bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) {
+bool kga::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_object_ptr) {
 
   ExecEnv::log().info("Analysis: {}, begin processing data file", ident(), data_object_ptr->fileId());
 
@@ -87,7 +87,7 @@ bool kgl::InbreedAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> data_o
 }
 
 // Perform the genetic analysis per iteration.
-bool kgl::InbreedAnalysis::iterationAnalysis() {
+bool kga::InbreedAnalysis::iterationAnalysis() {
 
   ExecEnv::log().info("Iteration Analysis called for Analysis Id: {}", ident());
 
@@ -118,7 +118,7 @@ bool kgl::InbreedAnalysis::iterationAnalysis() {
 
 
 // All VCF data has been presented, finalize analysis and write results.
-bool kgl::InbreedAnalysis::finalizeAnalysis() {
+bool kga::InbreedAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Finalize called for Analysis Id: {}", ident());
 
@@ -128,7 +128,7 @@ bool kgl::InbreedAnalysis::finalizeAnalysis() {
 
 
 
-bool kgl::InbreedAnalysis::writeResults() {
+bool kga::InbreedAnalysis::writeResults() {
 
 
   for (auto& param_output : parameter_output_vector_) {

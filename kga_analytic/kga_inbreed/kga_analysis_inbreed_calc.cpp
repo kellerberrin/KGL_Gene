@@ -10,11 +10,11 @@
 #include <fstream>
 #include <algorithm>
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 namespace kel = kellerberrin;
 
 
-bool kgl::RetryCalcResult::checkRetry(double retry) {
+bool kga::RetryCalcResult::checkRetry(double retry) {
 
   ++retry_count_;
   if (retry_count_ > max_retry_) {
@@ -41,7 +41,7 @@ bool kgl::RetryCalcResult::checkRetry(double retry) {
 }
 
 
-bool kgl::RetryCalcResult::checkTolerance() const {
+bool kga::RetryCalcResult::checkTolerance() const {
 
   auto current_entry = current_retries_.begin();
   while (current_entry != current_retries_.end()) {
@@ -68,7 +68,7 @@ bool kgl::RetryCalcResult::checkTolerance() const {
 }
 
 
-std::optional<kgl::InbreedingAlgorithm> kgl::InbreedingCalculation::namedAlgorithm(const std::string& algorithm_name) {
+std::optional<kga::InbreedingAlgorithm> kga::InbreedingCalculation::namedAlgorithm(const std::string& algorithm_name) {
 
   auto inbreeding_algo = inbreeding_algo_map_.find(algorithm_name);
 
@@ -91,7 +91,7 @@ std::optional<kgl::InbreedingAlgorithm> kgl::InbreedingCalculation::namedAlgorit
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data) {
+double kga::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data) {
 
   double log_prob_sum{0.0};
   double f = x[0];
@@ -128,7 +128,7 @@ double kgl::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::ve
 
 }
 
-kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
+kel::Optimize kga::InbreedingCalculation::createLogLikelihoodOptimizer() {
 
   const size_t parameter_dimension = 1;
   Optimize optimizer(OptimizationAlgorithm::LN_NELDERMEAD, parameter_dimension, OptimizationType::MAXIMIZE);
@@ -150,8 +150,8 @@ kel::Optimize kgl::InbreedingCalculation::createLogLikelihoodOptimizer() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-kgl::LocusResults
-kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
+kga::LocusResults
+kga::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
                                                  const std::shared_ptr<const ContigDB>& contig_ptr,
                                                  const std::string& super_population_field,
                                                  const std::shared_ptr<const ContigDB>& locus_list ) {
@@ -222,8 +222,8 @@ kgl::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::LocusResults
-kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
+kga::LocusResults
+kga::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
                                            const std::shared_ptr<const ContigDB>& contig_ptr,
                                            const std::string& super_population_field,
                                            const std::shared_ptr<const ContigDB>& locus_list ) {
@@ -315,8 +315,8 @@ kgl::InbreedingCalculation::processHallME( const GenomeId_t& genome_id,
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::LocusResults
-kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
+kga::LocusResults
+kga::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
                                           const std::shared_ptr<const ContigDB>& contig_ptr,
                                           const std::string& super_population_field,
                                           const std::shared_ptr<const ContigDB>& locus_list) {
@@ -371,8 +371,8 @@ kgl::InbreedingCalculation::processSimple(const GenomeId_t& genome_id,
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-kgl::LocusResults
-kgl::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
+kga::LocusResults
+kga::InbreedingCalculation::processRitlandLocus(const GenomeId_t &genome_id,
                                            const std::shared_ptr<const ContigDB>& contig_ptr,
                                            const std::string& super_population_field,
                                            const std::shared_ptr<const ContigDB>& locus_list ) {

@@ -10,11 +10,11 @@
 #include "kel_workflow_threads.h"
 
 
-namespace kgl = kellerberrin::genome;
+namespace kga = kellerberrin::genome::analysis;
 
 
 // Calculate the Synthetic Population Inbreeding Coefficient
-bool kgl::SyntheticAnalysis::syntheticInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
+bool kga::SyntheticAnalysis::syntheticInbreeding(std::shared_ptr<const PopulationDB> unphased_ptr,
                                                  InbreedParamOutput& param_output) {
 
 
@@ -71,7 +71,7 @@ bool kgl::SyntheticAnalysis::syntheticInbreeding(std::shared_ptr<const Populatio
 }
 
 
-kgl::ResultsMap kgl::SyntheticAnalysis::processSynResults( std::shared_ptr<const PopulationDB> unphased_ptr,
+kga::ResultsMap kga::SyntheticAnalysis::processSynResults( std::shared_ptr<const PopulationDB> unphased_ptr,
                                                            const InbreedingParameters& parameters) {
 
   ResultsMap results_map;
