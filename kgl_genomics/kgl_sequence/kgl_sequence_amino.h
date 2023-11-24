@@ -5,9 +5,9 @@
 #ifndef KGL_SEQUENCE_AMINO_H
 #define KGL_SEQUENCE_AMINO_H
 
+#include "kgl_sequence_base_view.h"
 #include "kgl_sequence_base.h"
 #include "kgl_table.h"
-#include "kgl_sequence_virtual.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -32,9 +32,9 @@ class AminoSequence: public AlphabetSequence<AminoAcid> {
 public:
 
   AminoSequence(AminoSequence&& sequence) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence)) {};
+  explicit AminoSequence(const AminoSequenceView& sequence_view) : AlphabetSequence<AminoAcid>(sequence_view.getSequence()) {};
   explicit AminoSequence(StringAminoAcid&& sequence_string) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence_string)) {};
   AminoSequence(AminoSequence& sequence) = delete; // For Performance reasons, don't allow copy constructors.
-  AminoSequence() = default;  // Allow the creation of empty sequences
   ~AminoSequence() override = default;
 
   // For Performance reasons, don't allow naive assignments.
@@ -47,8 +47,8 @@ public:
 
   }
 
-  [[nodiscard]] bool removeTrailingStop();  // Remove the stop codon (if present).
-
+  //Return a view.
+  [[nodiscard]] AminoSequenceView getView() const { return AminoSequenceView(*this); }
 
 private:
 

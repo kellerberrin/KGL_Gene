@@ -57,7 +57,7 @@ bool kga::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   genome_3D7_ptr_ = pf3d7_opt.value();
 
   // Initialize the mutate object.
-  mutate_genes_ptr_ = std::make_shared<kga::MutateGenes>(genome_3D7_ptr_);
+  mutate_genes_ptr_ = std::make_shared<kga::MutateGenesReport>(genome_3D7_ptr_, SeqVariantFilterType::FRAMESHIFT_ADJUSTED, ident_work_directory_);
 
 //  performPFEMP1UPGMA();
 
@@ -104,10 +104,7 @@ bool kga::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   // Calculate the FWS statistics.
   calc_fws_.calcFwsStatistics(filtered_population_ptr);
 
-  // Mutate all the relevant genes in the relevant contigs.
-  ExecEnv::log().info("PfEMPAnalysis::performModification; Begin gene mutation");
   mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
-  ExecEnv::log().info("PfEMPAnalysis::performModification; End gene mutation");
 
   return true;
 
@@ -168,12 +165,7 @@ bool kga::PfEMPAnalysis::finalizeAnalysis() {
   calc_fws_.writeVariantResults(variant_file_name);
 
   // Output the mutation statistics.
-  std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
-  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_genes_ptr_->mutateAnalysis().printMutationTranscript(mutation_file_name);
-  mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
-  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);
+  mutate_genes_ptr_->printMutateReports();
 
   return true;
 

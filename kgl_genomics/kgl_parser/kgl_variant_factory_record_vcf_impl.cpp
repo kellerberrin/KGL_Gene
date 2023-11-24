@@ -54,10 +54,10 @@ kgl::ParseVCFRecord::ParseVCFRecord( const std::string& genome_contig,
 
   }
   const DNA5SequenceLinear& contig_ref = contig_ref_opt.value();
-  if (contig_ref.getSequenceAsString() != reference_) {
+  if (contig_ref.getStringView() != reference_) {
 
     ExecEnv::log().error("Variant reference: {} does not match Contig region: {} at offset: {}",
-                         reference_, contig_ref.getSequenceAsString(), allele_offset_);
+                         reference_, contig_ref.getStringView(), allele_offset_);
     parse_result_ = false;
     return;
 

@@ -349,8 +349,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_distance_genome.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.h
-        kgl_genomics/kgl_classification/kgl_phylogenetic_analysis.h
-        kgl_genomics/kgl_classification/kgl_phylogenetic_analysis.cpp
+        kgl_genomics/kgl_legacy/kgl_phylogenetic_analysis.h
+        kgl_genomics/kgl_legacy/kgl_phylogenetic_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_rna_search.cpp
         kgl_genomics/kgl_legacy/kgl_rna_search.h
         kgl_genomics/kgl_legacy/kgl_ploidy_analysis.h
@@ -364,6 +364,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_distance_matrix_array.h
         kgl_genomics/kgl_classification/kgl_distance_sequence.cpp
         kgl_genomics/kgl_classification/kgl_distance_sequence.h
+        kgl_genomics/kgl_sequence/kgl_alphabet_sequence.h
+        kgl_genomics/kgl_sequence/kgl_alphabet_view.h
+        kgl_genomics/kgl_sequence/kgl_sequence_base_view.h
+        kgl_genomics/kgl_sequence/kgl_sequence_base_view.cpp
 
 )
 
@@ -534,8 +538,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_mutation.cpp
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_mutation.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_output.cpp
@@ -561,8 +565,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_variant.h
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.cpp
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.h
-        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ontology.cpp
-        kga_analytic/kga_mutation/kga_analysis_mutation_gene_ontology.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.h
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.cpp
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.h
         kga_analytic/kga_mutation/kga_analysis_mutation_data.h
@@ -591,6 +595,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pf7filter.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_gene.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_gene.h
 
 )
 

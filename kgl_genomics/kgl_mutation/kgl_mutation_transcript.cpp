@@ -83,12 +83,12 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getModifiedCodin
 }
 
 
-std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::SequenceTranscript::getModifiedValidity() const {
+std::optional<std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t>> kgl::SequenceTranscript::getModifiedValidity() const {
 
   auto modified_linear_opt = getModifiedLinear();
   if (not modified_linear_opt) {
 
-    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY, 0};
+    return std::nullopt;
 
   }
 
@@ -97,12 +97,12 @@ std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::Se
 }
 
 
-std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::SequenceTranscript::getModifiedAdjustedValidity() const {
+std::optional<std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t>> kgl::SequenceTranscript::getModifiedAdjustedValidity() const {
 
   auto modified_linear_opt = getModifiedAdjusted();
   if (not modified_linear_opt) {
 
-    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY, 0};
+    return std::nullopt;
 
   }
 
@@ -156,12 +156,12 @@ std::optional<kgl::DNA5SequenceCoding> kgl::SequenceTranscript::getOriginalCodin
 }
 
 
-std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t> kgl::SequenceTranscript::getOriginalValidity() const {
+std::optional<std::tuple<kgl::DNA5SequenceCoding, kgl::CodingSequenceValidity, size_t>> kgl::SequenceTranscript::getOriginalValidity() const {
 
   auto original_linear_opt = getOriginalLinear();
   if (not original_linear_opt) {
 
-    return {DNA5SequenceCoding(), CodingSequenceValidity::EMPTY, 0};
+    return std::nullopt;
 
   }
 

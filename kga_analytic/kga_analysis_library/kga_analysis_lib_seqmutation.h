@@ -36,16 +36,12 @@ struct SequenceStats {
 };
 
 
-using GeneContigMap = std::map<std::shared_ptr<const GeneFeature>, ContigId_t>;
 class MutateGenes {
 
 public:
 
-  explicit MutateGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) : genome_ptr_(genome_ptr) {
-
-    initializeGeneContigMap(genome_ptr_);
-
-  }
+  MutateGenes(const std::shared_ptr<const GenomeReference>& genome_ptr, SeqVariantFilterType filtertype)
+              : genome_ptr_(genome_ptr), filtertype_(filtertype) {}
   ~MutateGenes() = default;
   // Return the id of all genes from a particular contig_ref_ptr.
   [[nodiscard]] std::vector<std::shared_ptr<const GeneFeature>> contigGenes(const ContigId_t& contig_id) const;
@@ -57,10 +53,9 @@ public:
 private:
 
   std::shared_ptr<const GenomeReference> genome_ptr_;
-  GeneContigMap gene_contig_map_;
   MutateAnalysis mutate_analysis_;
+  const SeqVariantFilterType filtertype_;
 
-  void initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr);
 
   // Process a gene and transcript.
   TranscriptMutateRecord mutateTranscript(const std::shared_ptr<const GeneFeature>& gene_ptr,
@@ -76,11 +71,40 @@ private:
                              const std::shared_ptr<const GenomeReference>& reference_genome_ptr);
 
   // Multi-threaded function, statistics and other objects returned in RegionReturn.
-  static std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_db_ptr,
-                                                               const std::shared_ptr<const GeneFeature>& gene_ptr,
-                                                               const FeatureIdent_t& transcript_id,
-                                                               const std::shared_ptr<const GenomeReference>& genome_ref_ptr);
+  std::pair<SequenceStats,bool> genomeTranscriptMutation( const std::shared_ptr<const GenomeDB>& genome_db_ptr,
+                                                          const std::shared_ptr<const GeneFeature>& gene_ptr,
+                                                          const FeatureIdent_t& transcript_id,
+                                                          const std::shared_ptr<const GenomeReference>& genome_ref_ptr);
 
+
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class MutateGenesReport {
+
+public:
+
+  MutateGenesReport(const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                    SeqVariantFilterType filter_type,
+                    std::string report_directory)
+  : mutate_genes_(genome_ref_ptr, filter_type), report_directory_(std::move(report_directory)) {}
+  ~MutateGenesReport() = default;
+
+  void mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr);
+  void printMutateReports();
+
+private:
+
+  MutateGenes mutate_genes_; // Perform transcript level mutations for all genomes.
+  std::string report_directory_;
+  constexpr static const std::string VARIANT_COUNT_EXT_{".csv"};
 
 };
 

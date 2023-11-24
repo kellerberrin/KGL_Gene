@@ -316,7 +316,7 @@ void kga::IntervalAnalysis::setupIntervalStructure(std::shared_ptr<const GenomeR
 
   for (auto const& [contig_id, contig_ptr] : genome->getMap()) {
 
-    ContigSize_t contig_size = contig_ptr->contigSize();
+    ContigSize_t contig_size = contig_ptr->sequence().length();
     size_t vector_size = (contig_size / interval_size_) + 1;
     IntervalVector interval_vector;
     for (size_t index = 0; index < vector_size; ++index) {
@@ -550,7 +550,7 @@ bool kga::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
     ExecEnv::log().info("IntervalAnalysis::writeData; processing contig_ref_ptr: {}", contig_id);
     ContigOffset_t contig_offset = 0;
-    ContigSize_t contig_size = contig_ptr->contigSize();
+    ContigSize_t contig_size = contig_ptr->sequence().length();
 
     for (size_t count_index = 0; count_index <  interval_vector.size(); ++count_index) {
 
@@ -573,13 +573,13 @@ bool kga::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
       }
 
       OpenRightUnsigned contig_sub_interval(contig_offset, contig_offset+interval_size);
-      auto sequence_opt = contig_ptr->sequence_ptr()->subSequence(contig_sub_interval);
+      auto sequence_opt = contig_ptr->sequence().subSequence(contig_sub_interval);
       if (not sequence_opt) {
 
         ExecEnv::log().warn("Could not extract sub-sequence: {} from contig: {} contig_ref_ptr interval: {}",
                             contig_sub_interval.toString(),
                             contig_id,
-                            contig_ptr->sequence_ptr()->interval().toString());
+                            contig_ptr->sequence().interval().toString());
         break;
 
       }
@@ -644,7 +644,7 @@ bool kga::IntervalAnalysis::writeData( std::shared_ptr<const GenomeReference> ge
 
       if (display_sequence) {
 
-        output << delimiter << sequence.getSequenceAsString() << '\n';
+        output << delimiter << sequence.getStringView() << '\n';
 
       } else {
 

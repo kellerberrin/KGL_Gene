@@ -3,7 +3,7 @@
 //
 
 #include "kel_exec_env.h"
-#include "kga_analysis_mutation_gene_ontology.h"
+#include "kga_analysis_lib_gene_ontology.h"
 #include "kgl_gene_cache_ontology.h"
 
 
@@ -13,15 +13,13 @@ namespace kgl = kellerberrin::genome;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//
+// Define the PIMPL implementation to be the kgl::OntologyGeneCache object.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Define the PIMPL implementation to be the kgl::OntologyGeneCache object.
 class kga::OntologyCache::OntologyGeneCache : public kgl::OntologyGeneCache {
 
-public:
   using kgl::OntologyGeneCache::OntologyGeneCache;
 
 };

@@ -129,7 +129,7 @@ bool kgl::GeneDistance::geneFamily(std::shared_ptr<const GeneFeature> ,
 }
 
 
-void kgl::GeneDistance::mutateProtein() {
+kgl::AminoSequence kgl::GeneDistance::mutateProtein() {
 
   auto transcipt_array_ptr = kgl::GeneFeature::getTranscriptionSequences(gene_ptr_);
 
@@ -155,23 +155,25 @@ void kgl::GeneDistance::mutateProtein() {
   auto contig_db_opt = genome_db_ptr_->getContig(contig_id);
   if (not contig_db_opt) {
 
-    ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr_->genomeId());
-    return;
+    ExecEnv::log().critical("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr_->genomeId());
 
   }
   const auto& contig_db_ptr = contig_db_opt.value();
 
-  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, SeqVariantFilterType::DEFAULT_SEQ_FILTER);
 
-  auto reference_sequence_opt = modified_transcript.getOriginalCoding();
   auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
 
-  if (modified_transcript.sequenceStatus() and reference_sequence_opt and mutant_sequence_opt) {
+  if (not mutant_sequence_opt) {
 
-    auto reference_sequence = contig_ref_ptr->getAminoSequence(reference_sequence_opt.value());
-    auto mutant_sequence = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
+    ExecEnv::log().critical("Could not generate mutant gene transcript: {} for genome: {}", gene_ptr_->id(), genome_db_ptr_->genomeId());
 
   }
+
+  auto mutant_sequence = contig_ref_ptr->getAminoSequence(mutant_sequence_opt.value());
+
+  return mutant_sequence;
+
 
 }
 
@@ -231,8 +233,6 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
 
   }
 
-  AminoSequence mutant_sequence;
-  AminoSequence reference_sequence;
 
   auto contig_db_opt = genome_db_ptr_->getContig(contig_id);
   if (not contig_db_opt) {
@@ -243,7 +243,7 @@ void kgl::UPGMAATP4Distance::writeNode(std::ostream& outfile) const {
   }
   const auto& contig_db_ptr = contig_db_opt.value();
 
-  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr);
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, SeqVariantFilterType::DEFAULT_SEQ_FILTER);
 
   auto reference_sequence_opt = modified_transcript.getOriginalCoding();
   auto mutant_sequence_opt = modified_transcript.getModifiedCoding();
@@ -375,7 +375,7 @@ kgl::DistanceType_t kgl::DNAGeneDistance::distance(std::shared_ptr<const Virtual
 
 
 
-void  kgl::AminoGeneDistance::getAminoSequence() {
+kgl::AminoSequence kgl::AminoGeneDistance::getAminoSequence() {
 
   std::shared_ptr<const ContigReference> contig_ref_ptr = gene_ptr_->contig_ref_ptr();
 
@@ -386,15 +386,14 @@ void  kgl::AminoGeneDistance::getAminoSequence() {
 
   if (not coding_seq_opt) {
 
-    ExecEnv::log().warn("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
+    ExecEnv::log().critical("Unable create coding sequence from Contig: {},  Gene: {}, Transcript: {}",
                         contig_ref_ptr->contigId(),
                         transcript_ptr->getGene()->id(),
                         transcript_ptr->getParent()->id());
-    return;
   }
   auto& dna_coding_sequence = coding_seq_opt.value();
 
-  amino_sequence_ = contig_ref_ptr->getAminoSequence(dna_coding_sequence);
+  return contig_ref_ptr->getAminoSequence(dna_coding_sequence);
 
 }
 

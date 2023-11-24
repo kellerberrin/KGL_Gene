@@ -197,9 +197,9 @@ void kga::AnalysisGenePf::varIntron(const GeneVector& gene_vector,
          << "IStart" << CSV_DELIMITER_
          << "IEnd" << CSV_DELIMITER_
          << "IStrand" << CSV_DELIMITER_
-         << i_promoter.getSequenceAsString() << CSV_DELIMITER_
-         << i_complement_promoter.getSequenceAsString() << CSV_DELIMITER_
-         << i_5_promoter.getSequenceAsString() << CSV_DELIMITER_
+         << i_promoter.getStringView() << CSV_DELIMITER_
+         << i_complement_promoter.getStringView() << CSV_DELIMITER_
+         << i_5_promoter.getStringView() << CSV_DELIMITER_
          << "Size" << CSV_DELIMITER_
          << "ISequence" << '\n';
 
@@ -287,7 +287,7 @@ void kga::AnalysisGenePf::varIntron(const GeneVector& gene_vector,
                  << CSV_DELIMITER_
                  << intron_sequence.length()
                  << CSV_DELIMITER_
-                 << intron_sequence.getSequenceAsString() << '\n';
+                 << intron_sequence.getStringView() << '\n';
 
         } // 1 intron
 

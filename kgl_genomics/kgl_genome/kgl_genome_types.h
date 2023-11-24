@@ -39,7 +39,6 @@ using OntologyIdent_t = std::string;
 using Phred_t = double;
 
 
-
 // Usage and semantics : ContigOffset_t should be used when referring to the Genome and std::size_t should be used
 // when referring to the underlying data structure. In reality both are 64 bit integers (Paris Japonica). This is
 // asserted below.

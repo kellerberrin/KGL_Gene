@@ -45,23 +45,15 @@ bool kgl::DNA5SequenceLinear::insertSubSequence(ContigOffset_t insert_offset, co
 // Returns an UNSTRANDED subsequence. Returned sequence is valid but zero-sized if offset/size are out-of-bounds.
 std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::subSequence(const OpenRightUnsigned& sub_interval) const {
 
-  if (not interval().containsInterval(sub_interval)) {
+  auto sub_sequence_opt = getSubsequence(sub_interval);
+  if (not sub_sequence_opt) {
 
-    ExecEnv::log().warn("Sub interval: {} not contained in interval: {}.", sub_interval.toString(), interval().toString());
+    ExecEnv::log().error("Cannot get sub-sequence: {} from sequence: {}", sub_interval.toString(), interval().toString());
     return std::nullopt;
 
   }
 
-  DNA5SequenceLinear sub_sequence;
-  if (not getSubsequence(sub_interval.lower(), sub_interval.size(), sub_sequence)) {
-
-    ExecEnv::log().warn("Cannot get sub-sequence: {} from sequence: {}", sub_interval.toString(), interval().toString());
-    // ReturnType an empty sequence
-    return sub_sequence;
-
-  }
-
-  return sub_sequence;
+  return DNA5SequenceLinear(std::move(sub_sequence_opt.value()));
 
 }
 
@@ -109,31 +101,38 @@ kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense stra
 std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(const IntervalSetLower& interval_set) const {
 
 
-  // Extract the modified sequences and concatenate them.
-  DNA5SequenceLinear concatenated_sequence;
+  // Extract the modified sequence views and store in a vector.
+  std::vector<DNA5SequenceLinearView> concat_vector;
   for (auto const& sub_interval : interval_set) {
 
-    if (not interval().containsInterval(sub_interval)) {
+    auto sub_view_opt = getView().subView(sub_interval);
+    if (not sub_view_opt) {
 
-      ExecEnv::log().warn("Sub-interval: {} unable is not contained in interval: {}",
-                          sub_interval.toString(), interval().toString());
+      ExecEnv::log().warn("Unable to extract sub-sequence: {} for interval: {}", sub_interval.toString(), interval().toString());
       return std::nullopt;
 
     }
 
-    auto sub_sequence_opt = subSequence(sub_interval);
-    if (not sub_sequence_opt) {
+    concat_vector.push_back(sub_view_opt.value());
 
-      ExecEnv::log().warn("Unable to extract sub-sequence: {} for interval: {}", sub_interval.toString(), interval().toString());
-      return sub_sequence_opt;
+  }
 
-    }
+  if (concat_vector.empty()) {
 
-    bool result = concatenated_sequence.append(sub_sequence_opt.value());
+    ExecEnv::log().warn("No concat sub-sequences for interval set size: {}", interval_set.size());
+    return std::nullopt;
+
+  }
+
+  // Copy the first view
+  DNA5SequenceLinear concatenated_sequence(concat_vector.front());
+  // Vector will preserve sort order, drop first view
+  for (auto const& concat_view : std::ranges::drop_view{ concat_vector, 1}) {
+
+    bool result = concatenated_sequence.append(DNA5SequenceLinear(concat_view));
     if (not result) {
 
-      ExecEnv::log().warn("Unable to concatenate modified sequence for interval: {}",
-                          sub_interval.toString());
+      ExecEnv::log().warn("Unable to concatenate modified sequence for interval");
       return std::nullopt;
 
     }

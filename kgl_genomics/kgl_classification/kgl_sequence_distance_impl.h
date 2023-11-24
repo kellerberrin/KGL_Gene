@@ -37,10 +37,12 @@ CompareDistance_t LevenshteinGlobalImpl(const char* sequenceA,
 template<typename Seq>
 CompareDistance_t LevenshteinGlobalImpl(const Seq& sequenceA, const Seq& sequenceB) {
 
-  return LevenshteinGlobalImpl(sequenceA.getSequenceAsPtr(),
-                               sequenceA.length(),
-                               sequenceB.getSequenceAsPtr(),
-                               sequenceB.length());
+  auto sequenceA_view = sequenceA.getStringView();
+  auto sequenceB_view = sequenceB.getStringView();
+  return LevenshteinGlobalImpl(sequenceA_view.data(),
+                               sequenceA_view.length(),
+                               sequenceB_view.data(),
+                               sequenceB_view.length());
 
 }
 
@@ -52,10 +54,12 @@ CompareDistance_t LevenshteinLocalImpl(const char* sequenceA,
 template<typename Seq>
 CompareDistance_t LevenshteinLocalImpl(const Seq& sequenceA, const Seq& sequenceB) {
 
-  return LevenshteinLocalImpl(sequenceA.getSequenceAsPtr(),
-                              sequenceA.length(),
-                              sequenceB.getSequenceAsPtr(),
-                              sequenceB.length());
+  auto sequenceA_view = sequenceA.getStringView();
+  auto sequenceB_view = sequenceB.getStringView();
+  return LevenshteinLocalImpl(sequenceA_view.data(),
+                              sequenceA_view.length(),
+                              sequenceB_view.data(),
+                              sequenceB_view.length());
 
 }
 

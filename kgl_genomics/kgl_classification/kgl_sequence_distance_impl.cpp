@@ -3,15 +3,6 @@
 //
 
 
-// #define SEQAN3 1
-#ifdef SEQAN3
-
-#include <seqan3/alphabet/all.hpp>
-#include <seqan3/alignment/all.hpp>
-#include <seqan3/alphabet/all.hpp>
-
-#endif
-
 #include "edlib.h"
 
 #include "kgl_sequence_distance_impl.h"
@@ -19,6 +10,7 @@
 
 #include <cmath>
 #include <cstring>
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -29,9 +21,9 @@ kgl::CompareDistance_t kgl::LevenshteinGlobalImpl(const char* sequenceA,
                                                   size_t sequenceB_size) {
 
   EdlibAlignResult result = edlibAlign(sequenceA,
-                                       sequenceA_size,
+                                       static_cast<int32_t>(sequenceA_size),
                                        sequenceB,
-                                       sequenceB_size,
+                                       static_cast<int32_t>(sequenceB_size),
                                        edlibNewAlignConfig(-1, EDLIB_MODE_NW, EDLIB_TASK_LOC, NULL, 0));
 
   if (result.status != EDLIB_STATUS_OK) {
@@ -65,18 +57,18 @@ kgl::CompareDistance_t kgl::LevenshteinLocalImpl(const char* sequenceA,
   if (sequenceA_size <= sequenceB_size) {
 
     result = edlibAlign(sequenceA,
-                        sequenceA_size,
+                        static_cast<int32_t>(sequenceA_size),
                         sequenceB,
-                        sequenceB_size,
+                        static_cast<int32_t>(sequenceB_size),
                         edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
 
 
   } else {
 
     result = edlibAlign(sequenceB,
-                        sequenceB_size,
+                        static_cast<int32_t>(sequenceB_size),
                         sequenceA,
-                        sequenceA_size,
+                        static_cast<int32_t>(sequenceA_size),
                         edlibNewAlignConfig(-1, EDLIB_MODE_HW, EDLIB_TASK_LOC, NULL, 0));
 
   }

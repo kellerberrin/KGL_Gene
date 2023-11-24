@@ -221,8 +221,8 @@ void kga::GenerateGeneAllele::writeOutput(const std::string& output_file, char d
              << variant_ptr->identifier() << delimiter
              << variant_ptr->contigId() << delimiter
              << variant_ptr->offset() << delimiter
-             << variant_ptr->reference().getSequenceAsString() << delimiter
-             << variant_ptr->alternate().getSequenceAsString() << delimiter;
+             << variant_ptr->reference().getStringView() << delimiter
+             << variant_ptr->alternate().getStringView() << delimiter;
 
     auto pmid_set = getCitations(variant_ptr->identifier());
     out_file << pmid_set.size() << delimiter;

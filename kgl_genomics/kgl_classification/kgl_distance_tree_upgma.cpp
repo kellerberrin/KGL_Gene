@@ -19,6 +19,7 @@ size_t kgl::DistanceTreeUPGMA::getLeafCount(size_t leaf_idx) const {
 
     ExecEnv::log().error("getLeafCount(), bad index: {}, node vector size: {}", leaf_idx, node_vector_ptr_->size());
     return 1;
+
   }
 
   return node_vector_ptr_->at(leaf_idx)->leafNodeCount();

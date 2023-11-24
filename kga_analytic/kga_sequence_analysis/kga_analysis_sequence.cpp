@@ -52,7 +52,7 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
   genome_3D7_ptr_ = pf3d7_opt.value();
 
   // Initialize the mutate object.
-  mutate_genes_ptr_ = std::make_shared<MutateGenes>(genome_3D7_ptr_);
+  mutate_genes_ptr_ = std::make_shared<MutateGenesReport>(genome_3D7_ptr_, SeqVariantFilterType::FRAMESHIFT_ADJUSTED, ident_work_directory_);
 
   // Do the UPGMA stuff.
   AnalysisGenePf::performGeneAnalysis(genome_3D7_ptr_, ident_work_directory_);
@@ -76,11 +76,8 @@ bool kga::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_
 
   }
 
-
   // Mutate all the relevant genes in the relevant contigs.
-  ExecEnv::log().info("SequenceAnalysis::initializeAnalysis; Begin gene mutation");
   mutate_genes_ptr_->mutatePopulation(population_ptr);
-  ExecEnv::log().info("SequenceAnalysis::initializeAnalysis; End gene mutation");
 
   return true;
 
@@ -98,19 +95,7 @@ bool kga::SequenceAnalysis::iterationAnalysis() {
 // All VCF data has been presented, finalize analysis and write results.
 bool kga::SequenceAnalysis::finalizeAnalysis() {
 
-  // Output the mutation statistics.
-  std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
-  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_genes_ptr_->mutateAnalysis().printMutationTranscript(mutation_file_name);
-
-  std::string validity_file_name = std::string("MutationValidity") + std::string(VARIANT_COUNT_EXT_);
-  validity_file_name = Utility::filePath(validity_file_name, ident_work_directory_);
-  mutate_genes_ptr_->mutateAnalysis().printMutationValidity(validity_file_name);
-
-  mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
-  mutation_file_name = Utility::filePath(mutation_file_name, ident_work_directory_);
-  mutate_genes_ptr_->mutateAnalysis().printGenomeContig(mutation_file_name);
-
+  mutate_genes_ptr_->printMutateReports();
   return true;
 
 }

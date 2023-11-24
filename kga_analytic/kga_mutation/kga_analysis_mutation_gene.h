@@ -16,7 +16,7 @@
 #include "kga_analysis_mutation_gene_stats.h"
 #include "kga_analysis_mutation_gene_clinvar.h"
 #include "kga_analysis_mutation_gene_variant.h"
-#include "kga_analysis_mutation_gene_ontology.h"
+#include "kga_analysis_lib_gene_ontology.h"
 #include "kga_analysis_mutation_gene_allele_pop.h"
 
 

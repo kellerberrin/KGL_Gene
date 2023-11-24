@@ -279,23 +279,20 @@ std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::memberInterval
 
 std::string kgl::Variant::cigar() const {
 
-  return ParseVCFCigar::generateCigar(reference().getSequenceAsString(), alternate().getSequenceAsString());
+  return ParseVCFCigar::generateCigar(std::string(reference().getStringView()), std::string(alternate().getStringView()));
 
 }
 
 // Unique upto phase.
 std::string kgl::Variant::HGVS() const {
 
-  // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(offset()) + reference().getSequenceAsString() + ">" + alternate().getSequenceAsString();
+  return std::format("{}:g.{}{}>{}", contigId(), offset(), reference().getStringView(), alternate().getStringView());
 
 }
 
 // Phase specific hash
 std::string kgl::Variant::HGVS_Phase() const {
 
-  // 1 is added to the offset to make it 1-based as is the standard in Gffs etc.
-  return contigId() + ":g."  + std::to_string(offset()) + reference().getSequenceAsString() +
-         ">" + alternate().getSequenceAsString() + ":" + std::to_string(static_cast<uint8_t>(phaseId()));
+  return std::format("{}:g.{}{}>{}:{}", contigId(), offset(), reference().getStringView(), alternate().getStringView(), static_cast<uint8_t>(phaseId()));
 
 }

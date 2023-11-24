@@ -79,21 +79,20 @@ bool kgl::GenomicMutation::readFastaProteins(const std::string& fasta_file,
 
 
 
-bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
-                                         const FeatureIdent_t& gene_id,
-                                         const FeatureIdent_t& transcript_id,
-                                         ContigSize_t region_size,
-                                         const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
-                                         const std::shared_ptr<const GenomeDB>& genome_db_ptr,
-                                         DNA5SequenceCoding& reference_sequence,
-                                         DNA5SequenceCoding& mutant_sequence) {
+std::optional<std::pair<kgl::DNA5SequenceCoding, kgl::DNA5SequenceCoding>>
+kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
+                                    const FeatureIdent_t& gene_id,
+                                    const FeatureIdent_t& transcript_id,
+                                    ContigSize_t region_size,
+                                    const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                    const std::shared_ptr<const GenomeDB>& genome_db_ptr) {
 
   // Get the contig_ref_ptr.
   std::optional<std::shared_ptr<const ContigReference>> contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_ref_opt) {
 
     ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find contig_ref_ptr: {} in genome database", contig_id);
-    return false;
+    return std::nullopt;
 
   }
   const auto& contig_ref_ptr = contig_ref_opt.value();
@@ -103,7 +102,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   if (not transcript_opt) {
 
     ExecEnv::log().warn("GenomicMutation::compare5Prime, Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
-    return false;
+    return std::nullopt;
 
   }
   const auto& transcript_ptr = transcript_opt.value();
@@ -116,7 +115,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
   if (not contig_db_opt) {
 
     ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr->genomeId());
-    return false;
+    return std::nullopt;
 
   }
   const auto& contig_db_ptr = contig_db_opt.value();
@@ -129,7 +128,7 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
 
     ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
                         contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
-    return false;
+    return std::nullopt;
 
   }
 
@@ -138,34 +137,33 @@ bool kgl::GenomicMutation::compare5Prime(const ContigId_t& contig_id,
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Interval: {}",
                          genome_db_ptr->genomeId(), contig_id, prime_5_region.toString());
-    return false;
+    return std::nullopt;
 
   }
   const auto& [ref_sequence, mod_sequence] = dual_seq_opt.value();
 
-  reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
-  mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
+  auto reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
+  auto mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
+  std::pair<kgl::DNA5SequenceCoding, kgl::DNA5SequenceCoding> seq_pair{std::move(reference_sequence), std::move(mutant_sequence)};
 
-  return true;
+  return seq_pair;
 
 }
 
-
-bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
-                                         const FeatureIdent_t& gene_id,
-                                         const FeatureIdent_t& transcript_id,
-                                         ContigSize_t region_size,
-                                         const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
-                                         const std::shared_ptr<const GenomeDB>& genome_db_ptr,
-                                         DNA5SequenceCoding& reference_sequence,
-                                         DNA5SequenceCoding& mutant_sequence) {
+std::optional<std::pair<kgl::DNA5SequenceCoding, kgl::DNA5SequenceCoding>>
+kgl::GenomicMutation::compare3Prime( const ContigId_t& contig_id,
+                                     const FeatureIdent_t& gene_id,
+                                     const FeatureIdent_t& transcript_id,
+                                     ContigSize_t region_size,
+                                     const std::shared_ptr<const GenomeReference>& genome_ref_ptr,
+                                     const std::shared_ptr<const GenomeDB>& genome_db_ptr) {
 
   // Get the contig_ref_ptr.
   auto contig_ref_opt = genome_ref_ptr->getContigSequence(contig_id);
   if (not contig_ref_opt) {
 
     ExecEnv::log().warn("Could not find contig_ref_ptr: {} in genome database", contig_id);
-    return false;
+    return std::nullopt;
 
   }
   const auto& contig_ref_ptr = contig_ref_opt.value();
@@ -175,7 +173,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   if (not transcript_opt) {
 
     ExecEnv::log().warn("Could not find a coding sequence for gene: {}, sequence: {}", gene_id, transcript_id);
-    return false;
+    return std::nullopt;
 
   }
   const auto& transcript_ptr = transcript_opt.value();
@@ -188,7 +186,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
   if (not contig_db_opt) {
 
     ExecEnv::log().warn("Contig: {} not found for Genome: {}", contig_id, genome_db_ptr->genomeId());
-    return false;
+    return std::nullopt;
 
   }
   const auto& contig_db_ptr = contig_db_opt.value();
@@ -201,7 +199,7 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
 
     ExecEnv::log().warn("Problem mutating region DNA sequence for contig_id id: {}, interval: {}",
                         contig_db_ptr->contigId(), seq_variant_filter.sequenceInterval().toString());
-    return false;
+    return std::nullopt;
 
   }
 
@@ -210,15 +208,16 @@ bool kgl::GenomicMutation::compare3Prime(const ContigId_t& contig_id,
 
     ExecEnv::log().error("Unexpected error mutating Genome: {}, Contig: {}, Interval: {}",
                          genome_db_ptr->genomeId(), contig_id, prime_3_interval.toString());
-    return false;
+    return std::nullopt;
 
   }
   const auto& [ref_sequence, mod_sequence] = dual_seq_opt.value();
 
-  reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
-  mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
+  auto reference_sequence = ref_sequence.codingSequence(transcript_ptr->strand());
+  auto mutant_sequence = mod_sequence.codingSequence(transcript_ptr->strand());
+  std::pair<kgl::DNA5SequenceCoding, kgl::DNA5SequenceCoding> seq_pair{std::move(reference_sequence), std::move(mutant_sequence)};
 
-  return true;
+  return seq_pair;
 
 }
 
@@ -348,7 +347,7 @@ bool kgl::GenomicMutation::outputDNASequenceCSV(const std::string &file_name,
       for (const auto& [transcript_id, transcript_ptr] : transcript_array_ptr->getMap()) {
 
 
-        out_file << contig_ref_ptr->contigSize() << CSV_delimiter;
+        out_file << contig_ref_ptr->sequence().length() << CSV_delimiter;
         out_file << gene_ptr->id() << CSV_delimiter;
         out_file << transcript_id << CSV_delimiter;
         out_file << transcript_ptr->start() << CSV_delimiter;
@@ -503,7 +502,7 @@ bool kgl::GenomicMutation::outputAminoSequenceCSV(const std::string &file_name,
       for (auto const& [transcript_id, transcript_ptr] : coding_seq_ptr->getMap()) {
 
 
-        out_file << contig_ref_ptr->contigSize() << CSV_delimiter;
+        out_file << contig_ref_ptr->sequence().length() << CSV_delimiter;
         out_file << gene_ptr->id() << CSV_delimiter;
         out_file << transcript_id << CSV_delimiter;
         out_file << transcript_ptr->start() << CSV_delimiter;
@@ -745,8 +744,8 @@ bool kgl::GenomicMutation::outputAminoMutationCSV(const std::string &file_name,
 
 
       EditVector edit_vector;
-      SequenceComparison().editDNAItems(amino_reference_seq.getSequenceAsString(),
-                                        amino_mutant.getSequenceAsString(),
+      SequenceComparison().editDNAItems(std::string(amino_reference_seq.getStringView()),
+                                        std::string(amino_mutant.getStringView()),
                                         edit_vector);
 
       for (auto edit_item : edit_vector) {
@@ -857,8 +856,8 @@ bool kgl::GenomicMutation::outputDNAMutationCSV(const std::string &file_name,
       auto const& mutant_sequence = mutant_sequence_opt.value();
 
       EditVector edit_vector;
-      SequenceComparison().editDNAItems(reference_sequence.getSequenceAsString(),
-                                        mutant_sequence.getSequenceAsString(),
+      SequenceComparison().editDNAItems(std::string(reference_sequence.getStringView()),
+                                        std::string(mutant_sequence.getStringView()),
                                         edit_vector);
 
       MutationEditVector mutation_edit_vector;

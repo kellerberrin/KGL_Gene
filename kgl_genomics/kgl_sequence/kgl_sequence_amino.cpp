@@ -11,35 +11,6 @@ namespace kgl = kellerberrin::genome;
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Amino Sequence - A container for Amino Acid (protein) sequences.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-bool kgl::AminoSequence::removeTrailingStop() {
-
-  if (alphabet_string_.empty()) {
-
-    ExecEnv::log().warn("Attempt to remove trailing stop amino acid from empty amino sequence");
-    return false;
-
-  }
-
-  if (*alphabet_string_.rbegin() == AminoAcid::AMINO_STOP) {
-
-    alphabet_string_.pop_back();
-    return true;
-
-  } else {  // Not a stop codon.
-
-    ExecEnv::log().info("removeTrailingStop(). Final amino: {} is not a stop codon.", AminoAcid::convertToChar(*alphabet_string_.rbegin()));
-    return false;
-
-  }
-
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

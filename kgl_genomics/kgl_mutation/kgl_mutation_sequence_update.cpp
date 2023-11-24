@@ -123,8 +123,8 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
       const DNA5SequenceLinear& interval_reference = interval_reference_opt.value();
 
       ExecEnv::log().warn("Reference: {} does not match sequence: {} at offset: {}/{}, ref interval: {}, delete interval: {}, Update: {}",
-                          truncated_reference.getSequenceAsString(),
-                          interval_reference.getSequenceAsString(),
+                          truncated_reference.getStringView(),
+                          interval_reference.getStringView(),
                           sequence_offset,
                           original_offset,
                           ref_interval.toString(),

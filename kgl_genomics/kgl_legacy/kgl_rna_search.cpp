@@ -127,7 +127,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
     analysis_results.score_ = score;
     analysis_results.target_offset_ = 0;
     analysis_results.comparison_ = compare_str;
-    analysis_results.rna_sequence = rna_sub_region.getSequenceAsString();
+    analysis_results.rna_sequence = rna_sub_region.getStringView();
 
     search_results_.insert(RNASearchResults::value_type(index_score, analysis_results));
 
@@ -136,7 +136,7 @@ bool kgl::RNAAnalysis::compareRNARegion(ContigSize_t rna_region_comparison_start
     if (counter % report_frequency == 0) {
 
       ExecEnv::log().info("compareRNARegion() just compared: {}, total comparisons: {}",
-                          rna_sub_region.getSequenceAsString(), counter);
+                          rna_sub_region.getStringView(), counter);
 
     }
 

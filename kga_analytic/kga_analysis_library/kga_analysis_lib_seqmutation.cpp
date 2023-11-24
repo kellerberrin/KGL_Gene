@@ -2,7 +2,7 @@
 // Created by kellerberrin on 6/07/23.
 //
 
-#include "kga_analysis_sequence_mutation.h"
+#include "kga_analysis_lib_seqmutation.h"
 #include "kgl_variant_filter_db_offset.h"
 #include "kgl_mutation_variant_filter.h"
 #include "kel_workflow_threads.h"
@@ -55,37 +55,21 @@ void kga::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
 }
 
 
-void kga::MutateGenes::initializeGeneContigMap(const std::shared_ptr<const GenomeReference>& genome_ptr) {
-
-  for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
-
-    for (auto const& [gene_offset, gene_ptr] : contig_ptr->getGeneMap()) {
-
-      auto [iter, result] = gene_contig_map_.try_emplace(gene_ptr, contig_id);
-      if (not result) {
-
-        ExecEnv::log().warn("Unable to insert duplicate gene: {}", gene_ptr->id());
-
-      }
-
-    }
-
-  }
-
-}
-
-
 std::vector<std::shared_ptr<const kgl::GeneFeature>> kga::MutateGenes::contigGenes(const ContigId_t& contig_id) const {
 
   std::vector<std::shared_ptr<const GeneFeature>> gene_vector;
 
-  for (auto const& [gene_ptr, gene_contig_id] : gene_contig_map_) {
+  auto contig_opt = genome_ptr_->getContigSequence(contig_id);
+  if (not contig_opt) {
 
-    if (gene_contig_id == contig_id) {
+    ExecEnv::log().warn("Requested contig: {} not found in reference genome: {}", contig_id, genome_ptr_->genomeId());
+    return gene_vector;
+
+  }
+  auto const& contig_ref_ptr = contig_opt.value();
+  for (auto const& [gene_offset, gene_ptr] : contig_ref_ptr->getGeneMap()) {
 
       gene_vector.push_back(gene_ptr);
-
-    }
 
   }
 
@@ -143,6 +127,7 @@ kga::MutateStats kga::MutateGenes::mutateGenomes( const std::shared_ptr<const Ge
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
     std::future<std::pair<SequenceStats, bool>> future = thread_pool.enqueueFuture(&MutateGenes::genomeTranscriptMutation,
+                                                                                this,
                                                                                 genome_ptr,
                                                                                 gene_ptr,
                                                                                 transcript_id,
@@ -251,19 +236,31 @@ std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(c
   }
   const auto& transcript_ptr = transcript_opt.value();
 
-  const auto filtertype = SeqVariantFilterType::HIGHEST_FREQ_VARIANT;
-  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, filtertype);
+//  const auto filtertype = SeqVariantFilterType::HIGHEST_FREQ_VARIANT;
+  const SequenceTranscript modified_transcript(contig_db_ptr, transcript_ptr, filtertype_);
   if (not modified_transcript.sequenceStatus()) {
 
-    ExecEnv::log().warn("Unable to generate modified seuquence for Transcript: {}, Gene: {}, Reference Genome: {}",
+    ExecEnv::log().warn("Unable to generate modified sequence for Transcript: {}, Gene: {}, Reference Genome: {}",
                         transcript_id, gene_ptr->id(), gene_contig_id);
 
     return {{}, false};
 
   }
 
-  auto [modified_coding, modified_validity, modified_amino_size] = modified_transcript.getModifiedAdjustedValidity();
-  auto [original_coding, original_validity, original_amino_size] = modified_transcript.getOriginalValidity();
+  auto modified_opt = modified_transcript.getModifiedAdjustedValidity();
+  auto original_opt = modified_transcript.getOriginalValidity();
+
+  if (not modified_opt or not original_opt) {
+
+    ExecEnv::log().warn("Problem retrieving modified sequence for Transcript: {}, Gene: {}, Reference Genome: {}",
+                        transcript_id, gene_ptr->id(), gene_contig_id);
+
+    return {{}, false};
+
+  }
+
+  auto& [modified_coding, modified_validity, modified_amino_size] = modified_opt.value();
+  auto& [original_coding, original_validity, original_amino_size] = original_opt.value();
 
   SequenceStats stats;
   stats.filter_statistics_ = modified_transcript.filterStatistics();
@@ -273,5 +270,40 @@ std::pair<kga::SequenceStats, bool> kga::MutateGenes::genomeTranscriptMutation(c
   stats.original_amino_size_ = original_amino_size;
 
   return { stats, true};
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void kga::MutateGenesReport::mutatePopulation(const std::shared_ptr<const PopulationDB>& population_ptr) {
+
+  // Mutate all the relevant genes in the relevant contigs.
+  ExecEnv::log().info("MutateGenesReport; Begin gene mutation");
+  mutate_genes_.mutatePopulation(population_ptr);
+  ExecEnv::log().info("MutateGenesReport; End gene mutation");
+
+}
+
+void kga::MutateGenesReport::printMutateReports() {
+
+  // Output the mutation statistics.
+  std::string mutation_file_name = std::string("MutationTranscript") + std::string(VARIANT_COUNT_EXT_);
+  mutation_file_name = Utility::filePath(mutation_file_name, report_directory_);
+  mutate_genes_.mutateAnalysis().printMutationTranscript(mutation_file_name);
+
+  std::string validity_file_name = std::string("MutationValidity") + std::string(VARIANT_COUNT_EXT_);
+  validity_file_name = Utility::filePath(validity_file_name, report_directory_);
+  mutate_genes_.mutateAnalysis().printMutationValidity(validity_file_name);
+
+  mutation_file_name = std::string("MutationGenome") + std::string(VARIANT_COUNT_EXT_);
+  mutation_file_name = Utility::filePath(mutation_file_name, report_directory_);
+  mutate_genes_.mutateAnalysis().printGenomeContig(mutation_file_name);
 
 }

@@ -85,11 +85,8 @@ public:
                                              genome_db_ptr_(std::move(genome_db_ptr)),
                                              genome_ref_ptr_(std::move(genome_ref_ptr)),
                                              gene_ptr_(std::move(gene_ptr)),
-                                             protein_family_(std::move(protein_family)) {
-
-    mutateProtein();
-
-  }
+                                             protein_family_(std::move(protein_family)),
+                                             mutated_protein_(mutateProtein()) {}
   ~GeneDistance() override = default;
 
   // UPGMA Classification functions
@@ -113,7 +110,7 @@ protected:
 
   AminoSequence mutated_protein_;
 
-  void mutateProtein();
+  AminoSequence mutateProtein();
 
 };
 
@@ -225,11 +222,8 @@ public:
                     std::shared_ptr<const GeneFeature> gene_ptr,
                     std::string protein_family)
   : ReferenceGeneDistance(std::move(genome_db_ptr), std::move(gene_ptr), std::move(protein_family)),
-    sequence_distance_(sequence_distance) {
-
-    getAminoSequence();
-
-  }
+    sequence_distance_(std::move(sequence_distance)),
+    amino_sequence_(getAminoSequence()) {}
 
   ~AminoGeneDistance() override = default;
 
@@ -239,9 +233,9 @@ public:
 private:
 
   AminoDistanceMetric sequence_distance_;
-  AminoSequence amino_sequence_;
+  const AminoSequence amino_sequence_;
 
-  void  getAminoSequence();
+  AminoSequence getAminoSequence();
 
 };
 

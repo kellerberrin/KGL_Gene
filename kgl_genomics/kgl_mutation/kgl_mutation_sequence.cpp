@@ -101,23 +101,23 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
 
   }
 
-  auto modified_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
+  auto modified_sequence_opt = contig_ref_ptr->sequence().subSequence(contigInterval());
   if (not modified_sequence_opt) {
 
     ExecEnv::log().error("Requested modified sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
-                         contig_ref_ptr->sequence_ptr()->interval().toString());
+                         contig_ref_ptr->sequence().interval().toString());
     return;
 
   }
-  auto original_sequence_opt = contig_ref_ptr->sequence_ptr()->subSequence(contigInterval());
+  auto original_sequence_opt = contig_ref_ptr->sequence().subSequence(contigInterval());
   if (not original_sequence_opt) {
 
     ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
-                         contig_ref_ptr->sequence_ptr()->interval().toString());
+                         contig_ref_ptr->sequence().interval().toString());
     return;
 
   }

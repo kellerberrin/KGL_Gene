@@ -32,6 +32,7 @@ public:
 
   AlphabetString() = default;
   explicit AlphabetString(std::basic_string<typename Alphabet::Alphabet>&& base_string) noexcept : base_string_(std::move(base_string)) {}
+  explicit AlphabetString(const std::basic_string_view<typename Alphabet::Alphabet>& base_view) : base_string_(base_view) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
   AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
   AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
@@ -183,6 +184,8 @@ public:
   // Yes, this is as dodgy as it looks. But if Alphabets are always implemented as char (byte) sized objects it should be ok.
   // The motivation is to avoid the overhead of the byte copy of convertToCharString() above.
   [[nodiscard]] const char* c_str() const { return reinterpret_cast<const char*>(base_string_.c_str()); }
+  // Pointer to the base of the alphabet string. Points to the same address as the above but is not coerced into a const char*
+  [[nodiscard]] const Alphabet::Alphabet* data() const { return base_string_.data(); }
 
   bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 

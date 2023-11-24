@@ -46,14 +46,14 @@ public:
   // In strand sense. Returns a sequence of the concatenated and modified exons.
   // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
   // The size_t returns the size of the amino sequence including the first stop sequence.
-  [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getModifiedValidity() const;
+  [[nodiscard]] std::optional<std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>> getModifiedValidity() const;
   // Adjust for mod3.
-  [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getModifiedAdjustedValidity() const;
+  [[nodiscard]] std::optional<std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>> getModifiedAdjustedValidity() const;
 
   // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
   // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
   // The size_t returns the size of the amino sequence including the first stop sequence.
-  [[nodiscard]] std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t> getOriginalValidity() const;
+  [[nodiscard]] std::optional<std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>> getOriginalValidity() const;
 
 
 

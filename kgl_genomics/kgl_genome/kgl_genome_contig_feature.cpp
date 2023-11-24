@@ -59,16 +59,20 @@ void kgl::StructuredFeatures::verifyContigOverlap() const {
       adj_sequence.begin(0);
       feature.sequence(adj_sequence);
       ExecEnv::log().warn("Contig: {} 1-offset features [1, {}], adjusted to zero-offset [0, {})",
-                          feature.contig_ref_ptr()->contigId(), feature.contig_ref_ptr()->contigSize(), feature.contig_ref_ptr()->contigSize());
+                          feature.contig_ref_ptr()->contigId(), feature.contig_ref_ptr()->sequence().length(), feature.contig_ref_ptr()->sequence().length());
 
-    } else if (feature.sequence().end() > feature.contig_ref_ptr()->contigSize()) { // No features larger than the contig_ref_ptr.
+    } else if (feature.sequence().end() > feature.contig_ref_ptr()->sequence().length()) { // No features larger than the contig_ref_ptr.
 
       FeatureSequence adj_sequence = feature.sequence();
-      adj_sequence.end(feature.contig_ref_ptr()->contigSize());
+      adj_sequence.end(feature.contig_ref_ptr()->sequence().length());
       feature.sequence(adj_sequence);
       ExecEnv::log().warn("Feature: {} [{}, {}) exceeds contig_ref_ptr size :{} adjusted to [{}, {})",
-                          feature.id(), feature.sequence().begin(), feature.sequence().end(),
-                          feature.contig_ref_ptr()->contigSize(), feature.sequence().begin(), feature.contig_ref_ptr()->contigSize());
+                          feature.id(),
+                          feature.sequence().begin(),
+                          feature.sequence().end(),
+                          feature.contig_ref_ptr()->sequence().length(),
+                          feature.sequence().begin(),
+                          feature.contig_ref_ptr()->sequence().length());
 
     }
 

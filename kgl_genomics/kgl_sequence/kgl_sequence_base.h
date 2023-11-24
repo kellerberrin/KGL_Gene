@@ -7,8 +7,9 @@
 
 
 #include "kgl_alphabet_string.h"
+#include "kgl_alphabet_sequence.h"
 #include "kgl_genome_prelim.h"
-#include "kgl_sequence_virtual.h"
+#include "kgl_sequence_base_view.h"
 
 #include <string>
 #include <memory>
@@ -42,8 +43,8 @@ class DNA5SequenceCoding: public AlphabetSequence<CodingDNA5> {
 public:
 
   DNA5SequenceCoding(DNA5SequenceCoding&& sequence) noexcept :  AlphabetSequence<CodingDNA5>(std::move(sequence.alphabet_string_)), strand_(sequence.strand_) {}
+  explicit DNA5SequenceCoding(const DNA5SequenceCodingView& sequence_view) : AlphabetSequence<CodingDNA5>(sequence_view.getSequence()), strand_(sequence_view.strand()) {};
   DNA5SequenceCoding(StringCodingDNA5&& sequence_string, StrandSense strand) noexcept : AlphabetSequence<CodingDNA5>(std::move(sequence_string)), strand_(strand) {}
-  DNA5SequenceCoding() : strand_(StrandSense::FORWARD) {} // Empty sequences permitted
   DNA5SequenceCoding(DNA5SequenceCoding& copy) = delete; // For Performance reasons, no copy constructor.
   ~DNA5SequenceCoding() override = default;
 
@@ -58,6 +59,8 @@ public:
 
   }
 
+  //Return a view.
+  [[nodiscard]] DNA5SequenceCodingView getView() const { return DNA5SequenceCodingView(*this); }
 
   // Returns the sequence strand, FORWARD '+' or REVERSE '-'.
   [[nodiscard]] StrandSense strand() const { return strand_; }
@@ -86,6 +89,7 @@ public:
   DNA5SequenceLinear(DNA5SequenceLinear&& sequence) noexcept : AlphabetSequence<DNA5>(std::move(sequence)) {}
   explicit DNA5SequenceLinear(StringDNA5&& sequence_string) :  AlphabetSequence<DNA5>(std::move(sequence_string)) {}
   explicit DNA5SequenceLinear(AlphabetSequence<DNA5>&& sequence) :  AlphabetSequence<DNA5>(std::move(sequence)) {}
+  explicit DNA5SequenceLinear(const DNA5SequenceLinearView& sequence_view) : AlphabetSequence<DNA5>(sequence_view.getSequence()) {};
   DNA5SequenceLinear() = default; // Empty sequences permitted.
   DNA5SequenceLinear(const DNA5SequenceLinear&) = delete; // For Performance reasons, no copy constructor.
   ~DNA5SequenceLinear() override = default;
@@ -119,8 +123,11 @@ public:
 
   // Returns an UNSTRANDED subsequence.
   [[nodiscard]] std::optional<DNA5SequenceLinear> subSequence(const OpenRightUnsigned& sub_interval) const;
+  //Return a view.
+  [[nodiscard]] DNA5SequenceLinearView getView() const { return DNA5SequenceLinearView(*this); }
 
   // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
+  // Does not check for overlapping intervals.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const IntervalSetLower& interval_set) const;
 
 private:

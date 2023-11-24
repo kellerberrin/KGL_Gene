@@ -236,16 +236,16 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
   std::pair<size_t, size_t> contig_count{0, 0};
 
-  std::shared_ptr<const DNA5SequenceLinear> contig_sequence_ptr = contig_db_ptr->sequence_ptr();
+  const DNA5SequenceLinear& contig_sequence = contig_db_ptr->sequence();
 
   for (auto const& [offset, variant_vector] : getMap()) {
 
     contig_count.first += variant_vector->getVariantArray().size();
 
-    if (offset >= contig_sequence_ptr->length()) {
+    if (offset >= contig_sequence.length()) {
 
       ExecEnv::log().error("Variant offset: {} exceeds total contig_ref_ptr: {} size: {}", offset,
-                           contig_db_ptr->contigId(), contig_sequence_ptr->length());
+                           contig_db_ptr->contigId(), contig_sequence.length());
       continue;
 
     }
@@ -260,12 +260,12 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
       }
 
       OpenRightUnsigned contig_ref_interval(variant_ptr->offset(), variant_ptr->offset()+variant_ptr->referenceSize());
-      auto contig_ref_opt = contig_sequence_ptr->subSequence(contig_ref_interval);
+      auto contig_ref_opt = contig_sequence.subSequence(contig_ref_interval);
       if (not contig_ref_opt) {
 
         ExecEnv::log().error("Unable to extract variant reference from contig: {}, contig_ref_ptr interval: {}, variant: {}",
                              contig_db_ptr->contigId(),
-                             contig_sequence_ptr->interval().toString(),
+                             contig_sequence.interval().toString(),
                              variant_ptr->HGVS());
         continue;
 
@@ -279,7 +279,7 @@ std::pair<size_t, size_t> kgl::ContigDB::validate(const std::shared_ptr<const Co
 
         ExecEnv::log().error("Mismatch, at Contig Offset: {} Contig Sequence is: {}, Variant is: {}",
                                variant_ptr->offset(),
-                               contig_ref_opt.value().getSequenceAsString(),
+                               contig_ref_opt.value().getStringView(),
                                variant_ptr->HGVS());
 
       }

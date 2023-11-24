@@ -190,19 +190,16 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
   AminoDistanceMetric amino_distance_metric{LevenshteinGlobalAmino};
   gene_summary.genome = genome_variant_ptr->genomeId();
 
-  DNA5SequenceCoding prime5_reference;
-  DNA5SequenceCoding prime5_mutant;
+  auto prime5coding_pair_opt = GenomicMutation::compare5Prime(contig_id,
+                                                              gene,
+                                                              sequence,
+                                                              PRIME_REGION_SIZE,
+                                                              genome_ref_ptr,
+                                                              genome_variant_ptr);
 
-  if (GenomicMutation::compare5Prime(contig_id,
-                                     gene,
-                                     sequence,
-                                     PRIME_REGION_SIZE,
-                                     genome_ref_ptr,
-                                     genome_variant_ptr,
-                                     prime5_reference,
-                                     prime5_mutant)) {
+  if (prime5coding_pair_opt) {
 
-
+    auto& [prime5_reference, prime5_mutant] = prime5coding_pair_opt.value();
 
     gene_summary.prime5_distance = dna_distance_metric(prime5_reference, prime5_mutant);
 
@@ -274,17 +271,16 @@ bool kgl::GenomicSequence::mutateGenomeGene(const ContigId_t& contig_id,
 
   }
 
-  DNA5SequenceCoding prime3_reference;
-  DNA5SequenceCoding prime3_mutant;
+  auto prime3coding_pair_opt = GenomicMutation::compare3Prime(contig_id,
+                                                              gene,
+                                                              sequence,
+                                                              PRIME_REGION_SIZE,
+                                                              genome_ref_ptr,
+                                                              genome_variant_ptr);
 
-  if (GenomicMutation::compare3Prime(contig_id,
-                                     gene,
-                                     sequence,
-                                     PRIME_REGION_SIZE,
-                                     genome_ref_ptr,
-                                     genome_variant_ptr,
-                                     prime3_reference,
-                                     prime3_mutant)) {
+  if (prime3coding_pair_opt ) {
+
+    auto& [prime3_reference, prime3_mutant] = prime3coding_pair_opt.value();
 
     gene_summary.prime3_distance = dna_distance_metric(prime3_reference, prime3_mutant);
     ExecEnv::log().info("3PRIME Genome: {}, Contig: {}, Gene: {}, Sequence: {} Levenshtein: {}",

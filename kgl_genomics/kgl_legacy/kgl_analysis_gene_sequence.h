@@ -11,7 +11,7 @@
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_io_gff_fasta.h"
 #include "kgl_genome_collection.h"
-#include "kga_analysis_sequence_mutation.h"
+#include "kga_analysis_lib_seqmutation.h"
 #include "kgl_sequence_distance_impl.h"
 
 #include <memory>

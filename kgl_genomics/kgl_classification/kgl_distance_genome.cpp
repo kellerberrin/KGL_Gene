@@ -7,7 +7,7 @@
 
 namespace kgl = kellerberrin::genome;
 
-// This routine counts the the number of variants that are in one genome but not the other - the variant difference.
+// This routine counts the number of variants that are in one genome but not the other - the variant difference.
 // Unfortunately the logic here is somewhat complex, be careful when modifying.
 kgl::DistanceType_t kgl::GenomeDistance::distance(std::shared_ptr<const VirtualDistanceNode> distance_node) const {
 
