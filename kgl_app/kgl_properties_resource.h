@@ -29,7 +29,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 // 1. Define the resource in a resource XML file.
 // 2. Define all the tags used in the XML definition below as text constants.
-// 3. Go to the kgl_properties_resource.cpp and kgl_properties_resource_item.cpp and define a simple XML parser.
+// 3. Go to the kgl_properties_resource.cpp and kgl_properties_resource_item.cpp (or kgl_properties_resource_pf.cpp) and define a simple XML parser.
 // 4. Go to kgl_package_resource.cpp function ExecutePackage::loadRuntimeResource() and add code to create the resource on demand.
 // 5. Add the resource type and identifier in the package XML.
 // 6. Retrieve the resource at runtime in the analysis object.
@@ -104,6 +104,10 @@ public:
   constexpr static const char PUBMED_IDENT_[] = "pubmedApiIdent";
   constexpr static const char PUBMED_PUBLICATION_CACHE_[] = "pubmedPublicationCache";
   constexpr static const char PUBMED_CITATION_CACHE_[] = "pubmedCitationCache";
+  // The Pf3k COI data
+  constexpr static const char PF3K_COI_RESOURCE_ID_[] = "Pf3KCOI";
+  constexpr static const char PF3K_COI_IDENT_[] = "Pf3KCOIIdent";
+  constexpr static const char PF3K_COI_FILE_[] = "Pf3KCOIFile";
 
 private:
 
@@ -126,6 +130,7 @@ private:
   [[nodiscard]] std::optional<ResourceParameters> Pf7DistanceResourceXML(const PropertyTree& sub_tree) const;
   [[nodiscard]] std::optional<ResourceParameters> PubmedLitAPIResourceXML(const PropertyTree& sub_tree) const;
   [[nodiscard]] std::optional<ResourceParameters> auxIDResourceXML(const PropertyTree& sub_tree) const;
+  [[nodiscard]] std::optional<ResourceParameters> Pf3KCOIResourceXML(const PropertyTree& sub_tree) const;
 
 };
 

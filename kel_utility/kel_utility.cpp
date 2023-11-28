@@ -42,7 +42,7 @@ std::string kel::Utility::filePath(const std::string& file_name) {
 }
 
 
-// Returns the filename with the path directory appended to it "path/file".
+// Returns the filename with the path directory appended to it "path/file", or appended subdirectory "path/sub_dir".
 std::string kel::Utility::filePath(const std::string& file_name, const std::string& path) {
 
   fs::path directory_path = fs::path(path);
@@ -50,6 +50,9 @@ std::string kel::Utility::filePath(const std::string& file_name, const std::stri
   return file_path.string();
 
 }
+
+// Utility to append subdirectory "path/sub_dir" (same as above).
+std::string kel::Utility::appendPath(const std::string& sub_directory, const std::string& path) { return filePath(sub_directory, path); }
 
 // Check that a file exists at the file path.
 bool kel::Utility::fileExists(const std::string& file_path) {
@@ -70,6 +73,21 @@ bool kel::Utility::fileExistsCreate(const std::string& file_path) {
   }
 
   return true;
+
+}
+
+// If directory exists recreate it, else just create it.
+bool kel::Utility::directoryRenew(const std::string& path) {
+
+  if (directoryExists(path)) {
+
+    return recreateDirectory(path);
+
+  } else {
+
+    return createDirectory(path);
+
+  }
 
 }
 

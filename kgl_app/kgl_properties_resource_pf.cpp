@@ -99,3 +99,28 @@ std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf7DistanceResou
 
 }
 
+
+std::optional<kgl::ResourceParameters> kgl::ResourceProperties::Pf3KCOIResourceXML(const PropertyTree& sub_tree) const {
+
+  std::string Pf3KCOI_ident;
+  if (not sub_tree.getProperty(PF3K_COI_IDENT_, Pf3KCOI_ident)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf3KCOI Identifier.");
+    return std::nullopt;
+
+  }
+  ResourceParameters resource_parameters(PF3K_COI_RESOURCE_ID_, Pf3KCOI_ident);
+
+  std::string Pf3KCOI_file_name;
+  if (not sub_tree.getFileProperty(PF3K_COI_FILE_, workDirectory(), Pf3KCOI_file_name)) {
+
+    ExecEnv::log().error("RuntimeProperties::getRuntimeResources; No Pf3kCOI file name information, ident: {}", Pf3KCOI_ident);
+    return std::nullopt;
+
+  }
+  resource_parameters.setParameter(PF3K_COI_FILE_, Pf3KCOI_file_name);
+
+  return resource_parameters;
+
+}
+

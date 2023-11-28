@@ -4,6 +4,9 @@
 
 #include "kga_analysis_sequence.h"
 #include "kga_analysis_lib_Pfgene.h"
+#include "kga_analysis_lib_utility.h"
+#include "kga_analysis_lib_PfFilter.h"
+
 #include "kgl_variant_filter_db_variant.h"
 
 #include <chrono>
@@ -33,6 +36,9 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
 
   }
 
+  // Get subscribed resource for Pf3K COI data.
+  Pf3KCOI_ptr_ = resource_ptr->getSingleResource<const Pf3kCOIResource>(ResourceProperties::PF3K_COI_RESOURCE_ID_);
+
   auto reference_genomes_ptr = std::make_shared<GenomeCollection>();
   for (auto const& genome_resource_ptr : resource_ptr->getResources(ResourceProperties::GENOME_RESOURCE_ID_)) {
 
@@ -57,6 +63,9 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
   // Do the UPGMA stuff.
   AnalysisGenePf::performGeneAnalysis(genome_3D7_ptr_, ident_work_directory_);
 
+  // Analysis on RUf6.
+  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+
   return true;
 
 }
@@ -76,8 +85,18 @@ bool kga::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_
 
   }
 
+  // Filter to COI = 1 only.
+  FilterPf3k filter_coi(Pf3KCOI_ptr_);
+  auto filtered_population_ptr = filter_coi.filterCOI(population_ptr);
+
+  ExecEnv::log().info("Unfiltered genomes: {}, COI = 1 filtered genomes: {}",
+                      population_ptr->getMap().size(),
+                      filtered_population_ptr->getMap().size());
+
   // Mutate all the relevant genes in the relevant contigs.
-  mutate_genes_ptr_->mutatePopulation(population_ptr);
+  mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
+
+  transcript_analysis_.performFamilyAnalysis(filtered_population_ptr);
 
   return true;
 
@@ -96,6 +115,9 @@ bool kga::SequenceAnalysis::iterationAnalysis() {
 bool kga::SequenceAnalysis::finalizeAnalysis() {
 
   mutate_genes_ptr_->printMutateReports();
+
+  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_);
+
   return true;
 
 }

@@ -37,14 +37,16 @@ public:
   Utility()=delete;
   ~Utility()=delete;
 
-  [[nodiscard]] static std::string filePath(const std::string& file_name); // Input is "path/file.ext" function returns "path"
-  [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // Utility to concatenate "path/file.ext"
+  [[nodiscard]] static std::string filePath(const std::string& file_name); // Input is "path/file.ext" function returns "path".
+  [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // Utility to concatenate "path/file.ext".
+  [[nodiscard]] static std::string appendPath(const std::string& sub_directory, const std::string& path); // Utility to append subdirectory "path/sub_dir" (same as above).
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
   [[nodiscard]] static bool fileExistsCreate(const std::string& file_path); // Check that a file exists at the file path, creates zero sized file if not.
   [[nodiscard]] static bool directoryExists(const std::string& path); // Check that the directory exists at the specified path
   [[nodiscard]] static bool createDirectory(const std::string& path); // Create directory at the specified path
-  [[nodiscard]] static bool deleteDirectory(const std::string& path); // Recursively deletes the contents of a directory and all sub-directories.
+  [[nodiscard]] static bool deleteDirectory(const std::string& path); // Recursively deletes the contents of a directory and all subdirectories.
   [[nodiscard]] static bool recreateDirectory(const std::string& path); // Delete the directory and its contents and then recreate the directory.
+  [[nodiscard]] static bool directoryRenew(const std::string& path);  // If directory exists, recreate it, else just create it.
   [[nodiscard]] static std::string fileExtension(const std::string& file_name); // Input is "path/file.ext", returns "ext"
   [[nodiscard]] static std::string fileName(const std::string& file_name); // Input is path/file.ext", returns "file"
   [[nodiscard]] static std::optional<std::string> getEnvironment(const std::string& env_var); // Translate a linux environment variable.

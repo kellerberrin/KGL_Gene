@@ -100,15 +100,14 @@ bool kgl::SquareTextIndexed::parseTextRows(const SquareTextRows& square_text) {
 std::optional<size_t> kgl::SquareTextIndexed::fieldOffset(const std::string& field_name) const {
 
   auto result = square_file_header_.find(field_name);
-
   if (result != square_file_header_.end()) {
 
-    return result->second;
+    auto const& [field_key, field_index] = *result;
+    return field_index;
 
   }
 
   ExecEnv::log().warn("SquareTextIndexed::fieldOffset; could not find field: {}", field_name);
-
   return std::nullopt;
 
 }
@@ -117,19 +116,15 @@ std::optional<size_t> kgl::SquareTextIndexed::fieldOffset(const std::string& fie
 const std::vector<std::string>& kgl::SquareTextIndexed::getRow(const std::string& row_index) const {
 
   auto result = square_indexed_rows_.find(row_index);
-
   if (result != square_indexed_rows_.end()) {
 
-    return result->second;
+    auto const& [row_key, row_vector] = *result;
+    return row_vector;
 
   }
 
-  ExecEnv::log().warn("SquareTextIndexed::getRow; could not find row index: {}", row_index);
-
-  static std::vector<std::string> empty_row;
-
+  static const std::vector<std::string> empty_row;
   return empty_row;
-
 
 }
 

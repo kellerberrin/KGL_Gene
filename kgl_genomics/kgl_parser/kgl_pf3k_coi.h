@@ -5,9 +5,9 @@
 #ifndef KGL_COI_PF3K_H
 #define KGL_COI_PF3K_H
 
-
-#include "kgl_data_file_type.h"
+#include "kgl_properties_resource.h"
 #include "kgl_square_parser.h"
+#include "kgl_genome_types.h"
 
 
 #include <string>
@@ -25,16 +25,20 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class Pf3kCOIDB : public DataDB {
+class Pf3kCOIResource : public ResourceBase {
 
 public:
 
-  Pf3kCOIDB(std::string file_ident, DataSourceEnum data_source) : DataDB(data_source), file_ident_(std::move(file_ident)) {}
-  ~Pf3kCOIDB() override = default;
+  Pf3kCOIResource(std::string identifier, const SquareTextRows& square_text);
+  ~Pf3kCOIResource() override = default;
 
-  [[nodiscard]] const std::string& fileId() const override { return file_ident_; }
   [[nodiscard]] const SquareTextIndexed& indexedFile() const { return indexed_file_; }
-  bool parseFlatFile(const SquareTextRows& square_text) { return indexed_file_.parseTextRows(square_text); }
+  [[nodiscard]] std::optional<size_t> genomeCOI(const GenomeId_t& genome) const;
+
+
+private:
+
+  SquareTextIndexed indexed_file_;
 
   // Field offsets.
   constexpr static const size_t FIELD_COUNT = 10;
@@ -49,10 +53,7 @@ public:
   constexpr static const size_t COUNTRY_FIELD = 8;
   constexpr static const size_t CONTINENT_FIELD = 9;
 
-private:
-
-  const std::string file_ident_;
-  SquareTextIndexed indexed_file_;
+  [[nodiscard]] bool parseFlatFile(const SquareTextRows& square_text) { return indexed_file_.parseTextRows(square_text); }
 
 };
 
@@ -67,17 +68,16 @@ class Pf3kCOIParser  {
 
 public:
 
-  explicit Pf3kCOIParser(std::shared_ptr<Pf3kCOIDB> pf3k_coi_ptr) : pf3k_coi_ptr_(std::move(pf3k_coi_ptr)) {}
+  Pf3kCOIParser() = default;
   ~Pf3kCOIParser() = default;
 
-  bool parseCOIPf3k(const std::string& file_name);
+  [[nodiscard]] bool parseCOIPf3k(const std::string& file_name);
+  [[nodiscard]] const SquareTextRows& parsedText() const { return *parsed_text_ptr_; }
 
 public:
 
-
-
-  std::shared_ptr<Pf3kCOIDB> pf3k_coi_ptr_;
   SquareTextParser flat_file_parser_;
+  std::shared_ptr<SquareTextRows> parsed_text_ptr_;
 
 };
 

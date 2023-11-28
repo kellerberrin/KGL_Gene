@@ -73,6 +73,10 @@ kgl::ResourceDefinitions kgl::ResourceProperties::getRuntimeResources() const {
         resource_opt = auxIDResourceXML(sub_tree);
         break;
 
+      case Utility::hash(PF3K_COI_RESOURCE_ID_):
+        resource_opt = Pf3KCOIResourceXML(sub_tree);
+        break;
+
       default:
         ExecEnv::log().warn("RuntimeProperties::getRuntimeResources, Unexpected resource: '{}'; ignored", tree_type);
         break;

@@ -175,7 +175,8 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
 
   if (CDS_found) {
   // Remove all non-cds (EXONS) from the list
-    leaf_features.remove_if([](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; });
+    auto not_feature_CDS = [](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; };
+    leaf_features.remove_if(not_feature_CDS);
 
   } else {
   // Check that all the leaf features are EXONS and the gene is ncRNA.
@@ -193,23 +194,19 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
   }
 
   TranscriptionFeatureMap parent_feature_map;
-  if (not leaf_features.empty()) {
+  for (auto const& leaf : leaf_features) {
 
-    for (auto const& leaf : leaf_features) {
+    auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
 
-      auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
+    // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
+    // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
+    if (not insert_result) {
 
-      // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
-      // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
-      if (not insert_result) {
-
-        ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Duplicate coding feature: {}",
-                            gene_ptr->id(),
-                            leaf->featureText());
-        gene_ptr->recusivelyPrintsubfeatures();
-        return true;
-
-      }
+      ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Duplicate coding feature: {}",
+                          gene_ptr->id(),
+                          leaf->featureText());
+      gene_ptr->recusivelyPrintsubfeatures();
+      return true;
 
     }
 

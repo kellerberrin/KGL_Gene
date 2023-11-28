@@ -6,6 +6,7 @@
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
 #include "kgl_pf7_genetic_distance_parser.h"
+#include "kgl_pf3k_coi.h"
 
 
 namespace kgl = kellerberrin::genome;
@@ -119,4 +120,38 @@ void kgl::ExecutePackage::loadPf7DistanceResource(const std::string& resource_ty
   resource_ptr->addResource(Pf7Distance_ptr);
 
 }
+
+
+void kgl::ExecutePackage::loadPf3KCOIResource(const std::string& resource_type,
+                                             const std::string& Pf3KCOI_ident,
+                                             const std::shared_ptr<AnalysisResources>& resource_ptr) const {
+
+  auto params_opt = runtime_config_.resourceDefMap().retrieve(resource_type, Pf3KCOI_ident);
+  if (not params_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf3KCOIResource, Pf3kCOI Data: {}, not defined", Pf3KCOI_ident);
+
+  }
+
+  auto const& params = params_opt.value();
+  auto file_name_opt = params.getParameter(ResourceProperties::PF3K_COI_FILE_);
+  if (not file_name_opt) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf3KCOIResource, Ident: {} Pf3KCOI Data file not defined", Pf3KCOI_ident);
+
+  }
+
+  Pf3kCOIParser Pf3k_COI_Parser;
+  if (not Pf3k_COI_Parser.parseCOIPf3k(file_name_opt.value())) {
+
+    ExecEnv::log().critical("ExecutePackage::loadPf3KCOIResource; failed to create Pf3KCOI Data resource from file: {}", file_name_opt.value());
+
+  }
+
+  std::shared_ptr<Pf3kCOIResource> Pf3kCOI_ptr(std::make_shared<Pf3kCOIResource>(Pf3KCOI_ident, Pf3k_COI_Parser.parsedText()));
+
+  resource_ptr->addResource(Pf3kCOI_ptr);
+
+}
+
 

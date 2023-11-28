@@ -70,6 +70,10 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
         loadPf7DistanceResource(resource_type, resource_ident, resource_ptr);
         break;
 
+      case Utility::hash(ResourceProperties::PF3K_COI_RESOURCE_ID_):
+        loadPf3KCOIResource(resource_type, resource_ident, resource_ptr);
+        break;
+
       default:
         ExecEnv::log().critical("ExecutePackage::loadRuntimeResources, Package: {} Attempt to load unknown resource type: '{}', resource ident: '{}'.",
                                 package.packageIdentifier(), resource_type, resource_ident);

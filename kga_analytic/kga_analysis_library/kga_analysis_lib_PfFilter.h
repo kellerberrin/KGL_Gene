@@ -8,10 +8,20 @@
 
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
+#include "kgl_pf3k_coi.h"
 #include "kgl_variant_db_population.h"
 
 
 namespace kellerberrin::genome::analysis {   //  organization::project level namespace
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 class FilterPf7 {
@@ -61,6 +71,31 @@ private:
 
 
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class FilterPf3k {
+
+public:
+
+  FilterPf3k(std::shared_ptr<const Pf3kCOIResource> Pf3k_COI_ptr) : Pf3k_COI_ptr_(std::move(Pf3k_COI_ptr)) {}
+  ~FilterPf3k() = default;
+
+  [[nodiscard]] std::shared_ptr<PopulationDB> filterCOI( const std::shared_ptr<const PopulationDB>& unfiltered_population_ptr) const;
+
+private:
+
+  std::shared_ptr<const Pf3kCOIResource> Pf3k_COI_ptr_;
+
+
+};
+
 
 
 } // Namespace

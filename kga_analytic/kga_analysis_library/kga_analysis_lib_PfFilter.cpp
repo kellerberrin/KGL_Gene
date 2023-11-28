@@ -5,7 +5,7 @@
 
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_filter_Pf7.h"
-#include "kga_analysis_lib_Pf7filter.h"
+#include "kga_analysis_lib_PfFilter.h"
 
 
 namespace kga = kellerberrin::genome::analysis;
@@ -114,6 +114,75 @@ std::shared_ptr<kgl::PopulationDB> kga::FilterPf7::qualityFilter(const std::shar
                       deepcopy_population_ptr->variantCount());
 
   return deepcopy_population_ptr;
+
+}
+
+
+
+// Population must be PF7
+// Important - this code above only filters a shallow copy of the population.
+std::shared_ptr<kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
+
+
+  auto filtered_ptr = std::make_shared<kgl::PopulationDB>(Pf7_unfiltered_ptr->populationId() + "_QC_Pass",
+                                                          Pf7_unfiltered_ptr->dataSource());
+
+  for (auto const& [genome_id, genome_ptr] : Pf7_unfiltered_ptr->getMap()) {
+
+    if (getMap().contains(genome_id)) {
+
+      auto sample_iter = getMap().find(genome_id);
+      auto const& [id, sample_data] = *sample_iter;
+      if (sample_data.pass()) {
+
+        if (not filtered_ptr->addGenome(genome_ptr)) {
+
+          ExecEnv::log().warn("Pf7SampleResource::filterPassQCGenomes; Unable to add filtered genome: {} to filtered  population", genome_id);
+
+        }
+
+      } // Pass
+
+    } else {
+
+      ExecEnv::log().warn("PPf7SampleResource::filterPassQCGenomes; Genome: {} not found in sample data", genome_id);
+
+    }
+
+  } // For genomes.
+
+  return filtered_ptr;
+
+}
+
+
+// Important - this code above only filters a shallow copy of the population.
+std::shared_ptr<kgl::PopulationDB> kga::FilterPf3k::filterCOI(const std::shared_ptr<const PopulationDB>& population_ptr) const {
+
+
+  auto filtered_ptr = std::make_shared<kgl::PopulationDB>(population_ptr->populationId(), population_ptr->dataSource());
+
+  for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
+
+    auto coi_opt = Pf3k_COI_ptr_->genomeCOI(genome_id);
+    if (coi_opt) {
+
+      auto coi_value = coi_opt.value();
+      if (coi_value == 1) {
+
+        if (not filtered_ptr->addGenome(genome_ptr)) {
+
+          ExecEnv::log().warn("FilterPf3k::filterCOI; Unable to add filtered genome: {} to filtered  population", genome_id);
+
+        }
+
+      } // Pass
+
+    }
+
+  } // For genomes.
+
+  return filtered_ptr;
 
 }
 

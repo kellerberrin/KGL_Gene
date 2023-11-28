@@ -9,10 +9,11 @@
 #include "kgl_genome_collection.h"
 #include "kgl_pf7_sample_parser.h"
 #include "kgl_pf7_fws_parser.h"
-#include "kga_analysis_lib_Pf7filter.h"
+#include "kga_analysis_lib_PfFilter.h"
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
 #include "kga_analysis_lib_seqmutation.h"
+#include "kga_analysis_lib_seq_gene.h"
 
 #include "kga_analysis_PfEMP_variant.h"
 #include "kga_analysis_PfEMP_heterozygous.h"
@@ -63,20 +64,20 @@ private:
   std::shared_ptr<const Pf7GeneticDistanceResource> Pf7_genetic_distance_ptr_;
   constexpr static const double SAMPLE_LOCATION_RADIUS_{0.0};
   std::shared_ptr<const Pf7SampleLocation> Pf7_physical_distance_ptr_;
-  constexpr static const char PF3D7_IDENT_[]{"Pf3D7_64"};
+  constexpr static const std::string PF3D7_IDENT_{"Pf3D7_64"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   std::shared_ptr<MutateGenesReport> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
 
   // Gene family ident.
-  constexpr static const char *PFEMP1_FAMILY_ = "PFEMP1";
-  constexpr static const char *RUF6_FAMILY_ = "RUF6";
-  constexpr static const char *RIFIN_FAMILY_ = "RIFIN";
-  constexpr static const char *STEVOR_FAMILY_ = "STEVOR";
-  constexpr static const char *SURFIN_FAMILY_ = "SURFIN";
-  constexpr static const char *TRNA_FAMILY_ = "TRNA";
-  constexpr static const char *RIBOSOME_FAMILY_ = "RIBOSOM";
+  constexpr static const std::string PFEMP1_FAMILY_{"PFEMP1"};
+  constexpr static const std::string RUF6_FAMILY_{"RUF6"};
+  constexpr static const std::string RIFIN_FAMILY_{"RIFIN"};
+  constexpr static const std::string STEVOR_FAMILY_{"STEVOR"};
+  constexpr static const std::string SURFIN_FAMILY_{"SURFIN"};
+  constexpr static const std::string TRNA_FAMILY_{"TRNA"};
+  constexpr static const std::string RIBOSOME_FAMILY_{"RIBOSOM"};
 
 
   // The genes we are interested in.
@@ -88,16 +89,13 @@ private:
   HeteroHomoZygous hetero_homo_zygous_;
   CalcFWS calc_fws_;
 
+  // Transcript Analysis
+  AnalysisTranscriptFamily transcript_analysis_;
+  constexpr static const std::string TRANSCRIPT_SUBDIRECTORY_{"transcript"};
+
   // File name constants.
-  constexpr static const char *VARIANT_COUNT_{"gene_variant_"};
-  constexpr static const char *VARIANT_COUNT_EXT_{".csv"};
-
-  // Return a vector of genes that have a particular text fragment in the description.
-  [[nodiscard]] GeneVector getGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr, const std::string &description_text) const;
-
-  [[nodiscard]] GeneVector getncRNAGeneVector(const std::shared_ptr<const GenomeReference> &genome_ptr,
-                                              const std::string &desc_uc_text = "",
-                                              size_t max_size = 0) const;
+  constexpr static const std::string VARIANT_COUNT_{"gene_variant_"};
+  constexpr static const std::string VARIANT_COUNT_EXT_{".csv"};
 
   void checkDistanceMatrix(const std::shared_ptr<const PopulationDB> &all_population_ptr,
                            const std::shared_ptr<const PopulationDB> &filtered_population_ptr) const;

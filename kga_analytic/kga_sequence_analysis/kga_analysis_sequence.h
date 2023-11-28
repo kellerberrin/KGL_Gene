@@ -8,12 +8,14 @@
 
 #include "kgl_package_analysis_virtual.h"
 #include "kgl_genome_collection.h"
+#include "kgl_pf3k_coi.h"
 #include "kga_analysis_lib_seqmutation.h"
+#include "kga_analysis_lib_seq_gene.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// This object checks the underlying population structures for correctness.
+// Analyzes Pf3k populations.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,14 +54,20 @@ public:
 
 private:
 
-  constexpr static const char PF3D7_IDENT_[]{"Pf3D7_64"};
+  constexpr static const std::string PF3D7_IDENT_{"Pf3D7_64"};
   std::shared_ptr<const GenomeReference> genome_3D7_ptr_;
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   std::shared_ptr<MutateGenesReport> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
+  std::shared_ptr<const Pf3kCOIResource> Pf3KCOI_ptr_;
+
+  // Transcript Analysis
+  AnalysisTranscriptFamily transcript_analysis_;
+  constexpr static const std::string RUF6_FAMILY_{"RUF6"};
+  constexpr static const std::string TRANSCRIPT_SUBDIRECTORY_{"transcript"};
 
   std::string ident_work_directory_;
-  constexpr static const char *VARIANT_COUNT_EXT_{".csv"};
+  constexpr static const std::string VARIANT_COUNT_EXT_{".csv"};
 
 };
 

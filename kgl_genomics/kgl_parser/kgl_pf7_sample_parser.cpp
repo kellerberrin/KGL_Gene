@@ -34,42 +34,6 @@ void kgl::Pf7SampleResource::indexPf7SampleData() {
 
 }
 
-// Population must be PF7
-// Important - this code above only filters a shallow copy of the population.
-std::shared_ptr<kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const {
-
-
-  auto filtered_ptr = std::make_shared<kgl::PopulationDB>(Pf7_unfiltered_ptr->populationId() + "_QC_Pass",
-                                                                                Pf7_unfiltered_ptr->dataSource());
-
-  for (auto const& [genome_id, genome_ptr] : Pf7_unfiltered_ptr->getMap()) {
-
-    if (getMap().contains(genome_id)) {
-
-      auto sample_iter = getMap().find(genome_id);
-      auto const& [id, sample_data] = *sample_iter;
-      if (sample_data.pass()) {
-
-        if (not filtered_ptr->addGenome(genome_ptr)) {
-
-          ExecEnv::log().warn("Pf7SampleResource::filterPassQCGenomes; Unable to add filtered genome: {} to filtered  population", genome_id);
-
-        }
-
-      } // Pass
-
-    } else {
-
-      ExecEnv::log().warn("PPf7SampleResource::filterPassQCGenomes; Genome: {} not found in sample data", genome_id);
-
-    }
-
-  } // For genomes.
-
-  return filtered_ptr;
-
-}
-
 
 [[nodiscard]] bool kgl::ParsePf7Sample::parsePf7SampleFile(const std::string& file_name) {
 

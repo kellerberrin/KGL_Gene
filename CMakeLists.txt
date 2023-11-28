@@ -582,21 +582,22 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_literature/kga_analysis_literature_publication.cpp
         kga_analytic/kga_literature/kga_analysis_literature_publication.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_distance.cpp
-        kga_analytic/kga_PfEMP/kga_analysis_PfEMP_gene_vector.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.h
-        kga_analytic/kga_analysis_library/kga_analysis_lib_Pf7filter.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_PfFilter.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
         kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.h
-        kga_analytic/kga_analysis_library/kga_analysis_lib_Pf7filter.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_PfFilter.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_seq_gene.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_seq_gene.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_utility.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_utility.h
 
 )
 

@@ -3,6 +3,7 @@
 //
 
 #include "kga_analysis_PfEMP.h"
+#include "kga_analysis_lib_utility.h"
 
 namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
@@ -66,6 +67,8 @@ bool kga::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   all_gene_map_.setGeneVector(getAllGenes(genome_3D7_ptr_));
   translation_gene_map_.setGeneVector(getTranslationGenes(genome_3D7_ptr_));
 
+  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+
   return true;
 
 }
@@ -105,6 +108,8 @@ bool kga::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
   calc_fws_.calcFwsStatistics(filtered_population_ptr);
 
   mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
+
+  transcript_analysis_.performFamilyAnalysis(filtered_population_ptr);
 
   return true;
 
@@ -167,6 +172,8 @@ bool kga::PfEMPAnalysis::finalizeAnalysis() {
   // Output the mutation statistics.
   mutate_genes_ptr_->printMutateReports();
 
+  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_);
+
   return true;
 
 }
@@ -176,14 +183,14 @@ bool kga::PfEMPAnalysis::finalizeAnalysis() {
 kgl::GeneVector kga::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
-  auto var_gene_vector = getGeneVector(genome_ptr, PFEMP1_FAMILY_);
-  auto ruf6_gene_vector = getGeneVector(genome_ptr, RUF6_FAMILY_);
+  auto var_gene_vector = KGAUtility::getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+  auto ruf6_gene_vector = KGAUtility::getGeneVector(genome_ptr, RUF6_FAMILY_);
   var_gene_vector.insert(var_gene_vector.end(), ruf6_gene_vector.begin(), ruf6_gene_vector.end() );
-  auto rifin_gene_vector = getGeneVector(genome_ptr, RIFIN_FAMILY_);
+  auto rifin_gene_vector = KGAUtility::getGeneVector(genome_ptr, RIFIN_FAMILY_);
   var_gene_vector.insert(var_gene_vector.end(), rifin_gene_vector.begin(), rifin_gene_vector.end() );
-  auto stevor_gene_vector = getGeneVector(genome_ptr, STEVOR_FAMILY_);
+  auto stevor_gene_vector = KGAUtility::getGeneVector(genome_ptr, STEVOR_FAMILY_);
   var_gene_vector.insert(var_gene_vector.end(), stevor_gene_vector.begin(), stevor_gene_vector.end() );
-  auto surfin_gene_vector = getGeneVector(genome_ptr, SURFIN_FAMILY_);
+  auto surfin_gene_vector = KGAUtility::getGeneVector(genome_ptr, SURFIN_FAMILY_);
   var_gene_vector.insert(var_gene_vector.end(), surfin_gene_vector.begin(), surfin_gene_vector.end() );
   //  auto ncRNA_gene_vector = getncRNAGeneVector(genome_ptr);
   //  var_gene_vector.insert( var_gene_vector.end(), ncRNA_gene_vector.begin(), ncRNA_gene_vector.end() );
@@ -192,11 +199,12 @@ kgl::GeneVector kga::PfEMPAnalysis::getAntiGenicGenes(const std::shared_ptr<cons
 
 }
 
+
 kgl::GeneVector kga::PfEMPAnalysis::getTranslationGenes(const std::shared_ptr<const GenomeReference>& genome_ptr) {
 
   // Get the gene families of interest.
-  auto trna_gene_vector = getncRNAGeneVector(genome_ptr, TRNA_FAMILY_);
-  auto ribosome_gene_vector = getGeneVector(genome_ptr, RIBOSOME_FAMILY_);
+  auto trna_gene_vector = KGAUtility::getncRNAGeneVector(genome_ptr, TRNA_FAMILY_);
+  auto ribosome_gene_vector = KGAUtility::getGeneVector(genome_ptr, RIBOSOME_FAMILY_);
   trna_gene_vector.insert(trna_gene_vector.end(), ribosome_gene_vector.begin(), ribosome_gene_vector.end() );
 
   return trna_gene_vector;

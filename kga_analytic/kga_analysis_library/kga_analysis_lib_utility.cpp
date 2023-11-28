@@ -1,17 +1,17 @@
 //
-// Created by kellerberrin on 6/04/23.
+// Created by kellerberrin on 27/11/23.
 //
 
+#include "kga_analysis_lib_utility.h"
 
-#include "kga_analysis_PfEMP.h"
-
+#include "kel_utility.h"
 
 namespace kga = kellerberrin::genome::analysis;
 namespace kgl = kellerberrin::genome;
 
 
-kgl::GeneVector kga::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr
-    , const std::string& desc_uc_text) const {
+kgl::GeneVector kga::KGAUtility::getGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                             const std::string& desc_uc_text) {
 
   GeneVector gene_vector;
 
@@ -39,9 +39,9 @@ kgl::GeneVector kga::PfEMPAnalysis::getGeneVector( const std::shared_ptr<const G
 }
 
 
-kgl::GeneVector kga::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                                                        const std::string& desc_uc_text,
-                                                        size_t max_size) const {
+kgl::GeneVector kga::KGAUtility::getncRNAGeneVector( const std::shared_ptr<const GenomeReference>& genome_ptr,
+                                                  const std::string& desc_uc_text,
+                                                  size_t max_size) {
 
   GeneVector gene_vector;
   size_t contig_count{0};
@@ -66,6 +66,15 @@ kgl::GeneVector kga::PfEMPAnalysis::getncRNAGeneVector( const std::shared_ptr<co
   } // Contig
 
   return gene_vector;
+
+}
+
+
+kgl::GeneVector kga::KGAUtility::getRUF6Genes(const std::shared_ptr<const GenomeReference> &genome_ptr) {
+
+  auto ruf6_gene_vector = KGAUtility::getGeneVector(genome_ptr, RUF6_FAMILY_);
+
+  return ruf6_gene_vector;
 
 }
 
