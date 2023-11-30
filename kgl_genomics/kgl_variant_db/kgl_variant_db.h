@@ -65,7 +65,7 @@ public:
   ~Variant() { --object_count_; }
 
   // Create a copy of the variant on heap.
-  // Important - all the original variant evidence is also attached to the new variant object.
+  // Important - all the reference variant evidence is also attached to the new variant object.
   [[nodiscard]] std::unique_ptr<Variant> clone() const;
   // Set the alternate to the reference; invalidates the evidence structure.
   // Used to specify major alleles (no genome change).

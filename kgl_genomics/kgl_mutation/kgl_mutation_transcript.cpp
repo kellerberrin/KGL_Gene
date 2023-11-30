@@ -120,7 +120,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getOriginalLinea
     auto modified_sequence_opt = adjusted_sequence_.originalSubSequence(sub_interval);
     if (not modified_sequence_opt) {
 
-      ExecEnv::log().warn("Unable to generate original sequence for interval: {}", sub_interval.toString());
+      ExecEnv::log().warn("Unable to generate reference sequence for interval: {}", sub_interval.toString());
       return std::nullopt;
 
     }
@@ -227,7 +227,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::SequenceTranscript::getModifiedAdjus
 
   if (Codon::codonRemainder(modified_linear.length()) != 0 and adjust_flag) {
 
-    ExecEnv::log().warn("Adjusted sequence not mod3: original length: {}, original mod3: {}, adjusted size: {}, extend size: {}, modified length: {}, mod3 remainder adjusted: {}",
+    ExecEnv::log().warn("Adjusted sequence not mod3: original length: {}, reference mod3: {}, adjusted size: {}, extend size: {}, modified length: {}, mod3 remainder adjusted: {}",
                         original_length,
                         mod3_remainder,
                         adjusted_size,

@@ -89,10 +89,6 @@ bool kga::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_
   FilterPf3k filter_coi(Pf3KCOI_ptr_);
   auto filtered_population_ptr = filter_coi.filterCOI(population_ptr);
 
-  ExecEnv::log().info("Unfiltered genomes: {}, COI = 1 filtered genomes: {}",
-                      population_ptr->getMap().size(),
-                      filtered_population_ptr->getMap().size());
-
   // Mutate all the relevant genes in the relevant contigs.
   mutate_genes_ptr_->mutatePopulation(filtered_population_ptr);
 

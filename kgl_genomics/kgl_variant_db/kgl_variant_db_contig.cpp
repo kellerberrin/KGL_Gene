@@ -153,7 +153,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigDB::viewFilter(const BaseFilter &filte
 }
 
 // Filters inSitu
-// Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
+// Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
 // Note that we delete any empty offsets.
 std::pair<size_t, size_t> kgl::ContigDB::selfFilter(const BaseFilter &filter) {
 

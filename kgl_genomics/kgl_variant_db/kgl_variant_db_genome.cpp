@@ -180,7 +180,7 @@ std::unique_ptr<kgl::GenomeDB> kgl::GenomeDB::viewFilter(const BaseFilter& filte
 }
 
 
-// Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
+// Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
 std::pair<size_t, size_t> kgl::GenomeDB::selfFilter(const BaseFilter& filter) {
 
   // Only genome filter is implemented at this level.

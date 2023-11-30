@@ -135,7 +135,7 @@ std::optional<kgl::AdjustedModifiedOffset> kgl::ModifiedOffsetMap::getPreviousIn
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/original interval.
+// Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/reference interval.
 std::pair<kel::OpenRightUnsigned, bool> kgl::ModifiedOffsetMap::lookupOriginalInterval(const OpenRightUnsigned& contig_interval) const {
 
   auto [lower, lower_result] = originalZeroOffset(contig_interval.lower());

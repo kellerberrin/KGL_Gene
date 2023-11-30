@@ -15,7 +15,7 @@ namespace kellerberrin::ontology {
 	\brief A class to calculate shared infromation accross disjoint common ancestors using an adjusted algorithm.
 
 	This class calculates shared infromation accross disjoint common ancestors. This is a modification of the
-	 original algorithm provided by Couto.
+	 reference algorithm provided by Couto.
 	 See line 150.
 
     F. M. Couto, M. J. Silva, and P. M. Coutinho, "Measuring semantic similarity

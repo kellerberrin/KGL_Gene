@@ -114,7 +114,7 @@ void kgl::AdjustedSequence::initializeSequences(const std::shared_ptr<const Cont
   auto original_sequence_opt = contig_ref_ptr->sequence().subSequence(contigInterval());
   if (not original_sequence_opt) {
 
-    ExecEnv::log().error("Requested original sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
+    ExecEnv::log().error("Requested reference sub interval: {} out of bounds for contig_ref_ptr: {} interval: {}",
                          contigInterval().toString(),
                          contig_ref_ptr->contigId(),
                          contig_ref_ptr->sequence().interval().toString());
@@ -226,7 +226,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::modifiedSubSequenc
 
   }
 
-  // Ckeck if the converted interval is zero sized (the original interval was deleted).
+  // Ckeck if the converted interval is zero sized (the reference interval was deleted).
   if (modified_interval.empty()) {
 
     return DNA5SequenceLinear{}; // Return empty sequence.
@@ -252,7 +252,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
 
   if (not valid_modified_sequence_) {
 
-    ExecEnv::log().warn("No valid original sequence available");
+    ExecEnv::log().warn("No valid reference sequence available");
     return std::nullopt;
 
   }
@@ -265,7 +265,7 @@ std::optional<kgl::DNA5SequenceLinear> kgl::AdjustedSequence::originalSubSequenc
     return std::nullopt;
   }
 
-  // Convert to the zero-offset original interval.
+  // Convert to the zero-offset reference interval.
   auto [modified_interval, convert_result] = modified_offset_map_.lookupOriginalInterval(sub_interval);
   if (not convert_result) {
 
@@ -292,7 +292,7 @@ kgl::DualSeqOpt kgl::AdjustedSequence::moveSequenceClear() {
 
   if (not valid_modified_sequence_) {
 
-    ExecEnv::log().warn("No valid original sequence available");
+    ExecEnv::log().warn("No valid reference sequence available");
     return std::nullopt;
   }
 

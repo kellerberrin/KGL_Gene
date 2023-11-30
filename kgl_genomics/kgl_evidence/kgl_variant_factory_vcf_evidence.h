@@ -106,7 +106,7 @@ public:
   InfoSubscribedField(const InfoSubscribedField &) = default;
   ~InfoSubscribedField() = default;
 
-  // Returns the original VCF header record for the VCF Info field.
+  // Returns the reference VCF header record for the VCF Info field.
   [[nodiscard]] const VCFInfoRecord &infoVCF() const { return vcfInfoRecord_; }
   // Returns one of the following
   // The enums are integer valued and can be used as an index for the std::variant return type of InfoDataVariant.
@@ -132,7 +132,7 @@ public:
 private:
 
 
-  const VCFInfoRecord vcfInfoRecord_;  // The original VCF Header Record.
+  const VCFInfoRecord vcfInfoRecord_;  // The reference VCF Header Record.
   const InfoEvidenceType type_;  // THe inferred subscriber type, external type and internal type.
   std::shared_ptr<const InfoEvidenceHeader> info_evidence_header_; // Ensure the index knows which header it belongs to.
   InfoResourceHandle m_data_handle_;

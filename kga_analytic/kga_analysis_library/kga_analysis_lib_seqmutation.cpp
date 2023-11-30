@@ -27,7 +27,7 @@ void kga::MutateGenes::mutatePopulation(const std::shared_ptr<const PopulationDB
 
 
   // Get the active contigs in this population.
-  auto contig_map = population_ptr->contigCount();
+  auto contig_map = population_ptr->contigCountMap();
 
   for (auto const& [contig_id, variant_count] : contig_map) {
 

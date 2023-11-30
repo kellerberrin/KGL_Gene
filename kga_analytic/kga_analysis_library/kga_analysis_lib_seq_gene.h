@@ -20,11 +20,46 @@ namespace kellerberrin::genome::analysis {   //  organization::project level nam
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using GenomeTuple = std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>;
-using GenomeRecordOpt = std::optional<GenomeTuple>;
+
+class TranscriptModifyRecord {
+
+public:
+
+  TranscriptModifyRecord( GenomeId_t genome,
+                          std::shared_ptr<const TranscriptionSequence> transcript_ptr,
+                          GenomeTuple&& reference,
+                          GenomeTuple&& modified)
+  : genome_(std::move(genome)),
+    transcript_ptr_(std::move(transcript_ptr)),
+    reference_transcript_(std::move(reference)),
+    modified_transcript_(std::move(modified)) {}
+  TranscriptModifyRecord(TranscriptModifyRecord&& rval_copy) noexcept
+  : genome_(std::move(rval_copy.genome_)),
+    transcript_ptr_(std::move(rval_copy.transcript_ptr_)),
+    reference_transcript_(std::move(rval_copy.reference_transcript_)),
+    modified_transcript_(std::move(rval_copy.modified_transcript_)) {}
+  ~TranscriptModifyRecord() = default;
+
+  [[nodiscard]] const GenomeId_t& genome() const { return genome_; }
+  [[nodiscard]] const std::shared_ptr<const TranscriptionSequence>& transcript() const { return transcript_ptr_; }
+  [[nodiscard]] const GenomeTuple& reference() const { return reference_transcript_; }
+  [[nodiscard]] const GenomeTuple& modified() const { return modified_transcript_; }
+
+private:
+
+  GenomeId_t genome_;
+  std::shared_ptr<const TranscriptionSequence> transcript_ptr_;
+  GenomeTuple reference_transcript_;
+  GenomeTuple modified_transcript_;
+
+};
+using GenomeRecordOpt = std::optional<TranscriptModifyRecord>;
 
 struct TranscriptSequenceRecord {
 
   std::set<GenomeId_t> genomes_;
+  std::set<FeatureIdent_t> transcripts_;
+  double distance_{0.0};
 
 };
 using TranscriptMap = std::map<std::string, TranscriptSequenceRecord>;
@@ -41,22 +76,27 @@ public:
 
   explicit AnalysisTranscriptSequence(std::shared_ptr<const TranscriptionSequence> transcript_ptr)
                                      : transcript_ptr_(std::move(transcript_ptr)) {}
+  AnalysisTranscriptSequence(const AnalysisTranscriptSequence& copy) = default;
   ~AnalysisTranscriptSequence() = default;
 
   void performTranscriptAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr);
+
+  void mergeMap(const TranscriptMap& transcript_map);
+
   void printReport(const std::string& report_directory) const;
+  void printReport(const std::string& report_label, const std::string& report_directory) const;
+
+  [[nodiscard]] const TranscriptionSequence& transcript() const { return *transcript_ptr_; }
+  [[nodiscard]] const TranscriptMap& transcriptMap() const { return transcript_map_; }
 
 private:
 
-
   std::shared_ptr<const TranscriptionSequence> transcript_ptr_;
-  const std::string report_directory_;
-  std::map<std::string, TranscriptSequenceRecord> sequence_map_;
-
   TranscriptMap transcript_map_;
 
   constexpr static const std::string REPORT_EXT_{".csv"};
   constexpr static const std::string REPORT_FIELD_{","};
+  constexpr static const std::string REPORT_SUBFIELD_{"-"};
   constexpr static const std::string REPORT_PREFIX_{"transcript"};
   constexpr static const SeqVariantFilterType FILTERTYPE_{SeqVariantFilterType::DEFAULT_SEQ_FILTER};
 
@@ -85,6 +125,8 @@ public:
 private:
 
   std::vector<AnalysisTranscriptSequence> analysis_vector_;
+
+  AnalysisTranscriptSequence generateTotal() const;
 
 };
 

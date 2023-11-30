@@ -84,14 +84,14 @@ public:
   // Given a contig_ref_ptr based sequence interval, return the equivalent zero-based indel modified interval (adjusts for delete indels).
   [[nodiscard]] std::pair<OpenRightUnsigned, bool> lookupModifiedInterval(const OpenRightUnsigned &contig_interval) const;
 
-  // Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/original interval.
+  // Given a contig_ref_ptr based sequence interval, return the equivalent zero-based unmodified/reference interval.
   [[nodiscard]] std::pair<OpenRightUnsigned, bool> lookupOriginalInterval(const OpenRightUnsigned &contig_interval) const;
 
   // Given an interval map offset, returns the equivalent offset into the zero-offset modified sequence [0, n).
   // Calculates the offset into the modified_sequence_.
   [[nodiscard]] std::pair<ContigOffset_t, bool> modifiedZeroOffset(ContigOffset_t offset) const;
 
-  // Given an interval map offset, returns the equivalent offset into the zero-offset original sequence [0, m), where (n-m) = base_offset_adjust_.
+  // Given an interval map offset, returns the equivalent offset into the zero-offset reference sequence [0, m), where (n-m) = base_offset_adjust_.
   // Calculates the offset into the original_sequence_.
   [[nodiscard]] std::pair<ContigOffset_t, bool> originalZeroOffset(ContigOffset_t contig_offset) const { return calcModifiedOffset(contig_offset, 0); }
 

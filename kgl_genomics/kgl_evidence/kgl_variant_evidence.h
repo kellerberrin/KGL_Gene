@@ -138,7 +138,7 @@ public:
 
 private:
 
-  size_t vcf_record_count_{0}; // The VCF line count, the original file line record that generated this variant.
+  size_t vcf_record_count_{0}; // The VCF line count, the reference file line record that generated this variant.
   DataSourceEnum data_source_{DataSourceEnum::NotImplemented};
   bool pass_filter_{true};  // The VCF record has "PASS"ed all quality filters.
   std::shared_ptr<const DataMemoryBlock> info_data_block_;   // INFO data items, may be missing.

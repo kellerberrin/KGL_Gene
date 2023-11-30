@@ -34,13 +34,13 @@ public:
   // Returns a sequence of the concatenated and modified exons. Not in strand sense.
   [[nodiscard]] std::optional<DNA5SequenceLinear> getModifiedLinear() const;
 
-  // Returns a sequence of the concatenated and original unmodified exons. Not in strand sense.
+  // Returns a sequence of the concatenated and reference unmodified exons. Not in strand sense.
   [[nodiscard]] std::optional<DNA5SequenceLinear> getOriginalLinear() const;
 
   // In strand sense. Returns a sequence of the concatenated and modified exons.
   [[nodiscard]] std::optional<DNA5SequenceCoding> getModifiedCoding() const;
 
-  // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
+  // In strand sense. Returns a sequence of the concatenated and reference unmodified exons.
   [[nodiscard]] std::optional<DNA5SequenceCoding> getOriginalCoding() const;
 
   // In strand sense. Returns a sequence of the concatenated and modified exons.
@@ -50,7 +50,7 @@ public:
   // Adjust for mod3.
   [[nodiscard]] std::optional<std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>> getModifiedAdjustedValidity() const;
 
-  // In strand sense. Returns a sequence of the concatenated and original unmodified exons.
+  // In strand sense. Returns a sequence of the concatenated and reference unmodified exons.
   // The coding sequence is also analysed for protein validity (ncRNA just return 'NCRNA').
   // The size_t returns the size of the amino sequence including the first stop sequence.
   [[nodiscard]] std::optional<std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>> getOriginalValidity() const;
@@ -59,8 +59,8 @@ public:
 
 
 
-  // The adjusted sequence object has the original interval, detailed internal sequence structure and s
-  // modified and original sequences.
+  // The adjusted sequence object has the reference interval, detailed internal sequence structure and s
+  // modified and reference sequences.
   [[nodiscard]] const AdjustedSequence& adjustedSequence() const { return adjusted_sequence_; }
   [[nodiscard]] const FilteredVariantStats& filterStatistics() const { return filter_stats_; }
   [[nodiscard]] bool sequenceStatus() const { return sequence_status_; }

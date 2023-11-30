@@ -75,7 +75,7 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::viewFilter(const BaseFilte
 
 // Multi-threaded filtering for large populations.
 // We can do this because smart pointer reference counting (only) is thread safe.
-// Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
+// Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
 std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter) {
 
   // This routine modifies the populationDB data structure, so only permit one thread at a time.

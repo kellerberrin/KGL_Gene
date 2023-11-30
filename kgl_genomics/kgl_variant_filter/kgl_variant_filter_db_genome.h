@@ -18,7 +18,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Filters a population to the listed genomes (if they exist).
-// Note that this is a shallow copy of the original population.
+// Note that this is a shallow copy of the reference population.
 // Use selfFilter() or deepCopy() to create a permanent population view.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,6 @@ private:
   std::set<GenomeId_t> genome_set_;
 
 };
-
 
 
 

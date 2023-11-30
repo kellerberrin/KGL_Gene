@@ -80,7 +80,7 @@ bool kgl::AdjustedSequenceInterval::processVariantMap(const OffsetVariantMap& va
     if (not processVariant(variant_ptr)) {
 
       result = false;
-      ExecEnv::log().warn("AdjustedSequenceInterval::processVariantMap; problem updating with variant: {}, original interval: {} modified interval: {}",
+      ExecEnv::log().warn("AdjustedSequenceInterval::processVariantMap; problem updating with variant: {}, reference interval: {} modified interval: {}",
                           variant_ptr->HGVS(), original_interval_.toString(), modified_interval_.toString());
 
     }
@@ -108,7 +108,7 @@ bool kgl::AdjustedSequenceInterval::updateIndelAccounting(ContigOffset_t allele_
 
   if (not reconcileIntervalOffset(sequence_update)) {
 
-    ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; accounting map size: {} + original interval size: {} does not equal calculated interval size: {}",
+    ExecEnv::log().warn("AdjustedSequenceInterval::updateIndelAccounting; accounting map size: {} + reference interval size: {} does not equal calculated interval size: {}",
                         intervalSizeModification() , orginalInterval().size(), modifiedInterval().size());
 
     printAudit();
@@ -268,7 +268,7 @@ kgl::AdjustedSequenceInterval::updateInterval(const std::shared_ptr<const Varian
 
   if (update_result == SequenceUpdateResult::ERROR) {
 
-    ExecEnv::log().warn("AdjustedSequenceInterval::updateInterval; original/modified interval: {}/{}, orig/mod update: {}/{}, variant: {}",
+    ExecEnv::log().warn("AdjustedSequenceInterval::updateInterval; reference/modified interval: {}/{}, orig/mod update: {}/{}, variant: {}",
                         original_interval_.toString(),
                         modified_interval_.toString(),
                         modify_interval.toString(),
@@ -338,7 +338,7 @@ bool kgl::AdjustedSequenceInterval::reconcileIntervalOffset(const SequenceVarian
 
   }
 
-  // Check that the size of the current modified region + all indel size modifications is the same as the original region size.
+  // Check that the size of the current modified region + all indel size modifications is the same as the reference region size.
   SignedOffset_t size_modification = intervalSizeModification();
   return static_cast<SignedOffset_t>(modified_interval_.size())
          == (size_modification + static_cast<SignedOffset_t>(original_interval_.size()));

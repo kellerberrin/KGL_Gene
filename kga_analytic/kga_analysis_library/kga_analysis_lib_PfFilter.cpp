@@ -159,9 +159,9 @@ std::shared_ptr<kgl::PopulationDB> kgl::Pf7SampleResource::filterPassQCGenomes(c
 // Important - this code above only filters a shallow copy of the population.
 std::shared_ptr<kgl::PopulationDB> kga::FilterPf3k::filterCOI(const std::shared_ptr<const PopulationDB>& population_ptr) const {
 
-
   auto filtered_ptr = std::make_shared<kgl::PopulationDB>(population_ptr->populationId(), population_ptr->dataSource());
 
+  size_t no_COI_record{0};
   for (auto const& [genome_id, genome_ptr] : population_ptr->getMap()) {
 
     auto coi_opt = Pf3k_COI_ptr_->genomeCOI(genome_id);
@@ -178,9 +178,18 @@ std::shared_ptr<kgl::PopulationDB> kga::FilterPf3k::filterCOI(const std::shared_
 
       } // Pass
 
+    } else {
+
+      ++no_COI_record;
+
     }
 
   } // For genomes.
+
+  ExecEnv::log().info("FilterPf3k::filterCOI; Unfiltered genomes: {}, COI = 1 genomes: {}, No COI record genomes: {}",
+                      population_ptr->getMap().size(),
+                      filtered_ptr->getMap().size(),
+                      no_COI_record);
 
   return filtered_ptr;
 

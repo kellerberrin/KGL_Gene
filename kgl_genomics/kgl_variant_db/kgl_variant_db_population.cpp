@@ -204,7 +204,7 @@ size_t kgl::PopulationDB::trimEmpty() {
 }
 
 
-std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCount() const {
+std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCountMap() const {
 
   std::map<ContigId_t, size_t> contig_map;
 
@@ -218,7 +218,7 @@ std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCount() const {
         auto [insert_iter, result] = contig_map.try_emplace(contig_id, 0);
         if (not result) {
 
-          ExecEnv::log().error("PopulationDB::contigCount; expected error inserting contig_ref_ptr: {}", contig_id);
+          ExecEnv::log().error("PopulationDB::contigCountMap; expected error inserting contig_ref_ptr: {}", contig_id);
           continue;
 
         }
@@ -234,6 +234,23 @@ std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCount() const {
   }
 
   return contig_map;
+
+}
+
+
+std::optional<size_t> kgl::PopulationDB::contigCount(const ContigId_t& contig) const {
+
+  auto contig_map = contigCountMap();
+
+  auto find_iter = contig_map.find(contig);
+  if (find_iter == contig_map.end()) {
+
+    return std::nullopt;
+
+  }
+
+  auto const& [contig_id, contig_count] = *find_iter;
+  return contig_count;
 
 }
 

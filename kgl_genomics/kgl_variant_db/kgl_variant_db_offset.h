@@ -43,7 +43,7 @@ public:
   // unlike the higher levels of Population/Genome/Contig.
   [[nodiscard]] std::unique_ptr<OffsetDB> viewFilter(const BaseFilter &filter) const;
   // Filter this offset.
-  // Returns a std::pair with .first the original number of variants, .second the filtered number of variants.
+  // Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
 
 private:

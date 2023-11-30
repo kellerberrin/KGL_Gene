@@ -48,7 +48,7 @@ public:
   [[nodiscard]] bool updateSequence(const std::shared_ptr<const ContigReference>& contig_ref_ptr,
                                     const SequenceVariantFilter& filtered_variants);
 
-  // This function moves the original (.first) and modified (.second) sequences and initializes (clears) the object.
+  // This function moves the reference (.first) and modified (.second) sequences and initializes (clears) the object.
   DualSeqOpt moveSequenceClear();
 
 private:

@@ -34,6 +34,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 // Note that the file fields will generally be COMMA ',' (.csv) or tab '\t' (.tsv) delimited.
 // Leading and trailing (but not internal) whitespace will be stripped off fields.
+// Therefore " field_front  field_back   " becomes "field_front  field_back".
 // Rows are accessed by index.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

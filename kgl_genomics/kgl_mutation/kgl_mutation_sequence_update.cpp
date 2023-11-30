@@ -104,7 +104,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceDelete
   if (not reference_match) {
 
     // The deleted nucleotides in the modified interval may have already been modified by a prior SNP.
-    // So we check the deleted nucleotides against the original unmodified sequence.
+    // So we check the deleted nucleotides against the reference unmodified sequence.
     auto [original_offset, original_result] = modified_offset_map_.originalZeroOffset(contig_delete_offset);
     reference_match = original_sequence_.compareSubSequence(original_offset, truncated_reference);
     if (not reference_match) {
@@ -171,7 +171,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   auto [sequence_offset, sequence_result] = modified_offset_map_.modifiedZeroOffset(contig_insert);
   if (not sequence_result) {
 
-    ExecEnv::log().warn("Offset: {}, original: {}/{} not in interval: {}, update: {}",
+    ExecEnv::log().warn("Offset: {}, reference: {}/{} not in interval: {}, update: {}",
                         interval_update.variantPtr()->offset(),
                         contigInterval().toString(),
                         original_sequence_.interval().toString(),
@@ -186,7 +186,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceInsert
   if (not reference_match) {
 
     // The reference letter may have already been modified by a prior SNP.
-    // So we check the reference() against the original unmodified sequence.
+    // So we check the reference() against the reference unmodified sequence.
     auto [original_offset, original_result] = modified_offset_map_.originalZeroOffset(contig_insert);
     reference_match = original_sequence_.compareSubSequence(original_offset, interval_update.variantPtr()->reference());
 
