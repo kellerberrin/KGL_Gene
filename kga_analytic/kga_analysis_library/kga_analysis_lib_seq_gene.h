@@ -11,6 +11,8 @@
 
 #include "kel_utility.h"
 
+#include <compare>
+
 namespace kellerberrin::genome::analysis {   //  organization::project level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +21,6 @@ namespace kellerberrin::genome::analysis {   //  organization::project level nam
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using GenomeTuple = std::tuple<DNA5SequenceCoding, CodingSequenceValidity, size_t>;
 
 class TranscriptModifyRecord {
 
@@ -27,42 +28,93 @@ public:
 
   TranscriptModifyRecord( GenomeId_t genome,
                           std::shared_ptr<const TranscriptionSequence> transcript_ptr,
-                          GenomeTuple&& reference,
-                          GenomeTuple&& modified)
+                          DNA5SequenceCoding&& reference_coding,
+                          CodingSequenceValidity reference_validity,
+                          DNA5SequenceCoding&& modified_coding,
+                          CodingSequenceValidity modified_validity)
   : genome_(std::move(genome)),
     transcript_ptr_(std::move(transcript_ptr)),
-    reference_transcript_(std::move(reference)),
-    modified_transcript_(std::move(modified)) {}
+    original_sequence_(std::move(reference_coding)),
+    original_validity_(reference_validity),
+    modified_sequence_(std::move(modified_coding)),
+    modified_validity_(modified_validity) {}
   TranscriptModifyRecord(TranscriptModifyRecord&& rval_copy) noexcept
   : genome_(std::move(rval_copy.genome_)),
     transcript_ptr_(std::move(rval_copy.transcript_ptr_)),
-    reference_transcript_(std::move(rval_copy.reference_transcript_)),
-    modified_transcript_(std::move(rval_copy.modified_transcript_)) {}
+    original_sequence_(std::move(rval_copy.original_sequence_)),
+    original_validity_(rval_copy.original_validity_),
+    modified_sequence_(std::move(rval_copy.modified_sequence_)),
+    modified_validity_(rval_copy.modified_validity_) {}
   ~TranscriptModifyRecord() = default;
 
   [[nodiscard]] const GenomeId_t& genome() const { return genome_; }
   [[nodiscard]] const std::shared_ptr<const TranscriptionSequence>& transcript() const { return transcript_ptr_; }
-  [[nodiscard]] const GenomeTuple& reference() const { return reference_transcript_; }
-  [[nodiscard]] const GenomeTuple& modified() const { return modified_transcript_; }
+  [[nodiscard]] const DNA5SequenceCoding& reference() const { return original_sequence_; }
+  [[nodiscard]] CodingSequenceValidity referenceValidity() const { return original_validity_; }
+  [[nodiscard]] const DNA5SequenceCoding& modified() const { return modified_sequence_; }
+  [[nodiscard]] CodingSequenceValidity modifiedValidity() const { return modified_validity_; }
+
+  // Define an ordering using the spaceship operator. Records are indexed by genome.
+  auto operator<=>(const TranscriptModifyRecord &rhs) const { return genome() <=> rhs.genome(); }
+  bool operator==(const TranscriptModifyRecord &rhs) const { return genome() == rhs.genome(); }
 
 private:
 
   GenomeId_t genome_;
   std::shared_ptr<const TranscriptionSequence> transcript_ptr_;
-  GenomeTuple reference_transcript_;
-  GenomeTuple modified_transcript_;
+  DNA5SequenceCoding original_sequence_;
+  CodingSequenceValidity original_validity_;
+  DNA5SequenceCoding modified_sequence_;
+  CodingSequenceValidity modified_validity_;
 
 };
-using GenomeRecordOpt = std::optional<TranscriptModifyRecord>;
+using GenomeRecordOpt = std::optional<std::shared_ptr<const TranscriptModifyRecord>>;
 
-struct TranscriptSequenceRecord {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  std::set<GenomeId_t> genomes_;
-  std::set<FeatureIdent_t> transcripts_;
-  double distance_{0.0};
+using TransSeqGenomeMap = std::map<GenomeId_t, std::shared_ptr<const TranscriptModifyRecord>>;
+using TransSeqVector = std::vector<std::shared_ptr<const TranscriptModifyRecord>>;
+using TransSeqTranscriptMap = std::map<FeatureIdent_t, TransSeqVector>;
+
+class TranscriptSequenceRecord {
+
+public:
+
+  explicit TranscriptSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr)
+  : modified_sequence_(genome_modify_ptr->modified().getView()) {
+
+    if (not addSequenceRecord(genome_modify_ptr)) {
+
+      ExecEnv::log().warn("Unable to add transcript sequence record for genome: {}", genome_modify_ptr->genome());
+
+    }
+
+  }
+  ~TranscriptSequenceRecord() = default;
+
+  [[nodiscard]] bool addSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr);
+
+  [[nodiscard]] const DNA5SequenceCodingView& getModifiedView() const { return modified_sequence_; }
+  [[nodiscard]] const TransSeqGenomeMap& getGenomes() const { return genomes_; }
+  [[nodiscard]] const TransSeqTranscriptMap& getTranscripts() const { return transcripts_; }
+
+  // Define an ordering using the spaceship operator. Records are indexed by modified transcript.
+  auto operator<=>(const TranscriptSequenceRecord &rhs) const { return modified_sequence_.getStringView() <=> rhs.modified_sequence_.getStringView(); }
+  bool operator==(const TranscriptSequenceRecord &rhs) const { return modified_sequence_.getStringView() == rhs.modified_sequence_.getStringView(); }
+
+private:
+
+  const DNA5SequenceCodingView modified_sequence_;
+  TransSeqGenomeMap genomes_;
+  TransSeqTranscriptMap transcripts_;
+
 
 };
-using TranscriptMap = std::map<std::string, TranscriptSequenceRecord>;
+using TranscriptMap = std::map<DNA5SequenceCodingView, TranscriptSequenceRecord>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -98,6 +150,7 @@ private:
   constexpr static const std::string REPORT_FIELD_{","};
   constexpr static const std::string REPORT_SUBFIELD_{"-"};
   constexpr static const std::string REPORT_PREFIX_{"transcript"};
+  constexpr static const OpenRightUnsigned SUB_VIEW_INTERVAL_{0, 200};
   constexpr static const SeqVariantFilterType FILTERTYPE_{SeqVariantFilterType::DEFAULT_SEQ_FILTER};
 
   [[nodiscard]] GenomeRecordOpt genomeTranscriptMutation(const std::shared_ptr<const GenomeDB>& genome_db_ptr);
@@ -126,7 +179,7 @@ private:
 
   std::vector<AnalysisTranscriptSequence> analysis_vector_;
 
-  AnalysisTranscriptSequence generateTotal() const;
+  [[nodiscard]] AnalysisTranscriptSequence generateTotal() const;
 
 };
 

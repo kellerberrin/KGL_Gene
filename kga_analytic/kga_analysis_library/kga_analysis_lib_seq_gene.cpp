@@ -15,6 +15,62 @@ namespace kgl = kellerberrin::genome;
 namespace kga = kellerberrin::genome::analysis;
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bool kga::TranscriptSequenceRecord::addSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr) {
+
+  // Check the sequence views match.
+  if (genome_modify_ptr->modified().getView() != modified_sequence_) {
+
+    ExecEnv::log().warn("Cannot add transcript sequence record for genome: {}", genome_modify_ptr->genome());
+    return false;
+
+  }
+
+  // Add to the genome map.
+  bool result{true};
+  auto [genome_iter, genome_result] = genomes_.try_emplace(genome_modify_ptr->genome(), genome_modify_ptr);
+  if (not genome_result) {
+
+    ExecEnv::log().warn("Cannot add transcript sequence record to genome map, genome: {}", genome_modify_ptr->genome());
+    result = false;
+
+  }
+
+  // Add to the transcript map.
+  auto const& transcript_id = genome_modify_ptr->transcript()->getParent()->id();
+  if (transcripts_.contains(transcript_id)) {
+
+    auto& [find_id, transcript_vector] = *transcripts_.find(transcript_id);
+    transcript_vector.push_back(genome_modify_ptr);
+
+  } else {
+
+    auto [transcript_iter, transcript_result] = transcripts_.try_emplace(transcript_id, TransSeqVector{genome_modify_ptr});
+    if (not transcript_result) {
+
+      ExecEnv::log().warn("Cannot add transcript sequence record to genome map, genome: {}", genome_modify_ptr->genome());
+      result = false;
+
+    }
+
+  }
+
+  return result;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Multi-tasked filtering for large populations.
 // .first total variants across all genomes, .second multiple (duplicate) variants per offset for all genomes.
 void kga::AnalysisTranscriptSequence::performTranscriptAnalysis( const std::shared_ptr<const PopulationDB>& gene_population_ptr) {
@@ -26,60 +82,47 @@ void kga::AnalysisTranscriptSequence::performTranscriptAnalysis( const std::shar
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   using FutureType = std::future<GenomeRecordOpt>;
-  std::vector<std::pair<FutureType, std::string>> future_vector;
+  std::vector<FutureType> future_vector;
 
 
   // Queue a thread for each genome.
   for (auto const& [genome_id, genome_ptr] : gene_population_ptr->getMap()) {
 
     std::future<GenomeRecordOpt> future = thread_pool.enqueueFuture(&AnalysisTranscriptSequence::genomeTranscriptMutation, this, genome_ptr);
-    future_vector.emplace_back(std::move(future), genome_id);
+    future_vector.emplace_back(std::move(future));
 
   }
 
   // Wait for all the threads to return.
-  size_t genome_count{0};
-  for (auto & [future, genome_id] : future_vector) {
+  for (auto & future : future_vector) {
 
-    auto record_opt  = future.get();
-    if (not record_opt) {
+    auto record_ptr_opt  = future.get();
+    if (not record_ptr_opt) {
 
-      ExecEnv::log().warn("AnalysisTranscriptSequence; problem analyzing genome: {}, transcript: {}",
-                          genome_id, transcipt_id);
+      ExecEnv::log().warn("AnalysisTranscriptSequence; problem analyzing transcript: {}", transcipt_id);
       // Skip the statistics
       continue;
 
     }
-    auto const& record = record_opt.value();
-    auto const& [modified_coding, modified_validity, modified_amino_size] = record.modified();
-    auto const& [original_coding, original_validity, original_amino_size] = record.reference();
-    auto const& transcript_id = record.transcript()->getParent()->id();
+    auto const& record_ptr = record_ptr_opt.value();
+    auto const modified_view = record_ptr->modified().getView();
+    auto const& genome_id = record_ptr->genome();
 
-    auto string_view = modified_coding.getStringView();
-    auto sequence_text = std::string(string_view);
+    if (transcript_map_.contains(modified_view)) {
 
-    if (transcript_map_.contains(sequence_text)) {
+      auto& [seq_view, sequence_record] = *transcript_map_.find(modified_view);
+      if (not sequence_record.addSequenceRecord(record_ptr)) {
 
-      auto& [text, sequence_record] = *transcript_map_.find(sequence_text);
-      sequence_record.genomes_.insert(genome_id);
-      sequence_record.transcripts_.insert(transcript_id);
-      ++genome_count;
+        ExecEnv::log().warn("Cannot add transcript record for genome: {}", genome_id);
+
+      }
 
     } else {
 
-      TranscriptSequenceRecord transcript_record;
-      double distance = LevenshteinGlobalCoding(modified_coding, original_coding);
-      transcript_record.distance_ = distance;
-      transcript_record.genomes_.insert(genome_id);
-      transcript_record.transcripts_.insert(transcript_id);
-      auto [insert_iter, result] = transcript_map_.try_emplace(sequence_text, transcript_record);
+      auto [insert_iter, result] = transcript_map_.try_emplace(modified_view, TranscriptSequenceRecord(record_ptr));
       if (not result) {
 
-        ExecEnv::log().error("Unable to insert sequence record for genome: {}", genome_id);
-
-      } else {
-
-        ++genome_count;
+        ExecEnv::log().error("Unable to insert sequence record_ptr for genome: {}", genome_id);
 
       }
 
@@ -125,11 +168,25 @@ kga::GenomeRecordOpt kga::AnalysisTranscriptSequence::genomeTranscriptMutation(c
     return std::nullopt;
 
   }
+  auto& [original_sequence, original_validity, original_amino_size] = original_opt.value();
+  auto& [modified_sequence, modified_validity, modified_amino_size] = modified_opt.value();
 
-  TranscriptModifyRecord modify_record(genome_id, transcript_ptr_, std::move(original_opt.value()), std::move(modified_opt.value()));
-  return modify_record;
+  auto modify_record_ptr = std::make_shared<const TranscriptModifyRecord>(genome_id,
+                                                                          transcript_ptr_,
+                                                                          std::move(original_sequence),
+                                                                          original_validity,
+                                                                          std::move(modified_sequence),
+                                                                          modified_validity);
+  return modify_record_ptr;
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void kga::AnalysisTranscriptSequence::printReport(const std::string& report_directory) const {
@@ -155,14 +212,13 @@ void kga::AnalysisTranscriptSequence::printReport(const std::string& report_labe
   report_stream << "Genomes" << REPORT_FIELD_
                 << "TranscriptCount" << REPORT_FIELD_
                 << "Transcripts" << REPORT_FIELD_
-                << "Distance" << REPORT_FIELD_
                 << "Text" << '\n';
 
 
-  for (auto const& [text, record] : transcript_map_) {
+  for (auto const& [modified_view, record] : transcript_map_) {
 
     std::string transcript_list;
-    for (auto const& transcript_id : record.transcripts_) {
+    for (auto const& [transcript_id, trans_vector] : record.getTranscripts()) {
 
       if (not transcript_list.empty()) {
 
@@ -174,11 +230,11 @@ void kga::AnalysisTranscriptSequence::printReport(const std::string& report_labe
 
     }
 
-    report_stream << record.genomes_.size() << REPORT_FIELD_
-                  << record.transcripts_.size() << REPORT_FIELD_
+    auto modified_sub_view = modified_view.getTruncate(SUB_VIEW_INTERVAL_);
+    report_stream << record.getGenomes().size() << REPORT_FIELD_
+                  << record.getTranscripts().size() << REPORT_FIELD_
                   << transcript_list << REPORT_FIELD_
-                  << record.distance_ << REPORT_FIELD_
-                  << text << '\n';
+                  << modified_sub_view.getStringView() << '\n';
 
   }
 
@@ -186,17 +242,24 @@ void kga::AnalysisTranscriptSequence::printReport(const std::string& report_labe
 
 void kga::AnalysisTranscriptSequence::mergeMap(const TranscriptMap& transcript_map) {
 
-  for (auto const& [sequence_text, merge_record] : transcript_map) {
+  for (auto const& [modified_view, merge_record] : transcript_map) {
 
-    if (transcript_map_.contains(sequence_text)) {
+    if (transcript_map_.contains(modified_view)) {
 
-      auto& [text, map_record] = *transcript_map_.find(sequence_text);
-      map_record.genomes_.insert(merge_record.genomes_.begin(), merge_record.genomes_.end());
-      map_record.transcripts_.insert(merge_record.transcripts_.begin(), merge_record.transcripts_.end());
+      auto& [map_view, map_record] = *transcript_map_.find(modified_view);
+      for (auto const& [merge_genome, merge_record_ptr] : merge_record.getGenomes()) {
+
+        if (not map_record.addSequenceRecord(merge_record_ptr)) {
+
+          ExecEnv::log().warn("Cannot merge transcript record for genome: {}", merge_genome);
+
+        }
+
+      }
 
     } else {
 
-      auto [insert_iter, result] = transcript_map_.try_emplace(sequence_text, merge_record);
+      auto [insert_iter, result] = transcript_map_.try_emplace(modified_view, merge_record);
       if (not result) {
 
         ExecEnv::log().error("AnalysisTranscriptSequence::mergeMap; Unable to merge sequence record");

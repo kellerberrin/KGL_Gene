@@ -97,6 +97,10 @@ public:
   // Ptr to the base of the alphabet string. Used to initialize a SequenceView object.
   [[nodiscard]] const Alphabet::Alphabet* data() const { return alphabet_string_.data(); }
 
+  // Sequence comparison using the spaceship operator.
+  [[nodiscard]] constexpr auto operator<=>(const AlphabetSequence& rhs) const { return getStringView() <=> rhs.getStringView(); }
+  [[nodiscard]] constexpr bool operator==(const AlphabetSequence& rhs) const { return getStringView() == rhs.getStringView(); }
+
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;
@@ -109,8 +113,6 @@ protected:
   [[nodiscard]] bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
   // Returns bool false if offset and/or size are out of bounds.
   [[nodiscard]] std::optional<AlphabetSequence> getSubsequence(const OpenRightUnsigned& sub_interval) const;
-  // Equality of sequence.
-  [[nodiscard]] bool equal(const AlphabetSequence& cmp_seq) const { return alphabet_string_ == cmp_seq.alphabet_string_; }
 
 private:
 

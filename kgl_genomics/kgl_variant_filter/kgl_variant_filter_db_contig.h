@@ -7,7 +7,7 @@
 
 #include "kgl_variant_filter_type.h"
 #include "kgl_variant_db_genome.h"
-#include "kel_interval_map.h"
+#include "kel_interval_unsigned.h"
 #include "kel_utility.h"
 
 

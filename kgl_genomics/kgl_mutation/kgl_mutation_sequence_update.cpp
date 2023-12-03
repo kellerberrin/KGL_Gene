@@ -271,8 +271,14 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
   const bool reference_match = modified_sequence_.compareSubSequence(sequence_offset, interval_update.variantPtr()->reference());
   if (not reference_match) {
 
-    ExecEnv::log().warn("Reference does not match sequence, adjusted offset: {} update: {}",
-                        sequence_offset, interval_update.toString());
+    OpenRightUnsigned sub_seq_interval(sequence_offset, sequence_offset + interval_update.variantPtr()->referenceSize());
+    auto sub_seq_opt = modified_sequence_.subSequence(sub_seq_interval);
+    auto sub_seq_text = sub_seq_opt ? sub_seq_opt->getStringView() : "Invalid sub sequence";
+    ExecEnv::log().warn("Variant reference: {} does not match sequence: {}, at sequence interval: {} update: {}",
+                        interval_update.variantPtr()->reference().getStringView(),
+                        sub_seq_text,
+                        sub_seq_interval.toString(),
+                        interval_update.toString());
 
     return {false, 0};
 

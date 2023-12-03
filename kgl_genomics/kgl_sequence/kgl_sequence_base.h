@@ -104,8 +104,6 @@ public:
 
   }
 
-  // Equality operator.
-  [[nodiscard]] bool operator==(const DNA5SequenceLinear& cmp_seq) const { return equal(cmp_seq); }
   // Offset is the relative sequence offset.
   [[nodiscard]] bool modifyBase(ContigOffset_t base_offset, DNA5::Alphabet Nucleotide);
   // Delete offset is relative to the begining of the sequence (0 is the first letter).

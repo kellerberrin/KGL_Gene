@@ -46,14 +46,13 @@ class OpenRightInterval {
 
 public:
 
-  OpenRightInterval(IntervalValue lower, IntervalValue upper) { resize(lower, upper); }
-  ~OpenRightInterval() = default;
+  constexpr OpenRightInterval(IntervalValue lower, IntervalValue upper) { resize(lower, upper); }
+  constexpr ~OpenRightInterval() = default;
+  constexpr OpenRightInterval(const OpenRightInterval &copy) = default;
 
-  OpenRightInterval(const OpenRightInterval &copy) = default;
+  constexpr OpenRightInterval &operator=(const OpenRightInterval &copy) = default;
 
-  OpenRightInterval &operator=(const OpenRightInterval &copy) = default;
-
-  void resize(IntervalValue lower, IntervalValue upper)  {
+  constexpr void resize(IntervalValue lower, IntervalValue upper)  {
 
     if (upper < lower) {
 
@@ -69,7 +68,7 @@ public:
 
 
   // Shift the interval without changing it's size.
-  [[nodiscard]] OpenRightInterval translate(SignedInterval shift) const {
+  [[nodiscard]] constexpr OpenRightInterval translate(SignedInterval shift) const {
 
     OpenRightInterval translated(*this);
 
@@ -92,25 +91,21 @@ public:
   }
 
   // Return the zero-translated interval so that lower() == 0.
-  [[nodiscard]] OpenRightInterval translateZero() const {
+  [[nodiscard]] constexpr OpenRightInterval translateZero() const {
 
     SignedInterval shift =  -1 * static_cast<SignedInterval>(lower());
     return translate(shift);
 
   }
 
-  bool operator==(const OpenRightInterval &rhs) const { return this->lower() == rhs.lower() and this->upper() == rhs.upper(); }
+  [[nodiscard]] constexpr IntervalValue lower() const { return lower_; }
 
-  bool operator<(const OpenRightInterval &rhs) const { return this->lower() < rhs.lower(); }
+  [[nodiscard]] constexpr IntervalValue upper() const { return upper_; }
 
-  [[nodiscard]] IntervalValue lower() const { return lower_; }
-
-  [[nodiscard]] IntervalValue upper() const { return upper_; }
-
-  [[nodiscard]] size_t size() const { return upper_ - lower_; }
+  [[nodiscard]] constexpr size_t size() const { return upper_ - lower_; }
 
   // Returns the intersection interval or the empty [0, 0) interval indicating no intersection.
-  [[nodiscard]] OpenRightInterval intersection(const OpenRightInterval &interval) const {
+  [[nodiscard]] constexpr OpenRightInterval intersection(const OpenRightInterval &interval) const {
 
     if (lower_ >= interval.upper_ or interval.lower_ >= upper_) {
 
@@ -125,7 +120,7 @@ public:
   // Merge intersecting or adjacent intervals. If the argument intervals are disjoint and not adjacent
   // then the empty [0, 0) interval is returned.
   // Note that the merging of the empty intervals will also produce an empty interval.
-  [[nodiscard]] OpenRightInterval merge(const OpenRightInterval &interval) const {
+  [[nodiscard]] constexpr OpenRightInterval merge(const OpenRightInterval &interval) const {
 
     if (intersects(interval) or adjacent(interval)) {
 
@@ -137,21 +132,25 @@ public:
 
   }
 
-  [[nodiscard]] bool empty() const { return size() == 0; }
+  [[nodiscard]] constexpr bool empty() const { return size() == 0; }
 
-  [[nodiscard]] bool containsOffset(size_t offset) const { return offset >= lower_ and offset < upper_; }
+  [[nodiscard]] constexpr bool containsOffset(size_t offset) const { return offset >= lower_ and offset < upper_; }
 
-  [[nodiscard]] bool containsInterval(const OpenRightInterval &interval) const { return intersection(interval) == interval; }
+  [[nodiscard]] constexpr bool containsInterval(const OpenRightInterval &interval) const { return intersection(interval) == interval; }
 
   // Note that empty [0, 0) intervals adjoin each other, other empty intervals such as [k, k) and [l, l) do not adjoin if k != l.
-  [[nodiscard]] bool adjacent(const OpenRightInterval &interval) const { return lower_ == interval.upper_ or interval.lower_ == upper_; }
+  [[nodiscard]] constexpr bool adjacent(const OpenRightInterval &interval) const { return lower_ == interval.upper_ or interval.lower_ == upper_; }
 
-  [[nodiscard]] bool intersects(const OpenRightInterval &interval) const { return not disjoint(interval); }
+  [[nodiscard]] constexpr bool intersects(const OpenRightInterval &interval) const { return not disjoint(interval); }
 
-  [[nodiscard]] bool disjoint(const OpenRightInterval &interval) const { return intersection(interval).empty(); }
+  [[nodiscard]] constexpr bool disjoint(const OpenRightInterval &interval) const { return intersection(interval).empty(); }
 
   // Convenience routine to convert an interval to a string.
-  [[nodiscard]] std::string toString() const { return "[ " + std::to_string(lower_) + ", " + std::to_string(upper_) + ")"; }
+  [[nodiscard]] constexpr std::string toString() const { return "[ " + std::to_string(lower_) + ", " + std::to_string(upper_) + ")"; }
+
+  // Define an ordering using the spaceship operator. Intervals are, by default, ordered by their lower value.
+  constexpr auto operator<=>(const OpenRightInterval &rhs) const { return std::tie(lower_, upper_) <=> std::tie(rhs.lower_, rhs.upper_); }
+  constexpr bool operator==(const OpenRightInterval &rhs) const { return lower() == rhs.lower() and upper() == rhs.upper(); }
 
 private:
 

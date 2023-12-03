@@ -8,7 +8,6 @@
 #include "kgl_genome_types.h"
 
 #include "kel_interval_unsigned.h"
-#include "kel_interval_set.h"
 
 #include <memory>
 #include <string>

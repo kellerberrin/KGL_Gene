@@ -124,8 +124,6 @@ set(UTILITY_SOURCE_FILES
         kel_utility/kel_date_time.h
         kel_utility/kel_interval_type.h
         kel_utility/kel_interval_unsigned.h
-        kel_utility/kel_interval_map.h
-        kel_utility/kel_interval_set.h
         kel_utility/kel_interval_set.cpp)
 
 # Multi-threading library

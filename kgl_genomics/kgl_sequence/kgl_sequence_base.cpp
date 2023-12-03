@@ -4,7 +4,7 @@
 
 
 #include "kgl_sequence_base.h"
-#include "kel_interval_set.h"
+#include "kel_interval_unsigned.h"
 
 #include <ranges>
 

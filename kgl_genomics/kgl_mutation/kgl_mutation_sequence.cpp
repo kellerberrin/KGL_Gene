@@ -55,7 +55,7 @@ bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigRef
   bool result = updateSequence();
   if (not result) {
 
-    ExecEnv::log().warn("djustedSequence::updateSequence; could not update sequence: {}, contig_ref_ptr: {}",
+    ExecEnv::log().warn("adjustedSequence::updateSequence; could not update sequence: {}, contig_ref_ptr: {}",
                         contig_interval.toString(), contig_ref_ptr->contigId());
     clear();
     return false;

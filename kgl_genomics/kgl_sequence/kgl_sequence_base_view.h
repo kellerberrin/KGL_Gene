@@ -29,7 +29,7 @@ class AminoSequenceView: public AlphabetView<AminoAcid> {
 public:
 
   explicit AminoSequenceView(const AminoSequence& sequence);
-  AminoSequenceView(AminoSequenceView& amino_view) = default;
+  AminoSequenceView(const AminoSequenceView& amino_view) = default;
   ~AminoSequenceView() override = default;
 
   [[nodiscard]] std::optional<AminoSequenceView> subView(const OpenRightUnsigned& sub_interval) const;
@@ -54,7 +54,7 @@ class DNA5SequenceCodingView: public AlphabetView<CodingDNA5> {
 public:
 
   explicit DNA5SequenceCodingView(const DNA5SequenceCoding& coding_sequence);
-  DNA5SequenceCodingView(DNA5SequenceCodingView& copy) = default;
+  DNA5SequenceCodingView(const DNA5SequenceCodingView& copy) = default;
   ~DNA5SequenceCodingView() override = default;
 
   [[nodiscard]] std::optional<DNA5SequenceCodingView> subView(const OpenRightUnsigned& sub_interval) const;
@@ -87,11 +87,9 @@ class DNA5SequenceLinearView: public  AlphabetView<DNA5> {
 public:
 
   explicit DNA5SequenceLinearView(const DNA5SequenceLinear& sequence);
-  DNA5SequenceLinearView(const DNA5SequenceLinearView&) = default;
+  DNA5SequenceLinearView(const DNA5SequenceLinearView& copy) = default;
   ~DNA5SequenceLinearView() override = default;
 
-  // Equality operator.
-  [[nodiscard]] bool operator==(const DNA5SequenceLinearView& cmp_seq) const { return equal(cmp_seq); }
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
   // A -ve strand returns the reverse complement as expected.
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;

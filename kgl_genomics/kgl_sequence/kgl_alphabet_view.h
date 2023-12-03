@@ -40,11 +40,11 @@ public:
   [[nodiscard]] auto operator[] (ContigOffset_t offset) const { return alphabet_view_[offset]; }
   [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_view_[offset]; }
 
-  [[nodiscard]] ContigSize_t length() const { return alphabet_view_.length(); }
+  [[nodiscard]] constexpr ContigSize_t length() const { return alphabet_view_.length(); }
   [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_view_.length() }; }
 
   // Assumes that sequence alphabets are 1 byte (char) and map onto ascii char types. Avoids a sequence byte copy and conversion.
-  [[nodiscard]] std::string_view getStringView() const override { return std::string_view{reinterpret_cast<const char*>(alphabet_view_.data()), alphabet_view_.length()}; }
+  [[nodiscard]] constexpr std::string_view getStringView() const override { return std::string_view{reinterpret_cast<const char*>(alphabet_view_.data()), alphabet_view_.length()}; }
 
   // Get the physical sequence from the view.
   [[nodiscard]] AlphabetSequence<Alphabet> getSequence() const { return AlphabetSequence<Alphabet>(std::move(AlphabetString<Alphabet>(alphabet_view_))); }
@@ -53,19 +53,21 @@ public:
   [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetView& sub_sequence) const { return alphabet_view_.findAll(sub_sequence.alphabet_view_); }
 
   // Ptr to the base of the alphabet string. Used to initialize a SequenceView object.
-  [[nodiscard]] const Alphabet::Alphabet* data() const { return  alphabet_view_.data(); }
+  [[nodiscard]] constexpr const Alphabet::Alphabet* data() const { return  alphabet_view_.data(); }
 
   // Returns std::nullopt if offset and/or size are out of bounds.
   [[nodiscard]] std::optional<AlphabetView> getSubView(const OpenRightUnsigned& sub_interval) const;
 
+  // Returns std::nullopt if offset and/or size are out of bounds.
+  [[nodiscard]] AlphabetView getTruncate(const OpenRightUnsigned& sub_interval) const;
+
+  // Sequence view comparison using the spaceship operator. Sequence views (and thus sequences) are ordered lexically using std::string_view.
+  [[nodiscard]] constexpr auto operator<=>(const AlphabetView& rhs) const { return getStringView() <=> rhs.getStringView(); }
+  [[nodiscard]] constexpr bool operator==(const AlphabetView& rhs) const { return getStringView() == rhs.getStringView(); }
+
 protected:
 
   const std::basic_string_view<typename Alphabet::Alphabet> alphabet_view_;
-
-  // Equality of sequence.
-  [[nodiscard]] bool equal(const AlphabetView& cmp_seq) const { return alphabet_view_.compare(cmp_seq.alphabet_view_); }
-
-private:
 
 };
 
@@ -84,6 +86,13 @@ std::optional<AlphabetView<Alphabet>> AlphabetView<Alphabet>::getSubView(const O
 
 }
 
+template<typename Alphabet>
+AlphabetView<Alphabet> AlphabetView<Alphabet>::getTruncate(const OpenRightUnsigned& sub_interval) const {
+
+  auto truncate_interval = interval().intersection(sub_interval);
+  return AlphabetView<Alphabet>(alphabet_view_.substr(truncate_interval.lower(), truncate_interval.size()));
+
+}
 
 
 }   // end namespace
