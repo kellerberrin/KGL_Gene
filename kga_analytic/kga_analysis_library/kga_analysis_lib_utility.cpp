@@ -78,3 +78,12 @@ kgl::GeneVector kga::KGAUtility::getRUF6Genes(const std::shared_ptr<const Genome
 
 }
 
+
+kgl::GeneVector kga::KGAUtility::getPFEMP1Genes(const std::shared_ptr<const GenomeReference> &genome_ptr) {
+
+  auto var_gene_vector = KGAUtility::getGeneVector(genome_ptr, PFEMP1_FAMILY_);
+
+  return var_gene_vector;
+
+}
+

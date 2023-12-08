@@ -63,7 +63,6 @@ private:
 
   // Transcript Analysis
   AnalysisTranscriptFamily transcript_analysis_;
-  constexpr static const std::string RUF6_FAMILY_{"RUF6"};
   constexpr static const std::string TRANSCRIPT_SUBDIRECTORY_{"transcript"};
 
   std::string ident_work_directory_;

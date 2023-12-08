@@ -63,8 +63,9 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
   // Do the UPGMA stuff.
   AnalysisGenePf::performGeneAnalysis(genome_3D7_ptr_, ident_work_directory_);
 
-  // Analysis on RUf6.
-  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+  // Analysis on RUf6 and PFEMP1.
+//  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+  transcript_analysis_.createAnalysisVector(KGAUtility::getPFEMP1Genes(genome_3D7_ptr_));
 
   return true;
 

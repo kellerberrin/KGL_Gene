@@ -55,8 +55,8 @@ public:
   [[nodiscard]] CodingSequenceValidity modifiedValidity() const { return modified_validity_; }
 
   // Define an ordering using the spaceship operator. Records are indexed by genome.
-  auto operator<=>(const TranscriptModifyRecord &rhs) const { return genome() <=> rhs.genome(); }
-  bool operator==(const TranscriptModifyRecord &rhs) const { return genome() == rhs.genome(); }
+  [[nodiscard]] auto operator<=>(const TranscriptModifyRecord &rhs) const { return genome() <=> rhs.genome(); }
+  [[nodiscard]] bool operator==(const TranscriptModifyRecord &rhs) const { return genome() == rhs.genome(); }
 
 private:
 
@@ -76,7 +76,7 @@ using GenomeRecordOpt = std::optional<std::shared_ptr<const TranscriptModifyReco
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using TransSeqGenomeMap = std::map<GenomeId_t, std::shared_ptr<const TranscriptModifyRecord>>;
+using TransSeqGenomeMap = std::multimap<GenomeId_t, std::shared_ptr<const TranscriptModifyRecord>>;
 using TransSeqVector = std::vector<std::shared_ptr<const TranscriptModifyRecord>>;
 using TransSeqTranscriptMap = std::map<FeatureIdent_t, TransSeqVector>;
 
@@ -84,16 +84,7 @@ class TranscriptSequenceRecord {
 
 public:
 
-  explicit TranscriptSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr)
-  : modified_sequence_(genome_modify_ptr->modified().getView()) {
-
-    if (not addSequenceRecord(genome_modify_ptr)) {
-
-      ExecEnv::log().warn("Unable to add transcript sequence record for genome: {}", genome_modify_ptr->genome());
-
-    }
-
-  }
+  explicit TranscriptSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr);
   ~TranscriptSequenceRecord() = default;
 
   [[nodiscard]] bool addSequenceRecord(const std::shared_ptr<const TranscriptModifyRecord>& genome_modify_ptr);
@@ -102,9 +93,8 @@ public:
   [[nodiscard]] const TransSeqGenomeMap& getGenomes() const { return genomes_; }
   [[nodiscard]] const TransSeqTranscriptMap& getTranscripts() const { return transcripts_; }
 
-  // Define an ordering using the spaceship operator. Records are indexed by modified transcript.
-  auto operator<=>(const TranscriptSequenceRecord &rhs) const { return modified_sequence_.getStringView() <=> rhs.modified_sequence_.getStringView(); }
-  bool operator==(const TranscriptSequenceRecord &rhs) const { return modified_sequence_.getStringView() == rhs.modified_sequence_.getStringView(); }
+  // Generates a unique label for different sequences. Used as a map index rather than the actual sequence.
+  [[nodiscard]] static std::string generateSequenceLabel(const DNA5SequenceCodingView& seq_view);
 
 private:
 
@@ -112,15 +102,17 @@ private:
   TransSeqGenomeMap genomes_;
   TransSeqTranscriptMap transcripts_;
 
+  constexpr static const std::string SEQUENCE_LABEL_FORMAT_{"SEQID_{:x}"};
 
 };
-using TranscriptMap = std::map<DNA5SequenceCodingView, TranscriptSequenceRecord>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using TranscriptMap = std::map<std::string, TranscriptSequenceRecord>;
 
 class AnalysisTranscriptSequence {
 
@@ -157,11 +149,15 @@ private:
 
 };
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using AnalysisTranscriptMap = std::map<FeatureIdent_t, AnalysisTranscriptSequence>;
 
 class AnalysisTranscriptFamily {
 
@@ -174,17 +170,53 @@ public:
   void performFamilyAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr);
   void printAllReports(const std::string& analysis_directory, const std::string& analysis_sub_directory) const;
 
+  [[nodiscard]] const AnalysisTranscriptMap& getMap() const { return analysis_map_; }
 
 private:
 
-  std::vector<AnalysisTranscriptSequence> analysis_vector_;
+  AnalysisTranscriptMap analysis_map_;
 
   [[nodiscard]] AnalysisTranscriptSequence generateTotal() const;
 
 };
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Indexed by genome and then by transcript id.
+using FeatureTranscriptMap = std::map<FeatureIdent_t , std::shared_ptr<const TranscriptModifyRecord>>;
+using GenomeTranscriptMap = std::map<GenomeId_t, FeatureTranscriptMap>;
+
+class GenomeTranscriptAnalysis {
+
+public:
+
+  GenomeTranscriptAnalysis() = default;
+  ~GenomeTranscriptAnalysis() = default;
+
+  [[nodiscard]] bool createTranscriptMap(const AnalysisTranscriptMap& transcript_map);
+  void printGenomeReport(const std::string& report_directory) const;
+
+private:
+
+  GenomeTranscriptMap genome_map_;
+
+  [[nodiscard]] bool processTranscriptMap(const AnalysisTranscriptMap& transcript_map);
+  [[nodiscard]] std::optional<std::vector<FeatureIdent_t>> checkGenomeMap() const;
+
+  constexpr static const std::string REPORT_EXT_{".csv"};
+  constexpr static const std::string REPORT_FIELD_{","};
+  constexpr static const std::string REPORT_PREFIX_{"genome"};
+
+};
+
+
+
 
 } // Namespace
 
-#endif //KGA_ANLYSIS_LIB_SEQ_GENE_H
+#endif //KGA_ANALYSIS_LIB_SEQ_GENE_H
