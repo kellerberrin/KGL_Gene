@@ -10,7 +10,7 @@
 #include "kgl_genome_collection.h"
 #include "kgl_pf3k_coi.h"
 #include "kga_analysis_lib_seqmutation.h"
-#include "kga_analysis_lib_seq_gene.h"
+#include "kga_analysis_lib_seq_stats.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

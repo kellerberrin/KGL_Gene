@@ -366,6 +366,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_alphabet_view.h
         kgl_genomics/kgl_sequence/kgl_sequence_base_view.h
         kgl_genomics/kgl_sequence/kgl_sequence_base_view.cpp
+        kgl_genomics/kgl_sequence/kgl_sequence_motif.h
+        kgl_genomics/kgl_sequence/kgl_sequence_motif.cpp
 
 )
 
@@ -376,6 +378,8 @@ set(EDLIB_SOURCE_FILES
         contrib/rapidxml/rapidxml_iterators.h
         contrib/rapidxml/rapidxml_print.h
         contrib/rapidxml/rapidxml_utils.h
+        kel_utility/kel_search.cpp
+        kel_utility/kel_search.h
 )
 
 # Gene ontology library
@@ -596,6 +600,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_analysis_library/kga_analysis_lib_seq_gene.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.h
 
 )
 

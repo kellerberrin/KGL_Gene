@@ -8,6 +8,7 @@
 
 #include "kgl_alphabet_string.h"
 #include "kel_interval_unsigned.h"
+#include "kel_search.h"
 
 #include <string>
 #include <set>
@@ -29,6 +30,12 @@ public:
   virtual ~VirtualSequence() = default;
 
   [[nodiscard]] virtual std::string_view getStringView() const = 0;
+  // Searches the underlying sequence using a regular expression. Returns a vector (possibly empty) of intervals.
+  [[nodiscard]] std::vector<OpenRightUnsigned> regexSearch(const std::string_view& regex) const {
+
+    return Search::searchView(regex, getStringView());
+
+  }
 
 };
 

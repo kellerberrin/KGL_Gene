@@ -87,3 +87,12 @@ kgl::GeneVector kga::KGAUtility::getPFEMP1Genes(const std::shared_ptr<const Geno
 
 }
 
+
+kgl::GeneVector kga::KGAUtility::getCircumsporozoite(const std::shared_ptr<const GenomeReference> &genome_ptr) {
+
+  auto var_gene_vector = KGAUtility::getGeneVector(genome_ptr, CIRCUMSPOROZOITE_);
+
+  return var_gene_vector;
+
+}
+

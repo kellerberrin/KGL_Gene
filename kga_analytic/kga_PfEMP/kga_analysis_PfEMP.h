@@ -13,7 +13,7 @@
 #include "kgl_pf7_genetic_distance_parser.h"
 #include "kgl_Pf7_physical_distance.h"
 #include "kga_analysis_lib_seqmutation.h"
-#include "kga_analysis_lib_seq_gene.h"
+#include "kga_analysis_lib_seq_stats.h"
 
 #include "kga_analysis_PfEMP_variant.h"
 #include "kga_analysis_PfEMP_heterozygous.h"

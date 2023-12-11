@@ -59,7 +59,7 @@ public:
   [[nodiscard]] std::optional<AlphabetView> getSubView(const OpenRightUnsigned& sub_interval) const;
 
   // Returns std::nullopt if offset and/or size are out of bounds.
-  [[nodiscard]] AlphabetView getTruncate(const OpenRightUnsigned& sub_interval) const;
+  [[nodiscard]] AlphabetView getIntersection(const OpenRightUnsigned& sub_interval) const;
 
   // Sequence view comparison using the spaceship operator. Sequence views (and thus sequences) are ordered lexically using std::string_view.
   [[nodiscard]] constexpr auto operator<=>(const AlphabetView& rhs) const { return getStringView() <=> rhs.getStringView(); }
@@ -87,7 +87,7 @@ std::optional<AlphabetView<Alphabet>> AlphabetView<Alphabet>::getSubView(const O
 }
 
 template<typename Alphabet>
-AlphabetView<Alphabet> AlphabetView<Alphabet>::getTruncate(const OpenRightUnsigned& sub_interval) const {
+AlphabetView<Alphabet> AlphabetView<Alphabet>::getIntersection(const OpenRightUnsigned& sub_interval) const {
 
   auto truncate_interval = interval().intersection(sub_interval);
   return AlphabetView<Alphabet>(alphabet_view_.substr(truncate_interval.lower(), truncate_interval.size()));
