@@ -19,7 +19,7 @@ namespace kel = kellerberrin;
 
 // Returns the strand adjusted feature begin (-ve is end-1) to the
 // target strand adjusted feature begin (-ve is end-1)
-// and returns the relative begin transcription distance as a +ve offset.
+// and returns the relative begin transcription parentDistance as a +ve offset.
 kgl::ContigOffset_t kgl::FeatureSequence::distance(const FeatureSequence& compare_feature) const {
 
   ContigOffset_t target_begin_offset;

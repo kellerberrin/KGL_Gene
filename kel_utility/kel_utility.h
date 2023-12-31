@@ -18,6 +18,8 @@
 #ifndef KEL_UTILITY_H
 #define KEL_UTILITY_H
 
+#include "kel_string_hash.h"
+
 #include <string>
 #include <vector>
 #include <optional>
@@ -63,18 +65,8 @@ public:
   [[nodiscard]] static std::pair<double, double> process_time_usage(); // pair.first is system CPU time usage (seconds), pair.second is user CPU time usage (seconds).
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
   [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = pair.first,  sample stdev = pair.second
-  // Uses the 'djb2a' algorithm to hash a string. This fn is constexpr and can be used to hash constant strings in 'switch' statements.
-  [[nodiscard]] constexpr static uint32_t hash(std::string_view sv) {
-
-    uint32_t hash{ 5381 };
-    for (unsigned char c : sv) {
-
-      hash = ((hash << 5) + hash) ^ c;
-
-    }
-    return hash;
-
-  }
+  // Constexpr hash algorithm for a string, can be used to hash constant strings in 'switch' statements.
+  [[nodiscard]] constexpr static uint32_t hash(const std::string_view& sv) { return UtilityStringHash::crcStringHash(sv); }
 
 private:
 

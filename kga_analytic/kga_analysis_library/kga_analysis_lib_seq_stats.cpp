@@ -266,7 +266,7 @@ bool kga::GenomeTranscriptAnalysis::createTranscriptMap(const AnalysisTranscript
 
 void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_directory) const {
 
-  // Select distance metric.
+  // Select parentDistance metric.
   CodingDistanceMetric dna_distance_metric{LevenshteinGlobalCoding};
 
   auto file_path = REPORT_PREFIX_ + REPORT_EXT_;
@@ -298,22 +298,26 @@ void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_
                   << "Distance";
 
   }
+  report_stream << REPORT_FIELD_ << "TotalDistance";
   report_stream << '\n';
 
   for (auto const& [genome_id, transcript_map] : genome_map_) {
 
+    size_t total_distance{0};
     report_stream << genome_id;
     for (auto const& [transcript_id, transcript_modify] : transcript_map) {
 
       auto modify_transcript_view = transcript_modify->modified().getView();
       auto sequence_label = TranscriptSequenceRecord::generateSequenceLabel(modify_transcript_view);
       double distance = dna_distance_metric(transcript_modify->reference(), transcript_modify->modified());
+      total_distance += distance;
       report_stream << REPORT_FIELD_
                     << sequence_label
                     << REPORT_FIELD_
                     << distance;
 
     }
+    report_stream << REPORT_FIELD_ << total_distance;
     report_stream << '\n';
 
   }

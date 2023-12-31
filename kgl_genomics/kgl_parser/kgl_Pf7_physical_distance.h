@@ -59,7 +59,7 @@ private:
   std::vector<std::string> sample_id_vec_; // All samples/genomes at this location.
   std::map<std::string, size_t> studies_; // All [study, study_year] pairs
 
-  // Used to calculate great circle distance between 2 locations.
+  // Used to calculate great circle parentDistance between 2 locations.
   constexpr static const double EARTH_RADIUS_KM_{6371.0};
 
   void convertLatLong(const std::string& latitude_text, const std::string& longitude_text);
@@ -67,7 +67,7 @@ private:
 
 };
 
-// Use to 2 maps to cache the distance between any two locations (cities or countries).
+// Use to 2 maps to cache the parentDistance between any two locations (cities or countries).
 using DistanceCache = std::map<std::string, std::map<std::string, double>>;
 // Map to store location/country latitude and longitude and all samples located there.
 using SampleLocationMap = std::map<std::string, LocationCoordinates>;
@@ -84,11 +84,11 @@ public:
 
   // Expose all locations.
   [[nodiscard]] const SampleLocationMap& locationMap() const { return location_map_; }
-  // Expose the distance cache.
+  // Expose the parentDistance cache.
   [[nodiscard]] const DistanceCache& distanceCache() const { return distance_cache_; }
   // Calculate great circle distances in kilometers
   [[nodiscard]] double calculateDistance(const std::string& location1, const std::string& location2) const;
-  // Lookup the cache great circle distance.
+  // Lookup the cache great circle parentDistance.
   [[nodiscard]] double distance(const std::string& location1, const std::string& location2) const;
   // Get all locations within a radius from the specified location.
   // The bool 'all' parameter (default false) determines if all locations within the great circle radius are used to generate

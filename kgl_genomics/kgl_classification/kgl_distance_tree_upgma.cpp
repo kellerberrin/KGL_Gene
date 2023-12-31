@@ -13,35 +13,28 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 size_t kgl::DistanceTreeUPGMA::getLeafCount(size_t leaf_idx) const {
 
-  if (leaf_idx >= node_vector_ptr_->size()) {
+  if (leaf_idx >= tree_node_vector_.size()) {
 
-    ExecEnv::log().error("getLeafCount(), bad index: {}, node vector size: {}", leaf_idx, node_vector_ptr_->size());
+    ExecEnv::log().error("getLeafCount(), bad index: {}, node vector size: {}", leaf_idx, tree_node_vector_.size());
     return 1;
 
   }
 
-  return node_vector_ptr_->at(leaf_idx)->leafNodeCount();
-
-}
-
-
-kgl::DistanceType_t kgl::DistanceTreeUPGMA::distance(std::shared_ptr<TreeDistanceNode> row_node,
-                                                     std::shared_ptr<TreeDistanceNode> column_node) const {
-
-  return row_node->node()->distance(column_node->node());
+  return tree_node_vector_[leaf_idx]->leafNodeCount();
 
 }
 
 
 void kgl::DistanceTreeUPGMA::initializeDistance() {
 
-  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
+  for (size_t row = 0; row < tree_node_vector_.size(); ++row) {
 
     for (size_t column = 0; column < row; ++column) {
 
-      distance_matrix_.setDistance(row, column, distance(node_vector_ptr_->at(row), node_vector_ptr_->at(column)));
+      distance_matrix_.setDistance(row, column, distance(tree_node_vector_[row], tree_node_vector_[column]));
 
     }
 
@@ -59,15 +52,15 @@ void kgl::DistanceTreeUPGMA::normalizeDistance() {
 
 }
 
-// Enforce the distance metric; d(a, a) = 0.
+// Enforce the parentDistance metric; d(a, a) = 0.
 void kgl::DistanceTreeUPGMA::identityZeroDistance() {
 
-  for (size_t row = 0; row < node_vector_ptr_->size(); ++row) {
+  for (size_t row = 0; row < tree_node_vector_.size(); ++row) {
 
     for (size_t column = 0; column < row; ++column) {
 
-      auto row_hash = std::hash<std::shared_ptr<const VirtualDistanceNode>>()(node_vector_ptr_->at(row)->node());
-      auto column_hash = std::hash<std::shared_ptr<const VirtualDistanceNode>>()(node_vector_ptr_->at(column)->node());
+      auto row_hash = std::hash<std::shared_ptr<const TreeNodeDistance>>()(tree_node_vector_[row]);
+      auto column_hash = std::hash<std::shared_ptr<const TreeNodeDistance>>()(tree_node_vector_[column]);
 
       if (row_hash == column_hash) {
 
@@ -78,6 +71,25 @@ void kgl::DistanceTreeUPGMA::identityZeroDistance() {
     }
 
   }
+
+}
+
+
+kgl::DistanceType_t kgl::DistanceTreeUPGMA::distance(const std::shared_ptr<TreeNodeDistance>& row_node,
+                                                    const std::shared_ptr<TreeNodeDistance>& column_node) const {
+
+  return row_node->distance(column_node);
+
+}
+
+
+
+kgl::TreeNodeVector kgl::DistanceTreeUPGMA::calculateTree() {
+
+  distance_matrix_.resize(tree_node_vector_.size());
+  initializeDistance();
+  UPGMATree();
+  return tree_node_vector_;
 
 }
 
@@ -150,38 +162,40 @@ void kgl::DistanceTreeUPGMA::reduceDistance(size_t i, size_t j) {
 }
 
 
-
-
 bool kgl::DistanceTreeUPGMA::reduceNode(size_t row, size_t column, DistanceType_t minimum) {
 
-  std::shared_ptr<DistanceNodeVector> temp_node_vector_ptr(std::make_shared<DistanceNodeVector>());
-  std::shared_ptr<TreeDistanceNode> column_node = node_vector_ptr_->at(column);
-  std::shared_ptr<TreeDistanceNode> row_node = node_vector_ptr_->at(row);
+  TreeNodeVector temp_node_vector;
+  std::shared_ptr<TreeNodeDistance> column_node = tree_node_vector_[column];
+  std::shared_ptr<TreeNodeDistance> row_node = tree_node_vector_[row];
 
-  for (size_t idx = 0; idx < node_vector_ptr_->size(); idx++) {
+  for (size_t idx = 0; idx < tree_node_vector_.size(); idx++) {
 
     if (not (idx == column or idx == row)) {
 
-      temp_node_vector_ptr->push_back(node_vector_ptr_->at(idx));
+      temp_node_vector.push_back(tree_node_vector_[idx]);
 
     }
 
   }
 
-  node_vector_ptr_ = temp_node_vector_ptr;
+  tree_node_vector_ = std::move(temp_node_vector);
 
   DistanceType_t node_distance = minimum / 2;
-  DistanceType_t row_distance = node_distance - row_node->distance();
-  row_node->distance(row_distance);
-  DistanceType_t column_distance = node_distance - column_node->distance();
-  column_node->distance(column_distance);
-  std::shared_ptr<TreeDistanceNode> merged_node(std::make_shared<TreeDistanceNode>(row_node->node()));
-  merged_node->distance(node_distance);
-  merged_node->addOutNode(row_node);
-  merged_node->addOutNode(column_node);
+  DistanceType_t row_distance = node_distance - row_node->parentDistance();
+  row_node->parentDistance(row_distance);
+  DistanceType_t column_distance = node_distance - column_node->parentDistance();
+  column_node->parentDistance(column_distance);
+  size_t row_leaves = row_node->leafNodeCount();
+  size_t column_leaves = column_node->leafNodeCount();
+  auto merged_node_ptr = std::make_shared<CladeNode>("Clade Node", row_leaves + column_leaves);
+  merged_node_ptr->parentDistance(node_distance);
+  merged_node_ptr->addOutNode(row_node);
+  row_node->parentNode(merged_node_ptr);
+  merged_node_ptr->addOutNode(column_node);
+  column_node->parentNode(merged_node_ptr);
   // Insert the merged node at the front of the vector.
   // This matches the pattern of the reduction of the calculateDistance matrix (above).
-  node_vector_ptr_->insert(node_vector_ptr_->begin(), merged_node);
+  tree_node_vector_.insert(tree_node_vector_.begin(), merged_node_ptr);
 
   return true;
 
@@ -190,7 +204,7 @@ bool kgl::DistanceTreeUPGMA::reduceNode(size_t row, size_t column, DistanceType_
 
 void kgl::DistanceTreeUPGMA::UPGMATree() {
 
-  while (node_vector_ptr_->size() > 1) {
+  while (tree_node_vector_.size() > 1) {
 
     auto [min, row, column] = distance_matrix_.minimum();
 
@@ -199,68 +213,6 @@ void kgl::DistanceTreeUPGMA::UPGMATree() {
     reduceNode(row, column, min);
 
   } // while reduceNode.
-
-}
-
-
-bool kgl::DistanceTreeUPGMA::writeNewick(const std::string& file_name) const {
-
-  std::ofstream newick_file;
-
-  newick_file.open(file_name);
-  if (not newick_file.good()) {
-
-    ExecEnv::log().error("I/O error; could not open Newick file: {}", file_name);
-    return false;
-
-  }
-
-  for (const auto& node : *node_vector_ptr_) {
-
-    writeNode(node, newick_file);
-
-  }
-
-  newick_file << ";";
-
-  return true;
-
-}
-
-
-void kgl::DistanceTreeUPGMA::writeNode(const std::shared_ptr<TreeDistanceNode>& node, std::ofstream& newick_file) const {
-
-  if (not node->outNodes().empty()) {
-
-    newick_file << "(";
-
-    bool first_pass = true;
-    for (const auto& [distance, child_node] : node->outNodes()) {
-
-      if (first_pass) {
-
-        first_pass = false;
-
-      } else {
-
-        newick_file << ",";
-
-      }
-
-      writeNode(child_node, newick_file);
-
-    }
-
-    newick_file << ")";
-
-  } else {
-
-    node->node()->writeNode(newick_file);
-
-  }
-
-  newick_file << ":";
-  newick_file << node->distance();
 
 }
 

@@ -90,7 +90,7 @@ public:
   constexpr static const char PF7FWS_RESOURCE_ID_[] = "Pf7Fws";
   constexpr static const char PF7FWS_IDENT_[] = "Pf7FwsIdent";
   constexpr static const char PF7FWS_FILE_[] = "Pf7FwsFile";
-  // Pf7 distance matrix between all samples. Some distances are recorded as NaN.
+  // Pf7 parentDistance matrix between all samples. Some distances are recorded as NaN.
   constexpr static const char PF7DISTANCE_RESOURCE_ID_[] = "Pf7Distance";
   constexpr static const char PF7DISTANCE_IDENT_[] = "Pf7DistanceIdent";
   constexpr static const char PF7DISTANCE_MATRIXFILE_[] = "Pf7DistanceMatrixFile";

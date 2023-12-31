@@ -77,12 +77,12 @@ CompareDistance_t localblosum80Impl(const Seq&, const Seq&) {
 
 }
 
-// Define the distance function object.
+// Define the parentDistance function object.
 template<typename Seq>
 using SequenceDistanceMetricFn = std::function<CompareDistance_t(const Seq&, const Seq&)>;
 
 // Delete the default constructor.
-// The distance function object must be initialized.
+// The parentDistance function object must be initialized.
 template<typename Seq>
 class SequenceDistanceMetric : public SequenceDistanceMetricFn<Seq> {
 

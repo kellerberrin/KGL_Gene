@@ -11,6 +11,7 @@
 #include <boost/spirit/include/lex_lexertl.hpp>
 
 #include <sstream>
+#include <fstream>
 #include <stack>
 
 namespace kel = kellerberrin;

@@ -135,7 +135,7 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
         kel_thread/kel_workflow_pipeline.h
-        kel_thread/kel_movefunction.h)
+)
 
 # The basic I/O library.
 set(IO_SOURCE_FILES
@@ -343,8 +343,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_translate.h
         kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp
-        kgl_genomics/kgl_classification/kgl_distance_genome.h
-        kgl_genomics/kgl_classification/kgl_distance_genome.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.cpp
         kgl_genomics/kgl_legacy/kgl_legacy_Pf_analysis.h
         kgl_genomics/kgl_legacy/kgl_phylogenetic_analysis.h
@@ -359,15 +357,15 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_distance_matrix.cpp
         kgl_genomics/kgl_classification/kgl_distance_matrix.h
         kgl_genomics/kgl_classification/kgl_distance_matrix_triangular.h
-        kgl_genomics/kgl_classification/kgl_distance_matrix_array.h
-        kgl_genomics/kgl_classification/kgl_distance_sequence.cpp
-        kgl_genomics/kgl_classification/kgl_distance_sequence.h
         kgl_genomics/kgl_sequence/kgl_alphabet_sequence.h
         kgl_genomics/kgl_sequence/kgl_alphabet_view.h
         kgl_genomics/kgl_sequence/kgl_sequence_base_view.h
         kgl_genomics/kgl_sequence/kgl_sequence_base_view.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_motif.h
         kgl_genomics/kgl_sequence/kgl_sequence_motif.cpp
+        kgl_genomics/kgl_classification/kgl_sequence_node.h
+        kgl_genomics/kgl_classification/kgl_distance_tree_node.cpp
+        kgl_genomics/kgl_classification/kgl_distance_tree_node.h
 
 )
 
@@ -380,6 +378,7 @@ set(EDLIB_SOURCE_FILES
         contrib/rapidxml/rapidxml_utils.h
         kel_utility/kel_search.cpp
         kel_utility/kel_search.h
+        kel_utility/kel_string_hash.h
 )
 
 # Gene ontology library

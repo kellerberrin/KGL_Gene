@@ -83,10 +83,10 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
 
   const size_t sample_size = sample_index_map_ptr_->size();
   distance_matrix_size_ = sample_size * sample_size;
-  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; sample id size: {}, distance matrix size: {}",
+  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; sample id size: {}, parentDistance matrix size: {}",
                       sample_size, distance_matrix_size_);
 
-  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; reading distance matrix file: {}", matrix_file_name);
+  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; reading parentDistance matrix file: {}", matrix_file_name);
 
   // Allocate the calculateDistance matrix
   auto matrix_ptr = new (std::nothrow) double [distance_matrix_size_];
@@ -106,7 +106,7 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
   }
   auto file_io_ptr = std::move(file_io_opt.value());
 
-  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; begin parsing distance matrix records");
+  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; begin parsing parentDistance matrix records");
 
   // Read each record and place in the appropriate matrix element.
   size_t vector_index{0};
@@ -135,7 +135,7 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
         double distance_value = std::stod(line_string);
         if (distance_value < 0) {
 
-          ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; distance text: {} not a positive value: {}",
+          ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; parentDistance text: {} not a positive value: {}",
                               line_string, distance_value);
 
           distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
@@ -146,7 +146,7 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
 
       } catch(std::exception& e) {
 
-        ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; distance text: {} not valid float text, reason: {}, line: {}",
+        ExecEnv::log().warn("ParsePf7Distance::parsePf7Distance; parentDistance text: {} not valid float text, reason: {}, line: {}",
                             line_string, e.what(), (vector_index + 1));
 
         distance_matrix_ptr_[vector_index] = std::nan(NAN_TEXT_);
@@ -159,7 +159,7 @@ bool kgl::ParsePf7Distance::parsePf7Distance(const std::string& matrix_file_name
 
   }
 
-  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; completed parsing distance matrix records");
+  ExecEnv::log().info("ParsePf7Distance::parsePf7Distance; completed parsing parentDistance matrix records");
 
   return true;
 

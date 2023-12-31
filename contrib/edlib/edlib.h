@@ -86,7 +86,7 @@ extern "C" {
         /**
          * Set k to non-negative value to tell edlib that edit calculateDistance is not larger than k.
          * Smaller k can significantly improve speed of computation.
-         * If edit distance is larger than k, edlib will set edit calculateDistance to -1.
+         * If edit parentDistance is larger than k, edlib will set edit calculateDistance to -1.
          * Set k to negative value and edlib will internally auto-adjust k until score is found.
          */
         int k;
@@ -208,7 +208,7 @@ extern "C" {
 
 
     /**
-     * Aligns two sequences (query and target) using edit distance (levenshtein calculateDistance).
+     * Aligns two sequences (query and target) using edit parentDistance (levenshtein calculateDistance).
      * Through config parameter, this function supports different alignment methods (global, prefix, infix),
      * as well as different modes of search (tasks).
      * It always returns edit calculateDistance and end locations of optimal alignment in target.

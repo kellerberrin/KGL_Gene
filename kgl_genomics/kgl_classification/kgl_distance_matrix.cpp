@@ -5,7 +5,6 @@
 
 #include "kel_exec_env.h"
 #include "kgl_distance_matrix_triangular.h"
-#include "kgl_distance_matrix_array.h"
 #include "kgl_distance_matrix.h"
 
 
@@ -19,7 +18,6 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using DistanceMatrixImplBase = kgl::DistanceMatrixTriangular<kgl::DistanceType_t>;
-//using DistanceMatrixImplBase = kgl::DistanceMatrixArray<kgl::DistanceType_t>;
 
 
 class kgl::DistanceMatrixImpl : public DistanceMatrixImplBase {

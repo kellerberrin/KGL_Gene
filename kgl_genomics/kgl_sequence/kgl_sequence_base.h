@@ -124,7 +124,7 @@ public:
   //Return a view.
   [[nodiscard]] DNA5SequenceLinearView getView() const { return DNA5SequenceLinearView(*this); }
 
-  // Sorts a vector of intervals in lower() ascending order and then concatanates the sub-intervals together.
+  // Sorts a vector of intervals in lower() ascending order and then concatenates the sub-intervals together.
   // Does not check for overlapping intervals.
   [[nodiscard]] std::optional<DNA5SequenceLinear> concatSequences(const IntervalSetLower& interval_set) const;
 

@@ -66,10 +66,7 @@ private:
 
   static void varIntron( const GeneVector& gene_vector, const std::string& intron_file_name);
 
-  static void geneFamilyUPGMA( const std::shared_ptr<const GenomeReference>& genome_ptr,
-                        const GeneVector& gene_vector,
-                        const std::string& newick_file_name,
-                        const std::string& family_text);
+  static void geneCodingUPGMA(const GeneVector& gene_vector, const std::string& newick_file_name);
 
 
 };

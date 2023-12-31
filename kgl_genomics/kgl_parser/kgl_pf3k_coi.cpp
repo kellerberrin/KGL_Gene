@@ -29,8 +29,21 @@ kgl::Pf3kCOIResource::Pf3kCOIResource(std::string identifier, const SquareTextRo
 
 std::optional<size_t> kgl::Pf3kCOIResource::genomeCOI(const GenomeId_t& genome) const {
 
-  const auto& genome_row = indexed_file_.getRow(genome);
+  auto field_opt = genomeField(genome, COI_FIELD);
+  if (not field_opt) {
 
+    return std::nullopt;
+
+  }
+  auto field_text = field_opt.value();
+
+  return std::stoll(field_text);
+
+}
+
+std::optional<std::string> kgl::Pf3kCOIResource::genomeField(const GenomeId_t& genome, size_t field_index) const {
+
+  const auto& genome_row = indexed_file_.getRow(genome);
   if (genome_row.empty()) {
 
     return std::nullopt;
@@ -44,7 +57,14 @@ std::optional<size_t> kgl::Pf3kCOIResource::genomeCOI(const GenomeId_t& genome) 
 
   }
 
-  return std::stoll(genome_row[COI_FIELD]);
+  if (field_index >= FIELD_COUNT) {
+
+    ExecEnv::log().warn("COI resource record for genome: {} field index: {} >= total fields: {}", genome, field_index, FIELD_COUNT);
+    return std::nullopt;
+
+  }
+
+  return genome_row[field_index];
 
 }
 

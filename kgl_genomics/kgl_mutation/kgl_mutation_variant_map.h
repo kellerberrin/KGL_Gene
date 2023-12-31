@@ -105,12 +105,12 @@ class SequenceVariantUpdate {
 
 public:
 
-  SequenceVariantUpdate(const std::shared_ptr<const Variant>& variant_ptr,
+  SequenceVariantUpdate(std::shared_ptr<const Variant> variant_ptr,
                         const OpenRightUnsigned& prior_interval,
                         const OpenRightUnsigned& post_update_interval,
                         const OpenRightUnsigned& updating_interval,
                         SequenceUpdateResult update_result) :
-      variant_ptr_(variant_ptr),
+      variant_ptr_(std::move(variant_ptr)),
       prior_interval_(prior_interval),
       post_update_interval_(post_update_interval),
       updating_interval_(updating_interval),

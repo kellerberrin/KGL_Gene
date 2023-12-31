@@ -179,7 +179,7 @@ ExecEnv::log().info("**********Completed Analysis: {} **************", result->f
 
 void kgl::PhylogeneticAnalysis::performSequence() {
 
-  // Select distance metric.
+  // Select parentDistance metric.
   CodingDistanceMetric dna_distance_metric{LevenshteinGlobalCoding};
 
   std::string coding_file = Utility::filePath("All_DNA_CodingAnalysis", runtime_options_.workDirectory()) + ".csv";

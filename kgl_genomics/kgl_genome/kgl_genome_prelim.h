@@ -52,7 +52,7 @@ public:
   void strand(StrandSense strand) { strand_sense_ = strand; }
   // Returns the strand adjusted feature begin (-ve is end-1) to the
   // target strand adjusted feature begin (-ve is end-1)
-  // and returns the relative begin transcription distance as a +ve offset.
+  // and returns the relative begin transcription parentDistance as a +ve offset.
   [[nodiscard]] ContigOffset_t distance(const FeatureSequence& compare_feature) const;
 
   // Primarily used for testing.

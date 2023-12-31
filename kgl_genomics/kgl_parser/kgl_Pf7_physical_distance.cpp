@@ -195,7 +195,7 @@ void kgl::Pf7SampleLocation::initializeLocationMaps(const Pf7SampleResource& sam
 
   } // For loop.
 
-  // Create the distance cache.
+  // Create the parentDistance cache.
   createDistanceCache();
 
 }
@@ -252,7 +252,7 @@ double kgl::Pf7SampleLocation::distance(const std::string& location1, const std:
   auto location1_iter = distance_cache_.find(location1);
   if (location1_iter == distance_cache_.end()) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::distance; Location: {} not found in distance cache", location1);
+    ExecEnv::log().warn("Pf7SampleLocation::parentDistance; Location: {} not found in parentDistance cache", location1);
     return 0.0;
 
   }
@@ -262,7 +262,7 @@ double kgl::Pf7SampleLocation::distance(const std::string& location1, const std:
   auto location2_iter = location_map.find(location2);
   if (location2_iter == location_map.end()) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::distance; Location: {} not found in distance cache", location2);
+    ExecEnv::log().warn("Pf7SampleLocation::parentDistance; Location: {} not found in parentDistance cache", location2);
     return 0.0;
 
   }
@@ -285,7 +285,7 @@ std::vector<std::string> kgl::Pf7SampleLocation::locationRadius(const std::strin
   auto cache_iter = distance_cache_.find(location);
   if (cache_iter == distance_cache_.end()) {
 
-    ExecEnv::log().warn("Pf7SampleLocation::locationRadius; Location: {} not found in distance cache", location);
+    ExecEnv::log().warn("Pf7SampleLocation::locationRadius; Location: {} not found in parentDistance cache", location);
     return locations;
 
   }
@@ -355,7 +355,7 @@ std::vector<std::string> kgl::Pf7SampleLocation::sampleRadius(const std::string&
     auto proximity_iter = location_map_.find(proximity_location);
     if (proximity_iter == location_map_.end()) {
 
-      ExecEnv::log().warn("Pf7SampleLocation::sampleRadius; Location: {} not found in distance cache", proximity_location);
+      ExecEnv::log().warn("Pf7SampleLocation::sampleRadius; Location: {} not found in parentDistance cache", proximity_location);
       sample_vec.clear();
       return sample_vec;
 

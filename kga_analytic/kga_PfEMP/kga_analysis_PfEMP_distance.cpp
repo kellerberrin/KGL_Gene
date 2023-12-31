@@ -14,7 +14,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
                                               const std::shared_ptr<const PopulationDB>& filtered_population_ptr) const {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Diagonal distance
+  // Diagonal parentDistance
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const size_t distance_sample_size = Pf7_genetic_distance_ptr_->distanceSamples()->size();
@@ -38,7 +38,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   }
 
   double av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("Using Index; Diagonal average distance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
+  ExecEnv::log().info("Using Index; Diagonal average parentDistance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Examine sample id lookup.
@@ -62,7 +62,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
   }
   av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("Using Sample Id; Diagonal average distance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
+  ExecEnv::log().info("Using Sample Id; Diagonal average parentDistance: {}, Diagonal non-nan: {}, Diagonal nan: {}", av_distance, diagonal_count, nan_count);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Check the smallest each row is self.
@@ -109,7 +109,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   }  // Y
 
   av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("Smallest distance sample,  self smallest: {}, other smallest: {}", self_smallest, other_smallest);
+  ExecEnv::log().info("Smallest parentDistance sample,  self smallest: {}, other smallest: {}", self_smallest, other_smallest);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Examine off diagonal
@@ -146,7 +146,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   }  // Y
 
   av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("Off Diagonal average distance: {}, Off Diagonal non-nan: {}, Off Diagonal nan: {}", av_distance, diagonal_count, nan_count);
+  ExecEnv::log().info("Off Diagonal average parentDistance: {}, Off Diagonal non-nan: {}, Off Diagonal nan: {}", av_distance, diagonal_count, nan_count);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Off diagonal QC Pass filtered
@@ -183,7 +183,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
   }  // Y
 
   av_distance = sum_diagonal / static_cast<double>(diagonal_count);
-  ExecEnv::log().info("QC Pass; off Diagonal average distance: {}, Off Diagonal non-nan: {}, Off Diagonal nan: {}", av_distance, diagonal_count, nan_count);
+  ExecEnv::log().info("QC Pass; off Diagonal average parentDistance: {}, Off Diagonal non-nan: {}, Off Diagonal nan: {}", av_distance, diagonal_count, nan_count);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Check matrix symmetry.
@@ -223,7 +223,7 @@ void kga::PfEMPAnalysis::checkDistanceMatrix( const std::shared_ptr<const Popula
 
   }  // Y
 
-  ExecEnv::log().info("Total distance entries: {}, Symmetric: {}, Non Symmetric: {}", (sym_equal + sym_not_equal), sym_equal, sym_not_equal);
+  ExecEnv::log().info("Total parentDistance entries: {}, Symmetric: {}, Non Symmetric: {}", (sym_equal + sym_not_equal), sym_equal, sym_not_equal);
 
 }
 

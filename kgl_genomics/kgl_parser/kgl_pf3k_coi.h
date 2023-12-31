@@ -33,7 +33,13 @@ public:
   ~Pf3kCOIResource() override = default;
 
   [[nodiscard]] const SquareTextIndexed& indexedFile() const { return indexed_file_; }
+
   [[nodiscard]] std::optional<size_t> genomeCOI(const GenomeId_t& genome) const;
+  [[nodiscard]] std::optional<std::string> genomeSite(const GenomeId_t& genome) const { return genomeField(genome, SITE_FIELD); }
+  [[nodiscard]] std::optional<std::string> genomeCountry(const GenomeId_t& genome) const { return genomeField(genome, COUNTRY_FIELD); }
+  [[nodiscard]] std::optional<std::string> genomeContinent(const GenomeId_t& genome) const { return genomeField(genome, CONTINENT_FIELD); }
+
+  [[nodiscard]] std::optional<std::string> genomeField(const GenomeId_t& genome, size_t field_index) const;
 
 
 private:
