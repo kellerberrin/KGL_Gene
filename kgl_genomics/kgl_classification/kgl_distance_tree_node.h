@@ -53,7 +53,7 @@ public:
   [[nodiscard]] bool isBranch() const { return not isRoot() and not isLeaf(); }
   // By default, recursively counts the total number of leaf nodes, returns 1 if this is a leaf node
   [[nodiscard]] virtual size_t leafNodeCount() const;
-  // Pure virtual.
+  // Virtual text and distance.
   [[nodiscard]] virtual std::string nodeText() const = 0;
   [[nodiscard]] virtual DistanceType_t distance(const std::shared_ptr<const TreeNodeDistance>& distance_node) const;
 

@@ -1,9 +1,10 @@
 //
-// Created by kellerberrin on 25/12/23.
+// Created by kellerberrin on 11/01/24.
 //
 
-#ifndef KGL_SEQUENCE_TREE_H
-#define KGL_SEQUENCE_TREE_H
+#ifndef KGL_SEQUENCE_NODE_H
+#define KGL_SEQUENCE_NODE_H
+
 
 
 #include "kgl_sequence_amino.h"
@@ -14,21 +15,28 @@
 #include <concepts>
 #include <cmath>
 
+
 namespace kellerberrin::genome {   //  organization level namespace
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Important - for actual sequences (not sequence views)
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 template<typename T>
-concept NodeSequence = (std::same_as<T, AminoSequence> || std::same_as<T, DNA5SequenceLinear> || std::same_as<T, DNA5SequenceCoding>);
+concept NodeSequence = ( std::same_as<T, AminoSequence> || std::same_as<T, DNA5SequenceLinear> || std::same_as<T, DNA5SequenceCoding>);
 
 
 template<NodeSequence SequenceType>
-class SequenceNode : public TreeNodeDistance {
+class SequenceTreeNode : public TreeNodeDistance {
 
 public:
 
-  SequenceNode(SequenceType&& sequence, std::string sequence_tag, SequenceDistanceMetric<SequenceType> sequence_distance)
-  : sequence_(std::move(sequence)), sequence_tag_(std::move(sequence_tag)), sequence_distance_(sequence_distance) {}
-  ~SequenceNode() override = default;
+  SequenceTreeNode(SequenceType&& sequence, std::string sequence_tag, SequenceDistanceMetric<SequenceType> sequence_distance)
+      : sequence_(std::move(sequence)), sequence_tag_(std::move(sequence_tag)), sequence_distance_(sequence_distance) {}
+  ~SequenceTreeNode() override = default;
 
   [[nodiscard]] std::string nodeText() const override { return sequence_tag_; }
   [[nodiscard]] DistanceType_t distance(const std::shared_ptr<const TreeNodeDistance>& distance_node) const override;
@@ -43,9 +51,9 @@ private:
 
 
 template<NodeSequence SequenceType>
-DistanceType_t SequenceNode<SequenceType>::distance(const std::shared_ptr<const TreeNodeDistance>& distance_node) const {
+DistanceType_t SequenceTreeNode<SequenceType>::distance(const std::shared_ptr<const TreeNodeDistance>& distance_node) const {
 
-  auto sequence_node_ptr = std::dynamic_pointer_cast<const SequenceNode>(distance_node);
+  auto sequence_node_ptr = std::dynamic_pointer_cast<const SequenceTreeNode>(distance_node);
   if (not sequence_node_ptr) {
 
     ExecEnv::log().error("Mismatched sequence types");
@@ -66,13 +74,16 @@ DistanceType_t SequenceNode<SequenceType>::distance(const std::shared_ptr<const 
 }
 
 
-using AminoSequenceNode = SequenceNode<AminoSequence>;
-using CodingSequenceNode = SequenceNode<DNA5SequenceCoding>;
-using LinearSequenceNode = SequenceNode<DNA5SequenceLinear>;
-
+using AminoSequenceNode = SequenceTreeNode<AminoSequence>;
+using CodingSequenceNode = SequenceTreeNode<DNA5SequenceCoding>;
+using LinearSequenceNode = SequenceTreeNode<DNA5SequenceLinear>;
 
 
 } // namespace.
 
 
-#endif //KGL_SEQUENCE_TREE_H
+
+
+
+
+#endif //KGL_SEQUENCE_NODE_H

@@ -111,6 +111,11 @@ using CodingDistanceMetric = SequenceDistanceMetric<DNA5SequenceCoding>;
 inline static const CodingDistanceMetric LevenshteinGlobalCoding{LevenshteinGlobalImpl<DNA5SequenceCoding>};
 inline static const CodingDistanceMetric LevenshteinLocalCoding{LevenshteinLocalImpl<DNA5SequenceCoding>};
 
+using CodingDistanceMetricView = SequenceDistanceMetric<DNA5SequenceCodingView>;
+
+inline static const CodingDistanceMetricView LevenshteinGlobalCodingView{LevenshteinGlobalImpl<DNA5SequenceCodingView>};
+inline static const CodingDistanceMetricView LevenshteinLocalCodingView{LevenshteinLocalImpl<DNA5SequenceCodingView>};
+
 using LinearDistanceMetric = SequenceDistanceMetric<DNA5SequenceLinear>;
 
 inline static const LinearDistanceMetric LevenshteinGlobalLinear{LevenshteinGlobalImpl<DNA5SequenceLinear>};

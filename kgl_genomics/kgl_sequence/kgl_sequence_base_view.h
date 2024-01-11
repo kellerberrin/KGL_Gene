@@ -93,7 +93,6 @@ public:
   // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
   // A -ve strand returns the reverse complement as expected.
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
-
   [[nodiscard]] std::optional<DNA5SequenceLinearView> subView(const OpenRightUnsigned& sub_interval) const;
   
 private:

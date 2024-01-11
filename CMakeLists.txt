@@ -214,8 +214,8 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_genome/kgl_genome_contig_feature.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.cpp
         kgl_genomics/kgl_genome/kgl_genome_contig_aux.h
-        kgl_genomics/kgl_classification/kgl_distance_tree_base.cpp
-        kgl_genomics/kgl_classification/kgl_distance_tree_base.h
+        kgl_genomics/kgl_classification/kgl_classification_tree.cpp
+        kgl_genomics/kgl_classification/kgl_classification_tree.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_record.h
         kgl_genomics/kgl_parser/kgl_variant_factory_readvcf_impl.cpp
         kgl_genomics/kgl_parser/kgl_data_file_impl.h
@@ -363,9 +363,10 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_sequence/kgl_sequence_base_view.cpp
         kgl_genomics/kgl_sequence/kgl_sequence_motif.h
         kgl_genomics/kgl_sequence/kgl_sequence_motif.cpp
-        kgl_genomics/kgl_classification/kgl_sequence_node.h
+        kgl_genomics/kgl_classification/kgl_sequence_node_view.h
         kgl_genomics/kgl_classification/kgl_distance_tree_node.cpp
         kgl_genomics/kgl_classification/kgl_distance_tree_node.h
+        kgl_genomics/kgl_classification/kgl_sequence_node.h
 
 )
 

@@ -63,9 +63,12 @@ bool kga::SequenceAnalysis::initializeAnalysis(const std::string& work_directory
   // Do the UPGMA stuff.
   AnalysisGenePf::performGeneAnalysis(genome_3D7_ptr_, ident_work_directory_);
 
-  // Analysis on RUf6 and PFEMP1.
-  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+  // Analysis on various gene families including RUF6 and Var.
+  transcript_analysis_.createAnalysisVector(KGAUtility::getRifin(genome_3D7_ptr_));
+//  transcript_analysis_.createAnalysisVector(KGAUtility::getCircumsporozoite(genome_3D7_ptr_));
+//  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
 //  transcript_analysis_.createAnalysisVector(KGAUtility::getPFEMP1Genes(genome_3D7_ptr_));
+
 
   return true;
 
@@ -113,7 +116,12 @@ bool kga::SequenceAnalysis::finalizeAnalysis() {
 
   mutate_genes_ptr_->printMutateReports();
 
-  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_);
+  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_, Pf3KCOI_ptr_->annotatedGenomeMap());
+
+  transcript_analysis_.createClassificationTree(ident_work_directory_,
+                                                TRANSCRIPT_TREE_SUBDIRECTORY_,
+                                                Pf3KCOI_ptr_->annotatedGenomeMap(),
+                                                TREE_SELECTION_TEXT_);
 
   return true;
 

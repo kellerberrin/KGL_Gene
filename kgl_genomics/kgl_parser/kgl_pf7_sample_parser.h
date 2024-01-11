@@ -64,6 +64,9 @@ public:
   // Population must be PF7
   [[nodiscard]] std::shared_ptr<PopulationDB> filterPassQCGenomes(const std::shared_ptr<const PopulationDB>& Pf7_unfiltered_ptr) const;
 
+  // Annotate the genome map with site and country information.
+  [[nodiscard]] std::map<GenomeId_t, std::string> annotatedGenomeMap() const;
+
 private:
 
   const Pf7SampleVector Pf7Sample_vector_;

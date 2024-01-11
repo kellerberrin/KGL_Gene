@@ -4,11 +4,15 @@
 
 #include "kga_analysis_lib_seq_stats.h"
 #include "kgl_sequence_distance_impl.h"
+#include "kgl_distance_tree_upgma.h"
+#include "kgl_sequence_node_view.h"
+#include "kgl_classification_tree.h"
 
 
 #include <fstream>
 #include <ranges>
 #include <functional>
+
 
 namespace kel = kellerberrin;
 namespace kgl = kellerberrin::genome;
@@ -100,7 +104,8 @@ kga::AnalysisTranscriptSequence kga::AnalysisTranscriptFamily::generateTotal() c
 
 
 void kga::AnalysisTranscriptFamily::printAllReports(const std::string& analysis_directory,
-                                                    const std::string& analysis_sub_directory) const {
+                                                    const std::string& analysis_sub_directory,
+                                                    const std::map<GenomeId_t, std::string>& annotation_map) const {
 
   auto report_directory = Utility::appendPath(analysis_sub_directory, analysis_directory);
 
@@ -131,11 +136,42 @@ void kga::AnalysisTranscriptFamily::printAllReports(const std::string& analysis_
 
   }
 
-  genome_analysis.printGenomeReport(report_directory);
+  genome_analysis.printGenomeReport(report_directory, annotation_map);
+
 
 }
 
 
+void  kga::AnalysisTranscriptFamily::createClassificationTree(const std::string& analysis_directory,
+                                                              const std::string& analysis_sub_directory,
+                                                              const std::map<GenomeId_t, std::string>& annotations,
+                                                              const std::string& selection_text) const {
+
+  auto report_directory = Utility::appendPath(analysis_sub_directory, analysis_directory);
+
+  // Recreate the report subdirectory.
+  if (not Utility::directoryRenew(report_directory)) {
+
+    ExecEnv::log().warn("AnalysisTranscriptFamily; cannot re-create report directory: {}", report_directory);
+
+  }
+
+  GenomeTranscriptAnalysis genome_analysis;
+  if (not genome_analysis.createTranscriptMap(analysis_map_)) {
+
+    ExecEnv::log().warn("Transcript analysis index by genome failed");
+
+  }
+
+  for (auto const& [transcript_id, transcript_analysis] : analysis_map_) {
+
+
+    genome_analysis.createClassificationTree( report_directory, transcript_id, annotations, selection_text);
+
+
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -264,7 +300,8 @@ bool kga::GenomeTranscriptAnalysis::createTranscriptMap(const AnalysisTranscript
 
 }
 
-void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_directory) const {
+void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_directory,
+                                                      const std::map<GenomeId_t, std::string>& annotations) const {
 
   // Select parentDistance metric.
   CodingDistanceMetric dna_distance_metric{LevenshteinGlobalCoding};
@@ -289,7 +326,7 @@ void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_
   }
   auto const& transcript_vector = transcript_vec_opt.value();
 
-  report_stream << "Genomes";
+  report_stream << "Genomes" << REPORT_FIELD_ << "Annotation";
   for (auto const& transcript_id : transcript_vector) {
 
     report_stream << REPORT_FIELD_
@@ -303,8 +340,19 @@ void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_
 
   for (auto const& [genome_id, transcript_map] : genome_map_) {
 
+    report_stream << genome_id << REPORT_FIELD_;
+    if (annotations.contains(genome_id)) {
+
+      auto const& [genome_key, genome_annotation] = *annotations.find(genome_id);
+      report_stream << genome_annotation;
+
+    } else {
+
+      report_stream << "n/a";
+
+    }
+
     size_t total_distance{0};
-    report_stream << genome_id;
     for (auto const& [transcript_id, transcript_modify] : transcript_map) {
 
       auto modify_transcript_view = transcript_modify->modified().getView();
@@ -319,6 +367,67 @@ void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_
     }
     report_stream << REPORT_FIELD_ << total_distance;
     report_stream << '\n';
+
+  }
+
+}
+
+void kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string& newick_directory,
+                                                              const std::string& transcript_id,
+                                                              const std::map<GenomeId_t, std::string>& annotations,
+                                                              const std::string& selection_text) const {
+
+
+
+  TreeNodeVector tree_node_vector;
+  CodingDistanceMetricView coding_distance_metric_view{LevenshteinLocalCodingView};
+  for (auto const& [genome_id, transcript_map] : genome_map_) {
+
+    if (transcript_map.contains(transcript_id)) {
+
+      std::string node_tag = genome_id;
+      if (annotations.contains(genome_id)) {
+
+        auto const& [genome_key, genome_annotation] = *annotations.find(genome_id);
+        node_tag += "_" + genome_annotation;
+
+      }
+
+      if (not selection_text.empty() and not node_tag.contains(selection_text)) {
+
+        // Skip this record.
+        continue;
+
+      }
+
+      // Note that the modified sequences are held in 'genome_map_' and will exist in memory for the tree analysis.
+      auto const& [transcript_key, transcript_record] = *transcript_map.find(transcript_id);
+      // For performance reasons, sequence view is analysed in the tree, therefore the underlying sequence must be in memory during analysis.
+      auto const& modified_transcript_view = transcript_record->modified().getView();
+
+      auto coding_sequence_ptr = std::make_shared<CodingSequenceViewNode>(modified_transcript_view, node_tag, coding_distance_metric_view);
+      tree_node_vector.push_back(coding_sequence_ptr);
+
+    } // Transcript
+
+  }
+
+  ExecEnv::log().info("Tree nodes: {} created for: {}", tree_node_vector.size(), transcript_id);
+
+  DistanceTreeUPGMA upgma_distance;
+  // Add the parentDistance vector.
+  upgma_distance.addDistanceMap(tree_node_vector);
+  // Calculate.
+  auto root_node_vector = upgma_distance.calculateTree();
+  // Report Results.
+  ClassificationTree upgma_tree(root_node_vector);
+
+  auto file_path = transcript_id + "_" + NEWICK_SUFFIX_ + NEWICK_EXT_;
+  file_path = kel::Utility::filePath(file_path, newick_directory);
+
+  if (not upgma_tree.writeNewick(file_path)) {
+
+    ExecEnv::log().warn("createClassificationTree; Could not open file: {}", file_path);
 
   }
 

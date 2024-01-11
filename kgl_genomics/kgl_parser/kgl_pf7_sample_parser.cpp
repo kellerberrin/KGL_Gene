@@ -35,6 +35,23 @@ void kgl::Pf7SampleResource::indexPf7SampleData() {
 }
 
 
+std::map<kgl::GenomeId_t, std::string> kgl::Pf7SampleResource::annotatedGenomeMap() const {
+
+  std::map<kgl::GenomeId_t, std::string> annotated_genome_map;
+
+  for (auto const& [genome, field_struct] : getMap()) {
+
+    std::string annotation = field_struct.location1_ + "_" + field_struct.country_;
+    annotated_genome_map.try_emplace(genome, annotation);
+
+  }
+
+  return annotated_genome_map;
+
+}
+
+
+
 [[nodiscard]] bool kgl::ParsePf7Sample::parsePf7SampleFile(const std::string& file_name) {
 
 

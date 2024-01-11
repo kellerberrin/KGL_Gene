@@ -2,8 +2,8 @@
 // Created by kellerberrin on 23/05/19.
 //
 
-#ifndef KGL_DISTANCE_TREE_H
-#define KGL_DISTANCE_TREE_H
+#ifndef KGL_CLASSIFICATION_TREE_H
+#define KGL_CLASSIFICATION_TREE_H
 
 
 #include <memory>
@@ -19,17 +19,20 @@ namespace kellerberrin::genome {   //  organization level namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Abstract Phylogenetic Tree
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class DistanceTreeBase {
+class ClassificationTree {
 
 public:
 
-  explicit DistanceTreeBase(TreeNodeVector tree_root_vector) : tree_root_vector_(std::move(tree_root_vector)) {}
-  ~DistanceTreeBase() = default;
+  explicit ClassificationTree(TreeNodeVector tree_root_vector) : tree_root_vector_(std::move(tree_root_vector)) {}
+  ~ClassificationTree() = default;
 
+  [[nodiscard]] const TreeNodeVector& root() const { return tree_root_vector_; }
   [[nodiscard]] bool writeNewick(const std::string &file_name, size_t max_depth = MAX_TREE_DEPTH_) const;
 
 protected:
@@ -38,7 +41,6 @@ protected:
   // If size() == 1 then this is a rooted tree.
   TreeNodeVector tree_root_vector_;
 
-  constexpr static const size_t MINIMUM_TREE_NODES_{4};
   constexpr static const size_t MAX_TREE_DEPTH_{std::numeric_limits<size_t>::max()};
 
   void writeNode(const std::shared_ptr<TreeNodeDistance>& node,
@@ -54,4 +56,4 @@ protected:
 }   // end namespace
 
 
-#endif //KGL_DISTANCE_TREE_H
+#endif //KGL_CLASSIFICATION_TREE_H

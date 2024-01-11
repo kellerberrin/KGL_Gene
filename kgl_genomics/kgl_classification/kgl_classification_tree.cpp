@@ -2,7 +2,7 @@
 // Created by kellerberrin on 23/05/19.
 //
 
-#include "kgl_distance_tree_base.h"
+#include "kgl_classification_tree.h"
 
 namespace kgl = kellerberrin::genome;
 
@@ -14,7 +14,7 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool kgl::DistanceTreeBase::writeNewick(const std::string& file_name, size_t max_depth) const {
+bool kgl::ClassificationTree::writeNewick(const std::string& file_name, size_t max_depth) const {
 
   std::ofstream newick_file;
 
@@ -48,10 +48,10 @@ bool kgl::DistanceTreeBase::writeNewick(const std::string& file_name, size_t max
 }
 
 // Recursive.
-void kgl::DistanceTreeBase::writeNode(const std::shared_ptr<TreeNodeDistance>& node,
-                                      std::ofstream& newick_file,
-                                      size_t max_depth,
-                                      size_t current_depth) const {
+void kgl::ClassificationTree::writeNode(const std::shared_ptr<TreeNodeDistance>& node,
+                                        std::ofstream& newick_file,
+                                        size_t max_depth,
+                                        size_t current_depth) const {
 
 
   ++current_depth;

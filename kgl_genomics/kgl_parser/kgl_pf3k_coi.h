@@ -41,6 +41,8 @@ public:
 
   [[nodiscard]] std::optional<std::string> genomeField(const GenomeId_t& genome, size_t field_index) const;
 
+  // Annotate the genome map with site and country information.
+  [[nodiscard]] std::map<GenomeId_t, std::string> annotatedGenomeMap() const;
 
 private:
 

@@ -64,6 +64,8 @@ private:
   // Transcript Analysis
   AnalysisTranscriptFamily transcript_analysis_;
   constexpr static const std::string TRANSCRIPT_SUBDIRECTORY_{"transcript"};
+  constexpr static const std::string TRANSCRIPT_TREE_SUBDIRECTORY_{"transcript_tree"};
+  constexpr static const std::string TREE_SELECTION_TEXT_{"Laboratory"};  // Only laboratory cultured strains.
 
   std::string ident_work_directory_;
   constexpr static const std::string VARIANT_COUNT_EXT_{".csv"};

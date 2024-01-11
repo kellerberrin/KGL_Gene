@@ -67,7 +67,8 @@ bool kga::PfEMPAnalysis::initializeAnalysis(const std::string& work_directory,
   all_gene_map_.setGeneVector(getAllGenes(genome_3D7_ptr_));
   translation_gene_map_.setGeneVector(getTranslationGenes(genome_3D7_ptr_));
 
-  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+//  transcript_analysis_.createAnalysisVector(KGAUtility::getRUF6Genes(genome_3D7_ptr_));
+  transcript_analysis_.createAnalysisVector(KGAUtility::getPFEMP1Genes(genome_3D7_ptr_));
 
   return true;
 
@@ -172,7 +173,7 @@ bool kga::PfEMPAnalysis::finalizeAnalysis() {
   // Output the mutation statistics.
   mutate_genes_ptr_->printMutateReports();
 
-  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_);
+  transcript_analysis_.printAllReports(ident_work_directory_, TRANSCRIPT_SUBDIRECTORY_, Pf7_sample_ptr_->annotatedGenomeMap());
 
   return true;
 

@@ -96,3 +96,12 @@ kgl::GeneVector kga::KGAUtility::getCircumsporozoite(const std::shared_ptr<const
 
 }
 
+
+kgl::GeneVector kga::KGAUtility::getRifin(const std::shared_ptr<const GenomeReference> &genome_ptr) {
+
+  auto var_gene_vector = KGAUtility::getGeneVector(genome_ptr, RIFIN_FAMILY_);
+
+  return var_gene_vector;
+
+}
+

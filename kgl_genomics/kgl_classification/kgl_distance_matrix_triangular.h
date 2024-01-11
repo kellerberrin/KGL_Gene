@@ -268,7 +268,7 @@ void DistanceMatrixTriangular<MatrixValue>::normalizeDistance() {
 
   if (range == 0.0) {
 
-    ExecEnv::log().error("CcalculateDistance range for all nodes is zero");
+    ExecEnv::log().error("CalculateDistance range for all nodes is zero, matrix size: {}", size());
     return;
 
   }

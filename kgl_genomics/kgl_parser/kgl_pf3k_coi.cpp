@@ -69,6 +69,22 @@ std::optional<std::string> kgl::Pf3kCOIResource::genomeField(const GenomeId_t& g
 }
 
 
+std::map<kgl::GenomeId_t, std::string> kgl::Pf3kCOIResource::annotatedGenomeMap() const {
+
+  std::map<kgl::GenomeId_t, std::string> annotated_genome_map;
+
+  for (auto const& [genome, field_vector] : indexed_file_.getRowMap()) {
+
+    std::string annotation = field_vector[SITE_FIELD] + "_" + field_vector[COUNTRY_FIELD];
+    annotated_genome_map.try_emplace(genome, annotation);
+
+  }
+
+  return annotated_genome_map;
+
+}
+
+
 bool kgl::Pf3kCOIParser::parseCOIPf3k(const std::string& file_name) {
 
   parsed_text_ptr_ = flat_file_parser_.parseFlatFile(file_name, SquareTextParser::DELIMITER_TSV);
@@ -76,3 +92,4 @@ bool kgl::Pf3kCOIParser::parseCOIPf3k(const std::string& file_name) {
   return true;
 
 }
+

@@ -5,7 +5,7 @@
 
 #include "kga_analysis_lib_Pfgene.h"
 #include "kgl_distance_tree_upgma.h"
-#include "kgl_distance_tree_base.h"
+#include "kgl_classification_tree.h"
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_sequence_node.h"
 #include "kel_utility.h"
@@ -325,8 +325,7 @@ void kga::AnalysisGenePf::geneCodingUPGMA(const GeneVector& gene_vector,
       auto coding_dna_opt = gene_ptr->contig_ref_ptr()->codingSequence(transcript_ptr);
       if (coding_dna_opt) {
 
-        DNA5SequenceCoding& coding_dna_sequence = coding_dna_opt.value();
-        auto coding_sequence_ptr = std::make_shared<CodingSequenceNode>(std::move(coding_dna_sequence), transcript_id, coding_distance_metric);
+        auto coding_sequence_ptr = std::make_shared<CodingSequenceNode>(std::move(coding_dna_opt.value()), transcript_id, coding_distance_metric);
         distance_node_vector.push_back(coding_sequence_ptr);
 
       } // Valid coding sequence
@@ -341,7 +340,7 @@ void kga::AnalysisGenePf::geneCodingUPGMA(const GeneVector& gene_vector,
   // Calculate.
   auto root_node_vector = upgma_distance.calculateTree();
   // Report Results.
-  DistanceTreeBase upgma_tree(root_node_vector);
+  ClassificationTree upgma_tree(root_node_vector);
   if (not upgma_tree.writeNewick(newick_file_name)) {
 
     ExecEnv::log().error("Unable to write UPGMA Newick file: {}", newick_file_name);

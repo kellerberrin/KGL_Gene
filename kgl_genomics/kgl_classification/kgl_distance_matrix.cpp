@@ -85,13 +85,6 @@ std::tuple<kgl::DistanceType_t, size_t, size_t> kgl::DistanceMatrix::maximum() c
 
 }
 
-// Search efficiency depends on underlying implementation
-std::pair<kgl::DistanceType_t, kgl::DistanceType_t> kgl::DistanceMatrix::max_min() const {
-
-  return diagonal_impl_ptr_->max_min();
-
-}
-
 // Rescale elements to the interval [0, 1].
 void kgl::DistanceMatrix::normalizeDistance() {
 
@@ -99,9 +92,3 @@ void kgl::DistanceMatrix::normalizeDistance() {
 
 }
 
-// Zero all diagonal elements.
-void kgl::DistanceMatrix::zeroDiagonal() {
-
-  diagonal_impl_ptr_->zeroDiagonal();
-
-}

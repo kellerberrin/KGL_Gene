@@ -31,7 +31,14 @@ public:
 
   void createAnalysisVector(const GeneVector& gene_vector);
   void performFamilyAnalysis(const std::shared_ptr<const PopulationDB>& population_ptr);
-  void printAllReports(const std::string& analysis_directory, const std::string& analysis_sub_directory) const;
+  void printAllReports(const std::string& analysis_directory,
+                       const std::string& analysis_sub_directory,
+                       const std::map<GenomeId_t, std::string>& annotation_map) const;
+
+  void createClassificationTree(const std::string& analysis_directory,
+                                const std::string& analysis_sub_directory,
+                                const std::map<GenomeId_t, std::string>& annotations = {},
+                                const std::string& selection_text = {}) const;
 
   [[nodiscard]] const AnalysisTranscriptMap& getMap() const { return analysis_map_; }
 
@@ -63,7 +70,11 @@ public:
   ~GenomeTranscriptAnalysis() = default;
 
   [[nodiscard]] bool createTranscriptMap(const AnalysisTranscriptMap& transcript_map);
-  void printGenomeReport(const std::string& report_directory) const;
+  void printGenomeReport(const std::string& report_directory, const std::map<GenomeId_t, std::string>& annotations = {}) const;
+  void createClassificationTree(const std::string& newick_directory,
+                                const std::string& transcript_id,
+                                const std::map<GenomeId_t, std::string>& annotations = {},
+                                const std::string& selection_text = {}) const;
 
 private:
 
@@ -75,6 +86,9 @@ private:
   constexpr static const std::string REPORT_EXT_{".csv"};
   constexpr static const std::string REPORT_FIELD_{","};
   constexpr static const std::string REPORT_PREFIX_{"genome"};
+
+  constexpr static const std::string NEWICK_SUFFIX_{"newick"};
+  constexpr static const std::string NEWICK_EXT_{".txt"};
 
 };
 

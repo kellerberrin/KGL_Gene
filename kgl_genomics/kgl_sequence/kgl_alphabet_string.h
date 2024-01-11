@@ -242,7 +242,7 @@ private:
   }
 
 
-};
+}; // End of AlphabetString<Alphabet>
 
 
 

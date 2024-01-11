@@ -32,9 +32,11 @@ public:
   [[nodiscard]] static GeneVector getRUF6Genes(const std::shared_ptr<const GenomeReference> &genome_ptr);
   [[nodiscard]] static GeneVector getPFEMP1Genes(const std::shared_ptr<const GenomeReference> &genome_ptr);
   [[nodiscard]] static GeneVector getCircumsporozoite(const std::shared_ptr<const GenomeReference> &genome_ptr);
+  [[nodiscard]] static GeneVector getRifin(const std::shared_ptr<const GenomeReference> &genome_ptr);
 
 private:
 
+  constexpr static const std::string RIFIN_FAMILY_{"RIFIN"};
   constexpr static const std::string RUF6_FAMILY_{"RUF6"}; // Pf ncRNA gene family.
   constexpr static const std::string PFEMP1_FAMILY_{"PFEMP1"}; // Pf var family.
   // PF3D7_0304600, circumsporozoite (CS)
