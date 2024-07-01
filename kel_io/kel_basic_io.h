@@ -23,7 +23,7 @@ namespace kellerberrin {   //  organization::project level namespace
 // A subsequent attempt to access the moved data using getLineData() will generate a warning.
 // A static function createEOFMarker() creates an object to serve as EOF, this can also be pushed onto a queue.
 // Since the stored std::string data can be large, for optimal performance the object cannot be copied.
-// The object is designed to be pushed and poped from thread safe queues without incurring significant processing overhead.
+// The object is designed to be pushed and popped from thread safe queues without incurring significant processing overhead.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ public:
   // After moving data out of the object, it is empty() but not EOF().
   [[nodiscard]] std::pair<size_t, std::string> getLineData();
   [[nodiscard]] size_t lineCount() const { return line_count_; }
-  [[nodiscard]] const std::string_view getView() const { return {line_data_}; }
+  [[nodiscard]] std::string_view getView() const { return {line_data_}; }
   [[nodiscard]] bool EOFRecord() const { return EOF_; }
   [[nodiscard]] bool empty() const { return empty_; }
 

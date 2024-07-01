@@ -15,7 +15,7 @@ kgl::ResourceDefinitions kgl::ResourceProperties::getRuntimeResources() const {
 
   ResourceDefinitions resource_definitions;
 
-  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + RESOURCE_LIST_;
+  std::string key = std::string(RUNTIME_ROOT_) + std::string(DOT_) + std::string(RESOURCE_LIST_);
   std::vector<SubPropertyTree> property_tree_vector;
   if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 

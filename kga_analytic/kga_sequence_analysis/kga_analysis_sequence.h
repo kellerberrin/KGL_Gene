@@ -65,7 +65,30 @@ private:
   AnalysisTranscriptFamily transcript_analysis_;
   constexpr static const std::string TRANSCRIPT_SUBDIRECTORY_{"transcript"};
   constexpr static const std::string TRANSCRIPT_TREE_SUBDIRECTORY_{"transcript_tree"};
-  constexpr static const std::string TREE_SELECTION_TEXT_{"Laboratory"};  // Only laboratory cultured strains.
+
+  constexpr static const std::string LABORATORY_3D7_TEXT_{"3D7_Laboratory"};  // 3D7 Lab. reference strain.
+  constexpr static const std::string LABORATORY_DD2_TEXT_{"PG0008-CW"};  // DD2 Lab. reference strain.
+  constexpr static const std::string LABORATORY_HB3_TEXT_{"PG0052-C"};  // HB3 Lab. reference strain.
+  constexpr static const std::string LABORATORY_7G8_TEXT_{"7G8_7G8_Laborat"};  // 7GB Lab. reference strain.
+  constexpr static const std::string LABORATORY_GB4_TEXT_{"GB4_GB4_Laborat"};  // GB4 Lab. reference strain.
+
+
+  // constexpr static const std::string TREE_SELECTION_TEXT_{"Laboratory"};  // Only laboratory cultured strains.
+  // constexpr static const std::string TREE_SELECTION_TEXT_{"Thailand"};
+  constexpr static const std::string TREE_SELECTION_TEXT_{"Cambodia"};
+  // constexpr static const std::string TREE_SELECTION_TEXT_{"Malawi"};
+
+  // Allow for more complex selection criteria.
+  constexpr static const auto sample_selection_ = [](const std::string& sample_text)->bool {
+
+    return sample_text.contains(TREE_SELECTION_TEXT_)
+    or sample_text.contains(LABORATORY_3D7_TEXT_)
+    or sample_text.contains(LABORATORY_DD2_TEXT_)
+    or sample_text.contains(LABORATORY_HB3_TEXT_)
+    or sample_text.contains(LABORATORY_7G8_TEXT_)
+    or sample_text.contains(LABORATORY_GB4_TEXT_);
+
+  };
 
   std::string ident_work_directory_;
   constexpr static const std::string VARIANT_COUNT_EXT_{".csv"};

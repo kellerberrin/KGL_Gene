@@ -5,7 +5,7 @@
 #ifndef KGL_DISTANCE_MATRIX_H
 #define KGL_DISTANCE_MATRIX_H
 
-
+#include <memory>
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -26,6 +26,9 @@ public:
   explicit DistanceMatrix(size_t matrix_size);
   DistanceMatrix(DistanceMatrix&& matrix ) noexcept;
   ~DistanceMatrix();  // Do not use the default destructor, see PIMPL fwd decl.
+
+  void addMatrix(const DistanceMatrix& add_matrix);
+  void copyMatrix(const DistanceMatrix& copy_matrix);
 
   // Tuple returns value, row index, column index in that order.
   [[nodiscard]] std::tuple<DistanceType_t, size_t, size_t> minimum() const;

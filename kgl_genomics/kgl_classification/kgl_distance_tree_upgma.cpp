@@ -5,12 +5,87 @@
 #include "kel_exec_env.h"
 #include "kgl_distance_tree_upgma.h"
 
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
+
+
+void kgl::MatrixGenerator::initializeMatrix(const TreeNodeVector& tree_node_vector) {
+
+  tree_node_vector_ = tree_node_vector;
+
+  calculateMatrix(tree_node_vector_, distance_matrix_);
+
+
+}
+
+bool kgl::MatrixGenerator::sumMatrix(const TreeNodeVector& tree_node_vector) {
+
+  if (tree_node_vector.size() != tree_node_vector_.size()) {
+
+    ExecEnv::log().warn("Cannot add different node sizes; existing node size: {}, add node size: {}",
+                        tree_node_vector_.size(), tree_node_vector.size());
+    return false;
+
+  }
+
+  for (auto const& [existing, adding] : std::ranges::views::zip(tree_node_vector_, tree_node_vector)) {
+
+    if (existing->nodeText() != adding->nodeText()) {
+
+      ExecEnv::log().warn("Cannot add dissimilar nodes; existing node: {}, add node: {}",
+                          existing->nodeText(), adding->nodeText());
+      return false;
+
+    }
+
+  }
+
+  DistanceMatrix add_matrix;
+  calculateMatrix(tree_node_vector, add_matrix);
+
+  distance_matrix_.addMatrix(add_matrix);
+
+  return true;
+
+}
+
+void kgl::MatrixGenerator::calculateMatrix(const TreeNodeVector& tree_node_vector, DistanceMatrix& distance_matrix) {
+
+  // Resize.
+  distance_matrix.resize(tree_node_vector.size());
+
+  // Populate the matrix.
+  for (size_t row = 0; row < tree_node_vector.size(); ++row) {
+
+    for (size_t column = 0; column < row; ++column) {
+
+      distance_matrix.setDistance(row, column, distance(tree_node_vector[row], tree_node_vector[column]));
+
+    }
+
+  }
+
+}
+
+kgl::DistanceType_t kgl::MatrixGenerator::distance(const std::shared_ptr<TreeNodeDistance>& row_node,
+                                                     const std::shared_ptr<TreeNodeDistance>& column_node) {
+
+  return row_node->distance(column_node);
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UPGMA Distance matrix
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+kgl::DistanceTreeUPGMA::DistanceTreeUPGMA(const MatrixGenerator& tree_matrix) {
+
+  tree_node_vector_ = tree_matrix.treeNodes();
+  distance_matrix_.copyMatrix(tree_matrix.distanceMatrix());
+
+}
 
 
 
@@ -28,66 +103,14 @@ size_t kgl::DistanceTreeUPGMA::getLeafCount(size_t leaf_idx) const {
 }
 
 
-void kgl::DistanceTreeUPGMA::initializeDistance() {
+kgl::TreeNodeVector kgl::DistanceTreeUPGMA::calculateTree(bool normalized) {
 
-  for (size_t row = 0; row < tree_node_vector_.size(); ++row) {
+  if (normalized) {
 
-    for (size_t column = 0; column < row; ++column) {
-
-      distance_matrix_.setDistance(row, column, distance(tree_node_vector_[row], tree_node_vector_[column]));
-
-    }
+    distance_matrix_.normalizeDistance();
 
   }
 
-  normalizeDistance();
-
-}
-
-
-void kgl::DistanceTreeUPGMA::normalizeDistance() {
-
-  distance_matrix_.normalizeDistance();
-  identityZeroDistance();
-
-}
-
-// Enforce the parentDistance metric; d(a, a) = 0.
-void kgl::DistanceTreeUPGMA::identityZeroDistance() {
-
-  for (size_t row = 0; row < tree_node_vector_.size(); ++row) {
-
-    for (size_t column = 0; column < row; ++column) {
-
-      auto row_hash = std::hash<std::shared_ptr<const TreeNodeDistance>>()(tree_node_vector_[row]);
-      auto column_hash = std::hash<std::shared_ptr<const TreeNodeDistance>>()(tree_node_vector_[column]);
-
-      if (row_hash == column_hash) {
-
-        distance_matrix_.setDistance(row, column, 0.0);
-
-      }
-
-    }
-
-  }
-
-}
-
-
-kgl::DistanceType_t kgl::DistanceTreeUPGMA::distance(const std::shared_ptr<TreeNodeDistance>& row_node,
-                                                    const std::shared_ptr<TreeNodeDistance>& column_node) const {
-
-  return row_node->distance(column_node);
-
-}
-
-
-
-kgl::TreeNodeVector kgl::DistanceTreeUPGMA::calculateTree() {
-
-  distance_matrix_.resize(tree_node_vector_.size());
-  initializeDistance();
   UPGMATree();
   return tree_node_vector_;
 

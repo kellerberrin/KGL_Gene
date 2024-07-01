@@ -9,6 +9,7 @@
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_sequence_node.h"
 #include "kel_utility.h"
+#include "kel_workflow_threads.h"
 
 
 namespace kga = kellerberrin::genome::analysis;
@@ -309,6 +310,7 @@ void kga::AnalysisGenePf::geneCodingUPGMA(const GeneVector& gene_vector,
 
   CodingDistanceMetric coding_distance_metric{LevenshteinLocalCoding};
   TreeNodeVector distance_node_vector;
+  std::map<FeatureIdent_t, TreeNodeVector> transcription_treenode_map;
 
   for (auto const& gene_ptr : gene_vector) {
 
@@ -334,9 +336,12 @@ void kga::AnalysisGenePf::geneCodingUPGMA(const GeneVector& gene_vector,
 
   } // All Genes.
 
-  DistanceTreeUPGMA upgma_distance;
+  // Generate a UPGMA tree.
+  MatrixGenerator tree_matrix;
+  tree_matrix.initializeMatrix(distance_node_vector);
+
+  DistanceTreeUPGMA upgma_distance(tree_matrix);
   // Add the parentDistance vector.
-  upgma_distance.addDistanceMap(distance_node_vector);
   // Calculate.
   auto root_node_vector = upgma_distance.calculateTree();
   // Report Results.

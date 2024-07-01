@@ -94,22 +94,6 @@ public:
 
   }
 
-  // Uses the 'djb2a' algorithm to hash a string.
-  // This fn is constexpr and can be used to hash constant strings in 'switch' statements.
-  // Testing has revealed that hash 'collisions' are possible with this algorithm.
-  [[nodiscard]] constexpr static uint32_t djb2aStringHash(const std::string_view& sv) {
-
-    uint32_t hash{ 5381 };
-    for (unsigned char c : sv) {
-
-      hash = ((hash << 5) + hash) ^ c;
-
-    }
-
-    return hash;
-
-  }
-
 
 }; // UtilityStringHash
 

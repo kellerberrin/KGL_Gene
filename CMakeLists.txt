@@ -105,6 +105,10 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_property_tree.h
         kel_app/kel_logging.h
         kel_app/kel_logging.cpp
+        kel_app/kel_logging_spd.cpp
+        kel_app/kel_logging_spd.h
+        kel_app/kel_logging_stream.cpp
+        kel_app/kel_logging_stream.h
 )
 
 set(MATHEMATICAL_SOURCE_FILES

@@ -5,14 +5,46 @@
 #ifndef KEL_EXECENV_LOGGING_H
 #define KEL_EXECENV_LOGGING_H
 
-
+#include <source_location>
 #include <format>
 #include <memory>
-#include <source_location>
 #include <mutex>
 
 
 namespace kellerberrin {   //  organization level namespace
+
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// An auxiliary object to retrieve std::source_location information.
+//
+/////////////////////////////////////////////////////////////////////
+
+
+class LogFormatLocation {
+
+public:
+
+  // Important note. This constructor must be a template in order to modify the order of argument substitution.
+  template<typename String>
+  LogFormatLocation(const String &format,
+                    const std::source_location &location = std::source_location::current())
+  : format_(format), location_(location) {}
+
+  ~LogFormatLocation() = default;
+
+  [[nodiscard]] const std::string &format() const { return format_; }
+
+  [[nodiscard]] const std::source_location &location() const { return location_; }
+
+private:
+
+  const std::string format_;
+  const std::source_location location_;
+
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -25,33 +57,10 @@ namespace kellerberrin {   //  organization level namespace
 // If critical() is called the message is output and the application terminates immediately.
 // Message logging is thread-safe, however an abrupt logger initiated application termination may
 // cause a seg-fault in multi-threaded code.
-//
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// An object to retrieve std::source_location information.
-class LogFormatLocation {
 
-public:
-
-  template<typename String>
-  LogFormatLocation(const String& format,
-                    const std::source_location &location = std::source_location::current())
-  : format_(format), location_(location) {}
-  ~LogFormatLocation() = default;
-
-  [[nodiscard]] const std::string& format() const {return format_; }
-  [[nodiscard]] const std::source_location& location() const { return location_; }
-
-private:
-
-  const std::string format_;
-  const std::source_location location_;
-
-};
-
-
-
-// Forward Declaration of the implementation PIMPL object (currently implemented using the spdlog library).
+// Forward Declaration of the implementation PIMPL object (can be implemented using iostreams or the spdlog library).
 class ExecEnvLoggerImpl;
 
 // The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
@@ -76,6 +85,9 @@ public:
 
   template<typename... Args> void info(LogFormatLocation format_location, Args &&...args) noexcept {
 
+    std::lock_guard<std::mutex> lock(message_mutex_);
+
+    info_message_count_++;
     std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
     locationImpl(format_location, formatted_message, LoggerSeverity::INFO);
 
@@ -85,6 +97,9 @@ public:
 
   template<typename... Args> void info(std::format_string<Args...> format, Args&&... args) noexcept {
 
+    std::lock_guard<std::mutex> lock(message_mutex_);
+
+    info_message_count_++;
     formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::INFO);
 
   }
@@ -96,6 +111,8 @@ public:
 #ifdef EXECENV_LOGGER_WARN_LOCATION
 
   template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept {
+
+    std::lock_guard<std::mutex> lock(message_mutex_);
 
     if (warnMessageLimits()) {
 
@@ -109,6 +126,8 @@ public:
 #else
 
   template<typename... Args> void warn(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    std::lock_guard<std::mutex> lock(message_mutex_);
 
     if (warnMessageLimits()) {
 
@@ -127,6 +146,8 @@ public:
 
   template<typename... Args> void error(LogFormatLocation format_location, Args&&... args) noexcept {
 
+    std::lock_guard<std::mutex> lock(message_mutex_);
+
     if (errorMessageLimits()) {
 
       std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
@@ -140,6 +161,8 @@ public:
 #else
 
   template<typename... Args> void error(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    std::lock_guard<std::mutex> lock(message_mutex_);
 
     if (errorMessageLimits()) {
 
@@ -157,6 +180,8 @@ public:
 
   template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept {
 
+    std::lock_guard<std::mutex> lock(message_mutex_);
+
     std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
     locationImpl(format_location, formatted_message, LoggerSeverity::CRITICAL);
     formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
@@ -167,6 +192,8 @@ public:
 #else
 
   template<typename... Args> void critical(std::format_string<Args...> format, Args&&... args) noexcept {
+
+    std::lock_guard<std::mutex> lock(message_mutex_);
 
     formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::CRITICAL);
     formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
@@ -179,12 +206,13 @@ public:
 
 private:
 
-  std::unique_ptr<ExecEnvLoggerImpl> log_impl_ptr_;
+  std::unique_ptr<ExecEnvLoggerImpl> log_impl_ptr_; // The PIMPL logging implementation object.
+  size_t info_message_count_{0};     // Number of info messages issued.
   size_t max_error_messages_{100};     // Defaults to 100 error messages, zero (0) is unlimited.
   size_t error_message_count_{0};     // Number of error messages issued.
   size_t max_warn_messages_{100};     // Defaults to 100 warning messages, zero (0) is unlimited.
   size_t warn_message_count_{0};     // Number of warning messages issued.
-  std::mutex limit_mutex_;          // Messaging is thread safe.
+  std::mutex message_mutex_;          // Messaging is thread safe.
 
   bool warnMessageLimits(); // Stops issuing messages after max warn messages reached.
   bool errorMessageLimits(); // Forces program termination after max error messages reached.

@@ -52,7 +52,7 @@ public:
 
   // The constructor requires that a stop token is specified.
   // If the Object is a pointer (a typical case is InputObject = std::unique_ptr<T>) then this will be nullptr.
-  // The queue will be either a QueueMtSafe (unbounded) or BondedMtQueue (a bounded tidal queue).
+  // The queue will be either a QueueMtSafe (unbounded) or BoundedMtQueue (a bounded tidal queue).
   explicit WorkflowAsync(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token)) , queue_ptr_(std::move(queue_ptr)) {}
   ~WorkflowAsync() {

@@ -45,6 +45,19 @@ kgl::DistanceMatrix::DistanceMatrix(size_t matrix_size) : diagonal_impl_ptr_(std
 kgl::DistanceMatrix::~DistanceMatrix() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete PIMPL type.
 
 
+void kgl::DistanceMatrix::addMatrix(const DistanceMatrix& add_matrix) {
+
+  diagonal_impl_ptr_->addMatrix(*add_matrix.diagonal_impl_ptr_);
+
+}
+
+
+void kgl::DistanceMatrix::copyMatrix(const DistanceMatrix& copy_matrix) {
+
+  diagonal_impl_ptr_->copyMatrix(*copy_matrix.diagonal_impl_ptr_);
+
+}
+
 size_t kgl::DistanceMatrix::size() const {
 
   return diagonal_impl_ptr_->size();

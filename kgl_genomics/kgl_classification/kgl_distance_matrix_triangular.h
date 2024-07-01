@@ -38,6 +38,18 @@ public:
   explicit DistanceMatrixTriangular(const DistanceMatrixTriangular &) = default;
   ~DistanceMatrixTriangular() = default;
 
+  void addMatrix(const DistanceMatrixTriangular<MatrixValue>& add_matrix) {
+
+    lower_triangular_ += add_matrix.lower_triangular_;
+
+  }
+
+  void copyMatrix(const DistanceMatrixTriangular<MatrixValue>& copy_matrix) {
+
+    lower_triangular_ = copy_matrix.lower_triangular_;
+
+  }
+
   [[nodiscard]] size_t size() const { return lower_triangular_.size1(); }
   void resize(size_t new_size) { lower_triangular_.resize(new_size, new_size, false); }
 
@@ -74,6 +86,13 @@ MatrixValue DistanceMatrixTriangular<MatrixValue>::getDistance(size_t i, size_t 
 
   }
 
+  if (i == j) {
+
+    ExecEnv::log().error("Matrix size: {} is strict lower triangular; [i: {}, j: {}] == 0", size(), i, j);
+    return 0;
+
+  }
+
   if (j > i) {
 
     std::swap(i, j);
@@ -91,6 +110,12 @@ void DistanceMatrixTriangular<MatrixValue>::setDistance(size_t i, size_t j, Matr
 
     ExecEnv::log().error("Index too large i: {}, j:{} for calculateDistance matrix size: {}", i, j, size());
     return;
+
+  }
+
+  if (i == j) {
+
+    ExecEnv::log().error("Matrix size: {} is strict lower triangular; [i: {}, j: {}] != {}", size(), i, j, distance);
 
   }
 
@@ -266,9 +291,9 @@ void DistanceMatrixTriangular<MatrixValue>::normalizeDistance() {
   auto [max, min] = max_min();
   MatrixValue range = max - min;
 
-  if (range == 0.0) {
+  if (max == 0.0) {
 
-    ExecEnv::log().error("CalculateDistance range for all nodes is zero, matrix size: {}", size());
+    ExecEnv::log().warn("Invalid matrix range; max: {}, min: {}, matrix size: {}", max, min, size());
     return;
 
   }
@@ -278,7 +303,12 @@ void DistanceMatrixTriangular<MatrixValue>::normalizeDistance() {
     for (size_t column = 0; column < row; column++) {
 
       MatrixValue raw_distance = getDistance(row, column);
-      MatrixValue adj_distance = (raw_distance - min) / range;
+      MatrixValue adj_distance = raw_distance / max;
+      if (raw_distance < min or not (adj_distance >= 0.0 and adj_distance <= 1.0)) {
+
+        ExecEnv::log().warn("Invalid matrix normalize, raw: {}, range: {}, min: {}, adjusted: {}", raw_distance, range, min, adj_distance);
+
+      }
       setDistance(row, column, adj_distance);
 
     }

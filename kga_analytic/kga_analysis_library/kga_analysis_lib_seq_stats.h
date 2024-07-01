@@ -2,6 +2,7 @@
 // Created by kellerberrin on 9/12/23.
 //
 
+#include "kgl_distance_tree_upgma.h"
 #include "kga_analysis_lib_seq_gene.h"
 
 
@@ -37,15 +38,14 @@ public:
 
   void createClassificationTree(const std::string& analysis_directory,
                                 const std::string& analysis_sub_directory,
-                                const std::map<GenomeId_t, std::string>& annotations = {},
-                                const std::string& selection_text = {}) const;
+                                const std::map<GenomeId_t, std::string>& annotations,
+                                const std::function<bool(const std::string&)>& sample_selection) const;
 
   [[nodiscard]] const AnalysisTranscriptMap& getMap() const { return analysis_map_; }
 
 private:
 
   AnalysisTranscriptMap analysis_map_;
-
   [[nodiscard]] AnalysisTranscriptSequence generateTotal() const;
 
 };
@@ -71,10 +71,11 @@ public:
 
   [[nodiscard]] bool createTranscriptMap(const AnalysisTranscriptMap& transcript_map);
   void printGenomeReport(const std::string& report_directory, const std::map<GenomeId_t, std::string>& annotations = {}) const;
-  void createClassificationTree(const std::string& newick_directory,
+  bool createClassificationTree(const std::string& newick_directory,
                                 const std::string& transcript_id,
-                                const std::map<GenomeId_t, std::string>& annotations = {},
-                                const std::string& selection_text = {}) const;
+                                const std::map<GenomeId_t, std::string>& annotations,
+                                const std::function<bool(const std::string&)>& sample_selection);
+
 
 private:
 

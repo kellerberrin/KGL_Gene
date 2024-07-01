@@ -8,6 +8,7 @@
 #include "kgl_sequence_node_view.h"
 #include "kgl_classification_tree.h"
 
+#include "kel_workflow_threads.h"
 
 #include <fstream>
 #include <ranges>
@@ -142,10 +143,10 @@ void kga::AnalysisTranscriptFamily::printAllReports(const std::string& analysis_
 }
 
 
-void  kga::AnalysisTranscriptFamily::createClassificationTree(const std::string& analysis_directory,
+void kga::AnalysisTranscriptFamily::createClassificationTree(const std::string& analysis_directory,
                                                               const std::string& analysis_sub_directory,
                                                               const std::map<GenomeId_t, std::string>& annotations,
-                                                              const std::string& selection_text) const {
+                                                              const std::function<bool(const std::string&)>& sample_selection) const {
 
   auto report_directory = Utility::appendPath(analysis_sub_directory, analysis_directory);
 
@@ -153,25 +154,36 @@ void  kga::AnalysisTranscriptFamily::createClassificationTree(const std::string&
   if (not Utility::directoryRenew(report_directory)) {
 
     ExecEnv::log().warn("AnalysisTranscriptFamily; cannot re-create report directory: {}", report_directory);
+    return;
 
   }
 
-  GenomeTranscriptAnalysis genome_analysis;
-  if (not genome_analysis.createTranscriptMap(analysis_map_)) {
+  auto genome_analysis_ptr = std::make_unique<GenomeTranscriptAnalysis>();
+  if (not genome_analysis_ptr->createTranscriptMap(analysis_map_)) {
 
     ExecEnv::log().warn("Transcript analysis index by genome failed");
+    return;
 
   }
 
+  // Use threads to speed things up.
+  WorkflowThreads thread_pool(WorkflowThreads::defaultThreads());
   for (auto const& [transcript_id, transcript_analysis] : analysis_map_) {
 
-
-    genome_analysis.createClassificationTree( report_directory, transcript_id, annotations, selection_text);
-
+    thread_pool.enqueueVoid( &GenomeTranscriptAnalysis::createClassificationTree,
+                             genome_analysis_ptr.get(),
+                             report_directory,
+                             transcript_id,
+                             annotations,
+                             sample_selection);
 
   }
+  // Wait for completion (technically unnecessary, OK to use RAII here).
+  thread_pool.joinThreads();
 
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -372,15 +384,18 @@ void kga::GenomeTranscriptAnalysis::printGenomeReport(const std::string& report_
 
 }
 
-void kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string& newick_directory,
+bool kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string& newick_directory,
                                                               const std::string& transcript_id,
                                                               const std::map<GenomeId_t, std::string>& annotations,
-                                                              const std::string& selection_text) const {
+                                                              const std::function<bool(const std::string&)>& sample_selection) {
 
 
+  // Define the distance metric (local or global)
+  CodingDistanceMetricView coding_distance_metric_view{LevenshteinGlobalCodingView};
+  // Normalize Tree to [0, 1] branch lengths.
+  bool normalize_tree = true;
 
   TreeNodeVector tree_node_vector;
-  CodingDistanceMetricView coding_distance_metric_view{LevenshteinLocalCodingView};
   for (auto const& [genome_id, transcript_map] : genome_map_) {
 
     if (transcript_map.contains(transcript_id)) {
@@ -393,9 +408,9 @@ void kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string&
 
       }
 
-      if (not selection_text.empty() and not node_tag.contains(selection_text)) {
+      if (not sample_selection(node_tag)) {
 
-        // Skip this record.
+        // Skip this record if not selected.
         continue;
 
       }
@@ -414,11 +429,13 @@ void kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string&
 
   ExecEnv::log().info("Tree nodes: {} created for: {}", tree_node_vector.size(), transcript_id);
 
-  DistanceTreeUPGMA upgma_distance;
-  // Add the parentDistance vector.
-  upgma_distance.addDistanceMap(tree_node_vector);
+  // Generate a UPGMA tree.
+  MatrixGenerator tree_matrix;
+  tree_matrix.initializeMatrix(tree_node_vector);
+
+  DistanceTreeUPGMA upgma_distance(tree_matrix);
   // Calculate.
-  auto root_node_vector = upgma_distance.calculateTree();
+  auto root_node_vector = upgma_distance.calculateTree(normalize_tree);
   // Report Results.
   ClassificationTree upgma_tree(root_node_vector);
 
@@ -428,7 +445,12 @@ void kga::GenomeTranscriptAnalysis::createClassificationTree( const std::string&
   if (not upgma_tree.writeNewick(file_path)) {
 
     ExecEnv::log().warn("createClassificationTree; Could not open file: {}", file_path);
+    return false;
 
   }
+
+  ExecEnv::log().info("Tree created for: {}", transcript_id);
+
+  return true;
 
 }
