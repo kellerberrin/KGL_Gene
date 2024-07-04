@@ -5,8 +5,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 
 # add extra include directories
-include_directories(/usr/local/include/spdlog/include/
-                    contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
+include_directories(contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
                     /usr/local/include/nlopt
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     /usr/include/eigen3
@@ -105,8 +104,6 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_property_tree.h
         kel_app/kel_logging.h
         kel_app/kel_logging.cpp
-        kel_app/kel_logging_spd.cpp
-        kel_app/kel_logging_spd.h
         kel_app/kel_logging_stream.cpp
         kel_app/kel_logging_stream.h
 )

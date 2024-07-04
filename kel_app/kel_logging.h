@@ -60,8 +60,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Forward Declaration of the implementation PIMPL object (can be implemented using iostreams or the spdlog library).
-class ExecEnvLoggerImpl;
+// Forward Declaration of the implementation PIMPL object (implemented using iostreams).
+class StreamLoggerImpl;
 
 // The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
 // The logger is available to all application files that have "#include exec_env.h" in the include chain.
@@ -206,7 +206,7 @@ public:
 
 private:
 
-  std::unique_ptr<ExecEnvLoggerImpl> log_impl_ptr_; // The PIMPL logging implementation object.
+  std::unique_ptr<StreamLoggerImpl> log_impl_ptr_; // The PIMPL logging implementation object.
   size_t info_message_count_{0};     // Number of info messages issued.
   size_t max_error_messages_{100};     // Defaults to 100 error messages, zero (0) is unlimited.
   size_t error_message_count_{0};     // Number of error messages issued.
