@@ -35,7 +35,7 @@ class StreamMTBuffer : public BaseStreamIO {
 public:
 
   // The threads argument is only valid for '.bgz' file types. The argument is ignored for other stream types.
-  explicit StreamMTBuffer() {}
+  StreamMTBuffer() = default;
   StreamMTBuffer(const StreamMTBuffer&) = delete;
   ~StreamMTBuffer() override { close(); };
 

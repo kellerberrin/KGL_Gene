@@ -28,7 +28,6 @@ class PfEMPAnalysis : public VirtualAnalysis {
 public:
 
   PfEMPAnalysis() = default;
-
   ~PfEMPAnalysis() override = default;
 
   // The ident must match the ident used in the package XML.

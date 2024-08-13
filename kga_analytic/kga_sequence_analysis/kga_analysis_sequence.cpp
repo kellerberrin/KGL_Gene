@@ -81,7 +81,6 @@ bool kga::SequenceAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_
 
   // Superclass the population_ptr
   std::shared_ptr<const PopulationDB> population_ptr = std::dynamic_pointer_cast<const PopulationDB>(base_data_ptr);
-
   if (not population_ptr) {
 
     ExecEnv::log().error("Analysis: {}, expected a Population in file: {}", ident(), base_data_ptr->fileId());

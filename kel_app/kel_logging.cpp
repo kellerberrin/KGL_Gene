@@ -47,7 +47,7 @@ void ExecEnvLogger::locationImpl(const LogFormatLocation &format_location,
 
 }
 
-bool ExecEnvLogger::warnMessageLimits() {
+bool ExecEnvLogger::warnMessageLimits() noexcept {
 
   ++warn_message_count_;
   if (warn_message_count_ == max_warn_messages_) {
@@ -67,7 +67,7 @@ bool ExecEnvLogger::warnMessageLimits() {
 
 }
 
-bool ExecEnvLogger::errorMessageLimits() {
+bool ExecEnvLogger::errorMessageLimits() noexcept {
 
   ++error_message_count_;
   if (max_error_messages_ > 0 and error_message_count_ > max_error_messages_) {

@@ -65,6 +65,12 @@ class StreamLoggerImpl;
 
 // The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
 // The logger is available to all application files that have "#include exec_env.h" in the include chain.
+// Syntax is:
+// ExecEnv::log().info("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+// ExecEnv::log().warn("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+// ExecEnv::log().error("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+// ExecEnv::log().critical("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+
 class ExecEnvLogger {
 
 public:
@@ -77,10 +83,18 @@ public:
 
   void setMaxErrorMessages(size_t max_messages) { max_error_messages_ = max_messages; } // Zero (0) is unlimited.
   void setMaxWarningMessages(size_t max_messages) { max_warn_messages_ = max_messages; } // Zero (0) is unlimited.
+
   enum class LoggerSeverity { INFO, WARN, ERROR, CRITICAL };
 
 // Select between message location information or compile-time argument checking.
+// In general; WARN, ERROR and CRITICAL will report the code location "[module_file:line_no]" emitting
+// the message. However, disabling the location #define will re-compile with rigorous compile-time argument checking.
+// Very useful for debugging any possible runtime errors.
 //#define EXECENV_LOGGER_INFO_LOCATION 1
+#define EXECENV_LOGGER_WARN_LOCATION 1
+#define EXECENV_LOGGER_ERROR_LOCATION 1
+#define EXECENV_LOGGER_CRITICAL_LOCATION 1
+
 #ifdef EXECENV_LOGGER_INFO_LOCATION
 
   template<typename... Args> void info(LogFormatLocation format_location, Args &&...args) noexcept {
@@ -107,7 +121,6 @@ public:
 #endif
 
 // Select between message location information or compile-time argument checking.
-#define EXECENV_LOGGER_WARN_LOCATION 1
 #ifdef EXECENV_LOGGER_WARN_LOCATION
 
   template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept {
@@ -140,7 +153,6 @@ public:
 #endif
 
 // Select between message location information or compile-time argument checking.
-#define EXECENV_LOGGER_ERROR_LOCATION 1
 #ifdef EXECENV_LOGGER_ERROR_LOCATION
 
 
@@ -175,7 +187,6 @@ public:
 #endif
 
 // Select between message location information or compile-time argument checking.
-#define EXECENV_LOGGER_CRITICAL_LOCATION 1
 #ifdef EXECENV_LOGGER_CRITICAL_LOCATION
 
   template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept {
@@ -214,8 +225,8 @@ private:
   size_t warn_message_count_{0};     // Number of warning messages issued.
   std::mutex message_mutex_;          // Messaging is thread safe.
 
-  bool warnMessageLimits(); // Stops issuing messages after max warn messages reached.
-  bool errorMessageLimits(); // Forces program termination after max error messages reached.
+  bool warnMessageLimits() noexcept; // Stops issuing messages after max warn messages reached.
+  bool errorMessageLimits() noexcept; // Forces program termination after max error messages reached.
 
   // These functions simply re-direct to the PIMPL implementation object.
   void formatImpl(std::string&& formatted_string, LoggerSeverity severity) noexcept;

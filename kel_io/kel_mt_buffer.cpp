@@ -18,7 +18,7 @@ bool kel::StreamMTBuffer::open(const std::string &file_name) {
   auto stream_opt = BaseStreamIO::getStreamIO(file_name);
   if (not stream_opt) {
 
-    ExecEnv::log().error("StreamMTBuffer::open; could not open stream for file: {}", file_name);
+    ExecEnv::log().error("Could not open stream for file: {}", file_name);
     return false;
 
   }
@@ -93,7 +93,7 @@ void kel::StreamMTBuffer::enqueueIOLineRecord() {
 
 kel::IOLineRecord kel::StreamMTBuffer::readLine() {
 
-  // Dont block on EOF
+  // Don't block on EOF, return additional EOF markers.
   std::lock_guard<std::mutex> lock(mutex_);
   if (EOF_received_) return IOLineRecord::createEOFMarker();
   auto line_record = line_io_queue_.waitAndPop();

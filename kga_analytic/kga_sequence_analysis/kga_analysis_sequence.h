@@ -31,7 +31,7 @@ public:
   ~SequenceAnalysis() override = default;
 
   // The ident must match the ident used in the package XML.
-  constexpr static std::string IDENT {"VERIFY"};
+  constexpr static std::string IDENT {"PfSEQUENCE"};
   // Need a polymorphic version to interrogate VirtualAnalysis pointers.
   [[nodiscard]] std::string ident() const override { return IDENT; }
   // Simple creation factory function.
@@ -59,6 +59,7 @@ private:
   std::shared_ptr<const GenomeCollection> all_reference_genomes_ptr_;
   std::shared_ptr<MutateGenesReport> mutate_genes_ptr_; // Perform transcript level mutations for all genomes.
 
+  // COI information for Pf3K samples.
   std::shared_ptr<const Pf3kCOIResource> Pf3KCOI_ptr_;
 
   // Transcript Analysis
