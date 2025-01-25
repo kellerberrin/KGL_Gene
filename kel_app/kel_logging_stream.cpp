@@ -10,7 +10,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Logging implementation uses the SPDLog library
+// Logging implementation.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ kel::StreamLoggerImpl::StreamLoggerImpl(const std::string& module, const std::st
 }
 
 
-std::string kel::StreamLoggerImpl::severityANSI(ExecEnvLogger::LoggerSeverity severity, bool is_ansi) const {
+std::string kel::StreamLoggerImpl::severityANSI(ExecEnvLogger::LoggerSeverity severity, bool is_ansi) {
 
   switch(severity) {
 
@@ -82,7 +82,7 @@ void kel::StreamLoggerImpl::locationImpl(const LogFormatLocation& format_locatio
 }
 
 
-std::string kel::StreamLoggerImpl::dateTime() const
+std::string kel::StreamLoggerImpl::dateTime()
 {
 
   const std::chrono::zoned_time cur_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
@@ -90,7 +90,7 @@ std::string kel::StreamLoggerImpl::dateTime() const
 
 }
 
-std::string kel::StreamLoggerImpl::location(const LogFormatLocation &format_location) const {
+std::string kel::StreamLoggerImpl::location(const LogFormatLocation &format_location) {
 
   std::string file_name = Utility::fileName(format_location.location().file_name());
   std::string location_text = std::string("[") + file_name + ":"

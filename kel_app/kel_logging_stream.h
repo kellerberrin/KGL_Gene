@@ -7,10 +7,6 @@
 
 
 
-//
-// Created by kellerberrin on 20/10/23.
-//
-
 
 #include "kel_logging.h"
 
@@ -65,9 +61,9 @@ private:
   inline static const std::string ANSI_ERROR = ANSI_RED + ERROR + ANSI_RESET;
   inline static const std::string ANSI_CRITICAL = ANSI_BACKGROUND_RED + CRITICAL + ANSI_RESET;
 
-  [[nodiscard]] std::string severityANSI(ExecEnvLogger::LoggerSeverity severity, bool is_ansi) const;
-  [[nodiscard]] std::string dateTime() const;
-  [[nodiscard]] std::string location(const LogFormatLocation &format_location) const;
+  [[nodiscard]] static std::string severityANSI(ExecEnvLogger::LoggerSeverity severity, bool is_ansi = false);
+  [[nodiscard]] static std::string dateTime();
+  [[nodiscard]] static std::string location(const LogFormatLocation &format_location);
 
 
 };

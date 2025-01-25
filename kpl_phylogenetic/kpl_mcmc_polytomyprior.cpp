@@ -131,7 +131,7 @@ void kpl::PolytomyTopoPriorCalculator::recalcCountsAndPriorsImpl(unsigned n) {
 
     // temporary variables
     double a, b, c;
-    double max_log_double = std::log(std::numeric_limits<double>::max());
+    const double max_log_double = std::log(std::numeric_limits<double>::max());
 
     // The value of epsilon is arbitrary, but must be larger than
     // zero and less than scaling_factor

@@ -51,7 +51,7 @@ void kel::ExecEnv::setCommandTokens(int argc, char const ** argv) {
 
   for (int idx = 0; idx < argc; ++idx) {
 
-    command_tokens_.emplace_back(argv[idx]);;
+    command_tokens_.emplace_back(argv[idx]);
 
   }
 
