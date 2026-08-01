@@ -123,7 +123,7 @@ bool kgl::ParseFasta::readFastaFile( const std::string& fasta_file_name,
           std::string id_line = record_text;
           id_line.erase(id_line.begin());
           // Split into ID and comment on whitespace.
-          fasta_id_comment = Utility::firstSplit(id_line);
+          fasta_id_comment = Utility::firstSplitChar(id_line);
           fasta_id_comment.second = Utility::trimEndWhiteSpace(fasta_id_comment.second);
           if (fasta_id_comment.first.empty()) {
 

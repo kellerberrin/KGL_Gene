@@ -21,7 +21,7 @@ namespace kellerberrin {  //  organization level namespace
 // There is no guarantee that objects (except the stop token) are processed in the same order as they were pushed onto the queue.
 // The workflow is stopped and no threads are active after a stop token is pushed onto the workflow.
 // The stop token is guaranteed to be the last object processed.
-// This workflow can be readily 'ganged' together with other WorkflowAsync to provide multi thread, multi stage processing.
+// This workflow can be readily concatenated together with other WorkflowAsync to provide multi thread, multi stage processing.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

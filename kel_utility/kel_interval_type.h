@@ -20,18 +20,20 @@ namespace kellerberrin {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Define the concepts for the underlying numeric types used in the OpenRightInterval template class.
-// This includes floats. However, floats may require work on the comparison operators.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Ensure the minimum size of the underlying numeric type is 4 bytes.
 template <typename T>
-concept IntervalNumericType = std::integral<T> || std::floating_point<T>;
+concept IntervalNumericType = std::integral<T> && sizeof(T) >= 4;
+
+// Define the signed and unsigned interval types.
+template < class T >
+concept UnsignedIntervalType = IntervalNumericType<T> && !std::signed_integral<T>;
 
 template < class T >
-concept SignedIntervalType = (std::integral<T> && std::is_signed_v<T>) || std::floating_point<T>;
+concept SignedIntervalType = IntervalNumericType<T> && std::is_signed_v<T>;
 
-template < class T >
-concept UnsignedIntervalType = std::integral<T> && !std::signed_integral<T>;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,10 +43,17 @@ concept UnsignedIntervalType = std::integral<T> && !std::signed_integral<T>;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-template <IntervalNumericType IntervalValue, SignedIntervalType SignedInterval>
+template <UnsignedIntervalType IntervalValue>
 class OpenRightInterval {
 
 public:
+
+  using SignedInterval = std::make_signed_t<IntervalValue>;
+
+  static_assert(sizeof(IntervalValue) == sizeof(SignedInterval),
+                "IntervalValue and its signed counterpart must have the same size");
+
+  constexpr static OpenRightInterval EMPTY_INTERVAL{0, 0};
 
   constexpr OpenRightInterval(IntervalValue lower, IntervalValue upper) { resize(lower, upper); }
   constexpr ~OpenRightInterval() = default;
@@ -109,7 +118,7 @@ public:
 
     if (lower_ >= interval.upper_ or interval.lower_ >= upper_) {
 
-      return {0, 0};
+      return EMPTY_INTERVAL;
 
     }
 
@@ -128,7 +137,7 @@ public:
 
     }
 
-    return {0, 0};
+    return EMPTY_INTERVAL;
 
   }
 
@@ -151,6 +160,7 @@ public:
   // Define an ordering using the spaceship operator. Intervals are, by default, ordered by their lower value.
   constexpr auto operator<=>(const OpenRightInterval &rhs) const { return std::tie(lower_, upper_) <=> std::tie(rhs.lower_, rhs.upper_); }
   constexpr bool operator==(const OpenRightInterval &rhs) const { return lower() == rhs.lower() and upper() == rhs.upper(); }
+
 
 private:
 

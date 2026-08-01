@@ -4,9 +4,7 @@
 
 
 #include "kel_bzip_workflow.h"
-
 #include "kel_exec_env.h"
-#include "kel_utility.h"
 
 #include <fstream>
 
@@ -28,7 +26,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
   // Read file size.
   const size_t bgz_file_size = bgz_file.tellg();
   ExecEnv::log().info("Verifing bgz file: {}:, Size: {}", file_name, bgz_file_size);
-  // Reset the file stream pointer to the file begining.
+  // Reset the file stream pointer to the file beginning.
   bgz_file.seekg(0);
 
   size_t file_offset{0};
@@ -41,6 +39,13 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
     // Read header.
     BGZHeaderblock header_block;
     bgz_file.read(reinterpret_cast<char*>(&header_block), HEADER_SIZE_);
+    if (not bgz_file.good()) {
+
+      ExecEnv::log().warn("Error reading file: {}", file_name);
+      return false;
+
+    }
+
     file_offset += HEADER_SIZE_;
     // Check the header values.
     if (header_block.block_id_1 != BLOCK_ID1_) {
@@ -87,7 +92,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
     size_t compressed_data_size = header_block.block_size - BLOCK_SIZE_ADJUST_;
     if (compressed_data_size > MAX_UNCOMPRESSED_SIZE_) {
 
-      if (not silent) ExecEnv::log().error( "Block count: {}, Compressed block size: {} exceeds max Ccompressed size: {}",
+      if (not silent) ExecEnv::log().error( "Block count: {}, Compressed block size: {} exceeds max compressed size: {}",
                                             block_count, compressed_data_size, MAX_UNCOMPRESSED_SIZE_);
       return false;
 
@@ -123,7 +128,7 @@ bool kel::BGZStreamIO::verify(const std::string &file_name, bool silent) {
 
     }
 
-  } // while.
+  } // end while.
 
 
   // Check EOF string.

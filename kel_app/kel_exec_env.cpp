@@ -1,5 +1,5 @@
 // Copyright 2023 Kellerberrin
-//
+
 
 #include "kel_exec_env.h"
 #include "kel_utility.h"
@@ -27,9 +27,7 @@ std::unique_ptr<kel::ExecEnvLogger> kel::ExecEnv::createLogger(const std::string
                                                                size_t max_error_messages,
                                                                size_t max_warning_messages) {
 
-  std::unique_ptr<kel::ExecEnvLogger> log_ptr;
-
-  log_ptr = std::make_unique<ExecEnvLogger>(module, log_file);
+  auto log_ptr(std::make_unique<ExecEnvLogger>(module, log_file));
 
   log_ptr->setMaxErrorMessages(max_error_messages);
 

@@ -54,7 +54,7 @@ std::string kel::StreamLoggerImpl::severityANSI(ExecEnvLogger::LoggerSeverity se
 }
 
 
-void kel::StreamLoggerImpl::formatImpl(std::string&& formatted_string, ExecEnvLogger::LoggerSeverity severity) noexcept {
+void kel::StreamLoggerImpl::formatImpl(const std::string& formatted_string, ExecEnvLogger::LoggerSeverity severity) noexcept {
 
   std::string date_time = dateTime();
   std::cout << date_time <<  padded_module_name_ << severityANSI(severity, true) << formatted_string << '\n';

@@ -1,7 +1,10 @@
 //
+// Created by kellerberrin on 11/05/25.
+//
 
-#ifndef KEL_QUEUE_MT_SAFE_H
-#define KEL_QUEUE_MT_SAFE_H
+#ifndef KEL_QUEUE_MT_NEW_H
+#define KEL_QUEUE_MT_NEW_H
+
 
 #include "kel_queue_monitor.h"
 
@@ -26,13 +29,13 @@ namespace kellerberrin {   //  organization level namespace
 
 template<typename T>
 requires std::move_constructible<T>
-class QueueMtSafe {
+class QueueMtSync {
 
 public:
 
-  QueueMtSafe() { monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>(this); }
+  QueueMtSync() { monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>(this); }
   // Create the QueueMtSafe with an asynchronous queue monitor that checks for 'stalled' queues and collects queue statistics.
-  QueueMtSafe(std::string queue_name, size_t sample_frequency)  {
+  QueueMtSync(std::string queue_name, size_t sample_frequency)  {
 
     monitor_ptr_ = std::make_unique<MonitorMtSafe<T>>(this);
     monitor_ptr_->launchStats(sample_frequency, queue_name);
@@ -40,12 +43,12 @@ public:
   }
 
   // Explicitly shutdown the monitor and flag shutdown to all consumers.
-  ~QueueMtSafe() { monitor_ptr_ = nullptr; }
+  ~QueueMtSync() { monitor_ptr_ = nullptr; }
 
   // Copy constructors are removed.
-  QueueMtSafe(const QueueMtSafe&) = delete;
-  QueueMtSafe(QueueMtSafe&&) = delete;
-  QueueMtSafe& operator=(const QueueMtSafe&) = delete;
+  QueueMtSync(const QueueMtSync&) = delete;
+  QueueMtSync(QueueMtSync&&) = delete;
+  QueueMtSync& operator=(const QueueMtSync&) = delete;
 
   // Enqueue function can be called by multiple threads, this queue can potentially grow without bound.
   // These threads will only block on other producer thread enqueue activity.
@@ -125,4 +128,4 @@ private:
 }   // end namespace
 
 
-#endif // KEL_QUEUE_MT_SAFE_H
+#endif //KEL_QUEUE_MT_NEW_H

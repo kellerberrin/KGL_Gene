@@ -21,18 +21,8 @@ namespace kel = kellerberrin;
 
 size_t kel::AuditMemory::alignedSize(size_t mem_size) {
 
-  const static size_t MAX_ALIGN_BITS = maxAlignBits(alignof(max_align_t));
-
-  size_t aligned_chunks = mem_size >> MAX_ALIGN_BITS;
-  if ((aligned_chunks << MAX_ALIGN_BITS) != mem_size) {
-
-    size_t aligned_size = aligned_chunks + 1;
-    aligned_size <<= MAX_ALIGN_BITS;
-    mem_size = aligned_size;
-
-  }
-
-  return mem_size;
+  size_t alignment = alignof(std::max_align_t);
+  return ((mem_size + alignment - 1) / alignment) * alignment;
 
 }
 

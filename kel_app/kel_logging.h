@@ -99,10 +99,10 @@ public:
 
   template<typename... Args> void info(LogFormatLocation format_location, Args &&...args) noexcept {
 
-    std::lock_guard<std::mutex> lock(message_mutex_);
 
     info_message_count_++;
     std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
+    std::lock_guard<std::mutex> lock(message_mutex_);
     locationImpl(format_location, formatted_message, LoggerSeverity::INFO);
 
   }
@@ -111,25 +111,25 @@ public:
 
   template<typename... Args> void info(std::format_string<Args...> format, Args&&... args) noexcept {
 
-    std::lock_guard<std::mutex> lock(message_mutex_);
-
     info_message_count_++;
-    formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::INFO);
+    std::string formatted_message = std::format(format, std::forward<Args>(args)...);
+    std::lock_guard<std::mutex> lock(message_mutex_);
+    formatImpl(formatted_message, LoggerSeverity::INFO);
 
   }
 
 #endif
+
 
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_WARN_LOCATION
 
   template<typename... Args> void warn(LogFormatLocation format_location, Args &&...args) noexcept {
 
+    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
     std::lock_guard<std::mutex> lock(message_mutex_);
-
     if (warnMessageLimits()) {
 
-      std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
       locationImpl(format_location, formatted_message, LoggerSeverity::WARN);
 
     }
@@ -140,11 +140,12 @@ public:
 
   template<typename... Args> void warn(std::format_string<Args...> format, Args&&... args) noexcept {
 
-    std::lock_guard<std::mutex> lock(message_mutex_);
 
+    std::string formatted_message = std::format(format, std::forward<Args>(args)...);
+    std::lock_guard<std::mutex> lock(message_mutex_);
     if (warnMessageLimits()) {
 
-      formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::WARN);
+      formatImpl(formatted_message, LoggerSeverity::WARN);
 
     }
 
@@ -152,17 +153,17 @@ public:
 
 #endif
 
+
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_ERROR_LOCATION
 
 
   template<typename... Args> void error(LogFormatLocation format_location, Args&&... args) noexcept {
 
+    std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
     std::lock_guard<std::mutex> lock(message_mutex_);
-
     if (errorMessageLimits()) {
 
-      std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
       locationImpl(format_location, formatted_message, LoggerSeverity::ERROR);
 
     }
@@ -174,11 +175,11 @@ public:
 
   template<typename... Args> void error(std::format_string<Args...> format, Args&&... args) noexcept {
 
+    std::string formatted_message = std::format(format, std::forward<Args>(args)...);
     std::lock_guard<std::mutex> lock(message_mutex_);
-
     if (errorMessageLimits()) {
 
-      formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::ERROR);
+      formatImpl(formatted_message, LoggerSeverity::ERROR);
 
     }
 
@@ -189,13 +190,15 @@ public:
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_CRITICAL_LOCATION
 
-  template<typename... Args> void critical(LogFormatLocation format_location, Args&&... args) noexcept {
+  template<typename... Args> [[noreturn]] void critical(LogFormatLocation format_location, Args&&... args) noexcept {
 
-    std::lock_guard<std::mutex> lock(message_mutex_);
 
     std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
-    locationImpl(format_location, formatted_message, LoggerSeverity::CRITICAL);
-    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    {
+      std::lock_guard lock(message_mutex_);
+      locationImpl(format_location, formatted_message, LoggerSeverity::CRITICAL);
+      formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    }
     std::exit(EXIT_FAILURE);
 
   }
@@ -204,10 +207,12 @@ public:
 
   template<typename... Args> void critical(std::format_string<Args...> format, Args&&... args) noexcept {
 
-    std::lock_guard<std::mutex> lock(message_mutex_);
-
-    formatImpl(std::format(format, std::forward<Args>(args)...), LoggerSeverity::CRITICAL);
-    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    std::string formatted_message = std::format(format, std::forward<Args>(args)...);
+    {
+      std::lock_guard<std::mutex> lock(message_mutex_);
+      formatImpl(formatted_message, LoggerSeverity::CRITICAL);
+      formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::CRITICAL);
+    }
     std::exit(EXIT_FAILURE);
 
   }
@@ -228,11 +233,12 @@ private:
   bool warnMessageLimits() noexcept; // Stops issuing messages after max warn messages reached.
   bool errorMessageLimits() noexcept; // Forces program termination after max error messages reached.
 
-  // These functions simply re-direct to the PIMPL implementation object.
-  void formatImpl(std::string&& formatted_string, LoggerSeverity severity) noexcept;
+ // These functions simply re-direct to the PIMPL implementation object.
+  void formatImpl(const std::string& formatted_string, LoggerSeverity severity) noexcept;
   void locationImpl(const LogFormatLocation& format_location,
                     const std::string& formatted_string,
                     LoggerSeverity severity) noexcept;
+
 
 };
 

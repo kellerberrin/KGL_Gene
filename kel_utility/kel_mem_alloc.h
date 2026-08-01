@@ -7,10 +7,12 @@
 
 
 #include <memory_resource>
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <cstring>
 #include <malloc.h>
+#include <new>
 
 namespace kellerberrin {   //  organization level namespace
 
@@ -34,13 +36,20 @@ public:
   ~AuditMemory() = delete;
 
   // Force free store release using malloc trim.
-  static void trimFreeStore() { malloc_trim(0); }
+  // Malloc trim is a GNU/glibc-specific extension.
+  // It will not compile on macOS, Windows, and some non-glibc Linux systems.
+  static void trimFreeStore() {
+#ifdef __GLIBC__
+    malloc_trim(0);
+#endif
+  }
 
+  // Audited alloc functions.
   template<class T>
   [[nodiscard]] static T* newMem(std::size_t mem_size);
   template<class T>
   [[nodiscard]] static T* newArray(std::size_t array_size) { return newMem<T>(sizeof(T) * array_size); }
-
+  // Audited free functions.
   template<class T>
   static void deleteMem(T* mem_ptr);
   template<class T>
@@ -59,6 +68,7 @@ public:
 
 private:
 
+  // Threadsafe malloc and free statistics to aid in the search for memory leaks.
   inline static std::atomic<size_t> deallocated_bytes_{0};
   inline static std::atomic<size_t> allocated_bytes_{0};
   inline static std::atomic<size_t> allocations_{0};
@@ -66,24 +76,10 @@ private:
   inline static std::atomic<size_t> count_max_align_{0};
   inline static std::atomic<size_t> additional_align_bytes_{0};
 
-  constexpr static auto maxAlignBits(size_t max_align);
+   // Number of bytes to allocate for a memory aligned size_t.
+  constexpr static size_t SIZE_ALIGN_BYTES = std::max(alignof(std::max_align_t), sizeof(std::size_t));
 
-  };
-
-
-constexpr auto AuditMemory::maxAlignBits(size_t max_align) {
-
-  size_t bits{0};
-  while (max_align != 0){
-
-    ++bits;
-    max_align >>= 1;
-
-  }
-
-  return bits;
-}
-
+};
 
 // Warning Will Robinson! Nasty pointer munging ahead.
 template<class T>
@@ -109,15 +105,15 @@ T* AuditMemory::newMem(std::size_t mem_size)
   }
 
   // Thread safe in linux.
-  void *ptr = malloc(sizeof(size_t) + mem_size);
+  void *ptr = malloc(SIZE_ALIGN_BYTES + mem_size);
   if (ptr != nullptr) {
 
-    // Don't count sizeof(size_t)
+    // Don't count ALIGN_SIZE
     allocated_bytes_ += mem_size;
     ++allocations_;
     // Copy the block size in the front of returned memory.
     std::memcpy(ptr, &mem_size, sizeof(size_t));
-    std::byte* offset_ptr = static_cast<std::byte*>(ptr) + sizeof(size_t);
+    std::byte* offset_ptr = static_cast<std::byte*>(ptr) + SIZE_ALIGN_BYTES;
     T* data_ptr = reinterpret_cast<T*>(offset_ptr);
     return data_ptr;
 
@@ -143,7 +139,7 @@ void AuditMemory::deleteMem(T* ptr)
 
   // Recover the block size.
   size_t deallocate_size;
-  std::byte* offset_ptr = reinterpret_cast<std::byte*>(ptr) - sizeof(size_t);
+  std::byte* offset_ptr = reinterpret_cast<std::byte*>(ptr) - SIZE_ALIGN_BYTES;
   std::memcpy(&deallocate_size, offset_ptr, sizeof(size_t));
   ++deallocations_;
   deallocated_bytes_ += deallocate_size;
@@ -151,7 +147,6 @@ void AuditMemory::deleteMem(T* ptr)
   free(static_cast<void*>(offset_ptr));
 
 }
-
 
 
 } // namespace.

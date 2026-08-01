@@ -36,28 +36,28 @@ public:
   PropertyImpl(const PropertyImpl&) =default;
   ~PropertyImpl() = default;
 
-  bool readPropertiesFile(const std::string& properties_file);
+  [[nodiscard]] bool readPropertiesFile(const std::string& properties_file);
 
 //  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_ptr_, property_name, property); }
 
-  bool getProperty(const std::string& property_name, std::string& property) const;
+  [[nodiscard]] bool getProperty(const std::string& property_name, std::string& property) const;
 
-  bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
+  [[nodiscard]] bool getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const;
 
-  bool getNodeVector(const std::string& node_name, std::vector<std::string>& node_data_vector) const;
+  [[nodiscard]] bool getNodeVector(const std::string& node_name, std::vector<std::string>& node_data_vector) const;
 
-  bool getProperty(const std::string& property_name, size_t& property) const;
+  [[nodiscard]] bool getProperty(const std::string& property_name, size_t& property) const;
 
 
   void treeTraversal() const;
 
-  bool checkProperty(const std::string& property_name) const;
+  [[nodiscard]] bool checkProperty(const std::string& property_name) const;
 
-  bool getTreeVector(const std::string& property_name, std::vector<ImplSubTree>& tree_vector) const;
+  [[nodiscard]] bool getTreeVector(const std::string& property_name, std::vector<ImplSubTree>& tree_vector) const;
 
-  bool getTreeVector(std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const;
+  [[nodiscard]] bool getTreeVector(std::vector<std::pair<std::string, PropertyImpl>>& tree_vector) const;
 
-    template<class T> T getData() const { return property_tree_.get_value<T>(); }
+  template<class T> [[nodiscard]] T getData() const { return property_tree_.get_value<T>(); }
 
 private:
 
@@ -121,14 +121,25 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
 
     }
 
-    // Recursively include XML files.
-    if (line.find(INCLUDE_TOKEN_) != std::string::npos) {
+    if (line.contains(INCLUDE_TOKEN_)) {
 
-      // The include XML file spec should be in quotes, e.g #include "subdir/include.xml".
-      std::string file_spec = Utility::trimAllWhiteSpace(line.substr(include_token_size));
-      file_spec = Utility::trimAllChar(file_spec, INCLUDE_FILE_QUOTE_);
-      file_spec = Utility::filePath(file_spec, Utility::filePath(properties_file));
-      readRecursive(ss, file_spec, file_count);
+      std::string trimmed_line = Utility::trimLeadingWhiteSpace(line);
+      if (trimmed_line.starts_with(INCLUDE_TOKEN_)) {
+
+        // The include XML file spec should be in quotes, e.g #include "subdir/include.xml".
+        std::string file_spec = Utility::trimAllWhiteSpace(line.substr(include_token_size));
+        file_spec = Utility::trimAllChar(file_spec, INCLUDE_FILE_QUOTE_);
+        file_spec = Utility::filePath(file_spec, Utility::filePath(properties_file));
+        // Recursively include XML file.
+        readRecursive(ss, file_spec, file_count);
+
+
+      } else {
+
+        ExecEnv::log().warn("XML property file: {} contains malformed {} directive: {}", properties_file, INCLUDE_TOKEN_, line);
+        ss << line << '\n';
+
+      }
 
     } else {
 
@@ -245,7 +256,7 @@ bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
 
   try {
 
-    for (auto child : property_tree_.get_child(property_name)) {
+    for (auto const& child : property_tree_.get_child(property_name)) {
 
       // The data function is used to access the data stored in a node.
       property_vector.push_back(Utility::trimEndWhiteSpace(child.second.data()));
@@ -331,7 +342,7 @@ bool kel::PropertyTree::PropertyImpl::getTreeVector(const std::string& property_
 
   try {
 
-    for (auto sub_tree : property_tree_.get_child(property_name)) {
+    for (auto const& sub_tree : property_tree_.get_child(property_name)) {
 
       tree_vector.emplace_back(ImplSubTree(sub_tree.first, PropertyImpl(sub_tree.second)));
 
@@ -387,7 +398,7 @@ void kel::PropertyTree::PropertyImpl::treeTraversal() const {
 void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const pt::ptree& property_tree) const {
 
 
-  for (auto item : property_tree) {
+  for (const auto& item : property_tree) {
 
     std::string key = item.first;
     std::string parent_key;

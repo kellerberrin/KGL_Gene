@@ -6,15 +6,14 @@
 // Setup logger and read the XML program options.
 
 #include "kgl_gene_app.h"
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include "kel_utility.h"
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 // Define namespace alias
-namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 namespace bt = boost;
 namespace kgl = kellerberrin::genome;
@@ -31,13 +30,14 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
      << MODULE_NAME
      << " version: "
      << VERSION << '\n'
-     << "Usage: --workDirectory=<work_directory> --newLogFile=<new_log_file> --optionFile=<option_file.xml> (all arguments required)";
+     << "Usage: --workDirectory=<work_directory> --logFile=<log_file.log> --optionFile=<option_file.xml> (all arguments required)";
+  const std::string help_description = ss.str();
   const char* help_flag = "help";
 
   if (argc <= 1) {
 
     std::cerr << "Required arguments not specified. Use '--help' for argument formats." << std::endl;
-    std::cerr << ss.str() << std::endl;
+    std::cerr << help_description << std::endl;
     std::exit(EXIT_FAILURE);
 
   }
@@ -64,7 +64,7 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   const char* log_file_flag = "logFile";
 
   runtime_options.add_options ()
-      (help_flag, ss.str().c_str())
+      (help_flag, help_description.c_str())
       (work_directory_flag, po::value<std::string>(), dir_desc)
       (option_flag, po::value<std::string>(), option_desc)
       (log_file_flag, po::value<std::string>(), log_desc);
@@ -110,23 +110,11 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   }
 
-  fs::path directory_path = fs::path(getArgs().workDirectory);
-
-  boost::system::error_code error_code;
-  bool valid_directory = fs::exists(directory_path, error_code);
+  bool valid_directory = Utility::directoryExists(getArgs().workDirectory);
 
   if (!valid_directory) {
 
-    std::cerr << "Specified work directory:" << directory_path.string() << " does not exist." << std::endl;
-    std::cerr << MODULE_NAME << " exits" << std::endl;
-    std::exit(EXIT_FAILURE);
-
-  }
-
-  if (error_code.value() != boost::system::errc::success) {
-
-    std::cerr << "Error verifying work directory:" << directory_path.string()
-              << ", error was:" << error_code.message() << std::endl;
+    std::cerr << "Specified work directory:" << getArgs().workDirectory << " does not exist." << std::endl;
     std::cerr << MODULE_NAME << " exits" << std::endl;
     std::exit(EXIT_FAILURE);
 
@@ -138,18 +126,18 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
     std::string log_file_name;
     log_file_name = variable_map[log_file_flag].as<std::string>();
     // Join the log file and the directory
-    fs::path log_file_path = directory_path / fs::path(log_file_name);
+    std::string log_file_path = Utility::filePath(log_file_name, getArgs().workDirectory);
     // truncate the log file.
-    std::fstream log_file(log_file_path.string(), std::fstream::out | std::fstream::trunc);
+    std::fstream log_file(log_file_path, std::fstream::out | std::fstream::trunc);
     if (!log_file) {
 
-      std::cerr << "Cannot open log file (--logFile):" << log_file_path.string() << std::endl;
+      std::cerr << "Cannot open log file (--logFile):" << log_file_path << std::endl;
       std::cerr << MODULE_NAME << " exits" << std::endl;
       std::exit(EXIT_FAILURE);
 
     }
 
-    args_.logFile = log_file_path.string();
+    args_.logFile = log_file_path;
 
   } else { // log file not specified - complain and exit.
 

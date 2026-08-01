@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 # add extra include directories
 include_directories(contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
+                    /usr_local/include
                     /usr/local/include/nlopt
                     /usr/local/include/libhmsbeagle-1  # the beagle mcmc library used by kpl
                     /usr/include/eigen3
@@ -44,23 +45,34 @@ include_directories(contrib/edlib # 3rd party library for fast Levenshtein seque
                     contrib/rapidjson/include # 3rd party Json parser
                     contrib/rapidxml) # 3rd party XML parser
 
-link_directories(/usr/local/lib
+link_directories(/usr/local/lib/boost
                  /usr/local/lib/ncl
-                 /usr/local/lib/boost
-                 /usr/local/lib/libhmsbeagle-1/lib
-                 /usr/local/lib/nlopt)
+                 /usr/local/lib/beagle
+                 /usr/local/lib/nlopt
+                 /usr/local/lib)
 
 
-# Add boost library directories
-set(BOOST_INCLUDEDIR /usr/local/include)
-include_directories(${Boost_INCLUDE_DIRS})
-set(BOOST_LIBRARYDIR /usr/local/lib/boost)
 # Specify only static libraries for portability
+cmake_policy(SET CMP0167 NEW)
+set(CMAKE_PREFIX_PATH /usr/local/lib/boost/cmake)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
+# Disable system directories.
+set(Boost_DEBUG ON)
+set(Boost_VERBOSE ON)
+set(Boost_NO_SYSTEM_PATHS ON)
 # Find the Boost packages used.
-find_package( Boost COMPONENTS filesystem system timer chrono program_options iostreams REQUIRED )
+# Set the cmake behaviour to use newer config-package.
+#set(Boost_DIR /usr/local/lib/boost/cmake)
+#set(BOOST_INCLUDEDIR /usr/local/include/boost)
+#include_directories(${Boost_INCLUDE_DIRS})
+#set(BOOST_LIBRARYDIR /usr/local/lib/boost)
+find_package( Boost REQUIRED COMPONENTS timer chrono program_options iostreams)
+#find_package(Boost CONFIG REQUIRED)
+#message(STATUS "Boost Lib: ${Boost_LIBRARIES}")
+# Add boost library directories
+
 
 # zlib for compressed VCF files.
 find_package(ZLIB)
@@ -136,6 +148,7 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
         kel_thread/kel_workflow_pipeline.h
+        kel_thread/kel_queue_mt_new.h
 )
 
 # The basic I/O library.

@@ -3,10 +3,10 @@
 //
 
 #include "kel_exec_env.h"
+#include "kel_utility.h"
 #include "kpl_strom.h"
 #include "kpl_random.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 
@@ -576,7 +576,7 @@ void kpl::Strom::sample(unsigned iteration, Chain & chain) {
 void kpl::Strom::executeApp() {
 
   std::cout << "Starting..." << std::endl;
-  std::cout << "Current working directory: " << boost::filesystem::current_path() << std::endl;
+  std::cout << "Current working directory: " << Utility::showPath() << std::endl;
 
   try {
 

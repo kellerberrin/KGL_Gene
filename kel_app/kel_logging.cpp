@@ -33,9 +33,9 @@ ExecEnvLogger::~ExecEnvLogger() {
 
 }
 
-void ExecEnvLogger::formatImpl(std::string &&formatted_string, LoggerSeverity severity) noexcept {
+void ExecEnvLogger::formatImpl(const std::string &formatted_string, LoggerSeverity severity) noexcept {
 
-  log_impl_ptr_->formatImpl(std::forward<std::string &&>(formatted_string), severity);
+  log_impl_ptr_->formatImpl(formatted_string, severity);
 
 }
 

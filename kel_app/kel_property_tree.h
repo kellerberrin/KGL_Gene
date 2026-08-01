@@ -34,7 +34,7 @@ public:
   class PropertyImpl;       // Forward declaration of the boost:: properties implementation class.
 
   PropertyTree(); // Defined in implementation file.
-  explicit PropertyTree(const PropertyTree&);
+  PropertyTree(const PropertyTree&);
   explicit PropertyTree(const PropertyImpl&);
 
   ~PropertyTree(); // Defined in implementation file.

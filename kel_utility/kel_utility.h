@@ -11,6 +11,8 @@
 #include <optional>
 #include <functional>
 #include <cstdint>
+#include <cctype>
+
 
 
 namespace kellerberrin {   //  organization level namespace
@@ -27,6 +29,7 @@ public:
 
   [[nodiscard]] static std::string filePath(const std::string& file_name); // Input is "path/file.ext" function returns "path".
   [[nodiscard]] static std::string filePath(const std::string& file_name, const std::string& path); // Utility to concatenate "path/file.ext".
+  [[nodiscard]] static std::string showPath(); // Utility to return a string with the current path plus file name.
   [[nodiscard]] static std::string appendPath(const std::string& sub_directory, const std::string& path); // Utility to append subdirectory "path/sub_dir" (same as above).
   [[nodiscard]] static bool fileExists(const std::string& file_path); // Check that a file exists at the file path
   [[nodiscard]] static bool fileExistsCreate(const std::string& file_path); // Check that a file exists at the file path, creates zero sized file if not.
@@ -41,12 +44,13 @@ public:
   [[nodiscard]] static std::string toupper(const std::string& s); // Covert to upper case.
   [[nodiscard]] static std::string trimAllWhiteSpace(const std::string &s); // Trim any whitespace in a string
   [[nodiscard]] static std::string trimEndWhiteSpace(const std::string &s); // Only trim whitespace at either end of the string.
+  [[nodiscard]] static std::string trimLeadingWhiteSpace(const std::string &s); // Only trim whitespace at beginning of the string.
   [[nodiscard]] static std::string trimAllChar(const std::string &s, char nc); // Returns a string with all nc char removed.
   [[nodiscard]] static std::string findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace);
   [[nodiscard]] static std::vector<std::string_view> viewTokenizer(const std::string_view& str_view, char delim); // Tokenize a string using delimiter chars, return std::string_view tokens.
   [[nodiscard]] static std::vector<std::string> charTokenizer(const std::string_view& str_view, char delim); // Tokenize a string using delimiter chars, return std::string tokens.
-  // Split string on encountering char. Default version splits on first whitespace,
-  [[nodiscard]] static std::pair<std::string, std::string> firstSplit(const std::string& source, bool(* char_delim_fn)(char c) = [](char c)->bool { return std::isspace(c) != 0; });
+  // Split string on encountering a specific char. Default version splits on first whitespace,
+  [[nodiscard]] static std::pair<std::string, std::string> firstSplitChar(const std::string_view& source, bool(* char_delim_fn)(char c) = [](char c)->bool { return std::isspace(static_cast<unsigned char>(c)) != 0; });
   [[nodiscard]] static std::pair<double, double> process_mem_usage(); // pair.first is process vm_usage, pair.second is resident memory set.
   [[nodiscard]] static std::pair<double, double> process_time_usage(); // pair.first is system CPU time usage (seconds), pair.second is user CPU time usage (seconds).
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.

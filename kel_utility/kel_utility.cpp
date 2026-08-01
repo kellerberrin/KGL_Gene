@@ -37,13 +37,20 @@ std::string kel::Utility::filePath(const std::string& file_name, const std::stri
 
 }
 
+// Utility to return a string with the current path plus file name, "path/file".
+std::string kel::Utility::showPath() {
+
+  return fs::current_path().string();
+
+}
+
 // Utility to append subdirectory "path/sub_dir" (same as above).
 std::string kel::Utility::appendPath(const std::string& sub_directory, const std::string& path) { return filePath(sub_directory, path); }
 
 // Check that a file exists at the file path.
 bool kel::Utility::fileExists(const std::string& file_path) {
 
-  bool file_exists = fs::exists(fs::path(file_path));
+  bool file_exists = fs::is_regular_file(fs::path(file_path));
   return file_exists;
 
 }
@@ -81,7 +88,7 @@ bool kel::Utility::directoryRenew(const std::string& path) {
 // Check that the directory exists at the specified path
 bool kel::Utility::directoryExists(const std::string& path) {
 
-  return fileExists(path);
+  return fs::is_directory(fs::path(path));
 
 }
 
@@ -98,9 +105,18 @@ bool kel::Utility::createDirectory(const std::string& path) {
 }
 
 // Recursively delete the contents of a directory and then the directory.
-bool kel::Utility::deleteDirectory(const std::string& path) {
+bool kel::Utility::deleteDirectory(const std::string& path_string) {
 
-  return fs::remove_all(fs::path(path));
+  fs::path fs_path(path_string);
+  if (directoryExists(fs_path)) {
+
+    return fs::remove_all(fs_path);
+
+  } else {
+
+    return false;
+
+  }
 
 }
 
@@ -241,6 +257,36 @@ std::string kel::Utility::trimEndWhiteSpace(const std::string &s) {
 }
 
 
+// Only trim whitespace at the beginning of the string.
+std::string kel::Utility::trimLeadingWhiteSpace(const std::string &s) {
+
+  std::string start_trimmed_string;
+
+  auto it = s.begin();
+  while (it != s.end()) {
+
+    if (not std::isspace(*it)) {
+
+      break;
+
+    }
+
+    ++it;
+
+  }
+
+  while(it != s.end()) {
+
+    start_trimmed_string.push_back(*it);
+    ++it;
+
+  }
+
+  return start_trimmed_string;
+
+}
+
+
 std::string kel::Utility::findAndReplaceAll(const std::string& source, const std::string& search, const std::string& replace)
 {
 
@@ -312,7 +358,7 @@ std::vector<std::string> kel::Utility::charTokenizer(const std::string_view& str
 
 
 // Split string on encountering char. Default version splits on first whitespace
-std::pair<std::string, std::string> kel::Utility::firstSplit(const std::string& source, bool(* char_delim_fn)(char c)) {
+std::pair<std::string, std::string> kel::Utility::firstSplitChar(const std::string_view& source, bool(* char_delim_fn)(char c)) {
 
   std::string first;
   std::string second;

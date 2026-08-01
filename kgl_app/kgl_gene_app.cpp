@@ -1,11 +1,12 @@
+
 //
 // Created by kellerberrin on 10/11/17.
 //
 
+#include "kel_utility.h"
 #include "kgl_gene_app.h"
 #include "kgl_properties.h"
 #include "kgl_package.h"
-
 
 namespace kgl = kellerberrin::genome;
 
@@ -17,10 +18,10 @@ void kgl::GeneExecEnv::executeApp() {
   const CmdLineArgs &args = getArgs();
 
  // Read the XML program options.
-  runtime_options_.setWorkDirectory(args_.workDirectory);
-  if (not runtime_options_.readProperties(args_.options_file)) {
+  runtime_options_.setWorkDirectory(args.workDirectory);
+  if (not runtime_options_.readProperties(args.options_file)) {
 
-      std::string options_file_path = Utility::filePath(args_.options_file, args_.workDirectory);
+      std::string options_file_path = Utility::filePath(args.options_file, args.workDirectory);
       ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
 
   }

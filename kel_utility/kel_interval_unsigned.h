@@ -22,7 +22,7 @@ namespace kellerberrin {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using OpenRightUnsigned = OpenRightInterval<uint64_t, int64_t>;
+using OpenRightUnsigned = OpenRightInterval<uint64_t>;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ public:
   [[nodiscard]] bool containsInterval(const OpenRightUnsigned &interval) const;
   // Returns a vector (possibly empty) of set intervals that intersect the argument interval.
   [[nodiscard]] std::vector<OpenRightUnsigned> findIntersectsInterval(const OpenRightUnsigned &interval) const;
-  // Returns a bool the interval and set intersect.
+  // Returns a bool if the interval and set of intervals intersect.
   [[nodiscard]] bool intersectsInterval(const OpenRightUnsigned &interval) const { return not findIntersectsInterval(interval).empty(); }
   // Returns the interval unions between this set and the argument set.
   // Intervals are modified/extended as necessary for a disjoint interval minimal union.
