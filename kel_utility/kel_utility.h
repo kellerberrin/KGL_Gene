@@ -4,7 +4,8 @@
 #ifndef KEL_UTILITY_H
 #define KEL_UTILITY_H
 
-#include "kel_string_hash.h"
+#include "kel_string_crc32hash.h"
+#include "kel_string_crc64hash.h"
 
 #include <string>
 #include <vector>
@@ -55,8 +56,11 @@ public:
   [[nodiscard]] static std::pair<double, double> process_time_usage(); // pair.first is system CPU time usage (seconds), pair.second is user CPU time usage (seconds).
   [[nodiscard]] static std::pair<double, double> process_mem_usage2(); // pair.first is process vm_usage, pair.second is physical memory used.
   [[nodiscard]] static std::pair<double, double> stddev(const std::vector<double> &vec); // mean = pair.first,  sample stdev = pair.second
-  // Constexpr hash algorithm for a string, can be used to hash constant strings in 'switch' statements.
-  [[nodiscard]] constexpr static uint32_t hash(const std::string_view& sv) { return UtilityStringHash::crcStringHash(sv); }
+
+  // Constexpr crc32 hash algorithm for a string. Due to high collision risk do not use in 'switch' statements.
+  [[nodiscard]] static constexpr uint32_t hash32(const std::string_view& sv) { return UtilityStringHash::crc32StringHash(sv); }
+  // Constexpr crc64 hash algorithm for a string, can be used to hash constant strings in 'switch' statements.
+  [[nodiscard]] static constexpr uint64_t hash64(const std::string_view& sv) { return UtilityStringHash64::crc64StringHash(sv); }
 
 private:
 

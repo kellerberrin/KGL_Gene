@@ -2,7 +2,7 @@
 // Created by kellerberrin on 3/7/20.
 //
 
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
 #include "kga_analysis_inbreed.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"

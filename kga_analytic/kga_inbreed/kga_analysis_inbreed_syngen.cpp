@@ -3,8 +3,9 @@
 //
 
 #include "kga_analysis_inbreed_syngen.h"
+#include "kel_discrete_distributions.h"
+#include "kel_continuous_distributions.h"
 
-#include "kel_distribution.h"
 
 #include <sstream>
 #include <iomanip>

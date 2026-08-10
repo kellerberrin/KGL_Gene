@@ -24,53 +24,53 @@ std::shared_ptr<const kgl::AnalysisResources> kgl::ExecutePackage::loadRuntimeRe
 
   for (auto const& [resource_type, resource_ident]  : package.resourceList()) {
 
-    switch (Utility::hash(resource_type)) {
+    switch (Utility::hash64(resource_type)) {
 
-      case Utility::hash(ResourceProperties::GENOME_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::GENOME_RESOURCE_ID_):
         loadGenomeResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::ONTOLOGY_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::ONTOLOGY_RESOURCE_ID_):
         loadOntologyResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::GENE_NOMENCLATURE_RESOURCE_ID_):
         loadHsGeneNomenclatureResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::GENEALOGY_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::GENEALOGY_RESOURCE_ID_):
         loadHsGenomeGenealogyResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::GENOMEAUX_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::GENOMEAUX_RESOURCE_ID_):
         loadHsGenomeAuxResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::CITATION_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::CITATION_RESOURCE_ID_):
         loadCitationResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::ENTREZ_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::ENTREZ_RESOURCE_ID_):
         loadEntrezGeneResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PUBMED_API_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::PUBMED_API_RESOURCE_ID_):
         loadPubmedAPIResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PF7SAMPLE_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::PF7SAMPLE_RESOURCE_ID_):
         loadPf7SampleResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PF7FWS_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::PF7FWS_RESOURCE_ID_):
         loadPf7FwsResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PF7DISTANCE_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::PF7DISTANCE_RESOURCE_ID_):
         loadPf7DistanceResource(resource_type, resource_ident, resource_ptr);
         break;
 
-      case Utility::hash(ResourceProperties::PF3K_COI_RESOURCE_ID_):
+      case Utility::hash64(ResourceProperties::PF3K_COI_RESOURCE_ID_):
         loadPf3KCOIResource(resource_type, resource_ident, resource_ptr);
         break;
 

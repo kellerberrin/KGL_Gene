@@ -26,9 +26,9 @@ ExecEnvLogger::ExecEnvLogger(const std::string &module, const std::string &log_f
 ExecEnvLogger::~ExecEnvLogger() {
 
   formatImpl(std::format("Message summary; INFO: {}, WARN: {}, ERROR: {}",
-                         info_message_count_,
-                         warn_message_count_,
-                         error_message_count_), LoggerSeverity::INFO);
+                         info_message_count_.load(std::memory_order_relaxed),
+                         warn_message_count_.load(std::memory_order_relaxed),
+                         error_message_count_.load(std::memory_order_relaxed)), LoggerSeverity::INFO);
   log_impl_ptr_ = nullptr;
 
 }
@@ -50,37 +50,26 @@ void ExecEnvLogger::locationImpl(const LogFormatLocation &format_location,
 bool ExecEnvLogger::warnMessageLimits() noexcept {
 
   ++warn_message_count_;
-  if (warn_message_count_ == max_warn_messages_) {
+  if (warn_message_count_ == max_warn_messages_ and max_warn_messages_ != UNBOUNDED_MESSAGES) {
 
-    formatImpl(std::format("Maximum warning messages: {} issued.", max_warn_messages_), LoggerSeverity::WARN);
+    formatImpl(std::format("Maximum warning messages: {} issued.",
+                                         max_warn_messages_.load(std::memory_order_relaxed)),
+                                         LoggerSeverity::WARN);
     formatImpl(std::format("Further warning messages will be suppressed."), LoggerSeverity::WARN);
 
   }
 
-  if (max_warn_messages_ == 0 or warn_message_count_ <= max_warn_messages_) {
-
-    return true;
-
-  }
-
-  return false;
+  return max_warn_messages_ == UNBOUNDED_MESSAGES or warn_message_count_ <= max_warn_messages_;
 
 }
 
 bool ExecEnvLogger::errorMessageLimits() noexcept {
 
   ++error_message_count_;
-  if (max_error_messages_ > 0 and error_message_count_ > max_error_messages_) {
-
-    formatImpl(std::format("Maximum error messages: {} issued.", max_error_messages_), LoggerSeverity::ERROR);
-    formatImpl(std::format("Forced Program exit. May terminate abnormally."), LoggerSeverity::ERROR);
-    std::exit(EXIT_FAILURE);
-
-  }
-
-  return true;
+  return max_error_messages_ == UNBOUNDED_MESSAGES or error_message_count_ <= max_error_messages_;
 
 }
+
 
 } // End namespace
 

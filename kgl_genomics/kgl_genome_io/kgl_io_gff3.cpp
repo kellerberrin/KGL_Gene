@@ -243,31 +243,31 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
 
   // Create feature objects according to type.
   // Switch on hashed type strings for convenience.
-  switch(Utility::hash(gff_record.type())) {
+  switch(Utility::hash64(gff_record.type())) {
 
-    case Utility::hash(GeneFeature::CODING_GENE_):
-    case Utility::hash(GeneFeature::PROTEIN_CODING_GENE_): // Alias GFF types for a Gene.
-    case Utility::hash(GeneFeature::NCRNA_GENE_):
+    case Utility::hash64(GeneFeature::CODING_GENE_):
+    case Utility::hash64(GeneFeature::PROTEIN_CODING_GENE_): // Alias GFF types for a Gene.
+    case Utility::hash64(GeneFeature::NCRNA_GENE_):
       feature_ptr = std::make_shared<GeneFeature>(feature_id, gff_record.type(), contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::CDS_TYPE_):
+    case Utility::hash64(Feature::CDS_TYPE_):
       feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::CDS_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::MRNA_TYPE_):
+    case Utility::hash64(Feature::MRNA_TYPE_):
       feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::MRNA_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::UTR5_TYPE_):
+    case Utility::hash64(Feature::UTR5_TYPE_):
       feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::UTR5_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::UTR3_TYPE_):
+    case Utility::hash64(Feature::UTR3_TYPE_):
       feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::UTR3_TYPE_, contig_opt.value(), sequence);
       break;
 
-    case Utility::hash(Feature::TSS_TYPE_):
+    case Utility::hash64(Feature::TSS_TYPE_):
       feature_ptr = std::make_shared<Feature>(feature_id, gff_record.type(), Feature::TSS_TYPE_, contig_opt.value(), sequence);
       break;
 

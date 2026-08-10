@@ -9,7 +9,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <stdlib.h>
 
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
 #include "kol_TermAnnotation.h"
 #include "kol_GoGraph.h"
 #include "kol_SetUtilities.h"

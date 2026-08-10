@@ -4,6 +4,8 @@
 
 #include <kol_library.h>
 #include "kol_test.h"
+#include "kel_discrete_distributions.h"
+
 #include "contrib/kol_GoGraphImpl.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>

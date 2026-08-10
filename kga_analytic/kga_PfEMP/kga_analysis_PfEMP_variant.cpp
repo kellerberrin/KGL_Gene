@@ -475,7 +475,7 @@ size_t kga::GenotypeAnalysis::genotypeHash(const std::shared_ptr<const ContigDB>
   // A bit dodgy, there may be hash collisions. This should be tested.
   for (auto const& [hash_str, variant_ptr] : genotype_variants.unique_genotype_variants_) {
 
-    geno_hash += Utility::hash(hash_str);
+    geno_hash += Utility::hash64(hash_str);
 
   }
 

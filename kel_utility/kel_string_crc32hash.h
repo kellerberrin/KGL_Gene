@@ -65,7 +65,7 @@ public:
 
   // Uses the crc_table algorithm to hash a string.
   // This fn is constexpr and can be used to hash constant strings in 'switch' statements.
-  [[nodiscard]] constexpr static uint32_t crcStringHash(const std::string_view& sv) {
+  [[nodiscard]] constexpr static uint32_t crc32StringHash(const std::string_view& sv) {
 
     uint32_t crc_hash{ 0xFFFFFFFF };
     for (unsigned char c : sv) {

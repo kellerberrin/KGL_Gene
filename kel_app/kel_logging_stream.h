@@ -6,8 +6,6 @@
 #define KEL_LOGGING_STREAM_H
 
 
-
-
 #include "kel_logging.h"
 
 #include <fstream>

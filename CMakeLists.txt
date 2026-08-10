@@ -121,8 +121,8 @@ set(RUNTIME_SOURCE_FILES
 )
 
 set(MATHEMATICAL_SOURCE_FILES
-        kel_math/kel_distribution.h
-        kel_math/kel_distribution.cpp
+        kel_math/kel_continuous_distributions.h
+        kel_math/kel_distributions.cpp
         kel_math/kel_percentile.h
         kel_math/kel_optimize.cpp
         kel_math/kel_optimize.h)
@@ -393,7 +393,10 @@ set(EDLIB_SOURCE_FILES
         contrib/rapidxml/rapidxml_utils.h
         kel_utility/kel_search.cpp
         kel_utility/kel_search.h
-        kel_utility/kel_string_hash.h
+        kel_utility/kel_string_crc32hash.h
+        kel_math/kel_entropy_source.h
+        kel_math/kel_discrete_distributions.h
+        kel_utility/kel_string_crc64hash.h
 )
 
 # Gene ontology library

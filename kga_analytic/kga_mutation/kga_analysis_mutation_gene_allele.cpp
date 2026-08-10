@@ -6,7 +6,7 @@
 #include "kgl_variant_db_freq.h"
 #include "kgl_variant_sort.h"
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
 
 #include <fstream>
 

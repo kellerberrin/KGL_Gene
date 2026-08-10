@@ -3,6 +3,7 @@
 //
 
 
+#include "kel_discrete_distributions.h"
 #include "kol_OntologyTypes.h"
 #include "kol_EnrichmentTools.h"
 #include "contrib/kol_GoGraphImpl.h"

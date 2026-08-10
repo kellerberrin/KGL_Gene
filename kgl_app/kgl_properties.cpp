@@ -204,7 +204,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
   if (not property_tree_ptr_->getPropertyTreeVector(key, property_tree_vector)) {
 
     ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Analysis specified (NULL analysis available)");
-    return analysis_map; // return empty map.
+    return {}; // return empty map.
 
   }
 
@@ -227,7 +227,7 @@ kgl::RuntimeAnalysisMap kgl::RuntimeProperties::getAnalysisMap() const {
     if (not sub_tree.second.getPropertyTreeVector(key, parameter_tree_vector)) {
 
       ExecEnv::log().info("RuntimeProperties::getAnalysisMap, no Parameters Specified for Analysis: {}", analysis_ident);
-      return analysis_map; // return empty map.
+      return {}; // return empty map.
 
     }
 

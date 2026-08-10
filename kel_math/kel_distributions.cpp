@@ -3,7 +3,8 @@
 //
 
 #include "kel_exec_env.h"
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
+#include "kel_discrete_distributions.h"
 
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/binomial.hpp>
@@ -38,19 +39,19 @@ double kel::NormalDistribution::pdf(double x, double mean, double std_dev) {
 
 double kel::GammaDistribution::pdf(double x) const {
 
-  return bm::pdf(bm::gamma_distribution<>(_a, _b), x);
+  return bm::pdf(bm::gamma_distribution<>(shape_, scale_), x);
 
 }
 
 double kel::GammaDistribution::cdf(double x) const {
 
-  return bm::cdf(bm::gamma_distribution<>(_a, _b), x);
+  return bm::cdf(bm::gamma_distribution<>(shape_, scale_), x);
 
 }
 
 double kel::GammaDistribution::quantile(double p) const {
 
-  return bm::quantile(bm::gamma_distribution<>(_a, _b), p);
+  return bm::quantile(bm::gamma_distribution<>(shape_, scale_), p);
 
 }
 

@@ -5,7 +5,7 @@
 #include "kga_analysis_inbreed_locus.h"
 #include "kgl_variant_filter_db_variant.h"
 #include "kga_analysis_inbreed_calc.h"
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
 
 #include <fstream>
 #include <algorithm>

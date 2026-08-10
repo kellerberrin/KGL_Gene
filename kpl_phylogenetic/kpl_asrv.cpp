@@ -4,7 +4,7 @@
 
 #include "kpl_asrv.h"
 
-#include "kel_distribution.h"
+#include "kel_continuous_distributions.h"
 
 #include <boost/math/distributions/gamma.hpp>
 
