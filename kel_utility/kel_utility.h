@@ -62,6 +62,7 @@ public:
   // Constexpr crc64 hash algorithm for a string, can be used to hash constant strings in 'switch' statements.
   [[nodiscard]] static constexpr uint64_t hash64(const std::string_view& sv) { return UtilityStringHash64::crc64StringHash(sv); }
 
+
 private:
 
 };

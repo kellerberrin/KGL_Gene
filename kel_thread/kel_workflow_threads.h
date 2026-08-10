@@ -27,7 +27,7 @@ concept move_constructable_variadic = std::conjunction_v<std::is_move_constructi
 class WorkflowThreads
 {
 
-  using ThreadFunc = std::move_only_function<void(void)>; // Function args can be moved (std::unique_ptr).
+  using ThreadFunc = std::move_only_function<void()>; // Function args can be moved (std::unique_ptr).
   using ThreadFuncPtr = std::unique_ptr<ThreadFunc>; // Functions can be heterogeneous (type erasure).
 
 public:
