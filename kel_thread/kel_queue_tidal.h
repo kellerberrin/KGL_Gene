@@ -64,6 +64,7 @@ public:
   explicit QueueTidal( size_t high_tide = TIDAL_QUEUE_DEFAULT_HIGH_TIDE
                        , size_t low_tide = TIDAL_QUEUE_DEFAULT_LOW_TIDE) : high_tide_(high_tide), low_tide_(low_tide) {
 
+    validateTide();
     monitor_ptr_ = std::make_unique<MonitorTidal<T>>(this);
 
   }
@@ -74,6 +75,7 @@ public:
               , std::string queue_name
               , size_t sample_frequency): high_tide_(high_tide), low_tide_(low_tide) {
 
+    validateTide();
     monitor_ptr_ = std::make_unique<MonitorTidal<T>>(this);
     monitor_ptr_->launchStats(sample_frequency, queue_name);
 
@@ -135,16 +137,15 @@ public:
 
   void clear() {
 
-    { // Mutex
-
+    {
       std::scoped_lock<std::mutex> lock(queue_mutex_);
       queue_ = {};
       queue_size_ = 0;
       queue_tidal_state_ = QueueTidalState::FLOOD_TIDE;
+    }
 
-    } // ~Mutex
-
-    tide_cond_.notify_one();
+    tide_cond_.notify_all();
+    empty_cond_.notify_all();
 
   }
 
@@ -162,8 +163,8 @@ public:
 private:
 
   // Tidal limits.
-  const size_t high_tide_;
-  const size_t low_tide_;
+  size_t high_tide_;
+  size_t low_tide_;
 
   // Actual queue implementation.
   std::queue<T> queue_;
@@ -184,6 +185,25 @@ private:
   // it also (optionally) monitors for a 'stalled' queue where there is a possible deadlock condition and the queue is inactive.
   // Held in a pointer for explicit object lifetime.
   std::unique_ptr<MonitorTidal<T>> monitor_ptr_;
+
+  /// Ensures that the tidal parameters are valid. Invalid combinations (high tide <= low tide
+  /// or zero high tide) would cause producers to deadlock or the queue to oscillate.
+  void validateTide() {
+
+    if (high_tide_ == 0 or low_tide_ == 0 or high_tide_ <= low_tide_) {
+
+      // Invalid parameters would make the tidal queue unusable. Log and fall back to safe
+      // defaults so that the queue continues to function.
+      ExecEnv::log().warn( "QueueTidal received invalid tide parameters (high: {}, low: {}); using defaults (high: {}, low: {})."
+                         , high_tide_, low_tide_, TIDAL_QUEUE_DEFAULT_HIGH_TIDE, TIDAL_QUEUE_DEFAULT_LOW_TIDE);
+
+      // Since the members are not const, we can safely apply the validated defaults here.
+      high_tide_ = TIDAL_QUEUE_DEFAULT_HIGH_TIDE;
+      low_tide_ = TIDAL_QUEUE_DEFAULT_LOW_TIDE;
+
+    }
+
+  }
 
 
 };

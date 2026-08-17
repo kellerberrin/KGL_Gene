@@ -96,10 +96,13 @@ public:
   // Unconditionally empty the queue.
   void clear() {
 
-    std::scoped_lock<std::mutex> lock(data_mutex_);
+    {
+      std::scoped_lock<std::mutex> lock(data_mutex_);
+      data_queue_ = {};
+      size_ = 0;
+    }
 
-    data_queue_ = {};
-    size_ = 0;
+    data_cond_.notify_all();
 
   }
 

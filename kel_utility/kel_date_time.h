@@ -5,65 +5,73 @@
 #ifndef KEL_DATE_TIME_H
 #define KEL_DATE_TIME_H
 
+
+#include <chrono>
+#include <compare>
+#include <format>
+#include <locale>
+#include <optional>
+#include <stdexcept>
 #include <string>
-#include <vector>
+#include <string_view>
+
+namespace kellerberrin {
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// General purpose date time class. Implemented using boost::gregorian.
-// How many times in the history of C++ programming has this been recreated? Unnecessary and annoying.
+// General purpose date time class.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-namespace kellerberrin {   //  organization::project level namespace
 
 
 class DateGP {
-
 public:
-
   DateGP() = default;
-  explicit DateGP(const std::string& date); // Must be a valid delimited date e.g. "2020/1/1" or "2001-Feb-28"
-  DateGP(size_t year, size_t month, size_t day); // Must be a valid date, for example DateGP(2001, 2, 29) is an error.
+
+  explicit DateGP(std::string_view date);
+  DateGP(size_t year, size_t month, size_t day);
+
   DateGP(const DateGP&) = default;
+  DateGP& operator=(const DateGP&) = default;
   ~DateGP() = default;
 
-  DateGP& operator=(const DateGP&) = default;
+  void setToday();
+  void setUTCDate();
 
-  void setToday(); // The date object is initialized to the current local (timezone) date.
-  void setUTCDate(); // The date object is initialized to the current UTC (Greenwich) date.
+  // True only if the object actually holds a valid date.
+  [[nodiscard]] bool ok() const noexcept;
+  [[nodiscard]] bool notInitialized() const noexcept { return !ok(); }
 
-  [[nodiscard]] size_t year() const { return year_; }
-  [[nodiscard]] size_t month() const { return month_; }
-  [[nodiscard]] size_t day() const { return day_; }
+  [[nodiscard]] size_t year() const;
+  [[nodiscard]] size_t month() const;
+  [[nodiscard]] size_t day() const;
 
-  [[nodiscard]] std::string text() const; // returned as YYYY-MMM-DD, e.g. "2020-Jan-01"
+  [[nodiscard]] std::string text() const; // "YYYY-bbb-DD", e.g. "2020-Jan-01"
   static constexpr size_t TEXTSIZE_{11};
 
-  [[nodiscard]] std::string year_text() const { return std::to_string(year_); }
-  [[nodiscard]] std::string month_text() const { return std::to_string(month_); }
-  [[nodiscard]] std::string day_text() const { return std::to_string(day_); }
+  [[nodiscard]] std::string year_text() const { return std::to_string(year()); }
+  [[nodiscard]] std::string month_text() const { return std::to_string(month()); }
+  [[nodiscard]] std::string day_text() const { return std::to_string(day()); }
 
-  [[nodiscard]] bool operator<(const DateGP& cmp) const;
-  [[nodiscard]] bool operator==(const DateGP& cmp) const;
-  [[nodiscard]] bool operator!=(const DateGP& cmp) const { return not operator==(cmp); }
-  [[nodiscard]] bool operator>(const DateGP& cmp) const { return not operator<(cmp) and not operator==(cmp); }
-  [[nodiscard]] bool notInitialized() const { return this->operator==(DateGP()); }
+  [[nodiscard]] auto operator<=>(const DateGP&) const = default;
+  [[nodiscard]] bool operator==(const DateGP&) const = default;
 
   [[nodiscard]] static size_t daysDifference(const DateGP& date1, const DateGP& date2);
   [[nodiscard]] static size_t monthsDifference(const DateGP& date1, const DateGP& date2);
 
+  // Non-throwing alternatives for callers that cannot use exceptions.
+  [[nodiscard]] static std::optional<DateGP> tryParse(std::string_view date) noexcept;
+  [[nodiscard]] static std::optional<DateGP> tryCreate(size_t y, size_t m, size_t d) noexcept;
+
 private:
-
-  size_t year_{1901};
-  size_t month_{1};
-  size_t day_{1};
-
+  std::optional<std::chrono::year_month_day> date_;
 };
 
 
-} // namespace
+
+} // namespace kellerberrin
 
 
 #endif // KEL_DATE_TIME_H

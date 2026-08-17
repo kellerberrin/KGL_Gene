@@ -9,56 +9,72 @@
 namespace kel = kellerberrin;
 
 
-std::vector<kel::OpenRightUnsigned> kel::Search::searchView(const std::regex& search_spec, const std::string_view& sequence_view) {
+#include <cstddef>
+#include <regex>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace kel = kellerberrin;
+
+std::vector<kel::OpenRightUnsigned>
+kel::Search::searchView(const std::regex& search_spec, std::string_view sequence_view) {
 
   std::vector<OpenRightUnsigned> search_matches;
 
-  using RegexIter = std::regex_iterator<std::string_view::const_iterator>;
-  RegexIter iter_begin(sequence_view.begin(), sequence_view.end(), search_spec);
-  RegexIter iter_end; // Default constructor creates an end() guard.
-  for (auto iter = iter_begin; iter != iter_end; ++iter) {
+  const char* const first = sequence_view.data();
+  const char* const last  = first + sequence_view.size();
 
-    auto const& match = *iter;
+  using RegexIter = std::cregex_iterator;
+  RegexIter iter_begin(first, last, search_spec);
+  RegexIter iter_end; // Default-constructed end sentinel.
+
+  for (auto iter = iter_begin; iter != iter_end; ++iter) {
+    const auto& match = *iter;
+
     if (match.empty()) {
 
-      ExecEnv::log().warn("Unexpected empty search results for regex");
-      continue;
-
-    }
-    if (match.position() < 0) {
-
-      ExecEnv::log().error("Found -ve position in regex sequence search");
+      ExecEnv::log().warn("Unexpected empty regex match encountered; skipping.");
       continue;
 
     }
 
-    search_matches.emplace_back(match.position(), match.position() + match.length());
+    const auto pos = match.position();
+    const auto len = static_cast<std::size_t>(match.length());
+
+    if (pos < 0) {
+
+      ExecEnv::log().error("Invalid negative regex match position ({}); skipping.", pos);
+      continue;
+
+    }
+
+    const std::size_t start = static_cast<std::size_t>(pos);
+    search_matches.emplace_back(start, start + len);
 
   }
-
 
   return search_matches;
 
 }
 
-
-std::vector<kel::OpenRightUnsigned> kel::Search::searchView(const std::string_view& search_spec, const std::string_view& sequence_view) {
+std::vector<kel::OpenRightUnsigned>
+kel::Search::searchView(std::string_view search_spec, std::string_view sequence_view) {
 
   try {
-
-    auto regex_query = std::regex(std::string(search_spec), std::regex::icase);
-    auto search_results = searchView(regex_query, sequence_view);
-    return search_results;
+    // Case-insensitive search by default.
+    const std::regex regex_query{std::string(search_spec), std::regex::icase};
+    return searchView(regex_query, sequence_view);
 
   } catch (const std::regex_error& e) {
 
-  ExecEnv::log().error("Invalid regex text: {}, error: {}", search_spec, e.what());
-  return {};
+    ExecEnv::log().error("Invalid regex text '{}': {}", search_spec, e.what());
+    return {};
 
   } catch (const std::exception& e) {
 
-  ExecEnv::log().error("Unexpected error searching sequence for regex text: {}, error: {}", search_spec, e.what());
-  return {};
+    ExecEnv::log().error("Unexpected error searching with regex '{}': {}", search_spec, e.what());
+    return {};
 
   }
 

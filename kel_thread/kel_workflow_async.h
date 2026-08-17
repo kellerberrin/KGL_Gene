@@ -11,6 +11,8 @@
 #include <vector>
 #include <thread>
 #include <optional>
+#include <atomic>
+#include <mutex>
 
 namespace kellerberrin {  //  organization level namespace
 
@@ -57,6 +59,8 @@ public:
   bool activateWorkflow(size_t threads, F&& f, Args&&... args)
   {
 
+    std::scoped_lock lock{activation_mutex_};
+
     if (active_threads_ > 0) {
 
       return false;
@@ -102,6 +106,7 @@ private:
   std::unique_ptr<Queue<QueuedObj>> queue_ptr_;
   std::vector<std::jthread> threads_;
   std::atomic<uint32_t> active_threads_{0};
+  std::mutex activation_mutex_;
   WorkProc workflow_callback_;
 
   void queueThreads(size_t threads)
@@ -139,7 +144,11 @@ private:
           // This is guaranteed to be the last active thread.
           // Call the workflow function with the stop token.
           // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
-          workflow_callback_(std::move(work_item));
+          try {
+            workflow_callback_(std::move(work_item));
+          } catch (...) {
+            // Swallow exceptions during stop-token processing to keep shutdown safe.
+          }
 
         }
 
@@ -149,7 +158,11 @@ private:
       else {
 
         // The thread performs work with the dequeued work item.
-        workflow_callback_(std::move(work_item));
+        try {
+          workflow_callback_(std::move(work_item));
+        } catch (...) {
+          // Swallow user-callback exceptions to keep worker threads alive.
+        }
 
       }
 

@@ -6,6 +6,7 @@
 
 #include "kel_exec_env.h"
 
+#include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -34,7 +35,7 @@ public:
   ~MonitorMtSafe() {
 
     stopStats();
-    if (queue_samples_ > MIN_SAMPLES_) {
+    if (queue_samples_.load() > MIN_SAMPLES_) {
 
       displayStats();
 
@@ -44,8 +45,8 @@ public:
 
 
   [[nodiscard]] size_t sampleFrequency() const { return sample_milliseconds_; }
-  [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
-  [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
+  [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_.load(); }
+  [[nodiscard]] size_t queueSamples() const { return queue_samples_.load(); }
 
   void launchStats( size_t sample_milliseconds
                   , std::string queue_name = DEFAULT_QUEUE_NAME
@@ -63,7 +64,8 @@ public:
 
     if (sample_milliseconds_ != DISABLE_QUEUE_MONITOR) {
 
-      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorMtSafe::SampleQueue, this));
+      terminate_flag_ = false;
+      stats_thread_ptr_ = std::make_unique<std::thread>(&MonitorMtSafe::SampleQueue, this);
       ExecEnv::log().info("Sampling queue: {}, every milliseconds: {}", queue_name_, sample_milliseconds_);
 
     }
@@ -87,12 +89,12 @@ public:
 
     if (terminate_flag_) {
 
-      ExecEnv::log().info("Monitored Queue: {}, monitor is not active, no queue statistics available.");
+      ExecEnv::log().info("Monitored Queue: {}, monitor is not active, no queue statistics available.", queue_name_);
 
-    } else if (queue_samples_ < MIN_SAMPLES_) {
+    } else if (queue_samples_.load() < MIN_SAMPLES_) {
 
       ExecEnv::log().info( "Monitored Queue: {}, Sample Interval (ms): {}, Samples: {} (min {}); Insufficient for reliable statistics."
-                         , queue_name_, sample_milliseconds_, queue_samples_, MIN_SAMPLES_);
+                         , queue_name_, sample_milliseconds_, queue_samples_.load(), MIN_SAMPLES_);
 
     } else {
 
@@ -117,9 +119,9 @@ private:
   std::mutex stats_mutex_;
   std::condition_variable stats_condition_;
   std::atomic<bool> terminate_flag_{false};
-  size_t previous_activity_{0};
-  size_t cumulative_queue_size_{0};
-  size_t queue_samples_{0};
+  std::atomic<size_t> previous_activity_{0};
+  std::atomic<size_t> cumulative_queue_size_{0};
+  std::atomic<size_t> queue_samples_{0};
   size_t previous_count_{0};
 
   // Somewhat arbitrary but should work in most cases.
@@ -129,9 +131,10 @@ private:
 
   [[nodiscard]] double averageSize() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(cumulative_queue_size_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(cumulative_queue_size_.load()) / static_cast<double>(samples);
 
     }
 
@@ -142,7 +145,7 @@ private:
   void displayStats() const {
 
     ExecEnv::log().info("Monitored Queue: {}, Sample Interval (ms): {}, Samples: {}; Average Queue Size: {}",
-                        queue_name_, sample_milliseconds_, queue_samples_, static_cast<size_t>(averageSize()));
+                        queue_name_, sample_milliseconds_, queue_samples_.load(), static_cast<size_t>(averageSize()));
 
   }
 
@@ -162,7 +165,7 @@ private:
       cumulative_queue_size_ += sample_size;
 
       // Check for stalled queues (deadlock).
-      if (monitor_stalled_ and previous_activity_ == sample_activity) {
+      if (monitor_stalled_ and previous_activity_.load() == sample_activity) {
 
         if (not queue_ptr_->empty()) {
 
@@ -172,7 +175,7 @@ private:
         if (previous_count_ >= WARN_INACTIVE_COUNT_) {
 
           ExecEnv::log().warn( "Monitor Queue: {} Size: {} Stalled (no consumer activity) for milliseconds: {}"
-                             , queue_name_, sample_size, (queue_samples_ * sample_milliseconds_));
+                             , queue_name_, sample_size, (queue_samples_.load() * sample_milliseconds_));
 
         }
 
@@ -214,7 +217,7 @@ public:
   ~MonitorTidal() {
 
     stopStats();
-    if (queue_samples_ > MIN_SAMPLES_) {
+    if (queue_samples_.load() > MIN_SAMPLES_) {
 
       displayStats();
 
@@ -225,9 +228,9 @@ public:
 
   [[nodiscard]] size_t sampleFrequency() const { return sample_milliseconds_; }
 
-  [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_; }
+  [[nodiscard]] size_t cumulativeQueueSize() const { return cumulative_queue_size_.load(); }
 
-  [[nodiscard]] size_t queueSamples() const { return queue_samples_; }
+  [[nodiscard]] size_t queueSamples() const { return queue_samples_.load(); }
 
   void launchStats(  size_t sample_milliseconds
                    , std::string queue_name = TIDAL_QUEUE_DEFAULT_NAME
@@ -246,7 +249,8 @@ public:
 
     if (sample_milliseconds_ != TIDAL_QUEUE_MONITOR_DISABLE) {
 
-      stats_thread_ptr_ = std::move(std::make_unique<std::thread>(&MonitorTidal::SampleQueue, this));
+      terminate_flag_ = false;
+      stats_thread_ptr_ = std::make_unique<std::thread>(&MonitorTidal::SampleQueue, this);
       ExecEnv::log().info("Sampling queue: {}; every milliseconds: {}", queue_name_, sample_milliseconds_);
 
     }
@@ -272,10 +276,10 @@ public:
 
       ExecEnv::log().info("Queue monitor is not active, no queue statistics available.");
 
-    } else if (queue_samples_ < MIN_SAMPLES_) {
+    } else if (queue_samples_.load() < MIN_SAMPLES_) {
 
       ExecEnv::log().info( "Monitored Queue: {}, Sample Interval (ms): {}, Samples: {} (min {}); Insufficient for reliable statistics."
-          , queue_name_, sample_milliseconds_, queue_samples_, MIN_SAMPLES_);
+          , queue_name_, sample_milliseconds_, queue_samples_.load(), MIN_SAMPLES_);
 
     } else {
 
@@ -298,14 +302,14 @@ private:
   std::mutex stats_mutex_;
   std::condition_variable stats_condition_;
   std::atomic<bool> terminate_flag_{false};
-  size_t low_tide_count_{0};
-  size_t high_tide_count_{0};
-  size_t inter_tidal_count_{0};
-  size_t empty_count_{0};
+  std::atomic<size_t> low_tide_count_{0};
+  std::atomic<size_t> high_tide_count_{0};
+  std::atomic<size_t> inter_tidal_count_{0};
+  std::atomic<size_t> empty_count_{0};
   size_t previous_count_{0};
-  size_t previous_activity_{0};
-  size_t cumulative_queue_size_{0};
-  size_t queue_samples_{0};
+  std::atomic<size_t> previous_activity_{0};
+  std::atomic<size_t> cumulative_queue_size_{0};
+  std::atomic<size_t> queue_samples_{0};
 
   // Somewhat arbitrary but should work in most cases.
   constexpr static const size_t MIN_SAMPLES_{100};
@@ -314,9 +318,10 @@ private:
 
   [[nodiscard]] double averageHighTide() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(high_tide_count_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(high_tide_count_.load()) / static_cast<double>(samples);
 
     }
 
@@ -326,9 +331,10 @@ private:
 
   [[nodiscard]] double averageLowTide() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(low_tide_count_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(low_tide_count_.load()) / static_cast<double>(samples);
 
     }
 
@@ -338,9 +344,10 @@ private:
 
   [[nodiscard]] double ebbingTide() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(inter_tidal_count_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(inter_tidal_count_.load()) / static_cast<double>(samples);
 
     }
 
@@ -352,9 +359,10 @@ private:
 
   [[nodiscard]] double averageEmpty() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(empty_count_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(empty_count_.load()) / static_cast<double>(samples);
 
     }
 
@@ -364,9 +372,10 @@ private:
 
   [[nodiscard]] double averageSize() const {
 
-    if (queue_samples_ > 0) {
+    const size_t samples = queue_samples_.load();
+    if (samples > 0) {
 
-      return static_cast<double>(cumulative_queue_size_) / static_cast<double>(queue_samples_);
+      return static_cast<double>(cumulative_queue_size_.load()) / static_cast<double>(samples);
 
     }
 
@@ -374,7 +383,17 @@ private:
 
   }
 
-  [[nodiscard]] double avUtilization() const { return (averageSize() * 100.0) / static_cast<double>(queue_ptr_->highTide()); }
+  [[nodiscard]] double avUtilization() const {
+
+    const size_t high_tide = queue_ptr_->highTide();
+    if (high_tide == 0) {
+
+      return 0.0;
+
+    }
+    return (averageSize() * 100.0) / static_cast<double>(high_tide);
+
+  }
 
   void displayStats() const {
 
@@ -421,7 +440,7 @@ private:
       }
 
       // Check for stalled queues (deadlock).
-      if (previous_activity_ == sample_activity) {
+      if (previous_activity_.load() == sample_activity) {
 
         if (not queue_ptr_->empty()) {
 
@@ -432,7 +451,7 @@ private:
 
           ExecEnv::log().info( "Stalled Queue: {}, Size: {}, Queue State: {}, Stalled (no consumer activity) for milliseconds: {}"
                              , queue_name_, sample_size, (queue_ptr_->queueState() ? "Flood Tide" : "Ebb Tide")
-                             , (queue_samples_ * sample_milliseconds_));
+                             , (queue_samples_.load() * sample_milliseconds_));
 
         }
 

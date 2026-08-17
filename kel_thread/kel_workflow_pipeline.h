@@ -49,7 +49,13 @@ class WorkflowPipeline {
     QueuedFunctor(const QueuedFunctor& queued_functor) = delete;
     ~QueuedFunctor() = default;
 
-    void operator()() { result_promise_.set_value(fn_pointer_->operator()(std::move(input_object_))); }
+    void operator()() {
+      try {
+        result_promise_.set_value(fn_pointer_->operator()(std::move(input_object_)));
+      } catch (...) {
+        result_promise_.set_exception(std::current_exception());
+      }
+    }
     [[nodiscard]] std::future<OutputObject> getFuture() { return result_promise_.get_future(); }
 
   private:
@@ -95,8 +101,12 @@ public:
 
     auto func_ptr = std::make_unique<QueuedFunctor>(fn_pointer_, std::move(input_object));
     auto future = func_ptr->getFuture();
-    input_queue_.push(std::move(func_ptr));
+
+    // Enqueue the future first so that consumers can always make progress. Then enqueue the
+    // input functor so that workers can process it. Reversing this order can deadlock when
+    // the input queue is at high tide and the output queue is also full.
     output_queue_.push(std::move(future));
+    input_queue_.push(std::move(func_ptr));
 
   }
 

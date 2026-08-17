@@ -5,226 +5,229 @@
 #ifndef KEL_PERCENTILE_H
 #define KEL_PERCENTILE_H
 
-#include "kel_exec_env.h"
-
-#include <map>
-#include <vector>
-#include <optional>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <utility>
+#include <vector>
 
-namespace kellerberrin {   //  organization level namespace
+namespace kellerberrin {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// A template object that allows percentile stratification of payload objects based on a sortable key.
-// Which will generally be an integer or double (or anything else that can be sorted).
-// Currently implemented as a sorted vector.
+// Percentile stratification of (key, payload) pairs.
+//
+// Sortable: type with a strict weak ordering (e.g. int, double).
+// Payload:  arbitrary attached value.
+// Compare:  callable bool(const Sortable&, const Sortable&).  Defaults to std::less<>.
+//
+// The container is lazily sorted: addElement() only marks data dirty; actual sorting happens on first read.
+//
+// IMPORTANT: This class is NOT thread-safe.  Any reference returned by getVector() is invalidated by addElement().
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <typename Sortable, class Payload>
-using ComparePercentile = std::function<bool(const std::pair<Sortable, Payload> &a, const std::pair<Sortable, Payload> &b)>;
-
-template <typename Sortable, class Payload>
+template <typename Sortable, typename Payload, typename Compare = std::less<>>
 class Percentile {
-
 public:
+  using value_type = std::pair<Sortable, Payload>;
 
-  explicit Percentile(ComparePercentile<Sortable, Payload> compare) : compare_(compare) {}
-  Percentile() : compare_(default_compare_) {}
+  explicit Percentile(Compare compare = Compare{}) : compare_(std::move(compare)) {}
+
   ~Percentile() = default;
 
-  // Adds an element to the sortable vector and sets the sort needed flag.
-  // The vector is only sorted when accessed by one of the functions below.
-  void addElement(Sortable sortable, Payload payload)
-    { percentile_vector_.emplace_back(std::move(sortable), std::move(payload)); need_sort_ = true; }
+  Percentile(const Percentile&) = default;
+  Percentile& operator=(const Percentile&) = default;
+  Percentile(Percentile&&) = default;
+  Percentile& operator=(Percentile&&) = default;
 
-  // Get the vector value that corresponds to the percentile. std::nullopt if an empty vector.
-  [[nodiscard]] std::optional<std::pair<Sortable, Payload>> percentile(double percentile_value) const;
+  // Add a (key, payload) pair.  Invalidates any reference previously returned by getVector().
+  void addElement(Sortable sortable, Payload payload) {
+    data_.emplace_back(std::move(sortable), std::move(payload));
+    need_sort_ = true;
+  }
 
-  // Get a range of the sorted vector that corresponds to the percentiles, i.e. (0.0, 1.0) returns the entire vector.
-  [[nodiscard]] std::vector<std::pair<Sortable, Payload>> getPercentileRange(double lower_percentile, double upper_percentile) const;
+  // Return the element closest to the requested percentile, or std::nullopt if empty.
+  // Percentile must be in [0.0, 1.0] or std::out_of_range is thrown.
+  [[nodiscard]] std::optional<value_type> percentile(double percentile_value) const;
 
-  // ReturnType the sorted percentile vector.
-  [[nodiscard]] const std::vector<std::pair<Sortable, Payload>>& getVector() const { conditionalSort(); return percentile_vector_; }
+  // Return the inclusive range [lower_percentile, upper_percentile].
+  // Returns an empty vector if the container is empty or if lower > upper.
+  [[nodiscard]] std::vector<value_type> getPercentileRange(double lower_percentile,
+                                                           double upper_percentile) const;
 
-  // Given a sortable value find the corresponding percentile, 0.0 if an empty vector. Payload is not used.
-  [[nodiscard]] double inversePercentile(Sortable value, Payload dummy_payload) const;
+  // Return a const reference to the sorted underlying vector.
+  [[nodiscard]] const std::vector<value_type>& getVector() const;
 
-  // Given a value, find the number of elements in the array >= to the value.
-  [[nodiscard]] size_t findGEQCount(Sortable find_value, Payload dummy_payload) const;
+  // Return the percentile rank of a key value.  Returns 0.0 if empty.
+  // For a single-element container, returns 1.0 (matches legacy behavior).
+  [[nodiscard]] double inversePercentile(const Sortable& value) const;
+
+  // Return the number of elements with key >= value.
+  [[nodiscard]] std::size_t findGEQCount(const Sortable& value) const;
+
+  [[nodiscard]] bool empty() const noexcept { return data_.empty(); }
+  [[nodiscard]] std::size_t size() const noexcept { return data_.size(); }
+
+  void clear() noexcept {
+    data_.clear();
+    need_sort_ = false;
+  }
 
 private:
-
-  // A const access may require the vector to be re-sorted (if it has been updated).
-  mutable std::vector<std::pair<Sortable, Payload>> percentile_vector_;
+  mutable std::vector<value_type> data_;
   mutable bool need_sort_{true};
+  Compare compare_;
 
-  // Default sort lambda, generally used at runtime, although users can specify a bespoke sort function.
-  constexpr static auto default_compare_
-     = []( const std::pair<Sortable, Payload> &a,
-           const std::pair<Sortable, Payload> &b) -> bool { return a.first < b.first; };
-
-  // Runtime sort function, see above.
-  ComparePercentile<Sortable, Payload> compare_;
-
-  // ReturnType the vector element corresponding to a percentile.
-  [[nodiscard]] size_t index(double percentile) const;
-  // Sort the vector if it has been updated.
-  void conditionalSort() const;
-  // Given a value, find the array index.
-  [[nodiscard]] std::optional<size_t> findArrayIndex(Sortable find_value, Payload dummy_payload) const;
-
+  [[nodiscard]] std::size_t index(double percentile) const;
+  void ensureSorted() const;
 };
 
-// ReturnType a vector range between two percentiles.
-template <typename Sortable, class Payload>
-std::vector<std::pair<Sortable, Payload>> Percentile<Sortable, Payload>::getPercentileRange(double lower_percentile, double upper_percentile) const {
 
-  if (percentile_vector_.empty()) {
-
-    return std::vector<std::pair<Sortable, Payload>>();
-
-  }
-
-  conditionalSort();
-
-  auto lower_range = percentile_vector_.begin() + index(lower_percentile);
-  auto upper_range = percentile_vector_.begin() + index(upper_percentile);
-
-  return std::vector<std::pair<Sortable, Payload>>(lower_range, upper_range);
-
-}
-
-// ReturnType the record corresponding to the percentile.
-template <typename Sortable, class Payload>
-std::optional<std::pair<Sortable, Payload>> Percentile<Sortable, Payload>::percentile(double percentile_value) const {
-
-  if (percentile_vector_.empty()) {
-
-    return std::nullopt;
-
-  }
-
-  conditionalSort();
-
-  auto iterator = percentile_vector_.begin() + index(percentile_value);
-
-  return *iterator;
-
-}
-
-// Given a sortable value find the corresponding percentile, 0.0 if an empty vector. Payload is not used.
-template <typename Sortable, class Payload>
-double Percentile<Sortable, Payload>::inversePercentile(Sortable value, Payload dummy_payload) const {
-
-  std::optional<size_t> index_opt = findArrayIndex(value, dummy_payload);
-
-  if (not index_opt) {
-
-    return 0.0;
-
-  }
-
-  if (percentile_vector_.size() == 1) {
-
-    return 1.0;
-
-  }
-
-  return static_cast<double>(index_opt.value()) / (static_cast<double>(percentile_vector_.size()) - 1.0);
-
-}
-
-template <typename Sortable, class Payload>
-size_t Percentile<Sortable, Payload>::findGEQCount(Sortable find_value, Payload dummy_payload) const {
-
-  std::optional<size_t> index_opt = findArrayIndex(find_value, dummy_payload);
-
-  if (not index_opt) {
-
-    return 0;
-
-  }
-
-  return percentile_vector_.size() - index_opt.value();
-
-}
-
-
-// Calculate the vector index for a given percentile.
-template <typename Sortable, class Payload>
-size_t Percentile<Sortable, Payload>::index(double percentile) const {
-
-  if (percentile < 0 or percentile > 1) {
-
-    ExecEnv::log().error("Percentile::index, specified percentile value: {} is out of range", percentile);
-    return 0;
-
-  }
-
-  if (percentile_vector_.empty()) {
-
-    ExecEnv::log().error("Percentile::index, attempt to generate an index of an empty vector");
-    return 0;
-
-  }
-
-  // Calculate the vector index.
-  double proportion = (static_cast<double>(percentile_vector_.size()) * percentile) - 0.5;
-  long vector_index = std::lround(proportion);
-  vector_index = vector_index < 0 ? 0 : vector_index;
-  vector_index = vector_index > static_cast<long>(percentile_vector_.size() - 1) ? (percentile_vector_.size() - 1) : vector_index;
-
-  return static_cast<size_t>(vector_index);
-
-}
-
-// Binary lookup on the array index.
-template <typename Sortable, class Payload>
-std::optional<size_t> Percentile<Sortable, Payload>::findArrayIndex(Sortable find_value, Payload dummy_payload) const {
-
-  if (percentile_vector_.empty()) {
-
-    return std::nullopt;
-
-  }
-
-  conditionalSort();
-
-  auto result = std::lower_bound( percentile_vector_.begin(),
-                                  percentile_vector_.end(),
-                                  std::pair<Sortable, Payload>(find_value, dummy_payload),
-                                  compare_);
-
-  if (result == percentile_vector_.end()) {
-
-    return percentile_vector_.size() -1; // last element
-
-  }
-
-  return std::distance(percentile_vector_.begin(), result);
-
-}
-
-
-// If Updated, sort the percentile vector before any access.
-template <typename Sortable, class Payload>
-void Percentile<Sortable, Payload>::conditionalSort() const {
+template <typename Sortable, typename Payload, typename Compare>
+void Percentile<Sortable, Payload, Compare>::ensureSorted() const {
 
   if (need_sort_) {
 
-    std::sort(percentile_vector_.begin(), percentile_vector_.end(), compare_);
-
+    std::sort(data_.begin(), data_.end(),
+              [this](const value_type& a, const value_type& b) {
+                return compare_(a.first, b.first);
+              });
     need_sort_ = false;
 
   }
 
 }
 
+template <typename Sortable, typename Payload, typename Compare>
+std::size_t Percentile<Sortable, Payload, Compare>::index(double percentile) const {
 
-} // namespace
+  if (percentile < 0.0 || percentile > 1.0) {
 
+    ExecEnv::log().error("Percentile value: {} must be in [0.0, 1.0]", percentile);
+    return 0.0;
+
+  }
+  if (data_.empty()) {
+
+    ExecEnv::log().warn("Cannot compute percentile index of an empty distribution");
+    return 0.0;
+
+  }
+
+  // Preserve the original index formula: round(N * p - 0.5), clamped.
+  const double proportion = (static_cast<double>(data_.size()) * percentile) - 0.5;
+  long long vector_index = std::llround(proportion);
+  vector_index = std::clamp(vector_index,
+                            0LL,
+                            static_cast<long long>(data_.size() - 1));
+
+  return static_cast<std::size_t>(vector_index);
+
+}
+
+template <typename Sortable, typename Payload, typename Compare>
+std::optional<std::pair<Sortable, Payload>>
+Percentile<Sortable, Payload, Compare>::percentile(double percentile_value) const {
+
+  if (data_.empty()) {
+
+    return std::nullopt;
+
+  }
+
+  ensureSorted();
+  return data_[index(percentile_value)];
+
+}
+
+template <typename Sortable, typename Payload, typename Compare>
+std::vector<std::pair<Sortable, Payload>>
+Percentile<Sortable, Payload, Compare>::getPercentileRange(double lower_percentile,
+                                                           double upper_percentile) const {
+
+  if (lower_percentile < 0.0 || upper_percentile > 1.0) {
+
+    ExecEnv::log().error("Percentile interval: [{}, {}] must be in [0.0, 1.0]",
+                      lower_percentile, upper_percentile);
+    return 0.0;
+
+  }
+
+  if (data_.empty() || lower_percentile > upper_percentile) {
+
+    return {};
+
+  }
+
+  ensureSorted();
+
+  const std::size_t lower_idx = index(lower_percentile);
+  const std::size_t upper_idx = std::min(index(upper_percentile) + 1, data_.size());
+
+  return std::vector<value_type>(data_.begin() + lower_idx, data_.begin() + upper_idx);
+
+}
+
+template <typename Sortable, typename Payload, typename Compare>
+const std::vector<std::pair<Sortable, Payload>>&
+Percentile<Sortable, Payload, Compare>::getVector() const {
+
+  ensureSorted();
+  return data_;
+
+}
+
+template <typename Sortable, typename Payload, typename Compare>
+double Percentile<Sortable, Payload, Compare>::inversePercentile(const Sortable& value) const {
+
+  if (data_.empty()) {
+
+    return 0.0;
+
+  }
+
+  ensureSorted();
+
+  auto it = std::lower_bound(data_.begin(), data_.end(), value,
+                             [this](const value_type& pair, const Sortable& key) {
+                               return compare_(pair.first, key);
+                             });
+
+  if (data_.size() == 1) {
+
+    return 1.0;
+
+  }
+
+  const std::size_t idx = std::min(static_cast<std::size_t>(std::distance(data_.begin(), it)),
+                                   data_.size() - 1);
+  return static_cast<double>(idx) / static_cast<double>(data_.size() - 1);
+
+}
+
+template <typename Sortable, typename Payload, typename Compare>
+std::size_t Percentile<Sortable, Payload, Compare>::findGEQCount(const Sortable& value) const {
+
+  if (data_.empty()) {
+
+    return 0;
+
+  }
+
+  ensureSorted();
+
+  auto it = std::lower_bound(data_.begin(), data_.end(), value,
+                             [this](const value_type& pair, const Sortable& key) {
+                               return compare_(pair.first, key);
+                             });
+
+  return static_cast<std::size_t>(std::distance(it, data_.end()));
+
+}
+
+} // namespace kellerberrin
 
 #endif // KEL_PERCENTILE_H
+

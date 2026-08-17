@@ -73,7 +73,7 @@ double kga::InfoIntervalData::variantFrequencyPercentile(double percentile) cons
 size_t kga::InfoIntervalData::variantsCountGEQPercent(double percent) const {
 
   std::shared_ptr<const Variant> dummy_variant;
-  size_t variant_count = freq_percentile_.findGEQCount(percent, dummy_variant);
+  size_t variant_count = freq_percentile_.findGEQCount(percent);
 
   return variant_count;
 

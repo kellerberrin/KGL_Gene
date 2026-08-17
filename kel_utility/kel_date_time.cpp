@@ -3,28 +3,63 @@
 //
 
 #include "kel_date_time.h"
-
 #include "kel_exec_env.h"
 
-#include "boost/date_time/gregorian/gregorian.hpp"
 
-// Define namespace alias
+
+#include <chrono>
+#include <format>
+#include <locale>
+#include <sstream>
+
+
+
 namespace kel = kellerberrin;
-namespace bg = boost::gregorian;
 
-// Must be a delimited date e.g. "1/1/2020" or "1-Jan-2020"
-kel::DateGP::DateGP(const std::string& date_str) {
 
-  try {
+namespace {
 
-    bg::date boostdate(bg::from_string(date_str));
-    year_ = boostdate.year();
-    month_ = boostdate.month();
-    day_ = boostdate.day();
+// Tries to parse common delimited forms: 2020-01-01, 2020/1/1,
+// 2001-Feb-28, 1-Jan-2020, etc.  Uses the classic (C) locale so month
+// abbreviations are always English, matching the original output format.
+std::optional<std::chrono::year_month_day> parseDate(std::string_view sv) noexcept {
 
-  } catch(std::exception& e) {
+  std::string s(sv);
+  std::istringstream iss(s);
+  iss.imbue(std::locale::classic());
 
-    ExecEnv::log().error("DateGP::DateGP; unable to parse date string: '{}', exception: {}", date_str, e.what());
+  std::chrono::year_month_day ymd;
+
+  auto tryPattern = [&](const char* pattern) -> bool {
+    iss.clear();
+    iss.seekg(0);
+    iss.str(s);
+    iss >> std::chrono::parse(pattern, ymd);
+    return !iss.fail() && ymd.ok();
+  };
+
+  if (tryPattern("%Y-%m-%d")) return ymd; // 2020-01-01
+  if (tryPattern("%Y/%m/%d")) return ymd; // 2020/1/1
+  if (tryPattern("%Y-%b-%d")) return ymd; // 2001-Feb-28
+  if (tryPattern("%Y/%b/%d")) return ymd; // 2001/Feb/28
+  if (tryPattern("%d-%b-%Y")) return ymd; // 1-Jan-2020
+  if (tryPattern("%d/%b/%Y")) return ymd; // 1/Jan/2020
+
+  return std::nullopt;
+
+}
+
+} // anonymous namespace
+
+kel::DateGP::DateGP(std::string_view date) {
+
+  if (auto parsed = parseDate(date)) {
+
+    date_ = *parsed;
+
+  } else {
+
+    ExecEnv::log().warn("DateGP: unable to parse date string '{}'", date);
 
   }
 
@@ -32,107 +67,147 @@ kel::DateGP::DateGP(const std::string& date_str) {
 
 kel::DateGP::DateGP(size_t year, size_t month, size_t day) {
 
-  try {
+  std::chrono::year_month_day ymd{
+    std::chrono::year{static_cast<int>(year)},
+    std::chrono::month{static_cast<unsigned>(month)},
+    std::chrono::day{static_cast<unsigned>(day)}
+  };
 
-    bg::date boostdate(year, month, day);
-    year_ = boostdate.year();
-    month_ = boostdate.month();
-    day_ = boostdate.day();
+  if (!ymd.ok()) {
 
-  } catch(std::exception& e) {
-
-    ExecEnv::log().error("DateGP::DateGP; invalid date: {}-{}-{}, exception: {}", day, month, year, e.what());
+    ExecEnv::log().warn("DateGP: invalid date {}-{}-{}", year, month, day);
 
   }
 
-}
-
-// The date object is initialized to the current local date.
-void kel::DateGP::setToday() {
-
-  bg::date boostdate (bg::day_clock::local_day());
-
-  year_ = boostdate.year();
-  month_ = boostdate.month();
-  day_ = boostdate.day();
+  date_ = ymd;
 
 }
 
-// The date object is initialized to the current UTC (Greenwich) date.
-void kel::DateGP::setUTCDate() {
+std::optional<kel::DateGP> kel::DateGP::tryParse(std::string_view date) noexcept {
 
-  bg::date boostdate (bg::day_clock::universal_day());
+  if (auto ymd = parseDate(date)) {
 
-  year_ = boostdate.year();
-  month_ = boostdate.month();
-  day_ = boostdate.day();
+    DateGP result;
+    result.date_ = *ymd;
+    return result;
+
+  }
+
+  return std::nullopt;
+
+}
+
+std::optional<kel::DateGP> kel::DateGP::tryCreate(size_t y, size_t m, size_t d) noexcept {
+
+  std::chrono::year_month_day ymd{
+    std::chrono::year{static_cast<int>(y)},
+    std::chrono::month{static_cast<unsigned>(m)},
+    std::chrono::day{static_cast<unsigned>(d)}
+  };
+
+  if (!ymd.ok()) return std::nullopt;
+
+  DateGP result;
+  result.date_ = ymd;
+  return result;
+
+}
+
+bool kel::DateGP::ok() const noexcept {
+
+  return date_.has_value() && date_->ok();
+
+}
+
+size_t kel::DateGP::year() const {
+
+  if (!ok()) {
+
+    ExecEnv::log().warn("DateGP::year() on uninitialized date");
+
+  }
+
+  return static_cast<size_t>(static_cast<int>(date_->year()));
+
+}
+
+size_t kel::DateGP::month() const {
+
+  if (!ok()) {
+
+    ExecEnv::log().warn("DateGP::month() on uninitialized date");
+
+  }
+
+  return static_cast<unsigned>(date_->month());
+
+}
+
+size_t kel::DateGP::day() const {
+
+if (!ok()) {
+
+  ExecEnv::log().warn("DateGP::day() on uninitialized date");
+
+}
+
+  return static_cast<unsigned>(date_->day());
 
 }
 
 std::string kel::DateGP::text() const {
 
-  bg::date boostdate(year_, month_, day_);
-  return to_simple_string(boostdate);
+if (!ok()) {
+
+  ExecEnv::log().warn("DateGP::text() on uninitialized date");
+
+}
+// Classic locale gives English month abbreviations ("Jan", "Feb", ...).
+return std::format(std::locale::classic(), "{:%Y-%b-%d}", *date_);
 
 }
 
-bool kel::DateGP::operator<(const DateGP& cmp) const {
+void kel::DateGP::setToday() {
 
-  bg::date thisdate(year_, month_, day_);
-  bg::date cmpdate(cmp.year_, cmp.month_, cmp.day_);
+  auto local = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
 
-  return thisdate < cmpdate;
+  date_ = std::chrono::year_month_day{floor<std::chrono::days>(local)};
 
 }
 
-bool kel::DateGP::operator==(const DateGP& cmp) const {
+void kel::DateGP::setUTCDate() {
 
-  bg::date thisdate(year_, month_, day_);
-  bg::date cmpdate(cmp.year_, cmp.month_, cmp.day_);
-
-  return thisdate == cmpdate;
+  date_ = std::chrono::year_month_day{floor<std::chrono::days>(std::chrono::system_clock::now())};
 
 }
 
 size_t kel::DateGP::daysDifference(const DateGP& date1, const DateGP& date2) {
 
-  bg::date d1(date1.year_, date1.month_, date1.day_);
-  bg::date d2(date2.year_, date2.month_, date2.day_);
+  if (!date1.ok() || !date2.ok()) {
 
-  if (d1 < d2) {
-
-    bg::date_duration dd = d2 - d1;
-    return dd.days();
-
-  } else {
-
-    bg::date_duration dd = d1 - d2;
-    return dd.days();
+    ExecEnv::log().warn("DateGP::daysDifference() on uninitialized date");
 
   }
 
-}
+  auto d1 = std::chrono::sys_days{*date1.date_};
+  auto d2 = std::chrono::sys_days{*date2.date_};
 
+  return static_cast<size_t>(std::chrono::abs(d1 - d2).count());
+
+}
 
 size_t kel::DateGP::monthsDifference(const DateGP& date1, const DateGP& date2) {
 
-  bg::date d1(date1.year_, date1.month_, date1.day_);
-  bg::date d2(date2.year_, date2.month_, date2.day_);
+if (!date1.ok() || !date2.ok()) {
 
-  if (d1 < d2) {
-
-    size_t month_diff = (date2.year_ - date1.year_) * 12;
-    month_diff += date2.month_ - date1.month_;
-    return month_diff;
-
-  } else {
-
-    size_t month_diff = (date1.year_ - date2.year_) * 12;
-    month_diff += date1.month_ - date2.month_;
-    return month_diff;
-
-  }
+  ExecEnv::log().warn("DateGP::monthsDifference() on uninitialized date");
 
 }
+  auto months1 = (static_cast<int>(date1.date_->year()) * 12) + static_cast<unsigned>(date1.date_->month());
+  auto months2 = (static_cast<int>(date2.date_->year()) * 12) + static_cast<unsigned>(date2.date_->month());
 
+  auto month_diff = months1 > months2 ? months1 - months2 : months2 - months1;
 
+  return static_cast<size_t>(month_diff);
+
+}

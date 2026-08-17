@@ -68,7 +68,7 @@ set(Boost_NO_SYSTEM_PATHS ON)
 #set(BOOST_INCLUDEDIR /usr/local/include/boost)
 #include_directories(${Boost_INCLUDE_DIRS})
 #set(BOOST_LIBRARYDIR /usr/local/lib/boost)
-find_package( Boost REQUIRED COMPONENTS timer chrono program_options iostreams)
+find_package( Boost REQUIRED COMPONENTS timer program_options iostreams)
 #find_package(Boost CONFIG REQUIRED)
 #message(STATUS "Boost Lib: ${Boost_LIBRARIES}")
 # Add boost library directories
@@ -117,15 +117,16 @@ set(RUNTIME_SOURCE_FILES
         kel_app/kel_logging.h
         kel_app/kel_logging.cpp
         kel_app/kel_logging_stream.cpp
-        kel_app/kel_logging_stream.h
-)
+        kel_app/kel_logging_stream.h)
 
 set(MATHEMATICAL_SOURCE_FILES
         kel_math/kel_continuous_distributions.h
         kel_math/kel_distributions.cpp
         kel_math/kel_percentile.h
         kel_math/kel_optimize.cpp
-        kel_math/kel_optimize.h)
+        kel_math/kel_optimize.h
+        kel_math/kel_entropy_source.h
+        kel_math/kel_discrete_distributions.h)
 
 # Basic infrastructure library
 set(UTILITY_SOURCE_FILES
@@ -137,7 +138,10 @@ set(UTILITY_SOURCE_FILES
         kel_utility/kel_date_time.h
         kel_utility/kel_interval_type.h
         kel_utility/kel_interval_unsigned.h
-        kel_utility/kel_interval_set.cpp)
+        kel_utility/kel_interval_set.cpp
+        kel_utility/kel_search.cpp
+        kel_utility/kel_search.h
+        kel_utility/kel_string_hash.h)
 
 # Multi-threading library
 set(THREAD_SOURCE_FILES
@@ -148,7 +152,6 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
         kel_thread/kel_workflow_pipeline.h
-        kel_thread/kel_queue_mt_new.h
 )
 
 # The basic I/O library.
@@ -390,14 +393,7 @@ set(EDLIB_SOURCE_FILES
         contrib/rapidxml/rapidxml.h
         contrib/rapidxml/rapidxml_iterators.h
         contrib/rapidxml/rapidxml_print.h
-        contrib/rapidxml/rapidxml_utils.h
-        kel_utility/kel_search.cpp
-        kel_utility/kel_search.h
-        kel_utility/kel_string_crc32hash.h
-        kel_math/kel_entropy_source.h
-        kel_math/kel_discrete_distributions.h
-        kel_utility/kel_string_crc64hash.h
-)
+        contrib/rapidxml/rapidxml_utils.h)
 
 # Gene ontology library
 set(ONTOLOGY_SOURCE_FILES
@@ -618,9 +614,7 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.cpp
-        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.h
-
-)
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.h)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES
