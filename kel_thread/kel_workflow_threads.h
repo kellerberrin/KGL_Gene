@@ -7,15 +7,12 @@
 #include "kel_queue_mt_safe.h"
 
 #include <algorithm>
-#include <atomic>
 #include <exception>
 #include <functional>
 #include <future>
-#include <mutex>
 #include <optional>
-#include <stdexcept>
+#include <expected>
 #include <thread>
-#include <vector>
 
 
 namespace kellerberrin {  // organization level namespace
@@ -44,7 +41,7 @@ concept move_constructible_variadic = (std::move_constructible<std::decay_t<Args
 
 class WorkflowThreads
 {
-  // C++23 type-erased move-only callable. We use this rather than packaged_task<void()>
+  // Type-erased move-only callable. We use this rather than packaged_task<void()>
   // directly so that enqueueVoid() does not pay for a shared state it never exposes.
   using WorkTask = std::move_only_function<void()>;
   using WorkTaskOpt = std::optional<WorkTask>;
@@ -53,18 +50,6 @@ public:
 
   WorkflowThreads() = default;
   explicit WorkflowThreads(size_t threads) { queueThreads(threads); }
-
-  /// Construct, start a pool and optionally enable queue monitoring.
-  WorkflowThreads(size_t threads, std::string queue_name, size_t monitor_interval_ms)
-  {
-    if (not queue_name.empty()) {
-
-      work_queue_.monitor().launchStats(monitor_interval_ms, std::move(queue_name));
-
-    }
-    queueThreads(threads);
-  }
-
   ~WorkflowThreads() noexcept { joinThreads(); }
 
   // Non-copyable, non-movable.
@@ -96,25 +81,20 @@ public:
   bool queueThreads(size_t threads)
   {
 
-    std::scoped_lock lock{state_mutex_};
+    if (not workers_.empty()) {
 
-    if (running_) { return false; }
+      ExecEnv::log().error("Attempt to queue threads: {} to active thread pool", threads);
+      return false;
 
-    shutdown_ = false;
-    {
-      std::scoped_lock ex_lock{exception_mutex_};
-      first_exception_ = nullptr;
     }
-    threads = std::max<size_t>(threads, 1);
-    workers_.reserve(threads);
 
+    threads = std::max<size_t>(threads, 1);
     for (size_t i = 0; i < threads; ++i) {
 
-      workers_.emplace_back(&WorkflowThreads::workerLoop, this);
+      workers_.push(std::thread(&WorkflowThreads::workerLoop, this));
 
     }
 
-    running_ = true;
     return true;
 
   }
@@ -127,73 +107,31 @@ public:
   void joinThreads() noexcept
   {
 
-    std::vector<std::thread> local_workers;
-
-    {
-      std::scoped_lock lock{state_mutex_};
-
-      if (shutdown_ or not running_) {
-
-        workers_.clear();
-        work_queue_.clear();
-        return;
-
-      }
-
-      shutdown_ = true;
-      running_ = false;
-
+    try {
       // Push one stop token per worker. Unlike a single re-queued token, this is robust
       // against concurrent work submissions and guarantees every worker wakes up.
+
       const size_t token_count = workers_.size();
       for (size_t i = 0; i < token_count; ++i) {
 
-        try {
-
-          work_queue_.push(WorkTaskOpt{});
-
-        } catch (...) {
-
-          recordException();
-
-        }
+        work_queue_.push(WorkTaskOpt{});
 
       }
 
-      local_workers.swap(workers_);
+      while (not workers_.empty()) {
 
-    }
-
-    for (auto& worker : local_workers) {
-
-      try {
-
-        if (worker.joinable()) { worker.join(); }
-
-      } catch (...) {
-
-        recordException();
+        auto worker = workers_.waitAndPop();
+        worker.join();
 
       }
 
-    }
-
-    {
-      std::scoped_lock lock{state_mutex_};
       work_queue_.clear();
+
+    } catch (...) {
+
+      ExecEnv::log().error("Thread pool joinThreads threw exception");
+
     }
-
-  }
-
-  /// Signals all worker threads to stop, waits for them to finish, and rethrows the first
-  /// exception captured from a void task. Subsequent calls are no-ops.
-  ///
-  /// @throws std::exception  The first exception thrown by an enqueueVoid() callable, if any.
-  void shutdownAndRethrow()
-  {
-
-    joinThreads();
-    rethrowFirstException();
 
   }
 
@@ -205,35 +143,23 @@ public:
 
   }
 
-  /// @return The first exception captured from a void task or from an internal shutdown
-  ///         error, or nullptr if no exception was captured.
-  [[nodiscard]] std::exception_ptr capturedException() const
-  {
-
-    std::scoped_lock lock{exception_mutex_};
-    return first_exception_;
-
-  }
-
   [[nodiscard]] bool running() const
   {
 
-    std::scoped_lock lock{state_mutex_};
-    return running_;
+    return not workers_.empty();
 
   }
 
   [[nodiscard]] size_t threadCount() const
   {
 
-    std::scoped_lock lock{state_mutex_};
     return workers_.size();
 
   }
 
 
-  /// Enqueues a work function and its arguments, returning a future that will hold the
-  /// result (or the exception, if the function throws).
+  /// Enqueues a work function and its arguments, returning a future that will hold the result
+  /// Any exceptions by the callable are returned in the std::future.
   template<typename F, typename... Args>
   requires std::invocable<F, Args...> && move_constructible_variadic<F, Args...>
   [[nodiscard]] auto enqueueFuture(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
@@ -244,88 +170,35 @@ public:
     auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
     auto typed_task = std::packaged_task<return_type()>(std::move(callable));
     std::future<return_type> future = typed_task.get_future();
-
-    {
-      std::scoped_lock lock{state_mutex_};
-
-      if (not running_ or shutdown_) {
-
-        throw std::runtime_error("WorkflowThreads is shut down; cannot accept new work");
-
-      }
-
-      // Wrap the typed packaged_task inside a void() move_only_function. This lets all tasks
-      // share the same queue type while preserving the per-task future and exception state.
-      work_queue_.push([task = std::move(typed_task)]() mutable { task(); });
-    }
+    // Wrap the typed packaged_task inside a void() move_only_function. This lets all tasks
+    // share the same queue type while preserving the per-task future and exception state.
+    work_queue_.push(WorkTaskOpt{[task = std::move(typed_task)] () mutable ->void { task(); }});
 
     return future;
 
   }
 
-  /// Enqueues a work function with a void return type. No future is returned.
-  ///
-  /// Exceptions thrown by the callable are caught and stored; they are not rethrown by
-  /// joinThreads(). Use capturedException() or shutdownAndRethrow() to observe errors.
+  /// Enqueues a work function with a void (or ignored) return type. No future is returned.
+  /// Exceptions thrown by the callable are caught when executed in workerLoop().
   template<typename F, typename... Args>
   requires std::invocable<F, Args...> && move_constructible_variadic<F, Args...>
   void enqueueVoid(F&& f, Args&&... args)
   {
 
     auto callable = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
-
-    {
-      std::scoped_lock lock{state_mutex_};
-
-      if (not running_ or shutdown_) {
-
-        throw std::runtime_error("WorkflowThreads is shut down; cannot accept new work");
-
-      }
-
-      work_queue_.push(std::move(callable));
-    }
+    work_queue_.push(WorkTaskOpt{[task = std::move(callable)] () mutable ->void { task(); }});
 
   }
 
 private:
 
-  mutable std::mutex state_mutex_;
-  std::vector<std::thread> workers_;
+  QueueMtSafe<std::thread> workers_;
   QueueMtSafe<WorkTaskOpt> work_queue_;
-  bool running_ = false;
-  bool shutdown_ = false;
 
-  mutable std::mutex exception_mutex_;
-  std::exception_ptr first_exception_;
-
-  /// Records the current exception if no exception has been captured yet.
-  void recordException() noexcept
-  {
-
-    std::exception_ptr local_eptr = std::current_exception();
-    if (not local_eptr) { return; }
-
-    std::scoped_lock lock{exception_mutex_};
-    if (not first_exception_) { first_exception_ = local_eptr; }
-
-  }
-
-  /// Rethrows the first captured exception (void task or internal shutdown error), if any.
-  void rethrowFirstException()
-  {
-
-    std::exception_ptr ep;
-    {
-      std::scoped_lock lock{exception_mutex_};
-      ep = std::move(first_exception_);
-    }
-
-    if (ep) { std::rethrow_exception(ep); }
-
-  }
 
   /// Worker thread main loop. Each iteration waits for a task and executes it.
+  /// Tasks queued with futures will return exceptions in the future.
+  /// Void task exceptions are caught here.
   void workerLoop()
   {
 
@@ -339,16 +212,19 @@ private:
 
         (*task_opt)();
 
+      } catch (const std::exception& e) {
+
+        ExecEnv::log().error("Thread pool void task threw exception: {}", e.what());
+
       } catch (...) {
 
-        recordException();
+        ExecEnv::log().error("Thread pool void task threw unknown exception.");
 
       }
 
     }
 
   }
-
 
 };
 
