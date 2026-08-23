@@ -134,7 +134,7 @@ private:
                       const std::string& super_population_field,
                       const std::shared_ptr<const ContigDB>& locus_list);
 
-  [[nodiscard]] static double logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
+  [[nodiscard]] static double logLikelihood(const std::vector<double>& x, std::vector<AlleleFreqInfo>& data);
 
 };
 

@@ -91,7 +91,7 @@ std::optional<kga::InbreedingAlgorithm> kga::InbreedingCalculation::namedAlgorit
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-double kga::InbreedingCalculation::logLikelihood(std::vector<double>& x, std::vector<AlleleFreqInfo>& data) {
+double kga::InbreedingCalculation::logLikelihood(const std::vector<double>& x, std::vector<AlleleFreqInfo>& data) {
 
   double log_prob_sum{0.0};
   double f = x[0];
@@ -180,10 +180,12 @@ kga::InbreedingCalculation::processLogLikelihood(const GenomeId_t& genome_id,
     std::vector<double> coefficient;
     double initial_f = initialize_distribution.random(entropy_mt.generator());
     coefficient.push_back(initial_f);
+    // Set the loglike function defined above as the the optimized objective.
+    OptDataObjectiveFn objective_function = logLikelihood;
 
     auto [result_code, value, iterations] = likelihood_optimizer.optimize<std::vector<AlleleFreqInfo>>( coefficient,
                                                                                                         frequency_vector,
-                                                                                                        &logLikelihood);
+                                                                                                        objective_function);
 
     if (not Optimize::returnSuccess(result_code)) {
 

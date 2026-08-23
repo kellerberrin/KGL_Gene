@@ -1,6 +1,4 @@
-//
-// Created by kellerberrin on 22/6/20.
-//
+// Kellerberrin 2026.
 
 #ifndef KEL_PERCENTILE_H
 #define KEL_PERCENTILE_H
@@ -13,9 +11,11 @@
 #include <utility>
 #include <vector>
 
+#include "kel_exec_env.h"
+
 namespace kellerberrin {
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Percentile stratification of (key, payload) pairs.
 //
@@ -27,10 +27,12 @@ namespace kellerberrin {
 //
 // IMPORTANT: This class is NOT thread-safe.  Any reference returned by getVector() is invalidated by addElement().
 //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 template <typename Sortable, typename Payload, typename Compare = std::less<>>
 class Percentile {
 public:
+
   using value_type = std::pair<Sortable, Payload>;
 
   explicit Percentile(Compare compare = Compare{}) : compare_(std::move(compare)) {}
@@ -49,13 +51,13 @@ public:
   }
 
   // Return the element closest to the requested percentile, or std::nullopt if empty.
-  // Percentile must be in [0.0, 1.0] or std::out_of_range is thrown.
+  // Percentile must be in [0.0, 1.0]; out-of-range and empty cases are logged and return std::nullopt.
   [[nodiscard]] std::optional<value_type> percentile(double percentile_value) const;
 
   // Return the inclusive range [lower_percentile, upper_percentile].
   // Returns an empty vector if the container is empty or if lower > upper.
   [[nodiscard]] std::vector<value_type> getPercentileRange(double lower_percentile,
-                                                           double upper_percentile) const;
+                                                            double upper_percentile) const;
 
   // Return a const reference to the sorted underlying vector.
   [[nodiscard]] const std::vector<value_type>& getVector() const;
@@ -76,6 +78,7 @@ public:
   }
 
 private:
+
   mutable std::vector<value_type> data_;
   mutable bool need_sort_{true};
   Compare compare_;
@@ -106,13 +109,14 @@ std::size_t Percentile<Sortable, Payload, Compare>::index(double percentile) con
   if (percentile < 0.0 || percentile > 1.0) {
 
     ExecEnv::log().error("Percentile value: {} must be in [0.0, 1.0]", percentile);
-    return 0.0;
+    return 0;
 
   }
+
   if (data_.empty()) {
 
     ExecEnv::log().warn("Cannot compute percentile index of an empty distribution");
-    return 0.0;
+    return 0;
 
   }
 
@@ -145,13 +149,13 @@ Percentile<Sortable, Payload, Compare>::percentile(double percentile_value) cons
 template <typename Sortable, typename Payload, typename Compare>
 std::vector<std::pair<Sortable, Payload>>
 Percentile<Sortable, Payload, Compare>::getPercentileRange(double lower_percentile,
-                                                           double upper_percentile) const {
+                                                            double upper_percentile) const {
 
   if (lower_percentile < 0.0 || upper_percentile > 1.0) {
 
     ExecEnv::log().error("Percentile interval: [{}, {}] must be in [0.0, 1.0]",
-                      lower_percentile, upper_percentile);
-    return 0.0;
+                         lower_percentile, upper_percentile);
+    return {};
 
   }
 
@@ -191,9 +195,9 @@ double Percentile<Sortable, Payload, Compare>::inversePercentile(const Sortable&
   ensureSorted();
 
   auto it = std::lower_bound(data_.begin(), data_.end(), value,
-                             [this](const value_type& pair, const Sortable& key) {
-                               return compare_(pair.first, key);
-                             });
+                              [this](const value_type& pair, const Sortable& key) {
+                                return compare_(pair.first, key);
+                              });
 
   if (data_.size() == 1) {
 
@@ -219,9 +223,9 @@ std::size_t Percentile<Sortable, Payload, Compare>::findGEQCount(const Sortable&
   ensureSorted();
 
   auto it = std::lower_bound(data_.begin(), data_.end(), value,
-                             [this](const value_type& pair, const Sortable& key) {
-                               return compare_(pair.first, key);
-                             });
+                              [this](const value_type& pair, const Sortable& key) {
+                                return compare_(pair.first, key);
+                              });
 
   return static_cast<std::size_t>(std::distance(it, data_.end()));
 
@@ -230,4 +234,3 @@ std::size_t Percentile<Sortable, Payload, Compare>::findGEQCount(const Sortable&
 } // namespace kellerberrin
 
 #endif // KEL_PERCENTILE_H
-

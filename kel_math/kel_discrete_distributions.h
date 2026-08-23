@@ -1,37 +1,42 @@
-//
-// Created by kellerberrin on 10/8/26.
-//
+// Kellerberrin 2026.
 
 #ifndef KEL_DISCRETE_DISTRIBUTIONS_H
 #define KEL_DISCRETE_DISTRIBUTIONS_H
 
-
+#include <algorithm>
 #include <cstddef>
-#include <functional>
-#include <random>
+#include <cstdint>
 #include <utility>
 #include <vector>
+#include <random>
 
 #include "kel_entropy_source.h"
-
+#include "kel_exec_env.h"
 
 namespace kellerberrin {
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Discrete distributions
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Positive integer random numbers between, and including, lower_bound to upper_bound.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class UniformIntegerDistribution final {
 public:
 
-  explicit UniformIntegerDistribution(std::size_t lower_bound, std::size_t upper_bound)
-        : dist_(lower_bound, upper_bound) {}
+  explicit UniformIntegerDistribution(std::size_t lower_bound, std::size_t upper_bound) {
+    if (lower_bound > upper_bound) {
+
+      ExecEnv::log().warn("UniformIntegerDistribution; lower_bound:{} exceeds upper_bound:{}, swapping bounds",
+                          lower_bound, upper_bound);
+      std::swap(lower_bound, upper_bound);
+
+    }
+    dist_ = std::uniform_int_distribution<std::size_t>(lower_bound, upper_bound);
+  }
 
   UniformIntegerDistribution(const UniformIntegerDistribution&) = delete;
   UniformIntegerDistribution(UniformIntegerDistribution&&) = default;
@@ -48,9 +53,9 @@ private:
 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A boolean coin-flip object.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class RandomBoolean final {
 public:
@@ -64,7 +69,7 @@ public:
   ~RandomBoolean() = default;
 
   template<std::uniform_random_bit_generator URBG>
-    [[nodiscard]] bool random(URBG& source) const { return dist_(source); }
+  [[nodiscard]] bool random(URBG& source) const { return dist_(source); }
 
 private:
 
@@ -72,12 +77,13 @@ private:
 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Binomial Distribution.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class BinomialDistribution final {
 public:
+
   explicit BinomialDistribution(std::size_t trials, double prob_success)
         : dist_(trials, prob_success) {}
 
@@ -92,8 +98,8 @@ public:
 
   [[nodiscard]] static double pdf(std::size_t n, std::size_t k, double prob_success);
   [[nodiscard]] static double cdf(std::size_t n, double k, double prob_success);
-  [[nodiscard]] static double mean(std::size_t n, double prob_success) {
-        return static_cast<double>(n) * prob_success;
+  [[nodiscard]] static double mean(std::size_t n, double prob_success) noexcept {
+    return static_cast<double>(n) * prob_success;
   }
 
 private:
@@ -103,9 +109,9 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Bernoulli Distribution
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class BernoulliDistribution final {
 public:
@@ -121,7 +127,7 @@ public:
   template<std::uniform_random_bit_generator URBG>
   [[nodiscard]] bool random(URBG& source) const { return dist_(source); }
 
-  [[nodiscard]] static double mean(double prob_success) { return prob_success; }
+  [[nodiscard]] static double mean(double prob_success) noexcept { return prob_success; }
 
 private:
 
@@ -130,43 +136,43 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Beta Binomial Distribution.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 // Static-only helper: a namespace is cleaner than a class with deleted ctor/dtor.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 namespace BetaBinomialDistribution {
 
 // Uses boost beta functions.
-  [[nodiscard]] double pdf(std::size_t n, std::size_t k, double alpha, double beta);
+[[nodiscard]] double pdf(std::size_t n, std::size_t k, double alpha, double beta);
 // Uses boost lgamma functions.
-  [[nodiscard]] double logPdf(double n, double k, double alpha, double beta);
+[[nodiscard]] double logPdf(double n, double k, double alpha, double beta);
 // No binomial coefficient term.
-  [[nodiscard]] double logPartialPdf(double n, double k, double alpha, double beta);
+[[nodiscard]] double logPartialPdf(double n, double k, double alpha, double beta);
 // No binomial coefficient term.
-  [[nodiscard]] double partialPdf(double n, double k, double alpha, double beta);
+[[nodiscard]] double partialPdf(double n, double k, double alpha, double beta);
 // .first is alpha, .second is beta. The raw moments are calculated from the observations and used to calculate alpha and beta.
-  [[nodiscard]] std::pair<double, double> methodOfMoments( const std::vector<std::size_t>& observations, std::size_t n_trials);
+[[nodiscard]] std::pair<double, double> methodOfMoments( const std::vector<std::size_t>& observations, std::size_t n_trials);
 
-}
+} // namespace BetaBinomialDistribution
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Distribution objects that only provide pdf/cdf/quantile
 // (no internal RNG state, so copying is safe and useful).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Hypergeometric distribution.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class HypergeometricDistribution final {
 public:
+
   explicit HypergeometricDistribution(std::size_t pop_successes_K,
-                                      std::size_t sample_size_n,
-                                      std::size_t population_N);
+                                       std::size_t sample_size_n,
+                                       std::size_t population_N);
 
   HypergeometricDistribution(const HypergeometricDistribution&) = default;
   HypergeometricDistribution(HypergeometricDistribution&&) = default;
@@ -176,7 +182,10 @@ public:
 
   [[nodiscard]] double pdf(std::size_t successes_k) const;
   [[nodiscard]] double cdf(std::size_t successes_k) const;
-  [[nodiscard]] double quantile(std::size_t successes_k) const;
+  // Quantile takes a probability p in [0,1] and returns the corresponding number of successes k.
+  // NOTE: signature changed from the original (which took std::size_t successes_k) because the original
+  // passed a count to boost::math::quantile, which expects a probability in [0,1] - a critical bug.
+  [[nodiscard]] std::size_t quantile(double p) const;
 
   //  The hypergeometric tests below use the hypergeometric distribution to measure the statistical significance
   //  of having drawn a sample consisting of a specific number of k r_successes n total draws (without replacement)
@@ -188,8 +197,12 @@ public:
 
   // Bounds for the number of successes_k in a drawn sample_size_n (without replacement)
   // The number of r_successes drawn only has support; k in { lowerSuccesses_k, ... , upperSuccesses_k}
-  [[nodiscard]] std::size_t upperSuccesses_k() const noexcept { return std::min(pop_successes_K_, sample_size_n_);}
+  [[nodiscard]] std::size_t upperSuccesses_k() const noexcept { return std::min(pop_successes_K_, sample_size_n_); }
   [[nodiscard]] std::size_t lowerSuccesses_k() const;
+
+  [[nodiscard]] std::size_t popSuccesses_K() const noexcept { return pop_successes_K_; }
+  [[nodiscard]] std::size_t sampleSize_n() const noexcept { return sample_size_n_; }
+  [[nodiscard]] std::size_t population_N() const noexcept { return population_N_; }
 
 private:
 
@@ -197,11 +210,14 @@ private:
   std::size_t sample_size_n_;
   std::size_t population_N_;
 
+  // Clamp a requested number of successes_k into the supported range [lowerSuccesses_k(), upperSuccesses_k()].
+  [[nodiscard]] std::size_t clampSuccesses_k(std::size_t successes_k) const;
+
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Poisson distribution. Uses boost for implementation.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Poisson final {
 public:
@@ -218,6 +234,7 @@ public:
   [[nodiscard]] double cdf(std::size_t count) const;
   [[nodiscard]] std::size_t quantile(double p) const;
   [[nodiscard]] double mean() const noexcept { return lambda_; }
+  [[nodiscard]] double lambda() const noexcept { return lambda_; }
 
 private:
 
@@ -225,12 +242,13 @@ private:
 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Negative Binomial distribution. Uses boost for implementation.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class NegativeBinomial final {
 public:
+
   explicit NegativeBinomial(double r_successes, double p_prob_success)
         : r_successes_(r_successes), p_prob_success_(p_prob_success) {}
 
@@ -257,5 +275,4 @@ private:
 
 }   // namespace kellerberrin
 
-
-#endif //KEL_DISCRETE_DISTRIBUTIONS_H
+#endif // KEL_DISCRETE_DISTRIBUTIONS_H
