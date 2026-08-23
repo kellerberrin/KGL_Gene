@@ -4,15 +4,19 @@
 #ifndef KEL_WORKFLOW_ASYNC_H
 #define KEL_WORKFLOW_ASYNC_H
 
+#include "kel_exec_env.h"
 #include "kel_queue_mt_safe.h"
 #include "kel_queue_tidal.h"
 
-#include <functional>
-#include <vector>
-#include <thread>
-#include <optional>
 #include <atomic>
+#include <concepts>
+#include <cstdint>
+#include <functional>
+#include <memory>
 #include <mutex>
+#include <thread>
+#include <utility>
+#include <vector>
 
 namespace kellerberrin {  //  organization level namespace
 
@@ -25,6 +29,26 @@ namespace kellerberrin {  //  organization level namespace
 // The stop token is guaranteed to be the last object processed.
 // This workflow can be readily concatenated together with other WorkflowAsync to provide multi thread, multi stage processing.
 //
+// Shutdown protocol: a worker that pops the stop token re-queues it and terminates, so the single token
+// circulates until the last worker, which delivers it to the user callback (each concatenated stage therefore
+// 'processes' the stop token exactly once). Exceptions thrown by the callback are caught and logged; a throwing
+// callback never kills a worker thread.
+//
+// push() before activateWorkflow() simply queues the object; it is processed once workers exist. For a bounded
+// QueueTidal the push blocks at high tide, for the unbounded QueueMtSafe it never blocks - the queue's state, not
+// the workflow's activity, governs whether push() waits.
+//
+// The destructor pushes the stop token and joins the workers - but only if the workflow was
+// activated (active_threads_ > 0). A workflow that was constructed but never activated would
+// otherwise hang the destructor pushing into a full QueueTidal with no consumers. If a bounded
+// queue is stalled at high tide after activation (consumers all died) the push still blocks
+// forever; keep at least one consumer alive until shutdown.
+//
+// If activateWorkflow() fails partway through thread creation (resource exhaustion) the partially started workers
+// are shut down with stop tokens and joined, and the exception is rethrown. When the stop token is move-only this
+// rollback consumes it, so a workflow whose activation failed must not be re-activated (construct a new one);
+// copyable stop tokens are preserved.
+//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // The objects must be std::move constructable. In addition, the objects should be comparable
@@ -35,7 +59,12 @@ requires (std::move_constructible<QueuedObj> && std::equality_comparable<QueuedO
 class WorkflowAsync
 {
 
-  using WorkProc = std::function<void(QueuedObj)>;
+  // std::move_only_function (C++23) accepts move-only callables that std::function cannot.
+  using WorkProc = std::move_only_function<void(QueuedObj)>;
+  // The callback is held in a shared_ptr and accessed atomically. This eliminates the
+  // re-activation data race at the primitive level: a worker that has loaded the shared_ptr
+  // holds a stable reference even if activateWorkflow() installs a new callback concurrently.
+  using WorkProcPtr = std::shared_ptr<WorkProc>;
 
 public:
 
@@ -44,11 +73,31 @@ public:
   // The queue will be either a QueueMtSafe (unbounded) or BoundedMtQueue (a bounded tidal queue).
   explicit WorkflowAsync(QueuedObj stop_token, std::unique_ptr<Queue<QueuedObj>> queue_ptr = std::make_unique<Queue<QueuedObj>>())
     : stop_token_(std::move(stop_token)) , queue_ptr_(std::move(queue_ptr)) {}
-  ~WorkflowAsync() {
+  ~WorkflowAsync() noexcept {
 
-       // This stop token is not processed by the workflow function.
-    queue_ptr_->push(std::move(stop_token_));
-    joinAndDeleteThreads();
+    // Only push a stop token if there are active threads to consume it. Pushing onto an
+    // inactive, full QueueTidal workflow would otherwise block the destructor forever.
+    // This guards the common never-activated case; for an activated-but-stalled bounded
+    // queue the caller must still keep at least one consumer alive until shutdown.
+    try {
+
+      if (active_threads_ > 0) {
+
+        // This stop token is not processed by the workflow function.
+        queue_ptr_->push(std::move(stop_token_));
+        joinAndDeleteThreads();
+
+      }
+
+    } catch (const std::exception& e) {
+
+      ExecEnv::log().error("~WorkflowAsync() caught exception: {}", e.what());
+
+    } catch (...) {
+
+      ExecEnv::log().error("~WorkflowAsync() caught unknown exception");
+
+    }
 
   }
 
@@ -66,7 +115,23 @@ public:
       return false;
 
     }
-    workflow_callback_ = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+
+    // A previous run may have stopped (active_threads_ == 0) while its last worker was still finishing the
+    // stop-token callback. Join the stale threads first so workflow_callback_ is never overwritten while a
+    // worker is still executing it (otherwise a data race on the callback).
+    for (auto& thread : threads_) {
+
+      thread.join();
+
+    }
+    threads_.clear();
+
+    auto callback = std::bind_front(std::forward<F>(f), std::forward<Args>(args)...);
+
+    // Store the callback atomically in a shared_ptr so worker threads can load a
+    // consistent snapshot without data races during re-activation.
+    workflow_callback_.store(std::make_shared<WorkProc>(std::move(callback)),
+                             std::memory_order_release);
     queueThreads(threads);
 
     return true;
@@ -74,7 +139,9 @@ public:
   }
 
 
-  // This will block if the workflow is not active.
+  // Enqueue an object onto the workflow queue.
+  // Objects pushed before activateWorkflow() are processed once the workers start.
+  // For a bounded QueueTidal this blocks at high tide; for the unbounded QueueMtSafe it never blocks.
   void push(QueuedObj input_obj) {
 
     queue_ptr_->push(std::move(input_obj));
@@ -96,9 +163,8 @@ public:
 
   }
 
-
   // Underlying object queue access routine.
-  [[nodiscard]] const Queue<QueuedObj>& objectQueue() const { return *queue_ptr_; }
+  [[nodiscard]] const Queue<QueuedObj>& objectQueue() const noexcept { return *queue_ptr_; }
 
 private:
 
@@ -107,20 +173,60 @@ private:
   std::vector<std::jthread> threads_;
   std::atomic<uint32_t> active_threads_{0};
   std::mutex activation_mutex_;
-  WorkProc workflow_callback_;
+  // Shared by all worker threads. Accessed via atomic load/store to avoid data
+  // races during re-activation.
+  std::atomic<WorkProcPtr> workflow_callback_;
 
   void queueThreads(size_t threads)
   {
 
     // Always have at least one worker thread.
     threads = threads < 1 ? 1 : threads;
-    // Queue the worker threads,
-    for (size_t i = 0; i < threads; ++i) {
+    // Publish the worker count before any worker can pop a stop token, so the token-circulation
+    // protocol in threadProlog() always decrements from an accurate count.
+    active_threads_.store(threads);
 
-      threads_.emplace_back(&WorkflowAsync::threadProlog, this);
+    size_t started = 0;
+    try {
+
+      // Queue the worker threads,
+      for (; started < threads; ++started) {
+
+        threads_.emplace_back(&WorkflowAsync::threadProlog, this);
+
+      }
+
+    } catch (...) {
+
+      // Thread creation failed partway. The partially started workers are all blocked on the empty queue,
+      // so wake each of them with a stop token, then join them: leaving joinable threads behind would make
+      // the vector destructor hang (or std::terminate for std::thread).
+      active_threads_.store(started);
+      for (size_t i = 0; i < started; ++i) {
+
+        if constexpr (std::copy_constructible<QueuedObj>) {
+
+          queue_ptr_->push(stop_token_);
+
+        } else {
+
+          // A move-only token (e.g. a null unique_ptr) still matches threadProlog()'s comparison after being
+          // moved from, because the moved-from value equals itself. Copyable tokens are left untouched.
+          queue_ptr_->push(std::move(stop_token_));
+
+        }
+
+      }
+      for (auto& thread : threads_) {
+
+        thread.join();
+
+      }
+      threads_.clear();
+      active_threads_.store(0);
+      throw;
 
     }
-    active_threads_.store(threads);
 
   }
 
@@ -145,9 +251,13 @@ private:
           // Call the workflow function with the stop token.
           // The stop token is guaranteed to be the last object processed before the workflow is STOPPED.
           try {
-            workflow_callback_(std::move(work_item));
-          } catch (...) {
+            auto callback = workflow_callback_.load(std::memory_order_acquire);
+            (*callback)(std::move(work_item));
+          } catch (const std::exception& e) {
             // Swallow exceptions during stop-token processing to keep shutdown safe.
+            ExecEnv::log().error("WorkflowAsync stop-token processing threw exception: {}", e.what());
+          } catch (...) {
+            ExecEnv::log().error("WorkflowAsync stop-token processing threw an unknown exception.");
           }
 
         }
@@ -159,9 +269,13 @@ private:
 
         // The thread performs work with the dequeued work item.
         try {
-          workflow_callback_(std::move(work_item));
-        } catch (...) {
+          auto callback = workflow_callback_.load(std::memory_order_acquire);
+          (*callback)(std::move(work_item));
+        } catch (const std::exception& e) {
           // Swallow user-callback exceptions to keep worker threads alive.
+          ExecEnv::log().error("WorkflowAsync task threw exception: {}", e.what());
+        } catch (...) {
+          ExecEnv::log().error("WorkflowAsync task threw an unknown exception.");
         }
 
       }

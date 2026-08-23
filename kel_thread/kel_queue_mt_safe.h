@@ -5,11 +5,13 @@
 
 #include "kel_queue_monitor.h"
 
-#include <queue>
-#include <mutex>
-#include <optional>
+#include <atomic>
 #include <condition_variable>
+#include <cstddef>
 #include <memory>
+#include <mutex>
+#include <queue>
+#include <string>
 
 namespace kellerberrin {   //  organization level namespace
 
@@ -19,6 +21,11 @@ namespace kellerberrin {   //  organization level namespace
 // Thread safe queue for multiple consumer and producer threads.
 // This queue can potentially grow without bound if producer threads can enqueue faster than consumer threads can dequeue.
 // Objects on the queue must be move_constructible<T> (T=std::unique_ptr<QueuedObject>).
+//
+// NOTE: clear() destroys every queued object. Do not enqueue objects that require explicit
+// lifecycle handling (e.g. std::thread) and call clear() while they are in the queue; destroying
+// such an object is undefined behaviour. waitAndPop() move-constructs its result; if T's move
+// constructor can throw, the exception propagates and the queue state is left unchanged.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,13 +46,15 @@ public:
 
   }
 
-  // Explicitly shutdown the monitor and flag shutdown to all consumers.
-  ~QueueMtSafe() { monitor_ptr_ = nullptr; }
+  // Destroy the queue monitor, which joins its statistics thread. The queue itself has no
+  // shutdown mechanism; waiting consumers must be released via a stop-token sentinel value.
+  ~QueueMtSafe() noexcept { monitor_ptr_ = nullptr; }
 
-  // Copy constructors are removed.
+  // Non-copyable, non-movable.
   QueueMtSafe(const QueueMtSafe&) = delete;
   QueueMtSafe(QueueMtSafe&&) = delete;
   QueueMtSafe& operator=(const QueueMtSafe&) = delete;
+  QueueMtSafe& operator=(QueueMtSafe&&) = delete;
 
   // Enqueue function can be called by multiple threads, this queue can potentially grow without bound.
   // These threads will only block on other producer thread enqueue activity.
@@ -71,17 +80,19 @@ public:
 
   // Dequeue function can be called by multiple threads.
   // These threads will only block if the queue is empty or on other consumer thread dequeue activity.
+  // The counters are updated only after the element has been successfully moved out, so a
+  // throwing T move constructor leaves the queue state consistent.
   [[nodiscard]] T waitAndPop() {
 
     std::unique_lock<std::mutex> lock(data_mutex_);
     // Wait on non-empty queue.
     data_cond_.wait(lock, [this]{ return not empty(); });
 
-    --size_;
-    ++activity_;
-
     T value(std::move(data_queue_.front()));
     data_queue_.pop();
+
+    --size_;
+    ++activity_;
 
     // Unlock the mutex.
     lock.unlock();
@@ -93,12 +104,14 @@ public:
 
   }
 
-  // Unconditionally empty the queue.
+  // Unconditionally empty the queue. Destroys every queued object.
   void clear() {
 
     {
       std::scoped_lock<std::mutex> lock(data_mutex_);
-      data_queue_ = {};
+      // Swap with a local empty queue (std::queue::swap is noexcept for std::deque), then
+      // destroy the old elements when the local goes out of scope. Safer than assignment.
+      std::queue<T>().swap(data_queue_);
       size_ = 0;
     }
 
@@ -106,11 +119,11 @@ public:
 
   }
 
-  [[nodiscard]] MonitorMtSafe<T>& monitor() const { return *monitor_ptr_; };
+  [[nodiscard]] MonitorMtSafe<T>& monitor() const noexcept { return *monitor_ptr_; }
   // All of these functions are thread safe.
-  [[nodiscard]] bool empty() const { return size_ == 0; }
-  [[nodiscard]] size_t size() const { return size_; }
-  [[nodiscard]] size_t activity() const { return activity_; }
+  [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+  [[nodiscard]] size_t size() const noexcept { return size_; }
+  [[nodiscard]] size_t activity() const noexcept { return activity_; }
 
 private:
 
