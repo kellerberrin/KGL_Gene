@@ -40,15 +40,16 @@ public:
   IntervalSetLower() = default;
   ~IntervalSetLower() = default;
 
+  /// Returns true if the argument interval is contained within one of the intervals held in the set.
   [[nodiscard]] bool containsInterval(const OpenRightUnsigned &interval) const;
-  // Returns a vector (possibly empty) of set intervals that intersect the argument interval.
+  /// Returns a vector (possibly empty) of set intervals that intersect the argument interval.
   [[nodiscard]] std::vector<OpenRightUnsigned> findIntersectsInterval(const OpenRightUnsigned &interval) const;
-  // Returns a bool if the interval and set of intervals intersect.
+  /// Returns a bool if the interval and set of intervals intersect.
   [[nodiscard]] bool intersectsInterval(const OpenRightUnsigned &interval) const { return not findIntersectsInterval(interval).empty(); }
-  // Returns the interval unions between this set and the argument set.
-  // Intervals are modified/extended as necessary for a disjoint interval minimal union.
+  /// Returns the interval unions between this set and the argument set.
+  /// Intervals are modified/extended as necessary for a disjoint interval minimal union.
   [[nodiscard]] IntervalSetLower intervalSetUnion(const IntervalSetLower& interval_set) const;
-  // Set with simplified intervals which are modified/extended as necessary for disjoint representation.
+  /// Set with simplified intervals which are modified/extended as necessary for disjoint representation.
   [[nodiscard]] IntervalSetLower simplifyDisjoint() const { return intervalSetUnion(IntervalSetLower()); }
 
 

@@ -8,10 +8,7 @@
 
 #include <chrono>
 #include <compare>
-#include <format>
-#include <locale>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -37,18 +34,24 @@ public:
   DateGP& operator=(const DateGP&) = default;
   ~DateGP() = default;
 
+  /// Set the date to the current local date.
   void setToday();
+  /// Set the date to the current UTC date.
   void setUTCDate();
 
-  // True only if the object actually holds a valid date.
+  /// True only if the object actually holds a valid date.
   [[nodiscard]] bool ok() const noexcept;
   [[nodiscard]] bool notInitialized() const noexcept { return !ok(); }
 
+  /// Return the year, or 0 if the date is not initialized.
   [[nodiscard]] size_t year() const;
+  /// Return the month, or 0 if the date is not initialized.
   [[nodiscard]] size_t month() const;
+  /// Return the day, or 0 if the date is not initialized.
   [[nodiscard]] size_t day() const;
 
-  [[nodiscard]] std::string text() const; // "YYYY-bbb-DD", e.g. "2020-Jan-01"
+  /// Return the date as "YYYY-bbb-DD", e.g. "2020-Jan-01", or empty if not initialized.
+  [[nodiscard]] std::string text() const;
   static constexpr size_t TEXTSIZE_{11};
 
   [[nodiscard]] std::string year_text() const { return std::to_string(year()); }
@@ -58,7 +61,9 @@ public:
   [[nodiscard]] auto operator<=>(const DateGP&) const = default;
   [[nodiscard]] bool operator==(const DateGP&) const = default;
 
+  /// Return the absolute difference in days between two dates, or 0 if either is uninitialized.
   [[nodiscard]] static size_t daysDifference(const DateGP& date1, const DateGP& date2);
+  /// Return the absolute difference in months between two dates, or 0 if either is uninitialized.
   [[nodiscard]] static size_t monthsDifference(const DateGP& date1, const DateGP& date2);
 
   // Non-throwing alternatives for callers that cannot use exceptions.

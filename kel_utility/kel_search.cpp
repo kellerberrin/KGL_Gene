@@ -3,11 +3,7 @@
 //
 
 #include "kel_search.h"
-
-
-
-namespace kel = kellerberrin;
-
+#include "kel_exec_env.h"
 
 #include <cstddef>
 #include <regex>
@@ -17,16 +13,16 @@ namespace kel = kellerberrin;
 
 namespace kel = kellerberrin;
 
+/// Returns a vector of intervals where the regex pattern was found in the view.
 std::vector<kel::OpenRightUnsigned>
 kel::Search::searchView(const std::regex& search_spec, std::string_view sequence_view) {
 
   std::vector<OpenRightUnsigned> search_matches;
 
-  const char* const first = sequence_view.data();
-  const char* const last  = first + sequence_view.size();
-
-  using RegexIter = std::cregex_iterator;
-  RegexIter iter_begin(first, last, search_spec);
+  // Use regex_iterator over the view's iterators so that a null-terminated
+  // buffer is not required (string_view::data() is not guaranteed terminated).
+  using RegexIter = std::regex_iterator<std::string_view::const_iterator>;
+  RegexIter iter_begin(sequence_view.begin(), sequence_view.end(), search_spec);
   RegexIter iter_end; // Default-constructed end sentinel.
 
   for (auto iter = iter_begin; iter != iter_end; ++iter) {
@@ -58,6 +54,7 @@ kel::Search::searchView(const std::regex& search_spec, std::string_view sequence
 
 }
 
+/// Convenience routine with regular search expression as text. Use for single ad-hoc text searches.
 std::vector<kel::OpenRightUnsigned>
 kel::Search::searchView(std::string_view search_spec, std::string_view sequence_view) {
 

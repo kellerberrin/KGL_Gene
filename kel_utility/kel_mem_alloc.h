@@ -6,7 +6,6 @@
 #define KEL_MEM_ALLOC_H
 
 
-#include <memory_resource>
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
@@ -35,36 +34,43 @@ public:
   AuditMemory() = delete;
   ~AuditMemory() = delete;
 
-  // Force free store release using malloc trim.
-  // Malloc trim is a GNU/glibc-specific extension.
-  // It will not compile on macOS, Windows, and some non-glibc Linux systems.
+  /// Force free store release using malloc trim.
+  /// Malloc trim is a GNU/glibc-specific extension.
+  /// It will not compile on macOS, Windows, and some non-glibc Linux systems.
   static void trimFreeStore() {
 #ifdef __GLIBC__
     malloc_trim(0);
 #endif
   }
 
-  // Audited alloc functions.
+  /// Audited alloc functions.
   template<class T>
   [[nodiscard]] static T* newMem(std::size_t mem_size);
   template<class T>
   [[nodiscard]] static T* newArray(std::size_t array_size) { return newMem<T>(sizeof(T) * array_size); }
-  // Audited free functions.
+  /// Audited free functions.
   template<class T>
-  static void deleteMem(T* mem_ptr);
+  static void deleteMem(T* mem_ptr) noexcept;
   template<class T>
-  static void deleteArray(T* mem_ptr) { deleteMem(mem_ptr); }
+  static void deleteArray(T* mem_ptr) noexcept { deleteMem(mem_ptr); }
 
   template<class T>
-  [[nodiscard]] static size_t alignedArray(size_t array_size) { return alignedSize(sizeof(T) *  array_size); }
+  [[nodiscard]] static size_t alignedArray(size_t array_size) noexcept { return alignedSize(sizeof(T) *  array_size); }
 
-  [[nodiscard]] static size_t deallocatedBytes() { return deallocated_bytes_; }
-  [[nodiscard]] static size_t allocatedBytes() { return allocated_bytes_; }
-  [[nodiscard]] static size_t allocations() { return allocations_; }
-  [[nodiscard]] static size_t deallocations() { return deallocations_; }
-  [[nodiscard]] static size_t countMaxAlign() { return count_max_align_; }
-  [[nodiscard]] static size_t additionalAlignBytes() { return additional_align_bytes_; }
-  [[nodiscard]] static size_t alignedSize(size_t mem_size);
+  /// Return the total number of deallocated bytes.
+  [[nodiscard]] static size_t deallocatedBytes() noexcept { return deallocated_bytes_; }
+  /// Return the total number of allocated bytes.
+  [[nodiscard]] static size_t allocatedBytes() noexcept { return allocated_bytes_; }
+  /// Return the total number of allocations.
+  [[nodiscard]] static size_t allocations() noexcept { return allocations_; }
+  /// Return the total number of deallocations.
+  [[nodiscard]] static size_t deallocations() noexcept { return deallocations_; }
+  /// Return the count of allocations that already had maximum alignment.
+  [[nodiscard]] static size_t countMaxAlign() noexcept { return count_max_align_; }
+  /// Return the total number of additional alignment bytes.
+  [[nodiscard]] static size_t additionalAlignBytes() noexcept { return additional_align_bytes_; }
+  /// Return the aligned size for the requested memory size.
+  [[nodiscard]] static size_t alignedSize(size_t mem_size) noexcept;
 
 private:
 
@@ -92,7 +98,7 @@ T* AuditMemory::newMem(std::size_t mem_size)
 
   }
 
-  size_t aligned_size = alignedSize(mem_size);;
+  size_t aligned_size = alignedSize(mem_size);
   if (aligned_size == mem_size) {
 
     ++count_max_align_;
@@ -127,7 +133,7 @@ T* AuditMemory::newMem(std::size_t mem_size)
 
 
 template<class T>
-void AuditMemory::deleteMem(T* ptr)
+void AuditMemory::deleteMem(T* ptr) noexcept
 {
 
   if (ptr == nullptr) {

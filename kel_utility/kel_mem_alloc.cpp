@@ -19,10 +19,10 @@ namespace kel = kellerberrin;
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t kel::AuditMemory::alignedSize(size_t mem_size) {
+/// Return the requested memory size rounded up to a multiple of alignof(max_align_t).
+size_t kel::AuditMemory::alignedSize(size_t mem_size) noexcept {
 
   size_t alignment = alignof(std::max_align_t);
   return ((mem_size + alignment - 1) / alignment) * alignment;
 
 }
-

@@ -16,7 +16,7 @@ namespace kel = kellerberrin;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Returns true if the interval argument is contained within one of the intervals held in the set.
+/// Returns true if the interval argument is contained within one of the intervals held in the set.
 bool kel::IntervalSetLower::containsInterval(const OpenRightUnsigned& interval) const {
 
   if (empty()) {
@@ -65,8 +65,8 @@ bool kel::IntervalSetLower::containsInterval(const OpenRightUnsigned& interval) 
 }
 
 
-// Returns the interval unions between this set and the argument set.
-// Intervals are modified/extended as necessary for a disjoint interval minimal union.
+/// Returns the interval unions between this set and the argument set.
+/// Intervals are modified/extended as necessary for a disjoint interval minimal union.
 kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetLower& interval_set) const {
 
   IntervalSetLower set_union;
@@ -141,7 +141,7 @@ kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetL
 }
 
 
-// Find the set intervals that intersect the argument interval.
+/// Find the set intervals that intersect the argument interval.
 [[nodiscard]] std::vector<kel::OpenRightUnsigned> kel::IntervalSetLower::findIntersectsInterval(const OpenRightUnsigned &interval) const {
 
   std::vector<OpenRightUnsigned> value_vector;
@@ -209,4 +209,3 @@ kel::IntervalSetLower kel::IntervalSetLower::intervalSetUnion(const IntervalSetL
   return value_vector;
 
 }
-

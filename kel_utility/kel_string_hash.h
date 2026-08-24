@@ -65,7 +65,7 @@ inline constexpr std::array<std::uint64_t, XOR_TABLE_SIZE> crc64_table = generat
 
 } // namespace internal
 
-// Computes the CRC-64 checksum of a given string
+/// Computes the CRC-64 checksum of a given string.
 [[nodiscard]] constexpr std::uint64_t CRC_64_ECMA_182(std::string_view str_text) noexcept {
     // Initial value according to ECMA-182 standard is 0x0000000000000000
     std::uint64_t crc = internal::INIT;
@@ -81,8 +81,8 @@ inline constexpr std::array<std::uint64_t, XOR_TABLE_SIZE> crc64_table = generat
     return crc;
 }
 
-// FNV-1a 64-bit compile-time string hashing
-[[nodiscard]] constexpr std::uint64_t FNV_1A(std::string_view str_text) {
+/// FNV-1a 64-bit compile-time string hashing.
+[[nodiscard]] constexpr std::uint64_t FNV_1A(std::string_view str_text) noexcept {
 
     std::uint64_t hash = 0xcbf29ce484222325ULL; // FNV offset basis
 
@@ -98,7 +98,7 @@ inline constexpr std::array<std::uint64_t, XOR_TABLE_SIZE> crc64_table = generat
 }
 
 
-} // namespace UtilityStringHash64
+} // namespace StringHash64
 
 
 // Assert correct CRC-64-ECMA-182 crc values

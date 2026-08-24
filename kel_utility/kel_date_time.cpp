@@ -124,6 +124,7 @@ size_t kel::DateGP::year() const {
   if (!ok()) {
 
     ExecEnv::log().warn("DateGP::year() on uninitialized date");
+    return 0;
 
   }
 
@@ -136,6 +137,7 @@ size_t kel::DateGP::month() const {
   if (!ok()) {
 
     ExecEnv::log().warn("DateGP::month() on uninitialized date");
+    return 0;
 
   }
 
@@ -145,11 +147,12 @@ size_t kel::DateGP::month() const {
 
 size_t kel::DateGP::day() const {
 
-if (!ok()) {
+  if (!ok()) {
 
-  ExecEnv::log().warn("DateGP::day() on uninitialized date");
+    ExecEnv::log().warn("DateGP::day() on uninitialized date");
+    return 0;
 
-}
+  }
 
   return static_cast<unsigned>(date_->day());
 
@@ -157,21 +160,30 @@ if (!ok()) {
 
 std::string kel::DateGP::text() const {
 
-if (!ok()) {
+  if (!ok()) {
 
-  ExecEnv::log().warn("DateGP::text() on uninitialized date");
+    ExecEnv::log().warn("DateGP::text() on uninitialized date");
+    return {};
 
-}
-// Classic locale gives English month abbreviations ("Jan", "Feb", ...).
-return std::format(std::locale::classic(), "{:%Y-%b-%d}", *date_);
+  }
+  // Classic locale gives English month abbreviations ("Jan", "Feb", ...).
+  return std::format(std::locale::classic(), "{:%Y-%b-%d}", *date_);
 
 }
 
 void kel::DateGP::setToday() {
 
-  auto local = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+  try {
 
-  date_ = std::chrono::year_month_day{floor<std::chrono::days>(local)};
+    auto local = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+    date_ = std::chrono::year_month_day{floor<std::chrono::days>(local)};
+
+  } catch (const std::exception& e) {
+
+    ExecEnv::log().warn("DateGP::setToday; unable to determine local time zone ({}), using UTC", e.what());
+    setUTCDate();
+
+  }
 
 }
 
@@ -186,6 +198,7 @@ size_t kel::DateGP::daysDifference(const DateGP& date1, const DateGP& date2) {
   if (!date1.ok() || !date2.ok()) {
 
     ExecEnv::log().warn("DateGP::daysDifference() on uninitialized date");
+    return 0;
 
   }
 
@@ -198,11 +211,13 @@ size_t kel::DateGP::daysDifference(const DateGP& date1, const DateGP& date2) {
 
 size_t kel::DateGP::monthsDifference(const DateGP& date1, const DateGP& date2) {
 
-if (!date1.ok() || !date2.ok()) {
+  if (!date1.ok() || !date2.ok()) {
 
-  ExecEnv::log().warn("DateGP::monthsDifference() on uninitialized date");
+    ExecEnv::log().warn("DateGP::monthsDifference() on uninitialized date");
+    return 0;
 
-}
+  }
+
   auto months1 = (static_cast<int>(date1.date_->year()) * 12) + static_cast<unsigned>(date1.date_->month());
   auto months2 = (static_cast<int>(date2.date_->year()) * 12) + static_cast<unsigned>(date2.date_->month());
 
