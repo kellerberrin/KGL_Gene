@@ -8,6 +8,10 @@
 
 #include <curl/curl.h>
 
+#include <mutex>
+#include <string>
+#include <vector>
+
 
 namespace kellerberrin { // namespace
 
@@ -26,16 +30,34 @@ public:
 private:
 
   CURL* lib_curl_handle_;
-  inline static std::vector<std::string> request_responses_;
+  // Serialize concurrent requests on the same CURL handle. A single handle is not thread-safe.
+  std::mutex request_mutex_;
 
-  // Response callback
-  static size_t requestCallback(char *buffer, size_t item_size, size_t num_items, void *ignored);
+  // Response callback.
+  static size_t append(char* buffer, size_t item_size, size_t num_items, void* user_data);
 
 };
 
+// curl_global_init()/curl_global_cleanup() must be called exactly once and are not thread-safe.
+// Guard the global library initialisation with a once_flag and schedule cleanup at process exit.
+namespace {
+
+void ensureCurlGlobalInit() {
+
+  static std::once_flag init_flag;
+  std::call_once(init_flag, [] {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    std::atexit([] { curl_global_cleanup(); });
+  });
+
+}
+
+} // anonymous namespace
+
+
 CurlRestAPI::CurlRestAPI() {
 
-  curl_global_init(CURL_GLOBAL_DEFAULT);
+  ensureCurlGlobalInit();
   lib_curl_handle_ = curl_easy_init();
   if (lib_curl_handle_ == nullptr) {
 
@@ -53,11 +75,12 @@ CurlRestAPI::~CurlRestAPI() {
     curl_easy_cleanup(lib_curl_handle_);
 
   }
-  curl_global_cleanup();
 
 }
 
 std::pair<bool, std::string> CurlRestAPI::synchronousRequest(const std::string& url, const std::string& raw_request) {
+
+  std::lock_guard<std::mutex> lock(request_mutex_);
 
   if (lib_curl_handle_ == nullptr) {
 
@@ -65,51 +88,67 @@ std::pair<bool, std::string> CurlRestAPI::synchronousRequest(const std::string& 
 
   }
 
-  request_responses_.clear();
-  curl_easy_setopt(lib_curl_handle_, CURLOPT_POSTFIELDS, raw_request.c_str());
-  curl_easy_setopt(lib_curl_handle_, CURLOPT_URL, url.c_str());
-  // Register the callback.
-  curl_easy_setopt(lib_curl_handle_, CURLOPT_WRITEFUNCTION, &CurlRestAPI::requestCallback);
+  // Use a per-request response buffer passed through CURLOPT_WRITEDATA. This makes the
+  // callback instance-safe and thread-safe (no shared state).
+  std::string response_buffer;
 
-  // The call is synchronous (blocking).
-  auto result = curl_easy_perform(lib_curl_handle_);
+  auto setopt = [&](auto option, auto value) -> bool {
 
-  // Error check
-  if (result != CURLE_OK) {
+    const auto result = curl_easy_setopt(lib_curl_handle_, option, value);
+    if (result != CURLE_OK) {
 
-    ExecEnv::log().error("urlRestAPI::synchronousRequest; error making curl request: {}", curl_easy_strerror(result));
-    // Unpack the response for any error message.
-    std::string error_response;
-    for (auto const& response : request_responses_) {
-
-      error_response += response;
+      ExecEnv::log().error("CurlRestAPI::synchronousRequest; curl_easy_setopt failed: {}", curl_easy_strerror(result));
+      return false;
 
     }
+    return true;
 
-    return { false, error_response};
+  };
+
+  if (not setopt(CURLOPT_POSTFIELDS, raw_request.c_str())) return {false, response_buffer};
+  if (not setopt(CURLOPT_URL, url.c_str())) return {false, response_buffer};
+  // Register the callback.
+  if (not setopt(CURLOPT_WRITEFUNCTION, &CurlRestAPI::append)) return {false, response_buffer};
+  if (not setopt(CURLOPT_WRITEDATA, &response_buffer)) return {false, response_buffer};
+
+  // The call is synchronous (blocking).
+  const auto result = curl_easy_perform(lib_curl_handle_);
+
+  // Error check.
+  if (result != CURLE_OK) {
+
+    ExecEnv::log().error("CurlRestAPI::synchronousRequest; error making curl request: {}", curl_easy_strerror(result));
+    return {false, response_buffer};
 
   }
 
-  std::string success_response;
-  for (auto const& response : request_responses_) {
-
-    success_response += response;
-
-  }
-
-  return {true, success_response};
+  return {true, response_buffer};
 
 }
 
 
-// Static callback function
-size_t CurlRestAPI::requestCallback(char *buffer, size_t item_size, size_t num_items, void * /*ignored*/ )
-{
+// Static callback function.
+size_t CurlRestAPI::append(char* data, size_t buffer_size, size_t num_items, void* user_data) {
 
-  size_t bytes_returned = item_size * num_items;
-  request_responses_.emplace_back(std::string(buffer, bytes_returned));
+  auto* response_buffer = static_cast<std::string*>(user_data);
+  if (response_buffer == nullptr) {
 
-  return bytes_returned;
+    return 0;
+
+  }
+
+  try {
+
+    response_buffer->append(data, buffer_size * num_items);
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().error("CurlRestAPI::append; exception appending response data: {}", e.what());
+    return 0;  // Signal error to curl.
+
+  }
+  return buffer_size * num_items;
 
 }
 
@@ -134,6 +173,4 @@ std::pair<bool, std::string> RestAPI::synchronousRequest(const std::string& url,
 }
 
 
-
 } // namespace
-

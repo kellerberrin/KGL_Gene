@@ -19,6 +19,8 @@ namespace kellerberrin {
 // Plain text IO.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// Stream reader for uncompressed text files.
+/// Reads line-by-line using std::getline and returns IOLineRecord objects.
 class TextStreamIO : public BaseStreamIO {
 
 public:
@@ -31,6 +33,7 @@ public:
   [[nodiscard]] IOLineRecord readLine() override;
   void close() override { record_counter_ = 0; file_.close(); }
 
+  /// Factory method. Opens a text file and returns a ready-to-read stream, or std::nullopt on failure.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
 
 private:
@@ -46,6 +49,8 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GZStreamIOImpl; // Currently implemented using boost::streams.
+/// Stream reader for gzip '.gz' files using boost::iostreams.
+/// Decompression is single-threaded. Uses the Pimpl idiom to hide boost from the header.
 class GZStreamIO : public BaseStreamIO {
 
 public:
@@ -59,6 +64,7 @@ public:
   [[nodiscard]] IOLineRecord readLine() override;
   void close() override;
 
+  /// Factory method. Opens a .gz file and returns a ready-to-read stream, or std::nullopt on failure.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
 
 private:
@@ -73,6 +79,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class BZ2StreamIOImpl; // Currently implemented using boost::streams.
+/// Stream reader for bzip2 '.bz2' files using boost::iostreams.
+/// Decompression is single-threaded. Uses the Pimpl idiom to hide boost from the interface.
 class BZ2StreamIO : public BaseStreamIO {
 
 public:
@@ -85,6 +93,7 @@ public:
   [[nodiscard]] IOLineRecord readLine() override;
   void close() override;
 
+  /// Factory method. Opens a .bz2 file and returns a ready-to-read stream, or std::nullopt on failure.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
 
 private:

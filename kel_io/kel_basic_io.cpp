@@ -53,9 +53,8 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std
   std::string file_ext = Utility::toupper(Utility::fileExtension(file_name));
 
   // Open a compressed gzipped file based on the file extension.
-  if (file_ext == GZ_FILE_EXTENSTION_) {
+  if (file_ext == GZ_FILE_EXTENSION_) {
 
-    std::optional<std::unique_ptr<BaseStreamIO>> gz_stream_opt;
     if (BGZStreamIO::verify(file_name)) { // Check if block gzipped.
 
       ExecEnv::log().info("File structure verified as bgz format, parser uses bgz reader.");
@@ -68,11 +67,11 @@ std::optional<std::unique_ptr<BaseStreamIO>> BaseStreamIO::getStreamIO(const std
 
     }
 
-  } else if (file_ext == BGZ_FILE_EXTENSTION_) { // .bgz extension is just assumed to be block gzipped.
+  } else if (file_ext == BGZ_FILE_EXTENSION_) { // .bgz extension is just assumed to be block gzipped.
 
     return BGZStreamIO::getStreamIO(file_name, decompression_threads);
 
-  } else if (file_ext == BZ2_FILE_EXTENSTION_) { // If .bz2 then use Burrows Wheeler decompression.
+  } else if (file_ext == BZ2_FILE_EXTENSION_) { // If .bz2 then use Burrows Wheeler decompression.
 
     return BZ2StreamIO::getStreamIO(file_name);
 

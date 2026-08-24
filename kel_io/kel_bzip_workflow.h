@@ -14,6 +14,8 @@
 
 #include <string>
 #include <memory>
+#include <mutex>
+#include <fstream>
 
 
 namespace kellerberrin {   //  organization::project level namespace
@@ -40,6 +42,9 @@ namespace kellerberrin {   //  organization::project level namespace
 // This object can read multiple '.bgz' files by calling close() and then open().
 enum class BGZStreamState { ACTIVE, STOPPED};
 
+/// Multi-threaded block gzip (RFC1952) decompression stream.
+/// Reads and decompresses .bgz files using a pipeline of decompression threads.
+/// Presents a stream-like readLine() interface with guaranteed sequential line ordering.
 class BGZStreamIO : public BaseStreamIO {
 
   // This struct maps to the byte structure of the gzip header. We need to be very careful about any structure byte padding.
@@ -72,7 +77,7 @@ class BGZStreamIO : public BaseStreamIO {
 
   };
 
-  constexpr static const size_t MAX_UNCOMPRESSED_SIZE_{65536};
+  constexpr static size_t MAX_UNCOMPRESSED_SIZE_{65536};
   // Holds the compressed read directly from file. Note the union to hold the header block.
   using BGZCompressedData = std::array<std::byte, MAX_UNCOMPRESSED_SIZE_>;
   struct CompressedBlock {
@@ -109,27 +114,36 @@ public:
   explicit BGZStreamIO(size_t thread_count = BGZ_DEFAULT_THREADS) : decompression_threads_(thread_count) {}
   ~BGZStreamIO() override { close(); }
 
+  /// Factory method. Opens a .bgz file and returns a ready-to-read stream, or std::nullopt on failure.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name
                                                                                , size_t decompression_threads = BGZ_DEFAULT_THREADS);
 
-  // Guaranteed sequential line reader. Does not block on eof.
+  /// Guaranteed sequential line reader. Does not block on eof.
+  /// Note: readLine() holds an internal mutex across the blocking waitAndPop() call,
+  /// which serialises concurrent readers. This is intentional to guarantee sequential ordering.
+  /// Callers should not call close() while a readLine() is blocked; the documented usage
+  /// is to fully consume the stream (until EOF) before calling close().
   [[nodiscard]] IOLineRecord readLine() override;
 
-  // Opens the '.bgz' file and begins decompressing the file, the object is now 'ACTIVE'.
+  /// Opens the '.bgz' file and begins decompressing the file, the object is now 'ACTIVE'.
   [[nodiscard]] bool open(const std::string &file_name) override;
 
-  // Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
+  /// Close the physical file and reset the internal queues and threads, the object is now 'STOPPED'.
+  /// Note: close() joins the record-assembly thread. If the line queue is at high tide and no consumer
+  /// is draining it, the assembly thread can be blocked on push() and close() will block until the queue
+  /// is drained. Call close() only once the stream has been fully consumed (or concurrently with a
+  /// consumer that is draining the queue).
   void close() override;
 
 
-  // Checks the internal structures of a .bgz file.
-  // Returns true if the .bgz file conforms to the RFC1952 standard.
-  // Reads and verifies the entire .bgz file, may be slow on very large files.
+  /// Checks the internal structures of a .bgz file.
+  /// Returns true if the .bgz file conforms to the RFC1952 standard.
+  /// Reads and verifies the entire .bgz file, may be slow on very large files.
   [[nodiscard]] static bool verify(const std::string &file_name, bool silent = true);
 
-  [[nodiscard]] bool good() const { return not decompression_error_; }
+  [[nodiscard]] bool good() const { return not decompression_error_.load(); }
   // Stream state, of the object, active or stopped.
-  [[nodiscard]] BGZStreamState streamState() const { return stream_state_; }
+  [[nodiscard]] BGZStreamState streamState() const { return stream_state_.load(); }
 
   // Access the underlying queues for diagnostics.
   [[nodiscard]] const DecompressionPipeline& workFlow() const { return decompression_pipeline_; }
@@ -141,7 +155,6 @@ private:
   std::ifstream bgz_file_;
   size_t record_counter_{0};
   WorkflowThreads reader_thread_;
-  std::future<bool> reader_return_;
   WorkflowThreads assemble_records_thread_;
   // The synchronous decompression pipeline.
   DecompressionPipeline decompression_pipeline_;
@@ -150,48 +163,50 @@ private:
 
   size_t decompression_threads_;
   // Flag set if problems decompressing a gzip block.
-  bool decompression_error_{false};
+  std::atomic<bool> decompression_error_{false};
   // Flag set if EOF marker received on the line queue.
-  bool line_eof_{false};
+  std::atomic<bool> line_eof_{false};
   // If set, then shutdown the decompression pipeline gracefully.
   std::atomic<bool> close_stream_{false};
   // Object state.
   std::atomic<BGZStreamState> stream_state_{BGZStreamState::STOPPED};
+  // Mutex to protect the check-then-pop sequence in readLine().
+  std::mutex read_mutex_;
 
 
   // Queue and workflow parameters.
   // Queue high tide and low tide markers are guessed as reasonable values.
-  constexpr static const size_t PIPELINE_LOW_TIDE_{2000};
-  constexpr static const size_t PIPELINE_HIGH_TIDE_{4000};
+  constexpr static size_t PIPELINE_LOW_TIDE_{2000};
+  constexpr static size_t PIPELINE_HIGH_TIDE_{4000};
   constexpr static const char* PIPELINE_NAME_{"BGZWorkflow Decompress Pipeline"};
-  constexpr static const size_t PIPELINE_SAMPLE_FREQ_{100};
+  constexpr static size_t PIPELINE_SAMPLE_FREQ_{100};
 
-  constexpr static const size_t LINE_LOW_TIDE_{10000};
-  constexpr static const size_t LINE_HIGH_TIDE_{20000};
+  constexpr static size_t LINE_LOW_TIDE_{10000};
+  constexpr static size_t LINE_HIGH_TIDE_{20000};
   constexpr static const char* LINE_QUEUE_NAME_{"BGZWorkflow Line Record Queue"};
-  constexpr static const size_t LINE_SAMPLE_FREQ_{100};
+  constexpr static size_t LINE_SAMPLE_FREQ_{100};
 
 
   // These constants are used to verify the structure of the .bgz file and specified by standard RFC1952.
   // Don't change these constants
-  constexpr static const uint8_t BLOCK_ID1_{31};
-  constexpr static const uint8_t BLOCK_ID2_{139};
-  constexpr static const uint8_t COMPRESSION_{8};  // 8 = Z_DEFLATED in zlib.h
-  constexpr static const uint8_t FLAGS_{4};
-  constexpr static const uint8_t EXTRA_LENGTH_{6};
-  constexpr static const uint8_t SUBFIELD_ID1_{66};
-  constexpr static const uint8_t SUBFIELD_ID2_{67};
-  constexpr static const uint8_t SUBFIELD_LENGTH_{2};
+  constexpr static uint8_t BLOCK_ID1_{31};
+  constexpr static uint8_t BLOCK_ID2_{139};
+  constexpr static uint8_t COMPRESSION_{8};  // 8 = Z_DEFLATED in zlib.h
+  constexpr static uint8_t FLAGS_{4};
+  constexpr static uint8_t EXTRA_LENGTH_{6};
+  constexpr static uint8_t SUBFIELD_ID1_{66};
+  constexpr static uint8_t SUBFIELD_ID2_{67};
+  constexpr static uint8_t SUBFIELD_LENGTH_{2};
 
-  constexpr static const size_t EOF_MARKER_SIZE_{28};
-  constexpr static const uint8_t EOF_MARKER_[28] { 0x1f, 0x8b, 0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff,
+  constexpr static size_t EOF_MARKER_SIZE_{28};
+  constexpr static uint8_t EOF_MARKER_[28] { 0x1f, 0x8b, 0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff,
                                                    0x06, 0x00, 0x42, 0x43, 0x02, 0x00, 0x1b, 0x00, 0x03, 0x00,
                                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  constexpr static const int32_t HEADER_SIZE_{sizeof(BGZHeaderblock)};
-  constexpr static const int32_t TRAILER_SIZE_{sizeof(BGZTrailerBlock)};
-  constexpr static const size_t BLOCK_SIZE_ADJUST_{HEADER_SIZE_ + TRAILER_SIZE_ - 1};
-  constexpr static const size_t INFLATE_WINDOW_FLAG_ = 15 + 32;
-  constexpr static const char EOL_MARKER_ = '\n';
+  constexpr static size_t HEADER_SIZE_{sizeof(BGZHeaderblock)};
+  constexpr static size_t TRAILER_SIZE_{sizeof(BGZTrailerBlock)};
+  constexpr static size_t BLOCK_SIZE_ADJUST_{HEADER_SIZE_ + TRAILER_SIZE_ - 1};
+  constexpr static size_t INFLATE_WINDOW_FLAG_ = 15 + 32;
+  constexpr static char EOL_MARKER_ = '\n';
 
   // Read and decompress the entire bgz file.
   void readDecompressFile();

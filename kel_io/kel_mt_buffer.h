@@ -14,6 +14,8 @@
 #include <vector>
 #include <optional>
 #include <fstream>
+#include <mutex>
+#include <atomic>
 
 
 namespace kellerberrin {   //  organization::project level namespace
@@ -27,9 +29,13 @@ namespace kellerberrin {   //  organization::project level namespace
 // retrieved using readLine().
 // This object cannot be copied.
 //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// A buffered, thread-safe adapter for BaseStreamIO objects.
+/// Records are asynchronously read from the underlying stream and stored in a tidal queue.
+/// readLine() is thread safe. If read by a single thread, records are guaranteed in file order.
+/// If read by multiple threads, no line order guarantee is provided.
 class StreamMTBuffer : public BaseStreamIO {
 
 public:
@@ -39,21 +45,23 @@ public:
   StreamMTBuffer(const StreamMTBuffer&) = delete;
   ~StreamMTBuffer() override { close(); };
 
-  // Uses the filename extension heuristic documented in kel_basic_io.h to open the underlying file stream.
+  /// Uses the filename extension heuristic documented in kel_basic_io.h to open the underlying file stream.
   [[nodiscard]] bool open(const std::string &file_name) override;
-  // After closing the object can be re-opened on another file.
+  /// As open() but with a configurable decompression thread count for '.bgz' file types (ignored otherwise).
+  [[nodiscard]] bool open(const std::string& file_name, size_t decompression_threads);
+  /// After closing the object can be re-opened on another file.
   void close() override;
 
-  // This is thread safe and buffered.
-  // If read by 1 thread then records are guaranteed to be retrieved in file order.
-  // If read by multiple threads then there is no line order guarantee.
-  // This function will block on an empty queue and no EOF.
-  // After an EOF has been received, then subsequent calls will not block and will return EOF objects.
+  /// This is thread safe and buffered.
+  /// If read by 1 thread then records are guaranteed to be retrieved in file order.
+  /// If read by multiple threads then there is no line order guarantee.
+  /// This function will block on an empty queue and no EOF.
+  /// After an EOF has been received, then subsequent calls will not block and will return EOF objects.
   [[nodiscard]] IOLineRecord readLine() override;
 
-  // Static constructor.
+  /// Static constructor. Opens a file and returns a buffered, thread-safe stream, or std::nullopt on failure.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO( const std::string& file_name);
-  // Layer the stream buffer on top of an existing open StreamIO.
+  /// Layer the stream buffer on top of an existing open StreamIO.
   [[nodiscard]] static std::optional<std::unique_ptr<BaseStreamIO>> getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr);
 
   // Access queue stats.
@@ -62,23 +70,27 @@ public:
 private:
 
   // The tidal IO queue parameters.
-  static constexpr const size_t IO_HIGH_TIDE_{10000};          // Maximum QueueTidal size
-  static constexpr const size_t IO_LOW_TIDE_{2000};            // Low water mark to begin queueing data records
+  static constexpr size_t IO_HIGH_TIDE_{10000};          // Maximum QueueTidal size
+  static constexpr size_t IO_LOW_TIDE_{2000};            // Low water mark to begin queueing data records
   static constexpr const char* IO_QUEUE_NAME_{"StreamMTBuffer Queue"};      // The queue name
-  static constexpr const size_t IO_SAMPLE_RATE_{100};            // The queue monitor sampling rate (ms), zero (0) disables the monitor.
+  static constexpr size_t IO_SAMPLE_RATE_{100};            // The queue monitor sampling rate (ms), zero (0) disables the monitor.
   // Tidal queue holds buffered IOLineRecord objects.
   QueueTidal<IOLineRecord> line_io_queue_{IO_HIGH_TIDE_, IO_LOW_TIDE_, IO_QUEUE_NAME_, IO_SAMPLE_RATE_};
   // Thread pool asynchronously queues IOLineRecord objects to the queue.
-  static constexpr const size_t WORKER_THREAD_COUNT{1};
+  static constexpr size_t WORKER_THREAD_COUNT{1};
   WorkflowThreads line_io_thread_;
   // The StreamIO object.
   std::unique_ptr<BaseStreamIO> stream_ptr_;
   // Set if an EOF has been received and queued.
   std::atomic<bool> EOF_received_{false};
+  // If set, the worker thread is signalled to stop reading.
+  std::atomic<bool> close_stream_{false};
   // Mutex for readLine()
   std::mutex mutex_;
   // The thread worker function.
   void enqueueIOLineRecord();
+  // Common worker-startup path for open() and the getStreamIO(stream_ptr) overload.
+  [[nodiscard]] bool openStream(std::unique_ptr<BaseStreamIO> stream_ptr);
 
 };
 

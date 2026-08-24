@@ -23,12 +23,21 @@ bool kel::StreamMTBuffer::open(const std::string &file_name) {
 
   }
 
-  EOF_received_ = false;
-  stream_ptr_ = std::move(stream_opt.value());
-  line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
-  line_io_thread_.enqueueVoid(&StreamMTBuffer::enqueueIOLineRecord, this);
+  return openStream(std::move(stream_opt.value()));
 
-  return true;
+}
+
+bool kel::StreamMTBuffer::open(const std::string &file_name, size_t decompression_threads) {
+
+  auto stream_opt = BaseStreamIO::getStreamIO(file_name, decompression_threads);
+  if (not stream_opt) {
+
+    ExecEnv::log().error("Could not open stream for file: {}", file_name);
+    return false;
+
+  }
+
+  return openStream(std::move(stream_opt.value()));
 
 }
 
@@ -49,23 +58,62 @@ std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStream
 std::optional<std::unique_ptr<kel::BaseStreamIO>> kel::StreamMTBuffer::getStreamIO(std::unique_ptr<BaseStreamIO> open_stream_ptr) {
 
   auto stream_ptr = std::make_unique<StreamMTBuffer>();
-  stream_ptr->stream_ptr_ = std::move(open_stream_ptr);
-  stream_ptr->line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
-  stream_ptr->line_io_thread_.enqueueVoid(&StreamMTBuffer::enqueueIOLineRecord, stream_ptr.get());
+  if (not stream_ptr->openStream(std::move(open_stream_ptr))) {
+
+    return std::nullopt;
+
+  }
 
   return stream_ptr;
 
 }
 
 
-void kel::StreamMTBuffer::close() {
+bool kel::StreamMTBuffer::openStream(std::unique_ptr<BaseStreamIO> stream_ptr) {
 
-  {
+  // The supplied stream must be a valid, non-null object.
+  if (not stream_ptr) {
 
-    std::lock_guard<std::mutex> lock(mutex_);
-    EOF_received_ = true;
+    ExecEnv::log().error("StreamMTBuffer::openStream; null underlying stream object");
+    return false;
 
   }
+
+  try {
+
+    close_stream_ = false;
+    EOF_received_ = false;
+    stream_ptr_ = std::move(stream_ptr);
+    line_io_thread_.queueThreads(WORKER_THREAD_COUNT);
+    line_io_thread_.enqueueVoid(&StreamMTBuffer::enqueueIOLineRecord, this);
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().error("StreamMTBuffer::openStream; exception starting worker thread: {}", e.what());
+    // The worker pool may already be running (queueThreads succeeded) if enqueueVoid() threw.
+    // Signal shutdown and join before releasing the underlying stream so the worker thread is
+    // never left executing enqueueIOLineRecord() against a destroyed object (leaked thread + UAF).
+    close_stream_ = true;
+    line_io_thread_.joinThreads();
+    stream_ptr_ = nullptr;
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+void kel::StreamMTBuffer::close() {
+
+  // Signal the worker thread to stop reading from the underlying stream.
+  // Note: close() still joins the worker thread, which blocks until the underlying stream
+  // returns EOF or the current readLine() returns. It is intended to be called once the
+  // stream has been consumed, or concurrently with a consumer that is draining the queue.
+  close_stream_ = true;
+  EOF_received_ = true;
   line_io_thread_.joinThreads();
   stream_ptr_ = nullptr;
   line_io_queue_.clear();
@@ -74,18 +122,28 @@ void kel::StreamMTBuffer::close() {
 
 void kel::StreamMTBuffer::enqueueIOLineRecord() {
 
-  while(true) {
+  while (not close_stream_.load()) {
 
-    auto line_record = stream_ptr_->readLine();
+    try {
 
-    if (line_record.EOFRecord()) {
+      auto line_record = stream_ptr_->readLine();
+
+      if (line_record.EOFRecord()) {
+
+        line_io_queue_.push(std::move(line_record));
+        break;
+
+      }
 
       line_io_queue_.push(std::move(line_record));
+
+    }
+    catch (std::exception const &e) {
+
+      ExecEnv::log().error("StreamMTBuffer::enqueueIOLineRecord; exception reading line: {}", e.what());
       break;
 
     }
-
-    line_io_queue_.push(std::move(line_record));
 
   }
 
@@ -94,6 +152,8 @@ void kel::StreamMTBuffer::enqueueIOLineRecord() {
 kel::IOLineRecord kel::StreamMTBuffer::readLine() {
 
   // Don't block on EOF, return additional EOF markers.
+  // Note: if the worker thread is blocked on the underlying stream's readLine() and
+  // close() has not been called, then waitAndPop() will block until a record is available.
   std::lock_guard<std::mutex> lock(mutex_);
   if (EOF_received_) return IOLineRecord::createEOFMarker();
   auto line_record = line_io_queue_.waitAndPop();
@@ -105,4 +165,3 @@ kel::IOLineRecord kel::StreamMTBuffer::readLine() {
   return line_record;
 
 }
-

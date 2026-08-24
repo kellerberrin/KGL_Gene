@@ -22,14 +22,24 @@ namespace kellerberrin {
 IOLineRecord TextStreamIO::readLine() {
 
   std::string line_text;
-  if (not std::getline(file_, line_text).eof()) {
+  try {
 
-  ++record_counter_;
-  return IOLineRecord(record_counter_, std::move(line_text));
+    if (std::getline(file_, line_text)) {
 
-  } else {
+      ++record_counter_;
+      return IOLineRecord(record_counter_, std::move(line_text));
 
-  return IOLineRecord::createEOFMarker();
+    } else {
+
+      return IOLineRecord::createEOFMarker();
+
+    }
+
+  }
+  catch (std::exception const &e) {
+
+    ExecEnv::log().error("TextStreamIO::readLine; I/O exception reading file: {}", e.what());
+    return IOLineRecord::createEOFMarker();
 
   }
 
@@ -80,88 +90,98 @@ std::optional<std::unique_ptr<BaseStreamIO>> TextStreamIO::getStreamIO( const st
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation of gzip '.gz' decompression uses uses boost::iostreams::filtering_istream.
+// Implementation of gzip '.gz' and bzip2 '.bz2' decompression uses boost::iostreams::filtering_istream.
+// The two stream types differ only in the boost filter, so a single template implementation is shared.
+// GZStreamIOImpl/BZ2StreamIOImpl remain opaque forward-declared classes in the header (no boost exposure).
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class GZStreamIOImpl {
+template<typename Filter>
+class FilterStreamIOImpl {
 
 public:
 
-  GZStreamIOImpl() = default;
+  FilterStreamIOImpl() = default;
+  FilterStreamIOImpl(const FilterStreamIOImpl &) = delete;
+  ~FilterStreamIOImpl() = default;
 
-  GZStreamIOImpl(const GZStreamIOImpl &) = delete;
+  bool open(const std::string &file_name, const char* stream_name) {
 
-  ~GZStreamIOImpl() = default;
+    try {
 
+      record_counter_ = 0;
+      // Open input file.
 
-  bool open(const std::string &file_name);
+      file_.open(file_name, std::ios_base::in | std::ios_base::binary);
 
-  void close() { record_counter_ = 0; gz_file_.reset(); }
+      if (not file_.good()) {
 
-  IOLineRecord readLine();
+        ExecEnv::log().error("{}; I/O error; could not open file: {}", stream_name, file_name);
+        return false;
+
+      }
+
+      filter_file_.push(Filter());
+      filter_file_.push(file_);
+
+    }
+    catch (std::exception const &e) {
+
+      ExecEnv::log().error("{}; Opening file: {} unexpected I/O exception: {}", stream_name, file_name, e.what());
+      return false;
+
+    }
+
+    return true;
+
+  }
+
+  void close() { record_counter_ = 0; filter_file_.reset(); }
+
+  IOLineRecord readLine() {
+
+    std::string line_text;
+    try {
+
+      if (std::getline(filter_file_, line_text)) {
+
+        ++record_counter_;
+        return IOLineRecord(record_counter_, std::move(line_text));
+
+      } else {
+
+        return IOLineRecord::createEOFMarker();
+
+      }
+
+    }
+    catch (std::exception const &e) {
+
+      ExecEnv::log().error("FilterStreamIOImpl::readLine; I/O exception reading file: {}", e.what());
+      return IOLineRecord::createEOFMarker();
+
+    }
+
+  }
 
 private:
 
   std::ifstream file_;
-  boost::iostreams::filtering_istream gz_file_;
+  boost::iostreams::filtering_istream filter_file_;
   size_t record_counter_{0};
 
 };
 
 
-IOLineRecord GZStreamIOImpl::readLine() {
+// Concrete Pimpl types, matching the opaque forward declarations in the header.
+class GZStreamIOImpl final : public FilterStreamIOImpl<bio::gzip_decompressor> {};
+class BZ2StreamIOImpl final : public FilterStreamIOImpl<bio::bzip2_decompressor> {};
 
-  std::string line_text;
-  if (not std::getline(gz_file_, line_text).eof()) {
-
-    ++record_counter_;
-    return IOLineRecord(record_counter_, std::move(line_text));
-
-  } else {
-
-    return IOLineRecord::createEOFMarker();
-
-  }
-
-}
-
-
-bool GZStreamIOImpl::open(const std::string &file_name) {
-
-  try {
-
-    record_counter_ = 0;
-    // Open input file.
-
-    file_.open(file_name, std::ios_base::in | std::ios_base::binary);
-
-    if (not file_.good()) {
-
-      ExecEnv::log().error("GZStreamIO; I/O error; could not open file: {}", file_name);
-      return false;
-
-    }
-
-    gz_file_.push(bio::gzip_decompressor());
-    gz_file_.push(file_);
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().error("GZStreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
-    return false;
-
-  }
-
-  return true;
-
-}
 
 // Pimpl redirection.
 GZStreamIO::GZStreamIO() { pimpl_streamio_ = std::make_unique<GZStreamIOImpl>(); }
 GZStreamIO::~GZStreamIO() { close(); }
-bool GZStreamIO::open(const std::string &file_name) { return pimpl_streamio_->open(file_name); }
+bool GZStreamIO::open(const std::string &file_name) { return pimpl_streamio_->open(file_name, "GZStreamIO"); }
 IOLineRecord GZStreamIO::readLine() { return pimpl_streamio_->readLine(); }
 void GZStreamIO::close() { pimpl_streamio_->close(); }
 
@@ -181,86 +201,10 @@ std::optional<std::unique_ptr<BaseStreamIO>> GZStreamIO::getStreamIO( const std:
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Implementation of Burrows-Wheeler '.bz2' decompression uses boost::iostreams::filtering_istream.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class BZ2StreamIOImpl  {
-
-public:
-
-  BZ2StreamIOImpl() = default;
-  BZ2StreamIOImpl(const BZ2StreamIOImpl &) = delete;
-  ~BZ2StreamIOImpl() = default;
-
-  bool open(const std::string &file_name);
-
-  IOLineRecord readLine();
-
-  void close() { record_counter_ = 0; bz2_file_.reset(); }
-
-private:
-
-  std::ifstream file_;
-  boost::iostreams::filtering_istream bz2_file_;
-  size_t record_counter_{0};
-
-};
-
-
-IOLineRecord BZ2StreamIOImpl::readLine() {
-
-  std::string line_text;
-  if (not std::getline(bz2_file_, line_text).eof()) {
-
-    ++record_counter_;
-    return IOLineRecord(record_counter_, std::move(line_text));
-
-  } else {
-
-    return IOLineRecord::createEOFMarker();
-
-  }
-
-}
-
-
-bool BZ2StreamIOImpl::open(const std::string &file_name) {
-
-  try {
-
-    record_counter_ = 0;
-    // Open input file.
-
-    file_.open(file_name, std::ios_base::in | std::ios_base::binary);
-
-    if (not file_.good()) {
-
-      ExecEnv::log().error("GZStreamIO; I/O error; could not open file: {}", file_name);
-      return false;
-
-    }
-
-    bz2_file_.push(bio::bzip2_decompressor());
-    bz2_file_.push(file_);
-
-  }
-  catch (std::exception const &e) {
-
-    ExecEnv::log().error("BZ2StreamIO; Opening file: {} unexpected I/O exception: {}", file_name, e.what());
-    return false;
-
-  }
-
-  return true;
-
-}
-
 // Pimpl redirection.
 BZ2StreamIO::BZ2StreamIO() { pimpl_streamio_ = std::make_unique<BZ2StreamIOImpl>(); }
 BZ2StreamIO::~BZ2StreamIO() { close(); }
-bool BZ2StreamIO::open(const std::string &file_name) { return pimpl_streamio_->open(file_name); }
+bool BZ2StreamIO::open(const std::string &file_name) { return pimpl_streamio_->open(file_name, "BZ2StreamIO"); }
 IOLineRecord BZ2StreamIO::readLine() { return pimpl_streamio_->readLine(); }
 void BZ2StreamIO::close() { pimpl_streamio_->close(); }
 
