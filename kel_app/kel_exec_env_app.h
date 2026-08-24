@@ -23,9 +23,17 @@ namespace kellerberrin {   //  organization level namespace
 // It provides logging and commandline arguments to the application object. The function is a template so that
 // different applications may be easily specified.
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// runApplication() template. Sets up the static ExecEnv runtime environment, creates the logger,
+/// parses the command line, and invokes Environment::executeApp().
+///
+/// The template parameter Environment must expose:
+///   - a static parseCommandLine(int argc, char const**) -> bool
+///   - a static createLogger() -> std::unique_ptr<ExecEnvLogger>
+///   - a static executeApp()
+///   - static constants MODULE_NAME and VERSION
 template<class Environment>
 int ExecEnv::runApplication(int argc, char const ** argv) {
 
@@ -45,16 +53,20 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
 
     }
 
-    log_ptr_ = Environment::createLogger();
-    if (not log_ptr_) {
+    auto logger = Environment::createLogger();
+    if (not logger) {
 
       std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " ExecEnv::runApplication - cannot create application logger" << std::endl;
       std::exit(EXIT_FAILURE);
 
     }
+    {
+      std::lock_guard lock(env_mutex_);
+      log_ptr_ = std::move(logger);
+    }
 
     // Enable ctrl-C runtime termination.
-    signal(SIGINT, ctrlC);
+    std::signal(SIGINT, ctrlC);
 
     log().info("############ {} {} Start Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
     log().info("Command Line: {}", commandLine());
@@ -71,12 +83,15 @@ int ExecEnv::runApplication(int argc, char const ** argv) {
     log().info("############ {} {} End Runtime ###########", Environment::MODULE_NAME, Environment::VERSION);
 
     // Explicitly shutdown the logger.
-    log_ptr_ = nullptr;
+    {
+      std::lock_guard lock(env_mutex_);
+      log_ptr_ = nullptr;
+    }
 
 
   } catch(std::exception& e) { // In general, unhandled exceptions should not appear here, so complain and exit.
 
-    std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << "ExecEnv::runApplication - Unexpected/Uncaught Exception: " << e.what() << std::endl;
+    std::cerr << Environment::MODULE_NAME << " " << Environment::VERSION << " ExecEnv::runApplication - Unexpected/Uncaught Exception: " << e.what() << std::endl;
     std::exit(EXIT_FAILURE);
 
   }

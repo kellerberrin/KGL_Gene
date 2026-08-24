@@ -6,6 +6,7 @@
 #define KEL_EXECENV_LOGGING_H
 
 #include <atomic>
+#include <concepts>
 #include <cstddef>
 #include <cstdlib>
 #include <format>
@@ -25,12 +26,18 @@ namespace kellerberrin {   //  organization level namespace
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
+/// LogFormatLocation captures a std::format style format string together with the
+/// source file and line of the logging call site.
+///
+/// The constructor is a template so that the source_location default argument is
+/// substituted at the call site, capturing the correct location.
 class LogFormatLocation {
 
 public:
 
-  // Important note. This constructor must be a template in order to modify the order of argument substitution.
+  /// Important note. This constructor must be a template in order to modify the order of argument substitution.
   template<typename String>
+    requires std::convertible_to<String, std::string_view>
   LogFormatLocation(const String &format,
                     const std::source_location &location = std::source_location::current())
   : format_(format), location_(location) {}
@@ -63,21 +70,24 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Forward Declaration of the implementation PIMPL object (implemented using iostreams).
+/// Forward declaration of the stream logging PIMPL implementation.
 class StreamLoggerImpl;
 
-// The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
-// The logger is available to all application files that have "#include exec_env.h" in the include chain.
-// Syntax is:
-// ExecEnv::log().info("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
-// ExecEnv::log().warn("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
-// ExecEnv::log().error("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
-// ExecEnv::log().critical("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+/// The logger syntax uses the standard idiom; std::format("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn).
+/// The logger is available to all application files that have "#include exec_env.h" in the include chain.
+/// Syntax is:
+/// ExecEnv::log().info("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+/// ExecEnv::log().warn("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+/// ExecEnv::log().error("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
+/// ExecEnv::log().critical("Arg1: {}, Arg2: {} ... Argn: {}", arg1, arg1, ..., argn);
 
+/// Application logger providing info, warn, error, and critical message levels.
+/// All logging is thread-safe via an internal mutex. Message counts (warn/error) can be bounded.
 class ExecEnvLogger {
 
 public:
 
+  /// Constructs a logger writing to std::cout and the specified log file.
   ExecEnvLogger(const std::string& module, const std::string& log_file);
   ~ExecEnvLogger();
 
@@ -104,6 +114,7 @@ public:
 
 #ifdef EXECENV_LOGGER_INFO_LOCATION
 
+  /// Logs an informational message with source location information.
   template<typename... Args> void info(const LogFormatLocation& format_location, Args &&...args) noexcept {
 
     info_message_count_++;
@@ -113,6 +124,7 @@ public:
 
 #else
 
+  /// Logs an informational message with compile-time format string checking.
   template<typename... Args> void info(std::format_string<Args...> format, Args&&... args) noexcept {
 
     info_message_count_++;
@@ -126,6 +138,7 @@ public:
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_WARN_LOCATION
 
+  /// Logs a warning message with source location. Suppressed after max warning count is reached.
   template<typename... Args> void warn(const LogFormatLocation& format_location, Args &&...args) noexcept {
 
     if (warnMessageLimits()) {
@@ -138,6 +151,7 @@ public:
 
 #else
 
+  /// Logs a warning message with compile-time format string checking. Suppressed after max warning count.
   template<typename... Args> void warn(std::format_string<Args...> format, Args&&... args) noexcept {
 
     if (warnMessageLimits()) {
@@ -149,10 +163,11 @@ public:
   }
 
 #endif
-  
+
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_ERROR_LOCATION
 
+  /// Logs an error message with source location. Terminates the program after max error count is reached.
   template<typename... Args> void error(const LogFormatLocation& format_location, Args&&... args) noexcept {
 
     locationFormat(format_location, LoggerSeverity::ERROR, std::forward<Args>(args)...);
@@ -170,12 +185,13 @@ public:
 
 #else
 
+  /// Logs an error message with compile-time format string checking. Terminates after max error count.
   template<typename... Args> void error(std::format_string<Args...> format, Args&&... args) noexcept {
 
     logFormat(format, LoggerSeverity::ERROR, std::forward<Args>(args)...);
     if (not errorMessageLimits()) {
 
-      logFormat("Maximum error messages: {} issued.", LoggerSeverity::ERROR, max_error_messages_);
+      logFormat("Maximum error messages: {} issued.", LoggerSeverity::ERROR, max_error_messages_.load(std::memory_order_relaxed));
       logFormat("Forced Program exit. May terminate abnormally.", LoggerSeverity::ERROR);
       std::exit(EXIT_FAILURE);
 
@@ -188,6 +204,7 @@ public:
 // Select between message location information or compile-time argument checking.
 #ifdef EXECENV_LOGGER_CRITICAL_LOCATION
 
+  /// Logs a critical message with source location and immediately terminates the program.
   template<typename... Args> [[noreturn]] void critical(const LogFormatLocation& format_location, Args&&... args) noexcept {
 
     locationFormat(format_location, LoggerSeverity::CRITICAL, std::forward<Args>(args)...);
@@ -198,7 +215,8 @@ public:
 
 #else
 
-  template<typename... Args> void critical(std::format_string<Args...> format, Args&&... args) noexcept {
+  /// Logs a critical message with compile-time format string checking and immediately terminates.
+  template<typename... Args> [[noreturn]] void critical(std::format_string<Args...> format, Args&&... args) noexcept {
 
     logFormat(format, LoggerSeverity::CRITICAL, std::forward<Args>(args)...);
     logFormat("Forced Program exit. May terminate abnormally.", LoggerSeverity::CRITICAL);
@@ -249,7 +267,6 @@ template<typename... Args> void ExecEnvLogger::locationFormat( const LogFormatLo
   try {
 
     std::string formatted_message = std::vformat(format_location.format(), std::make_format_args(args...));
-    std::lock_guard lock(message_mutex_);
     locationImpl(format_location, formatted_message, severity);
 
   } catch (const std::exception& e) {
@@ -271,16 +288,15 @@ template<typename... Args> void ExecEnvLogger::logFormat( std::format_string<Arg
   try {
 
     std::string formatted_message = std::format(format, std::forward<Args>(args)...);
-    std::lock_guard<std::mutex> lock(message_mutex_);
     formatImpl(formatted_message, severity);
 
   } catch (const std::exception& e) {
 
-    formatImpl(std::format("Unexpected exception logging - error: {}", e.what()), LoggerSeverity::ERROR);
+    formatImpl(std::format("Unexpected error logging - error: {}", e.what()), LoggerSeverity::ERROR);
 
   } catch (...) {
 
-    formatImpl(std::format("Unexpected exception logging"), LoggerSeverity::ERROR);
+    formatImpl(std::format("Unexpected error logging"), LoggerSeverity::ERROR);
 
   };
 

@@ -35,6 +35,7 @@ ExecEnvLogger::~ExecEnvLogger() {
 
 void ExecEnvLogger::formatImpl(const std::string &formatted_string, LoggerSeverity severity) noexcept {
 
+  std::lock_guard lock(message_mutex_);
   log_impl_ptr_->formatImpl(formatted_string, severity);
 
 }
@@ -43,33 +44,33 @@ void ExecEnvLogger::locationImpl(const LogFormatLocation &format_location,
                                       const std::string &formatted_string,
                                       LoggerSeverity severity) noexcept {
 
+  std::lock_guard lock(message_mutex_);
   log_impl_ptr_->locationImpl(format_location, formatted_string, severity);
 
 }
 
 bool ExecEnvLogger::warnMessageLimits() noexcept {
 
-  ++warn_message_count_;
-  if (warn_message_count_ == max_warn_messages_ and max_warn_messages_ != UNBOUNDED_MESSAGES) {
+  const size_t count = ++warn_message_count_;
+  const size_t max_messages = max_warn_messages_.load(std::memory_order_relaxed);
+  if (max_messages != UNBOUNDED_MESSAGES and count == max_messages) {
 
-    formatImpl(std::format("Maximum warning messages: {} issued.",
-                                         max_warn_messages_.load(std::memory_order_relaxed)),
-                                         LoggerSeverity::WARN);
+    formatImpl(std::format("Maximum warning messages: {} issued.", max_messages), LoggerSeverity::WARN);
     formatImpl(std::format("Further warning messages will be suppressed."), LoggerSeverity::WARN);
 
   }
 
-  return max_warn_messages_ == UNBOUNDED_MESSAGES or warn_message_count_ <= max_warn_messages_;
+  return max_messages == UNBOUNDED_MESSAGES or count <= max_messages;
 
 }
 
 bool ExecEnvLogger::errorMessageLimits() noexcept {
 
-  ++error_message_count_;
-  return max_error_messages_ == UNBOUNDED_MESSAGES or error_message_count_ <= max_error_messages_;
+  const size_t count = ++error_message_count_;
+  const size_t max_messages = max_error_messages_.load(std::memory_order_relaxed);
+  return max_messages == UNBOUNDED_MESSAGES or count <= max_messages;
 
 }
 
 
 } // End namespace
-

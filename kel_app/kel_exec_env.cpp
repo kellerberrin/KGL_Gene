@@ -5,6 +5,7 @@
 #include "kel_utility.h"
 
 #include <iostream>
+#include <mutex>
 
 
 // Define namespace alias
@@ -12,6 +13,7 @@ namespace kel = kellerberrin;
 
 kel::ExecEnvLogger& kel::ExecEnv::log() {
 
+  std::lock_guard lock(env_mutex_);
   if (not log_ptr_) {
     std::cerr << "Critical - attempt to log to uninitialized logger.\n";
     std::cerr << "Program exits." << std::endl;
@@ -40,12 +42,16 @@ std::unique_ptr<kel::ExecEnvLogger> kel::ExecEnv::createLogger(const std::string
 
 void kel::ExecEnv::ctrlC(int) {
 
-  ExecEnv::log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
+  log().warn("Control-C. Program terminates. Output files may be corrupt. Multi-threaded code may hang.");
   std::exit(EXIT_FAILURE);
 
 }
 
-void kel::ExecEnv::setCommandTokens(int argc, char const ** argv) {
+void kel::ExecEnv::setCommandTokens(int argc, char const ** argv) noexcept {
+
+  std::lock_guard lock(env_mutex_);
+  command_tokens_.clear();
+  command_tokens_.reserve(static_cast<size_t>(argc));
 
   for (int idx = 0; idx < argc; ++idx) {
 
@@ -55,8 +61,9 @@ void kel::ExecEnv::setCommandTokens(int argc, char const ** argv) {
 
 }
 
-std::string kel::ExecEnv::commandLine() {
+std::string kel::ExecEnv::commandLine() noexcept {
 
+  std::lock_guard lock(env_mutex_);
   std::string command_line;
 
   for (auto const& token : command_tokens_) {
@@ -69,4 +76,3 @@ std::string kel::ExecEnv::commandLine() {
   return command_line;
 
 }
-

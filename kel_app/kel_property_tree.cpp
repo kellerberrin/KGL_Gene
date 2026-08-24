@@ -8,15 +8,14 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/spirit/include/lex_lexertl.hpp>
 
+#include <charconv>
 #include <sstream>
 #include <fstream>
-#include <stack>
+#include <shared_mutex>
 
 namespace kel = kellerberrin;
 namespace pt = boost::property_tree;
-namespace lex = boost::spirit::lex;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +25,8 @@ namespace lex = boost::spirit::lex;
 
 using ImplSubTree = std::pair<std::string, kel::PropertyTree::PropertyImpl>;
 
+/// The boost::property_tree PIMPL implementation. All accessor methods are const and do not
+/// modify shared state, so a shared tree may be read concurrently from multiple threads.
 class kel::PropertyTree::PropertyImpl {
 
 public:
@@ -37,8 +38,6 @@ public:
   ~PropertyImpl() = default;
 
   [[nodiscard]] bool readPropertiesFile(const std::string& properties_file);
-
-//  bool getProperty(const std::string& property_name, std::string& property) const { return getProperty(property_tree_ptr_, property_name, property); }
 
   [[nodiscard]] bool getProperty(const std::string& property_name, std::string& property) const;
 
@@ -70,8 +69,7 @@ private:
   pt::ptree property_tree_;
 
   void printTree(const std::string& parent, const pt::ptree& property_tree) const;
-  bool getPropertyTree(const pt::ptree& property_tree, const std::string& property_name, std::string& property) const;
-  // These functions are recursive and throw file exceptions which are caught in getPropertyTree().
+  // These functions are recursive and throw file exceptions which are caught in readPropertiesFile().
   std::stringstream preProcessPropertiesFile(const std::string& properties_file);
   void readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count);
 
@@ -170,7 +168,7 @@ bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& prop
     }
 
   }
-  catch(std::runtime_error& e) {
+  catch(const std::exception& e) {
 
     ExecEnv::log().error("PropertyTree; Missing or Malformed property tree in file: {}, error: {}", properties_file, e.what());
     return false;
@@ -214,7 +212,7 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
     }
 
   }
-  catch (const std::runtime_error& e) {
+  catch (const std::exception& e) {
 
     ExecEnv::log().error("Exception: PropertyTree::PropertyImpl::getProperty; Property: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("*********** Property Tree Contents *************");
@@ -229,28 +227,6 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 }
 
 
-bool kel::PropertyTree::PropertyImpl::getPropertyTree(const pt::ptree& property_tree, const std::string& property_name,  std::string& property) const {
-
-  try {
-
-    property = property_tree.get<std::string>(property_name);
-    property = Utility::trimEndWhiteSpace(property);
-
-  }
-  catch (const std::runtime_error& e) {
-
-    ExecEnv::log().error("PropertyTree; Property: {} not found, error: {}", property_name, e.what());
-    ExecEnv::log().error("***********Property Tree Contents*************");
-    treeTraversal();
-    ExecEnv::log().error("**********************************************");
-    return false;
-
-  }
-
-  return true;
-
-}
-
 bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
 
 
@@ -264,7 +240,7 @@ bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
     }
 
   }
-  catch (const std::runtime_error& e) {
+  catch (const std::exception& e) {
 
     ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
@@ -295,7 +271,7 @@ bool kel::PropertyTree::PropertyImpl::getNodeVector(const std::string& node_name
     }
 
   }
-  catch (const std::runtime_error& e) {
+  catch (const std::exception& e) {
 
     ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", node_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
@@ -370,18 +346,17 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 
   }
 
-  try {
+  // Use std::from_chars for no-throw numeric parsing and full-consumption validation.
+  size_t parsed_value{0};
+  const auto [ptr, ec] = std::from_chars(size_string.data(), size_string.data() + size_string.size(), parsed_value);
+  if (ec != std::errc() or ptr != size_string.data() + size_string.size()) {
 
-    property= std::stoull(size_string);
-
-  }
-  catch (const std::runtime_error& e) {
-
-    ExecEnv::log().error("PropertyTree; Property: {}, Value: {} is not an unsigned integer, error: {}", property_name, size_string, e.what());
+    ExecEnv::log().error("PropertyTree; Property: {}, Value: {} is not an unsigned integer", property_name, size_string);
     return false;
 
   }
 
+  property = parsed_value;
   return true;
 
 }
@@ -438,23 +413,38 @@ void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
 
 kel::PropertyTree::PropertyTree() : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>()) {}
 
-kel::PropertyTree::PropertyTree(const PropertyTree& property_tree) : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>(*(property_tree.properties_impl_ptr_))) {}
+kel::PropertyTree::PropertyTree(const PropertyTree& property_tree) {
+
+  std::shared_lock lock(property_tree.tree_mutex_);
+  properties_impl_ptr_ = std::make_unique<kel::PropertyTree::PropertyImpl>(*(property_tree.properties_impl_ptr_));
+
+}
 
 kel::PropertyTree::PropertyTree(const PropertyImpl& properties_impl) : properties_impl_ptr_(std::make_unique<kel::PropertyTree::PropertyImpl>(properties_impl)) {}
 
-kel::PropertyTree::~PropertyTree() {}  // DO NOT DELETE or USE DEFAULT. Required because of incomplete pimpl type.
+kel::PropertyTree::~PropertyTree() {}  // Required because of incomplete pimpl type.
 
 // Functionality passed to the implmentation.
 
 bool kel::PropertyTree::readProperties(const std::string& properties_file) {
 
-  return properties_impl_ptr_->readPropertiesFile(properties_file);
+  auto new_impl = std::make_unique<PropertyImpl>();
+  if (not new_impl->readPropertiesFile(properties_file)) {
+
+    return false;
+
+  }
+
+  std::unique_lock lock(tree_mutex_);
+  properties_impl_ptr_ = std::move(new_impl);
+  return true;
 
 }
 
 
 bool kel::PropertyTree::getProperty(const std::string& property_name, std::string& property) const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->getProperty(property_name, property);
 
 }
@@ -462,6 +452,7 @@ bool kel::PropertyTree::getProperty(const std::string& property_name, std::strin
 
 bool kel::PropertyTree::getProperty(const std::string& property_name, size_t& property) const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->getProperty(property_name, property);
 
 }
@@ -469,7 +460,8 @@ bool kel::PropertyTree::getProperty(const std::string& property_name, size_t& pr
 
 bool kel::PropertyTree::getOptionalProperty(const std::string& property_name, std::string& property) const {
 
-  if (checkProperty(property_name)) {
+  std::shared_lock lock(tree_mutex_);
+  if (properties_impl_ptr_->checkProperty(property_name)) {
 
     return properties_impl_ptr_->getProperty(property_name, property);
 
@@ -483,6 +475,7 @@ bool kel::PropertyTree::getOptionalProperty(const std::string& property_name, st
 
 void kel::PropertyTree::treeTraversal() const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->treeTraversal();
 
 }
@@ -490,6 +483,7 @@ void kel::PropertyTree::treeTraversal() const {
 
 bool kel::PropertyTree::checkProperty(const std::string& property_name) const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->checkProperty(property_name);
 
 }
@@ -497,14 +491,15 @@ bool kel::PropertyTree::checkProperty(const std::string& property_name) const {
 
 bool kel::PropertyTree::getFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
 
+  std::shared_lock lock(tree_mutex_);
   std::string file_name;
 
-  if (not getProperty(property_name, file_name)) {
+  if (not properties_impl_ptr_->getProperty(property_name, file_name)) {
 
     ExecEnv::log().warn("PropertyTree::getFileProperty; Requested file property: {} not found. A list of all valid properties follows:",
                         property_name);
 
-    treeTraversal();
+    properties_impl_ptr_->treeTraversal();
     return false;
 
   }
@@ -526,14 +521,15 @@ bool kel::PropertyTree::getFileProperty(const std::string& property_name, const 
 
 bool kel::PropertyTree::getFileCreateProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
 
+  std::shared_lock lock(tree_mutex_);
   std::string file_name;
 
-  if (not getProperty(property_name, file_name)) {
+  if (not properties_impl_ptr_->getProperty(property_name, file_name)) {
 
     ExecEnv::log().warn("PropertyTree::getFileCreateProperty; Requested file property: {} not found. A list of all valid properties follows:",
                         property_name);
 
-    treeTraversal();
+    properties_impl_ptr_->treeTraversal();
     return false;
 
   }
@@ -564,9 +560,11 @@ bool kel::PropertyTree::getFileCreateProperty(const std::string& property_name, 
 
 bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name, const std::string& work_directory, std::string& file_path) const {
 
+  std::shared_lock lock(tree_mutex_);
   std::string file_name;
 
-  if (not getOptionalProperty(property_name, file_name)) {
+  if (not (properties_impl_ptr_->checkProperty(property_name)
+           and properties_impl_ptr_->getProperty(property_name, file_name))) {
 
     return false;
 
@@ -588,6 +586,7 @@ bool kel::PropertyTree::getOptionalFileProperty(const std::string& property_name
 
 bool kel::PropertyTree::getPropertyVector(const std::string& property_name, std::vector<std::string>& property_vector) const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->getPropertyVector(property_name, property_vector);
 
 }
@@ -595,6 +594,7 @@ bool kel::PropertyTree::getPropertyVector(const std::string& property_name, std:
 
 bool kel::PropertyTree::getNodeVector(const std::string& node_name, std::vector<std::string>& node_vector) const {
 
+  std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->getNodeVector(node_name, node_vector);
 
 }
@@ -605,10 +605,13 @@ bool kel::PropertyTree::getPropertyTreeVector(const std::string& property_name, 
   property_tree_vector.clear();
 
   std::vector<ImplSubTree> tree_vector;
-  if (not properties_impl_ptr_->getTreeVector(property_name, tree_vector)) {
+  {
+    std::shared_lock lock(tree_mutex_);
+    if (not properties_impl_ptr_->getTreeVector(property_name, tree_vector)) {
 
-    return false;
+      return false;
 
+    }
   }
 
   for (auto const& [sub_tree_tag, sub_tree] : tree_vector) {
@@ -632,10 +635,13 @@ bool kel::PropertyTree::getPropertySubTreeVector(std::vector<SubPropertyTree>& p
   property_tree_vector.clear();
 
   std::vector<ImplSubTree> tree_vector;
-  if (not properties_impl_ptr_->getTreeVector(tree_vector)) {
+  {
+    std::shared_lock lock(tree_mutex_);
+    if (not properties_impl_ptr_->getTreeVector(tree_vector)) {
 
-    return false;
+      return false;
 
+    }
   }
 
   for (auto const& [property_tree_id, property_tree] : tree_vector) {
@@ -650,4 +656,25 @@ bool kel::PropertyTree::getPropertySubTreeVector(std::vector<SubPropertyTree>& p
 
 
 
-std::string kel::PropertyTree::getValue() const { return properties_impl_ptr_->getData<std::string>(); }
+std::string kel::PropertyTree::getValue() const {
+
+  std::shared_lock lock(tree_mutex_);
+  try {
+
+    return properties_impl_ptr_->getData<std::string>();
+
+  }
+  catch (const std::exception& e) {
+
+    ExecEnv::log().error("PropertyTree::getValue; error: {}", e.what());
+    return "";
+
+  }
+  catch (...) {
+
+    ExecEnv::log().error("PropertyTree::getValue; unknown error");
+    return "";
+
+  }
+
+}
