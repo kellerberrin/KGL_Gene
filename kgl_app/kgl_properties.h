@@ -2,126 +2,89 @@
 // Created by kellerberrin on 11/11/18.
 //
 
-
 #ifndef KGL_PROPERTIES_H
 #define KGL_PROPERTIES_H
 
 
 #include "kgl_runtime.h"
+#include "kgl_runtime_resource.h"
 #include "kel_property_tree.h"
 #include "kgl_genome_types.h"
-#include "kgl_properties_resource.h"
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <map>
-#include <set>
+#include <utility>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// High level object extracts application specific properties.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/// High level object that reads and caches application-specific properties from "runtime.xml".
+/// Each accessor delegates to a dedicated xml:: section parser.
 class RuntimeProperties {
 
 public:
 
   RuntimeProperties() : property_tree_ptr_(std::make_shared<PropertyTree>()) {}
   ~RuntimeProperties() = default;
+  RuntimeProperties(const RuntimeProperties&) = delete;
+  RuntimeProperties& operator=(const RuntimeProperties&) = delete;
+  RuntimeProperties(RuntimeProperties&&) = delete;
+  RuntimeProperties& operator=(RuntimeProperties&&) = delete;
 
+  /// Reads and parses the properties from the specified XML file.
   [[nodiscard]] bool readProperties(const std::string& properties_file);
 
+  /// Sets the work directory used to resolve relative file paths.
   void setWorkDirectory(const std::string& work_directory) { work_directory_ = work_directory; }
-
+  /// Returns the work directory.
   [[nodiscard]] const std::string& workDirectory() const { return work_directory_; }
 
-  [[nodiscard]] ActivePackageVector getActivePackages() const;
-
-  [[nodiscard]] RuntimePackageMap getPackageMap() const;
-
-  [[nodiscard]]  RuntimeAnalysisMap getAnalysisMap() const;
-
-  [[nodiscard]]  ResourceDefinitions getRuntimeResources() const {
-
-    ResourceProperties resource_properties(property_tree_ptr_, work_directory_);
-    return resource_properties.getRuntimeResources();
-
-  }
-
-  [[nodiscard]] RuntimeDataFileMap getDataFiles() const;
-
-  [[nodiscard]] ContigAliasMap getContigAlias() const;
-
-  [[nodiscard]] VariantEvidenceMap getEvidenceMap() const;
-
-  [[nodiscard]] ActiveParameterList getParameterMap() const;
+  /// Returns the list of active packages to be executed at runtime.
+  [[nodiscard]] const ActivePackageVector& getActivePackages() const;
+  /// Returns the map of package identifiers to RuntimePackage objects.
+  [[nodiscard]] const RuntimePackageMap&   getPackageMap() const;
+  /// Returns the map of analysis identifiers to RuntimeAnalysis objects.
+  [[nodiscard]] const RuntimeAnalysisMap&  getAnalysisMap() const;
+  /// Returns the resource definitions parsed from the runtime XML.
+  [[nodiscard]] const ResourceDefinitions& getRuntimeResources() const;
+  /// Returns the map of data file identifiers to file info objects.
+  [[nodiscard]] const RuntimeDataFileMap&  getDataFiles() const;
+  /// Returns the contig alias map for chromosome identifier lookup.
+  [[nodiscard]] const ContigAliasMap&      getContigAlias() const;
+  /// Returns the variant evidence map for VCF INFO field specifications.
+  [[nodiscard]] const VariantEvidenceMap&  getEvidenceMap() const;
+  /// Returns the active parameter list for analysis configuration.
+  [[nodiscard]] const ActiveParameterList& getParameterMap() const;
 
 private:
 
   std::string work_directory_;  // The work directory, all files are specified 'work_directory/file_name'
   std::shared_ptr<PropertyTree> property_tree_ptr_;   // The aggregated and parsed XML property tree.
 
-  // Node categories.
-  constexpr static const char DOT_[] = ".";
-  constexpr static const char RUNTIME_ROOT_[] = "runTime";
-  constexpr static const char ACTIVE_[] = "active";
-  constexpr static const char VALUE_[] = "value";
+  // Each section is parsed at most once because RuntimeProperties is logically read-only after readProperties().
+  template <class T, class F>
+  [[nodiscard]] const T& cache(std::optional<T>& cache_slot, F&& parse) const {
 
-  // Active Package Runtime categories.
-  constexpr static const char EXECUTE_LIST_[] = "executeList";
-  // Package Runtime categories.
-  constexpr static const char PACKAGE_LIST_[] = "packageList";
-  constexpr static const char PACKAGE_[] = "package";
-  constexpr static const char PACKAGE_IDENT_[] = "packageIdent";
-  constexpr static const char PACKAGE_ANALYSIS_LIST_[] = "analysisList";
-  constexpr static const char PACKAGE_RESOURCE_LIST_[] = "resourceList";
-  constexpr static const char PACKAGE_ITERATION_[] = "iteration";
-  constexpr static const char PACKAGE_ITERATION_LIST_[] = "iterationList";
-  // Analysis Runtime categories.
-  constexpr static const char ANALYSIS_LIST_[] = "analysisList";
-  constexpr static const char ANALYSIS_[] = "analysis";
-  constexpr static const char ANALYSIS_IDENT_[] = "analysisIdent";
-  // Parameter Runtime categories.
-  constexpr static const char PARAMETER_LIST_[] = "parameterList";
-  constexpr static const char PARAMETER_BLOCK_[] = "parameterBlock";
-  constexpr static const char PARAMETER_NAME_[] = "parameterName";
-  constexpr static const char PARAMETER_VECTOR_[] = "parameterVector";
-  constexpr static const char PARAMETER_[] = "parameter";
-  constexpr static const char PARAMETER_IDENT_[] = "parameterIdent";
-  constexpr static const char PARAMETER_VALUE_[] = "parameterValue";
-  constexpr static const char PARAMETER_RUNTIME_[] = "parameterRuntime";
-  // Data File Runtime categories.
-  constexpr static const char DATA_FILE_LIST_[] = "dataFileList";
-  constexpr static const char DATA_FILE_IDENT_[] = "dataFileIdent";
-  constexpr static const char DATA_FILE_NAME_[] = "dataFileName";
-  constexpr static const char DATA_PARSER_TYPE_[] = "dataFileType";
-  // general purpose data file without type specific fields.
-  constexpr static const char GENERAL_DATA_FILE_TYPE_[] = "generalFile";
-  // VCF data file specific fields.
-  constexpr static const char VCF_DATA_FILE_TYPE_[] = "vcfFile";
-  constexpr static const char VCF_FILE_GENOME_[] =  "vcfGenome";
-  constexpr static const char VCF_INFO_EVIDENCE_[] =  "vcfInfo";
-  // VCF Info Evidence categories.
-  constexpr static const char EVIDENCE_LIST_[] = "evidenceList";
-  constexpr static const char EVIDENCE_IDENT_[] = "evidenceIdent";
-  constexpr static const char EVIDENCE_INFO_LIST_[] = "vcfInfoList";
-  constexpr static const char EVIDENCE_INFO_ITEM_[] = "vcfInfoItem";
-   // Contig/Chromosome Alias categories.
-  constexpr static const char ALIAS_LIST_[] = "aliasList";
-  constexpr static const char ALIAS_IDENT_[] = "ident";
-  constexpr static const char ALIAS_TYPE_[] = "chromosomeType";
-  constexpr static const char ALIAS_ENTRY_[] = "alias";
+    if (not cache_slot) cache_slot = std::forward<F>(parse)();
+    return *cache_slot;
+
+  }
+
+  mutable std::optional<ActivePackageVector> active_packages_cache_;
+  mutable std::optional<RuntimePackageMap>   package_map_cache_;
+  mutable std::optional<RuntimeAnalysisMap>  analysis_map_cache_;
+  mutable std::optional<ResourceDefinitions> runtime_resources_cache_;
+  mutable std::optional<RuntimeDataFileMap>  data_files_cache_;
+  mutable std::optional<ContigAliasMap>      contig_alias_cache_;
+  mutable std::optional<VariantEvidenceMap>  evidence_map_cache_;
+  mutable std::optional<ActiveParameterList> parameter_map_cache_;
 
 };
 
 
-}   // end namespace
-
+} // namespace
 
 
 #endif //KGL_PROPERTIES_H

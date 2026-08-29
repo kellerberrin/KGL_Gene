@@ -17,7 +17,8 @@ include_directories(contrib/edlib # 3rd party library for fast Levenshtein seque
                     kel_app             # Application and logging
                     kel_math            # Mathematical Code
                     kgl_mixture                  # Deconvolution and mixture library
-                    kgl_app
+                    kgl_app              # High level application and package execution
+                    kgl_resource        # Create resources for package execution
                     kgl_genomics/kgl_parser
                     kgl_genomics/kgl_evidence
                     kgl_genomics/kgl_sequence
@@ -68,7 +69,7 @@ set(Boost_NO_SYSTEM_PATHS ON)
 #set(BOOST_INCLUDEDIR /usr/local/include/boost)
 #include_directories(${Boost_INCLUDE_DIRS})
 #set(BOOST_LIBRARYDIR /usr/local/lib/boost)
-find_package( Boost REQUIRED COMPONENTS timer program_options iostreams)
+find_package( Boost REQUIRED COMPONENTS timer iostreams)
 #find_package(Boost CONFIG REQUIRED)
 #message(STATUS "Boost Lib: ${Boost_LIBRARIES}")
 # Add boost library directories
@@ -630,26 +631,63 @@ set(APPLICATION_SOURCE_FILES
         kgl_app/kgl_gene_app.cpp
         kgl_app/kgl_gene_app.h
         kgl_app/kgl_gene_parse.cpp
-        kgl_app/kgl_properties.h
-        kgl_app/kgl_properties.cpp
-        kgl_app/kgl_package.cpp
-        kgl_app/kgl_package.h
         kgl_app/kgl_package_analysis.cpp
-        kgl_app/kgl_package_analysis.h
-        kgl_app/kgl_package_analysis_virtual.h
-        kgl_app/kgl_runtime.cpp
-        kgl_app/kgl_runtime.h
-        kgl_app/kgl_runtime_config.cpp
-        kgl_app/kgl_runtime_config.h
-        kgl_app/kgl_package_resource.cpp
         kgl_app/kgl_runtime_resource.h
         kgl_app/kgl_runtime_resource.cpp
-        kgl_app/kgl_properties_resource.cpp
-        kgl_app/kgl_properties_resource.h
-        kgl_app/kgl_properties_resource_items.cpp
-        kgl_app/kgl_properties_resource_pf.cpp
-        kgl_app/kgl_package_resource_pf.cpp)
+        kgl_app/kgl_runtime.h
+        kgl_app/kgl_runtime.cpp
+        kgl_app/kgl_runtime_config.h
+        kgl_app/kgl_runtime_config.cpp
+        kgl_app/kgl_resource_params.h
+        kgl_app/kgl_resource_base.h
+        kgl_app/kgl_properties.h
+        kgl_app/kgl_properties.cpp
+        kgl_app/kgl_package.h
+        kgl_app/kgl_package.cpp
+        kgl_app/kgl_package_analysis_virtual.h
+        kgl_app/kgl_package_analysis.h)
 
+# Package resource library
+set(RESOURCE_SOURCE_FILES
+        kgl_resource/kgl_package_manager.cpp
+        kgl_resource/kgl_package_manager.h
+        kgl_resource/kgl_properties_resource.h
+        kgl_resource/kgl_resource_aux.cpp
+        kgl_resource/kgl_resource_aux.h
+        kgl_resource/kgl_resource_citation.cpp
+        kgl_resource/kgl_resource_citation.h
+        kgl_resource/kgl_resource_entrez.cpp
+        kgl_resource/kgl_resource_entrez.h
+        kgl_resource/kgl_resource_factory.cpp
+        kgl_resource/kgl_resource_factory.h
+        kgl_resource/kgl_resource_gene_nomenclature.cpp
+        kgl_resource/kgl_resource_gene_nomenclature.h
+        kgl_resource/kgl_resource_genealogy.cpp
+        kgl_resource/kgl_resource_genealogy.h
+        kgl_resource/kgl_resource_genome.cpp
+        kgl_resource/kgl_resource_genome.h
+        kgl_resource/kgl_resource_ontology.cpp
+        kgl_resource/kgl_resource_ontology.h
+        kgl_resource/kgl_resource_pf3kcoi.cpp
+        kgl_resource/kgl_resource_pf3kcoi.h
+        kgl_resource/kgl_resource_pf7_distance.cpp
+        kgl_resource/kgl_resource_pf7_distance.h
+        kgl_resource/kgl_resource_pf7_fws.cpp
+        kgl_resource/kgl_resource_pf7_fws.h
+        kgl_resource/kgl_resource_pf7_sample.cpp
+        kgl_resource/kgl_resource_pf7_sample.h
+        kgl_resource/kgl_resource_pubmed.cpp
+        kgl_resource/kgl_resource_pubmed.h
+        kgl_resource/kgl_resource_type.h
+        kgl_resource/kgl_xml_detail.h
+        kgl_resource/kgl_xml_parser_analysis.cpp
+        kgl_resource/kgl_xml_parser_datafiles.cpp
+        kgl_resource/kgl_xml_parser_packages.cpp
+        kgl_resource/kgl_xml_parser_parameters.cpp
+        kgl_resource/kgl_xml_parser_resources.cpp
+        kgl_resource/kgl_xml_parsers.cpp
+        kgl_resource/kgl_xml_parsers.h
+        kgl_resource/kgl_xml_reader.h)
 
 
 add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES} ${MATHEMATICAL_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
@@ -669,7 +707,7 @@ add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES})
 target_link_libraries(kgl_analysis kgl_genomics kel_utility kel_thread)
 
 #generate kgl_genome executable
-add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} )
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} ${RESOURCE_SOURCE_FILES})
 
 # Specify the static libraries.
 target_link_libraries(kgl_genome kgl_analysis kgl_genomics kol_ontology kel_app kel_utility kel_thread kel_io ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)

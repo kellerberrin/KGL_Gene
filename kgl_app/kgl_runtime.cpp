@@ -13,6 +13,7 @@ namespace kgl = kellerberrin::genome;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
+/// Looks up a contig alias and returns the canonical contig identifier.
 const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias) const {
 
   auto result = alias_map_.find(alias);
@@ -31,6 +32,7 @@ const kgl::ContigId_t& kgl::ContigAliasMap::lookupAlias(const ContigId_t& alias)
 
 }
 
+/// Looks up the chromosome type associated with a contig alias.
 kgl::ChromosomeType kgl::ContigAliasMap::lookupType(const ContigId_t& alias) const {
 
   auto result = alias_map_.find(alias);
@@ -49,6 +51,7 @@ kgl::ChromosomeType kgl::ContigAliasMap::lookupType(const ContigId_t& alias) con
 
 }
 
+/// Sets a contig alias with the specified canonical contig identifier and chromosome type string.
 void kgl::ContigAliasMap::setAlias(const ContigId_t &alias, const ContigId_t &contig_id, const std::string &chromosome_type) {
 
   ChromosomeType chrom_type{ChromosomeType::AUTOSOMAL};
@@ -87,6 +90,7 @@ void kgl::ContigAliasMap::setAlias(const ContigId_t &alias, const ContigId_t &co
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
+/// Looks up the evidence info set associated with the given evidence identifier.
 std::optional<const kgl::EvidenceInfoSet> kgl::VariantEvidenceMap::lookupEvidence(const std::string& evidence_ident) const {
 
   auto result = evidence_map_.find(evidence_ident);
@@ -103,6 +107,7 @@ std::optional<const kgl::EvidenceInfoSet> kgl::VariantEvidenceMap::lookupEvidenc
 }
 
 
+/// Registers an evidence identifier with its associated set of info fields.
 void kgl::VariantEvidenceMap::setEvidence(const std::string& evidence_ident, const std::set<std::string>& info_list) {
 
   auto result = evidence_map_.emplace(evidence_ident, info_list);
@@ -119,6 +124,7 @@ void kgl::VariantEvidenceMap::setEvidence(const std::string& evidence_ident, con
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
+/// Adds a named parameter vector to the active parameter list.
 bool kgl::ActiveParameterList::addNamedParameterVector(const NamedParameterVector& named_vector) {
 
   auto insert_result = active_parameter_vectors_.try_emplace(named_vector.first, named_vector);
@@ -135,6 +141,7 @@ bool kgl::ActiveParameterList::addNamedParameterVector(const NamedParameterVecto
 }
 
 
+/// Creates a filtered parameter list containing only the named parameter vectors matching the specified identifiers.
 kgl::ActiveParameterList kgl::ActiveParameterList::createParameterList(const std::vector<std::string>& active_idents) const {
 
   ActiveParameterList active_parameters;
@@ -160,6 +167,7 @@ kgl::ActiveParameterList kgl::ActiveParameterList::createParameterList(const std
 }
 
 
+/// Retrieves all values associated with the specified parameter identifier from the parameter map.
 std::vector<std::string> kgl::ParameterMap::retrieve(const std::string& ident) const {
 
   std::vector<std::string> values;
@@ -179,39 +187,13 @@ std::vector<std::string> kgl::ParameterMap::retrieve(const std::string& ident) c
 }
 
 
+/// Retrieves a vector of floating-point values for the specified parameter identifier.
 std::optional<std::vector<double>> kgl::ParameterMap::getFloat(const std::string& ident, size_t vec_size) const {
-
-  std::vector<double> value_vector;
-
-  std::vector<std::string> string_vector = retrieve(ident);
-
-  if (string_vector.size() != vec_size and vec_size != ANY_SIZE) {
-
-    return std::nullopt;
-
-  }
-
-  for (auto const& str_value : string_vector) {
-
-    try {
-
-      value_vector.push_back(std::stod(str_value));
-
-    } catch(...) {
-
-      ExecEnv::log().error("ParameterMap::getFloat; parameter ident: {}, has invalid double value: {}", ident, str_value);
-      return std::nullopt;
-
-    }
-
-  }
-
-
-  return value_vector;
-
+  return convertParameter<double>(ident, vec_size, [](const auto& s) { return std::stod(s); });
 }
 
 
+/// Retrieves a vector of string values for the specified parameter identifier.
 std::optional<std::vector<std::string>> kgl::ParameterMap::getString(const std::string& ident, size_t vec_size) const {
 
   std::vector<std::string> value_vector = retrieve(ident);
@@ -227,71 +209,20 @@ std::optional<std::vector<std::string>> kgl::ParameterMap::getString(const std::
 }
 
 
+/// Retrieves a vector of 64-bit integer values for the specified parameter identifier.
 std::optional<std::vector<int64_t>> kgl::ParameterMap::getInteger(const std::string& ident, size_t vec_size) const {
-
-  std::vector<int64_t> value_vector;
-
-  std::vector<std::string> string_vector = retrieve(ident);
-
-  if (string_vector.size() != vec_size and vec_size != ANY_SIZE) {
-
-    return std::nullopt;
-
-  }
-
-  for (auto const& str_value : string_vector) {
-
-    try {
-
-      value_vector.push_back(std::stoll(str_value));
-
-    } catch(...) {
-
-      ExecEnv::log().error("ParameterMap::getInteger; parameter ident: {}, has invalid signed integer value: {}", ident, str_value);
-      return std::nullopt;
-
-    }
-
-  }
-
-  return value_vector;
-
+  return convertParameter<int64_t>(ident, vec_size, [](const auto& s) { return std::stoll(s); });
 }
 
 
 
+/// Retrieves a vector of size_t values for the specified parameter identifier.
 std::optional<std::vector<size_t>> kgl::ParameterMap::getSize(const std::string& ident, size_t vec_size) const {
-
-  std::vector<size_t> value_vector;
-
-  std::vector<std::string> string_vector = retrieve(ident);
-
-  if (string_vector.size() != vec_size and vec_size != ANY_SIZE) {
-
-    return std::nullopt;
-
-  }
-
-  for (auto const& str_value : string_vector) {
-
-    try {
-
-      value_vector.push_back(std::stoull(str_value));
-
-    } catch(...) {
-
-      ExecEnv::log().error("ParameterMap::getSize; parameter ident: {}, has invalid unsigned integer value: {}", ident, str_value);
-      return std::nullopt;
-
-    }
-
-  }
-
-  return value_vector;
-
+  return convertParameter<size_t>(ident, vec_size, [](const auto& s) { return std::stoull(s); });
 }
 
 
+/// Retrieves a boolean value for the specified parameter identifier.
 std::optional<bool> kgl::ParameterMap::getBool(const std::string& ident) const {
 
   static const std::string true_str{"TRUE"};

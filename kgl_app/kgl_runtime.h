@@ -8,6 +8,7 @@
 #include "kgl_genome_types.h"
 #include "kgl_runtime_resource.h"
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,6 +31,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 class ActivePackage;
 using ActivePackageVector = std::vector<ActivePackage>;
 
+/// Holds a package identifier for an active package that will be executed at runtime.
 class ActivePackage {
 
 public:
@@ -37,6 +39,7 @@ public:
   ActivePackage(const std::string& package_identifier) : package_identifier_(package_identifier) {}
   ~ActivePackage() = default;
 
+  /// Returns the package identifier string.
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
 
 private:
@@ -53,24 +56,29 @@ private:
 class RuntimePackage;
 using RuntimePackageMap = std::map<std::string, RuntimePackage>;
 
+/// Holds a package definition with associated analysis, resource, and iterative file lists.
 class RuntimePackage {
 
 public:
 
   RuntimePackage( std::string package_identifier,
                   std::vector<std::string> analysis_list,
-                  std::vector<std::pair<std::string, std::string>> resource_database_def,
+                  std::vector<std::pair<std::string, std::string>> resource_list,
                   std::vector<std::vector<std::string>> iterative_file_list)
                   : package_identifier_(std::move(package_identifier)),
                     analysis_list_(std::move(analysis_list)),
-                    resource_list_(std::move(resource_database_def)),
+                    resource_list_(std::move(resource_list)),
                     iterative_file_list_(std::move(iterative_file_list)) {}
   RuntimePackage(const RuntimePackage&) = default;
   ~RuntimePackage() = default;
 
+  /// Returns the package identifier string.
   [[nodiscard]] const std::string& packageIdentifier() const { return package_identifier_; }
+  /// Returns the list of analysis identifiers associated with this package.
   [[nodiscard]] const std::vector<std::string>& analysisList() const { return analysis_list_; }
+  /// Returns the list of resource identifier/type pairs associated with this package.
   [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& resourceList() const { return resource_list_; }
+  /// Returns the iterative file list (groups of file identifiers) for this package.
   [[nodiscard]] const std::vector<std::vector<std::string>>& iterativeFileList() const { return iterative_file_list_; }
 
 private:
@@ -92,6 +100,7 @@ class RuntimeAnalysis;
 using RuntimeAnalysisMap = std::map<std::string, RuntimeAnalysis>;
 using RuntimeParameterMap = std::vector<std::string>;
 
+/// Holds an analysis definition and its associated parameter list.
 class RuntimeAnalysis {
 
 public:
@@ -102,7 +111,9 @@ public:
   RuntimeAnalysis(const RuntimeAnalysis&) = default;
   ~RuntimeAnalysis() = default;
 
+  /// Returns the parameter map associated with this analysis.
   [[nodiscard]] const RuntimeParameterMap& parameterMap() const { return parameter_map_; }
+  /// Returns the analysis identifier string.
   [[nodiscard]] const std::string& analysis() const { return analysis_identifier_; }
 
 private:
@@ -120,6 +131,7 @@ private:
 class BaseFileInfo;
 using RuntimeDataFileMap = std::map<std::string, std::shared_ptr<BaseFileInfo>>;
 
+/// Base class holding data file information parsed from the runtime XML.
 class BaseFileInfo {
 
 public:
@@ -133,8 +145,11 @@ public:
   BaseFileInfo(const BaseFileInfo&) = default;
   virtual ~BaseFileInfo() = default;
 
+  /// Returns the unique file identifier string.
   [[nodiscard]] const std::string& identifier() const { return file_identifier_; }
+  /// Returns the file name.
   [[nodiscard]] const std::string& fileName() const { return file_name_; }
+  /// Returns the file type string.
   [[nodiscard]] const std::string& fileType() const { return file_type_; }
 
 private:
@@ -152,6 +167,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// Holds VCF file information including the reference genome and evidence identifiers.
 class RuntimeVCFFileInfo : public BaseFileInfo {
 
 public:
@@ -167,7 +183,9 @@ public:
   RuntimeVCFFileInfo(const RuntimeVCFFileInfo&) = default;
   ~RuntimeVCFFileInfo() override = default;
 
+  /// Returns the reference genome identifier for this VCF file.
   [[nodiscard]] const std::string& referenceGenome() const { return reference_genome_; }
+  /// Returns the evidence identifier for this VCF file.
   [[nodiscard]] const std::string& evidenceIdent() const { return evidence_ident_; }
 
 
@@ -183,9 +201,11 @@ private:
 // Lookup the Homosapien fasta/gff contig/chromosome  identifier using a VCF contig_ref_ptr identifier.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// Enum representing the type of chromosome.
 enum class ChromosomeType { AUTOSOMAL, ALLOSOME_X, ALLOSOME_Y, MITOCHONDRIA };
 using AliasMap = std::unordered_map<ContigId_t, std::pair<ContigId_t, ChromosomeType>>;
 
+/// Maps VCF contig identifiers to canonical contig identifiers and chromosome types.
 class ContigAliasMap {
 
 public:
@@ -194,9 +214,12 @@ public:
   ContigAliasMap(const ContigAliasMap&) = default;
   ~ContigAliasMap() = default;
 
+  /// Looks up the canonical contig identifier for the given alias.
   [[nodiscard]] const ContigId_t& lookupAlias(const ContigId_t& alias) const;
+  /// Looks up the chromosome type for the given alias.
   [[nodiscard]] ChromosomeType lookupType(const ContigId_t& alias) const;
 
+  /// Sets an alias mapping from a VCF contig identifier to a canonical contig identifier and chromosome type.
   void setAlias(const ContigId_t& alias, const ContigId_t& contig_id, const std::string& chromosome_type);
 
 private:
@@ -216,10 +239,11 @@ private:
 // Object the hold the VCF INFO evidence specification.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Indexed by the identifier <evidenceIdent>, an ordered set of INFO field IDs.
+/// Indexed by the identifier <evidenceIdent>, an ordered set of INFO field IDs.
 using EvidenceInfoSet = std::set<std::string>;
 using EvidenceMap = std::map<std::string, EvidenceInfoSet>;
 
+/// Holds VCF INFO evidence specifications indexed by evidence identifier.
 class VariantEvidenceMap {
 
 public:
@@ -228,8 +252,11 @@ public:
   VariantEvidenceMap(const VariantEvidenceMap&) = default;
   ~VariantEvidenceMap() = default;
 
+  /// Returns the underlying evidence map.
   [[nodiscard]] const EvidenceMap& getMap() const { return evidence_map_; }
+  /// Looks up the set of INFO field IDs for the given evidence identifier.
   [[nodiscard]] std::optional<const EvidenceInfoSet> lookupEvidence(const std::string& evidence_ident) const;
+  /// Sets the evidence specification for the given evidence identifier.
   void setEvidence(const std::string& evidence_ident, const std::set<std::string>& info_ids);
 
 private:
@@ -248,6 +275,7 @@ private:
 // A ParameterMap is named multimap of parameter values.
 // Parameter names need not be unique.
 
+/// A named multimap of parameter values where parameter names need not be unique.
 class ParameterMap {
 
 public:
@@ -255,25 +283,61 @@ public:
   ParameterMap() = default;
   ~ParameterMap() = default;
 
+  /// Inserts a parameter with the given identifier and value.
   void insert(const std::string& ident, const std::string& value) { parameter_map_.emplace(ident, value); }
+  /// Retrieves all values for the given parameter identifier.
   [[nodiscard]] std::vector<std::string> retrieve(const std::string& ident) const;
 
   // Returns std::nullopt if parameter is wrong size e.g. if parameter not found (0) and size specified = 1.
   // ANY_SIZE will always return a std::vector (possibly empty).
+  /// Retrieves floating-point parameter values; returns std::nullopt if size mismatch.
   [[nodiscard]] std::optional<std::vector<double>> getFloat(const std::string& ident, size_t vec_size = 1) const;
+  /// Retrieves string parameter values; returns std::nullopt if size mismatch.
   [[nodiscard]] std::optional<std::vector<std::string>> getString(const std::string& ident, size_t vec_size = 1) const;
+  /// Retrieves integer parameter values; returns std::nullopt if size mismatch.
   [[nodiscard]] std::optional<std::vector<int64_t>> getInteger(const std::string& ident, size_t vec_size = 1) const;
+  /// Retrieves size_t parameter values; returns std::nullopt if size mismatch.
   [[nodiscard]] std::optional<std::vector<size_t>> getSize(const std::string& ident, size_t vec_size = 1) const;
 
+  /// Retrieves floating-point parameter values from a name/size pair.
   [[nodiscard]] std::optional<std::vector<double>> getFloat(const std::pair<std::string, size_t> &field) const { return getFloat(field.first, field.second); }
+  /// Retrieves string parameter values from a name/size pair.
   [[nodiscard]] std::optional<std::vector<std::string>> getString(const std::pair<std::string, size_t> &field) const { return getString(field.first, field.second); }
+  /// Retrieves integer parameter values from a name/size pair.
   [[nodiscard]] std::optional<std::vector<int64_t>> getInteger(const std::pair<std::string, size_t> &field) const { return getInteger(field.first, field.second); }
+  /// Retrieves size_t parameter values from a name/size pair.
   [[nodiscard]] std::optional<std::vector<size_t>> getSize(const std::pair<std::string, size_t> &field) const { return getSize(field.first, field.second); }
+  /// Retrieves a boolean parameter value.
   [[nodiscard]] std::optional<bool> getBool(const std::string& ident) const;
 
-  constexpr static const size_t ANY_SIZE{99999999999};
+  /// Constant representing any vector size; bypasses size validation.
+  constexpr static const size_t ANY_SIZE{std::numeric_limits<size_t>::max()};
 
 private:
+
+  // Shared implementation for typed accessors (getFloat, getInteger, getSize).
+  template <typename T, typename ConvertFn>
+  [[nodiscard]] std::optional<std::vector<T>> convertParameter(const std::string& ident, size_t vec_size, ConvertFn convert) const {
+
+    std::vector<T> value_vector;
+    std::vector<std::string> string_vector = retrieve(ident);
+
+    if (string_vector.size() != vec_size and vec_size != ANY_SIZE) {
+      return std::nullopt;
+    }
+
+    for (auto const& str_value : string_vector) {
+      try {
+        value_vector.push_back(convert(str_value));
+      } catch(...) {
+        ExecEnv::log().error("ParameterMap; parameter ident: {}, has invalid value: {}", ident, str_value);
+        return std::nullopt;
+      }
+    }
+
+    return value_vector;
+
+  }
 
   std::multimap<std::string, std::string> parameter_map_;
 
@@ -301,6 +365,7 @@ using NamedParameterVector = std::pair<std::string, ParameterVector>;
 
 using ParameterListMap = std::map<const std::string, const NamedParameterVector>;
 
+/// A unique named map of parameter vectors supplied to analysis objects.
 class ActiveParameterList {
 
 public:
@@ -308,10 +373,12 @@ public:
   ActiveParameterList() = default;
   ~ActiveParameterList() = default;
 
+  /// Returns the underlying parameter list map.
   [[nodiscard]] const ParameterListMap& getMap() const { return active_parameter_vectors_; }
 
+  /// Adds a named parameter vector to the active parameter list.
   bool addNamedParameterVector(const NamedParameterVector& named_vector);
-  // Create a sub list of named parameters based on the active parameter identifiers specified by an analysis.
+  /// Creates a sub list of named parameters based on the active parameter identifiers specified by an analysis.
   [[nodiscard]] ActiveParameterList createParameterList(const std::vector<std::string>& active_idents) const;
 
 private:

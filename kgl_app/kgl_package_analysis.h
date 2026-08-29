@@ -16,34 +16,34 @@
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-// Adds flag to show if analysis is active.
-// Analytics that encounter error states disable themselves via this flag.
+/// Adds flag to show if analysis is active.
+/// Analytics that encounter error states disable themselves via this flag.
 using VirtualAnalysisArray = std::vector<std::pair<std::unique_ptr<VirtualAnalysis>, bool>>;
 
-// Manages runtime analytics within an execution package.
+/// Manages runtime analytics within an execution package.
 class PackageAnalysis {
 
 public:
 
-  explicit PackageAnalysis(const RuntimeConfiguration& runtime_contig) : runtime_contig_(runtime_contig) {}
+  explicit PackageAnalysis(const RuntimeConfiguration& runtime_config) : runtime_config_(runtime_config) {}
   ~PackageAnalysis() = default;
 
-  // Setup the analytics to process data.
+  /// Setup the analytics to process data.
   [[nodiscard]] bool initializeAnalysis(const RuntimePackage& package,
                                         const std::shared_ptr<const AnalysisResources>& resource_ptr) const;
 
-  // Perform the genetic analysis per VCF file read.
+  /// Perform the genetic analysis per VCF file read.
   [[nodiscard]] bool fileReadAnalysis(std::shared_ptr<const DataDB> file_data) const;
 
-  // Perform the genetic analysis per iteration (multiple files grouped together).
+  /// Perform the genetic analysis per iteration (multiple files grouped together).
   [[nodiscard]] bool iterationAnalysis() const;
 
-  // All data has been presented, finalize analysis and write results.
+  /// All data has been presented, finalize analysis and write results.
   [[nodiscard]] bool finalizeAnalysis() const;
 
 private:
 
-  const RuntimeConfiguration runtime_contig_;
+  const RuntimeConfiguration& runtime_config_;
   // Active analytics for this package
   mutable VirtualAnalysisArray active_analysis_;
 

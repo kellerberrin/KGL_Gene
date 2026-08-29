@@ -8,6 +8,7 @@
 namespace kgl = kellerberrin::genome;
 
 
+/// Initializes all analysis defined for a package by looking up factory functions and runtime parameters.
 bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
                                                const std::shared_ptr<const AnalysisResources>& resource_ptr) const {
 
@@ -23,16 +24,16 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
       auto [key_id, factory] = *find_iter;
       std::unique_ptr<VirtualAnalysis> analysis_ptr = factory();
 
-      auto result = runtime_contig_.analysisMap().find(analysis_id);
+      auto result = runtime_config_.analysisMap().find(analysis_id);
       // Analysis parameters found.
-      if (result != runtime_contig_.analysisMap().end()) {
+      if (result != runtime_config_.analysisMap().end()) {
 
         // Get the named parameter blocks for this analysis (if any).
         auto [runtime_id, analysis_runtime] = *result;
-        auto defined_parameters = runtime_contig_.activeParameterList().createParameterList(analysis_runtime.parameterMap());
+        auto defined_parameters = runtime_config_.activeParameterList().createParameterList(analysis_runtime.parameterMap());
 
         // Initialize the analysis.
-        if (analysis_ptr->initializeAnalysis(runtime_contig_.workDirectory(), defined_parameters, resource_ptr)) {
+        if (analysis_ptr->initializeAnalysis(runtime_config_.workDirectory(), defined_parameters, resource_ptr)) {
 
           active_analysis_.emplace_back(std::move(analysis_ptr), true);
 
@@ -61,6 +62,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
 }
 
 
+/// Updates all active analysis with the data read from a file.
 bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> file_data) const {
 
   for (auto& [analysis, active] : active_analysis_) {
@@ -92,6 +94,7 @@ bool kgl::PackageAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> file_d
 }
 
 
+/// Performs an iteration of analysis across all active analysis.
 bool kgl::PackageAnalysis::iterationAnalysis() const {
 
   for (auto& [analysis, active] : active_analysis_) {
@@ -121,6 +124,7 @@ bool kgl::PackageAnalysis::iterationAnalysis() const {
 }
 
 
+/// Finalizes all active analysis and reports any errors encountered.
 bool kgl::PackageAnalysis::finalizeAnalysis() const {
 
 

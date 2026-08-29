@@ -15,6 +15,7 @@ namespace kgl = kellerberrin::genome;
 
 
 
+/// Retrieves all resources matching the specified resource type and optional resource identifier.
 std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::getResources( const std::string& resource_type,
                                                                                             const std::string& resource_ident) const {
 
@@ -53,6 +54,7 @@ std::vector<std::shared_ptr<const kgl::ResourceBase>> kgl::AnalysisResources::ge
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// Retrieves the value of a parameter by key from the resource parameter map.
 std::optional<const std::string> kgl::ResourceParameters::getParameter(const std::string& parameter_key) const {
 
   if (parameter_map_.contains(parameter_key)) {
@@ -67,6 +69,7 @@ std::optional<const std::string> kgl::ResourceParameters::getParameter(const std
 }
 
 
+/// Sets a parameter key-value pair in the resource parameter map, warning if the key already exists.
 void kgl::ResourceParameters::setParameter(const std::string& parameter_key, const std::string& parameter_value) {
 
   if (parameter_map_.contains(parameter_key)) {
@@ -82,6 +85,7 @@ void kgl::ResourceParameters::setParameter(const std::string& parameter_key, con
 }
 
 
+/// Retrieves resource parameters matching the specified resource type and identifier.
 std::optional<kgl::ResourceParameters> kgl::ResourceDefinitions::retrieve(const std::string& resource_type,
                                                                           const std::string& resource_ident) const {
 
