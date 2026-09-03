@@ -209,6 +209,7 @@ public:
 
     locationFormat(format_location, LoggerSeverity::CRITICAL, std::forward<Args>(args)...);
     logFormat("Forced Program exit. May terminate abnormally.", LoggerSeverity::CRITICAL);
+    flushStreamsImpl();
     std::exit(EXIT_FAILURE);
 
   }
@@ -220,6 +221,7 @@ public:
 
     logFormat(format, LoggerSeverity::CRITICAL, std::forward<Args>(args)...);
     logFormat("Forced Program exit. May terminate abnormally.", LoggerSeverity::CRITICAL);
+    flushStreamsImpl();
     std::exit(EXIT_FAILURE);
 
   }
@@ -242,6 +244,7 @@ private:
 
   bool warnMessageLimits() noexcept; // Stops issuing messages after max warn messages reached.
   bool errorMessageLimits() noexcept; // Forces program termination after max error messages reached.
+  void flushStreamsImpl() noexcept; // Finalizes logging. flushes and closes any open files. Called by logging a critical msg.
 
   // This function captures any formatting errors and argument mis-matches at compile time.
   template<typename... Args> void logFormat( std::format_string<Args...> format,

@@ -12,15 +12,17 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // This object holds variants for each genome.
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 using ContigDBMap = std::map<ContigId_t, std::shared_ptr<ContigDB>>;
 
+/// This object holds variants for each genome (organism).
+/// Note that the population structure cannot be read while it is being updated.
 class GenomeDB {
 
 public:
@@ -31,10 +33,10 @@ public:
   GenomeDB(const GenomeDB&) = delete; // Use deep copy.
   GenomeDB& operator=(const GenomeDB&) = delete; // Use deep copy.
 
-  // Use this to copy the object.
+  /// Use this to copy the object.
   [[nodiscard]] std::shared_ptr<GenomeDB> deepCopy() const;
 
-  // Unconditionally merge (retains duplicates) genomes and variants into this genome.
+  /// Unconditionally merge (retains duplicates) genomes and variants into this genome.
   [[nodiscard]] size_t mergeGenome(const std::shared_ptr<const GenomeDB>& merge_genome);
 
   [[nodiscard]] size_t variantCount() const;
@@ -43,41 +45,41 @@ public:
 
   [[nodiscard]] const GenomeId_t& genomeId() const { return genome_id_; }
 
-  // Return a filtered copy of the genome.
-  // Important, returns a shallow copy of the genome - only use for CPU/memory efficiency.
+  /// Return a filtered copy of the genome.
+  /// Important, returns a shallow copy of the genome - only use for CPU/memory efficiency.
   [[nodiscard]] std::unique_ptr<GenomeDB> viewFilter(const BaseFilter& filter) const;
-  // Filter this genome in Situ. (efficient for large databases).
-  // Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
+  /// Filter this genome in Situ. (efficient for large databases).
+  /// Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
 
-  // Deletes any empty Contigs, returns number deleted.
+  /// Deletes any empty Contigs, returns number deleted.
   size_t trimEmpty();
 
-  // Create an equivalent genome that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
-  // and Inserts by '1MnI'. The genome structure is re-created and is not a shallow copy.
+  /// Create an equivalent genome that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
+  /// and Inserts by '1MnI'. The genome structure is re-created and is not a shallow copy.
   [[nodiscard]] std::unique_ptr<GenomeDB> canonicalGenome() const;
 
-  // Get the underlying contig_ref_ptr map.
+  /// Get the underlying contig_ref_ptr map.
   [[nodiscard]] const ContigDBMap& getMap() const { return contig_map_; }
 
-  // Creates the contig_ref_ptr if it does not exist.
+  /// Creates the contig_ref_ptr if it does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<ContigDB>> getCreateContig(const ContigId_t& contig_id);
-  // Const version, Returns nullopt if the contig_ref_ptr does not exist.
+  /// Const version, Returns nullopt if the contig_ref_ptr does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<const ContigDB>> getContig(const ContigId_t& contig_id) const;
-  // Returns nullopt if the contig_ref_ptr does not exist.
+  /// Returns nullopt if the contig_ref_ptr does not exist.
   [[nodiscard]] std::optional<std::shared_ptr<ContigDB>> getContig(const ContigId_t& contig_id);
-  // Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
+  /// Processes all variants in the genome with class Obj and Func = &Obj::objFunc(const shared_ptr<const Variant>&)
   template<class Obj> bool processAll(Obj& object, MemberVariantFunc<Obj> objFunc) const {
 
     VariantProcessFunc callable = std::bind_front(objFunc, &object);
     return processAll(callable);
 
   }
-  // Implementation
+  /// Implementation
   bool processAll(const VariantProcessFunc& procFunc) const;
 
-  // Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
-  // The second integer is the number variants that pass inspection by comparison to the genome database.
+  /// Validate returns a pair<size_t, size_t>. The first integer is the number of variants examined.
+  /// The second integer is the number variants that pass inspection by comparison to the genome database.
   [[nodiscard]] std::pair<size_t, size_t> validate(const std::shared_ptr<const GenomeReference>& genome_db_ptr) const;
 
 private:

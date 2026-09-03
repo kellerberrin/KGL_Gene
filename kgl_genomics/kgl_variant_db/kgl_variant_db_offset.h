@@ -14,15 +14,18 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // This is the low-level variant container.
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// The variant vector held by an offset object. Each element is either null (0), heterozygous (1) or homozygous (2).
 using OffsetDBArray = std::vector<std::shared_ptr<const Variant>>;
 
+/// This is the low-level variant container. A vector of variants that all share the same contig offset.
+/// Note that the population structure cannot be read while it is being updated.
 class OffsetDB {
 
 public:
@@ -38,21 +41,22 @@ public:
 
   void addVariant(const std::shared_ptr<const Variant>& variant_ptr) { variant_vector_.push_back(variant_ptr); }
 
-  // Return a filtered copy of the offset.
-  // Offset is the bottom level of the population structure, so a true/deep copy of the filtered offset is returned
-  // unlike the higher levels of Population/Genome/Contig.
+  /// Return a filtered copy of the offset.
+  /// Offset is the bottom level of the population structure, so a true/deep copy of the filtered offset is returned
+  /// unlike the higher levels of Population/Genome/Contig.
   [[nodiscard]] std::unique_ptr<OffsetDB> viewFilter(const BaseFilter &filter) const;
-  // Filter this offset.
-  // Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
+  /// Filter this offset.
+  /// Returns a std::pair with .first the reference number of variants, .second the filtered number of variants.
   std::pair<size_t, size_t> selfFilter(const BaseFilter &filter);
 
 private:
 
   OffsetDBArray variant_vector_;
-  constexpr static const size_t INITIAL_VECTOR_SIZE_ = 2;
+  constexpr static size_t INITIAL_VECTOR_SIZE_ = 2;
 
 
 };
+
 
 
 

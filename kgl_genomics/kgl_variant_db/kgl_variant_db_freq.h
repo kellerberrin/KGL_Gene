@@ -23,35 +23,36 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/// Read-only lookup of super population variant frequencies (or other info data) from a variant evidence block.
+/// This object hides the different INFO field codes used by the various variant databases (Gnomad 2.1/3.1, 1000 Genomes etc).
 class FrequencyDatabaseRead {
 
 public:
 
   FrequencyDatabaseRead() = delete;
-  ~FrequencyDatabaseRead() = delete;
 
-  // Read super population allele frequencies "AF"
+  /// Read super population allele frequencies "AF"
   [[nodiscard]] static std::optional<double> superPopFrequency(const Variant& variant,
                                                                const std::string& super_population);
 
-  // Read super population total number of alleles in called genotypes "AN" (integer).
+  /// Read super population total number of alleles in called genotypes "AN" (integer).
   [[nodiscard]] static std::optional<int64_t> superPopTotalAlleles( const Variant& variant,
                                                                     const std::string& super_population);
 
-  // Read super population alternate allele count for samples "AC" (integer).
+  /// Read super population alternate allele count for samples "AC" (integer).
   [[nodiscard]] static std::optional<int64_t> superPopAltAlleles( const Variant& variant,
                                                                   const std::string& super_population);
 
-  // List the super populations supported.
+  /// List the super populations supported.
   [[nodiscard]] static const std::vector<std::string>& superPopulations() { return super_populations_; }
 
-  // Read any float field with supplied INFO field code.
+  /// Read any float field with supplied INFO field code.
   [[nodiscard]] static std::optional<double> infoFloatField(const Variant& variant, const std::string& database_field);
 
-  // Read any integer field with supplied INFO field code.
+  /// Read any integer field with supplied INFO field code.
   [[nodiscard]] static std::optional<int64_t> infoIntegerField(const Variant& variant, const std::string& database_field);
 
-  // Valid super population codes.
+  /// Valid super population codes.
   constexpr static const char* SUPER_POP_AFR_{"AFR"} ;  // African
   constexpr static const char* SUPER_POP_AMR_{"AMR"};  // American
   constexpr static const char* SUPER_POP_EAS_{"EAS"};  // East Asian
@@ -68,66 +69,65 @@ private:
                                                                 SUPER_POP_SAS_,
                                                                 SUPER_POP_ALL_ };
 
+  // The number of variant database sources that have bespoke super population field codes.
+  constexpr static size_t SOURCE_COUNT = 5;
 
+  // The Info field types; AF (allele frequency), AN (total alleles), AC (alt allele count).
+  enum class FieldIndex { AF = 0, AN = 1, AC = 2 };
 
-  struct SuperPopFieldText {
+  // The super population Info field identifiers (field codes) for all supported data sources.
+  // Keyed by super population code. The source index order is;
+  // { Gnomad2_1, GnomadExomes2_1, Gnomad3_1, GnomadGenome3_1, Genome1000 }.
+  using SuperPopCode = std::pair<std::string_view, std::array<std::string_view, SOURCE_COUNT>>;
+  using SuperPopFields = std::array<SuperPopCode, 6>;
 
-    std::string gnomad_2_1;
-    std::string gnomad_ex_2_1;
-    std::string gnomad_3_1;
-    std::string gnomadgenome_3_1;
-    std::string genome_1000;
-
-  };
-
-  // The Info field identifiers for alternative allele frequency (float).
-  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AF_ {
-
-
+  // The Info field identifiers for allele frequency (float).
+  inline static constexpr SuperPopFields field_text_AF_ {{
       {SUPER_POP_AFR_, {"AF_afr", "AF_afr", "AF_afr", "gnomad_AF_afr", "AFR_AF"}},  // African
       {SUPER_POP_AMR_, {"AF_amr", "AF_amr", "AF_amr", "gnomad_AF_amr", "AMR_AF"}},   // American
       {SUPER_POP_EAS_, {"AF_eas", "AF_eas", "AF_eas", "gnomad_AF_eas", "EAS_AF"}},   // East Asian
       {SUPER_POP_EUR_, {"AF_nfe", "AF_nfe", "AF_nfe", "gnomad_AF_nfe", "EUR_AF"}},   // European
       {SUPER_POP_SAS_, {"AF", "AF_sas", "AF_sas", "gnomad_AF_sas", "SAS_AF"}},   // South Asian
       {SUPER_POP_ALL_, {"AF", "AF", "AF", "gnomad_AF", "AF"}}   // All Super Populations
-
-
-
-  };
+  }};
 
   // The Info field identifiers for total number of alleles in called genotypes (integer).
-  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AN_ {
-
-
+  inline static constexpr SuperPopFields field_text_AN_ {{
       {SUPER_POP_AFR_, {"AN_afr", "AN_afr", "AN_afr", "gnomad_AN_afr", "AFR_AN"}},  // African
       {SUPER_POP_AMR_, {"AN_amr", "AN_amr", "AN_amr", "gnomad_AN_amr", "AMR_AN"}},   // American
       {SUPER_POP_EAS_, {"AN_eas", "AN_eas", "AN_eas", "gnomad_AN_eas", "EAS_AN"}},   // East Asian
       {SUPER_POP_EUR_, {"AN_nfe", "AN_nfe", "AN_nfe", "gnomad_AN_nfe", "EUR_AN"}},   // European
       {SUPER_POP_SAS_, {"AN", "AN_sas", "AN_sas", "gnomad_AN_sas", "SAS_AN"}},   // South Asian
       {SUPER_POP_ALL_, {"AN", "AN", "AN", "gnomad_AN", "AN"}}   // All Super Populations
-
-
-  };
-
+  }};
 
   // The Info field identifiers for alternate allele count for samples (integer).
-  inline static const std::map<std::string, SuperPopFieldText> field_text_map_AC_ {
-
-
+  inline static constexpr SuperPopFields field_text_AC_ {{
       {SUPER_POP_AFR_, {"AC_afr", "AC_afr", "AC_afr", "gnomad_AC_afr", "AFR_AC"}},  // African
       {SUPER_POP_AMR_, {"AC_amr", "AC_amr", "AC_amr", "gnomad_AC_amr", "AMR_AC"}},   // American
       {SUPER_POP_EAS_, {"AC_eas", "AC_eas", "AC_eas", "gnomad_AC_eas", "EAS_AC"}},   // East Asian
       {SUPER_POP_EUR_, {"AC_nfe", "AC_nfe", "AC_nfe", "gnomad_AC_nfe", "EUR_AC"}},   // European
       {SUPER_POP_SAS_, {"AC", "AC_sas", "AC_sas", "gnomad_AC_sas", "SAS_AC"}},   // South Asian
       {SUPER_POP_ALL_, {"AC", "AC", "AC", "gnomad_AC", "AC"}}   // All Super Populations
+  }};
 
+  // All the field code tables indexed by FieldIndex.
+  inline static constexpr std::array<SuperPopFields, 3> field_text_tables_ {{ field_text_AF_, field_text_AN_, field_text_AC_ }};
 
-  };
+  // Map a data source to a super population field code index. Returns false if the data source is unsupported.
+  [[nodiscard]] static bool sourceIndex(DataSourceEnum data_source, size_t& source_index);
 
-  // Lookup a variant super population frequency code. The field code varies with the (FrequencyDatabaseSource) database source.
-  [[nodiscard]] static std::optional<std::string> lookupVariantSuperPopField( const std::map<std::string, SuperPopFieldText>& lookup_map,
-                                                                              DataSourceEnum data_source,
-                                                                              const std::string& super_population);
+  // Lookup a super population field code. Returns nullopt if the super population or data source is unsupported.
+  [[nodiscard]] static std::optional<std::string_view> lookupSuperPopField( FieldIndex field_index,
+                                                                            DataSourceEnum data_source,
+                                                                            const std::string& super_population);
+
+  // Common implementation for infoFloatField() and infoIntegerField().
+  template<typename T>
+  [[nodiscard]] static std::optional<T> infoFieldImpl( const Variant& variant,
+                                                       const std::string& database_field,
+                                                       const char* field_type);
+
 
 };
 

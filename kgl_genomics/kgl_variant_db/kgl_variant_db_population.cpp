@@ -6,6 +6,7 @@
 #include "kgl_variant_filter_db_variant.h"
 #include "kel_workflow_threads.h"
 
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -18,6 +19,7 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::deepCopy() const {
 
 }
 
+
 // Use this to empty the object. Just the trivial 'FalseFilter'.
 std::pair<size_t, size_t> kgl::PopulationDB::clear() {
 
@@ -27,6 +29,7 @@ std::pair<size_t, size_t> kgl::PopulationDB::clear() {
 
 }
 
+
 // This function is used by VCF parsers to create a variant database.
 // The function has been made thread safe for multiple parser thread access.
 std::optional<std::shared_ptr<kgl::GenomeDB>> kgl::PopulationDB::getCreateGenome(const GenomeId_t& genome_id) {
@@ -34,45 +37,30 @@ std::optional<std::shared_ptr<kgl::GenomeDB>> kgl::PopulationDB::getCreateGenome
   // Lock this function to concurrent access.
   std::scoped_lock lock(add_variant_mutex_);
 
-  auto result = genome_map_.find(genome_id);
+  auto [insert_iter, insert_result] = genome_map_.try_emplace(genome_id);
+  if (insert_result) {
 
-  if (result != genome_map_.end()) {
-
-    return result->second;
-
-  } else {
-
-    std::shared_ptr<GenomeDB> genome_ptr = std::make_shared<GenomeDB>(genome_id);
-    auto insert_result = genome_map_.try_emplace(genome_id, genome_ptr);
-
-    if (not insert_result.second) {
-
-      ExecEnv::log().error("PopulationDB::getCreateGenome(), Could not add genome: {} to the population: {}", genome_id, populationId());
-      return std::nullopt;
-
-    }
-
-    return genome_ptr;
+    // Add the new genome.
+    insert_iter->second = std::make_shared<GenomeDB>(genome_id);
 
   }
+
+  return insert_iter->second;
 
 }
 
 
 std::optional<std::shared_ptr<kgl::GenomeDB>> kgl::PopulationDB::getGenome(const GenomeId_t& genome_id) const {
 
-
   auto result = genome_map_.find(genome_id);
 
   if (result != genome_map_.end()) {
 
     return result->second;
 
-  } else {
-
-    return std::nullopt;
-
   }
+
+  return std::nullopt;
 
 }
 
@@ -93,6 +81,7 @@ bool kgl::PopulationDB::addGenome(const std::shared_ptr<GenomeDB>& genome_ptr) {
   return result;
 
 }
+
 
 // Multi-thread for speed.
 size_t kgl::PopulationDB::variantCount() const {
@@ -118,47 +107,35 @@ size_t kgl::PopulationDB::variantCount() const {
 
   }
 
-  size_t variant_count{0};
   // Add the genome variant counts.
-  for (auto& future : future_vector) {
-
-    variant_count += future.get();
-
-  }
-
-  return variant_count;
+  return std::ranges::fold_left(future_vector,
+                                size_t{0},
+                                [](size_t sum, auto& future) { return sum + future.get(); });
 
 }
+
 
 std::map<std::string, std::shared_ptr<const kgl::Variant>> kgl::PopulationDB::uniqueVariants() const {
 
-  // Local class to process the unique variants.
-  class UniqueCount {
+  // Process all the variants in the population collecting the unique variants.
+  std::map<std::string, std::shared_ptr<const kgl::Variant>> unique_map;
+  processAll([&unique_map](const std::shared_ptr<const Variant>& variant_ptr) -> bool {
 
-  public:
+    auto hgvs = variant_ptr->HGVS();
+    if (not unique_map.contains(hgvs)) {
 
-    bool uniqueCount(const std::shared_ptr<const Variant>& variant_ptr) {
-
-      auto hgvs = variant_ptr->HGVS();
-      if (not unique_map_.contains(hgvs)) {
-
-        unique_map_[hgvs] = variant_ptr;
-
-      }
-
-      return true;
+      unique_map.try_emplace(std::move(hgvs), variant_ptr);
 
     }
-    std::map<std::string, std::shared_ptr<const kgl::Variant>> unique_map_;
 
-  };
+    return true;
 
-  UniqueCount unique_count;
-  processAll(unique_count, &UniqueCount::uniqueCount);
+  });
 
-  return unique_count.unique_map_;
+  return unique_map;
 
 }
+
 
 // Create an equivalent population that has canonical variants, SNP are represented by '1X', Deletes by '1MnD'
 // and Inserts by '1MnI'. The population structure is re-created and is not a shallow copy.
@@ -181,25 +158,7 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::canonicalPopulation() cons
 
 size_t kgl::PopulationDB::trimEmpty() {
 
-  size_t delete_count{0};
-  // Delete empty genomes.
-  auto it = genome_map_.begin();
-  while (it != genome_map_.end()) {
-
-    if (it->second->variantCount() == 0) {
-
-      it = genome_map_.erase(it);
-      ++delete_count;
-
-    } else {
-
-      ++it;
-
-    }
-
-  }
-
-  return delete_count;
+  return std::erase_if(genome_map_, [](const auto& genome_pair) { return genome_pair.second->variantCount() == 0; });
 
 }
 
@@ -212,22 +171,8 @@ std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCountMap() const {
 
     for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
-      auto find_iter = contig_map.find(contig_id);
-      if (find_iter == contig_map.end()) {
-
-        auto [insert_iter, result] = contig_map.try_emplace(contig_id, 0);
-        if (not result) {
-
-          ExecEnv::log().error("PopulationDB::contigCountMap; expected error inserting contig_ref_ptr: {}", contig_id);
-          continue;
-
-        }
-        find_iter = insert_iter;
-
-      }
-
-      auto& [map_map, contig_count] = *find_iter;
-      contig_count += contig_ptr->variantCount();
+      // Note that map operator[] zero-initializes the contig count if the contig does not already exist.
+      contig_map[contig_id] += contig_ptr->variantCount();
 
     }
 
@@ -249,8 +194,7 @@ std::optional<size_t> kgl::PopulationDB::contigCount(const ContigId_t& contig) c
 
   }
 
-  auto const& [contig_id, contig_count] = *find_iter;
-  return contig_count;
+  return find_iter->second;
 
 }
 
@@ -371,7 +315,7 @@ bool kgl::PopulationDB::processAll(const VariantProcessFunc& objFunc)  const {
 
     if (not genome_ptr->processAll(objFunc)) {
 
-      ExecEnv::log().error("UnphasedPopulation::processAll<Obj>; error with genome: {}", genome);
+      ExecEnv::log().error("PopulationDB::processAll<Obj>; error with genome: {}", genome);
       return false;
 
     }
@@ -391,25 +335,19 @@ bool kgl::PopulationDB::processAll_MT(const GenomeProcessFunc& objFunc)  const {
   // A vector for thread futures.
   std::vector<std::future<std::pair<bool, GenomeId_t>>> future_vector;
 
-  // Local structure in which to define an appropriate static routine.
-  struct genomeClass {
+  // Thread work lambda, all arguments are passed by value.
+  auto process_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr, GenomeProcessFunc objFunc) {
 
-    // All arguments are passed by value.
-    static std::pair<bool, GenomeId_t> processGenome(std::shared_ptr<const GenomeDB> genome_ptr, GenomeProcessFunc objFunc) {
-
-      VariantProcessFunc callable = std::bind_front(objFunc, genome_ptr);
-      bool result = genome_ptr->processAll(callable);
-      GenomeId_t genome = genome_ptr->genomeId();
-      return {result, genome};
-
-    }
+    VariantProcessFunc callable = std::bind_front(objFunc, genome_ptr);
+    bool result = genome_ptr->processAll(callable);
+    return std::pair<bool, GenomeId_t>{result, genome_ptr->genomeId()};
 
   };
 
   // Queue a thread for each genome.
   for (const auto& [genome_id, genome_ptr] : getMap()) {
 
-    std::future<std::pair<bool, GenomeId_t>> future = thread_pool.enqueueFuture(&genomeClass::processGenome, genome_ptr, objFunc);
+    std::future<std::pair<bool, GenomeId_t>> future = thread_pool.enqueueFuture(process_lambda, genome_ptr, objFunc);
     future_vector.push_back(std::move(future));
 
   }
@@ -449,103 +387,85 @@ std::shared_ptr<kgl::GenomeDB> kgl::PopulationDB::compressPopulation() const {
 
 std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() const {
 
-  // Local class to perform the multi-threaded construction of a population with 1 genome containing
-  // all the unique variants.
-  class UniqueVariant {
+  // Create a population with a single genome to hold all the unique unphased variants.
+  auto compressed_population_ptr = std::make_shared<PopulationDB>(populationId() + "_Compressed", dataSource());
 
-  public:
+  auto unphased_genome_opt = compressed_population_ptr->getCreateGenome("UniqueCompressed");
 
-    UniqueVariant(const PopulationDB& multi_genome) {
+  if (not unphased_genome_opt) {
 
-      compressed_population_ptr_ = std::make_shared<PopulationDB>(multi_genome.populationId() + "_Compressed", multi_genome.dataSource());
+    ExecEnv::log().critical("PopulationDB::uniqueUnphasedGenome(); problem creating unique unphased genome with population: {}", populationId());
 
-      auto unphased_genome_opt = compressed_population_ptr_->getCreateGenome("UniqueCompressed");
+  }
 
-      if (not unphased_genome_opt) {
+  auto unphased_genome = unphased_genome_opt.value();
 
-        ExecEnv::log().critical("PopulationDB::UniqueUnphased(); problem creating unique unphased genome with population: {}", multi_genome.populationId());
+  // A hash map of unique (unphased) variants, implemented as a hash map for a bit of extra speed.
+  std::unordered_map<std::string, std::shared_ptr<const Variant>> variant_map;
+  // Mutex to lock the map structure for safe multiple thread access.
+  std::mutex map_mutex;
 
-      }
+  // Using multi-threading, process all variants held in the population.
+  auto add_result = processAll_MT([&](std::shared_ptr<const GenomeDB>, const std::shared_ptr<const Variant>& variant_ptr) -> bool {
 
-      unphased_genome_ = unphased_genome_opt.value();
+    auto unphased_hash = variant_ptr->HGVS(); // Create a unique HGVS hash, phasing excluded.
+    {
 
-    }
+      // Acquire the mutex and check if the variant is already in the map.
+      std::scoped_lock lock(map_mutex);
 
-    bool addUniqueUnphasedVariant(std::shared_ptr<const GenomeDB>, const std::shared_ptr<const Variant>& variant_ptr) {
+      if (variant_map.contains(unphased_hash)) {
 
-      auto unphased_hash = variant_ptr->HGVS(); // Create a unique HGSV hash, phasing excluded.
-      {
-        // Acquire the mutex.
-        std::scoped_lock lock(map_mutex_);
-
-        // Check if the variant is already in the map.
-        auto find_result = variant_map_.find(unphased_hash);
-        if (find_result != variant_map_.end()) {
-
-          // If already present, just return.
-          return true;
-
-        } else {
-
-          // If not present, then add to the map.
-          auto [insert_iter, result] = variant_map_.try_emplace(std::move(unphased_hash), variant_ptr);
-
-          if (not result) {
-
-            ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add duplicate variant hash: {}", variant_ptr->HGVS());
-            return false;
-
-          }
-
-        }
+        // If already present, just return.
+        return true;
 
       }
-      // The variant was not found in the map so add to the unique population.
-      bool add_result = unphased_genome_->addVariant(variant_ptr);
-      if (not add_result) {
 
-        ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add variant hash: {} to population", variant_ptr->HGVS());
+      // If not present, then add to the map.
+      auto [insert_iter, insert_result] = variant_map.try_emplace(std::move(unphased_hash), variant_ptr);
+      if (not insert_result) {
+
+        ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add duplicate variant hash: {}", variant_ptr->HGVS());
         return false;
 
       }
 
-      return true;
+    }
+
+    // The variant was not found in the map so add to the unique population.
+    // Note that the map mutex is deliberately not held to avoid a nested mutex (the addVariant has its own mutex).
+    if (not unphased_genome->addVariant(variant_ptr)) {
+
+      ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add variant hash: {} to population", variant_ptr->HGVS());
+      return false;
 
     }
 
-    std::shared_ptr<PopulationDB> compressed_population_ptr_;
-    std::shared_ptr<GenomeDB> unphased_genome_;
-    // Implemented as a hash map for a bit of extra speed.
-    std::unordered_map<std::string, std::shared_ptr<const Variant>> variant_map_;
-    // Mutex to lock the map structure for safe multiple thread access.
-    std::mutex map_mutex_;
+    return true;
 
-  }; // End of local object definition.
+  });
 
-  // Create an instance of the local object as a std::shared_ptr.
-  UniqueVariant unique_variant(*this);
-  // Using the local object and multi-threading, process all variants held in the population
-  if (not processAll_MT(unique_variant, &UniqueVariant::addUniqueUnphasedVariant)) {
+  if (not add_result) {
 
-    ExecEnv::log().error("PopulationDB::UniqueUnphased(); problem creating unique unphased genome with population: {}", populationId());
+    ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome(); problem creating unique unphased genome with population: {}", populationId());
 
   }
 
-  // ReturnType the unique variant population.
-  return  unique_variant.compressed_population_ptr_;
+  // Return the unique variant population.
+  return  compressed_population_ptr;
 
 }
 
 
 std::optional<std::shared_ptr<const kgl::InfoEvidenceHeader>> kgl::PopulationDB::getVCFInfoEvidenceHeader() const {
 
-  for (auto const& genome : getMap()) {
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    for (auto const& contig : genome.second->getMap()) {
+    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
 
-      for (auto const& variant_vector : contig.second->getMap()) {
+      for (auto const& [offset, offset_ptr] : contig_ptr->getMap()) {
 
-        for (auto const& variant_ptr : variant_vector.second->getVariantArray()) {
+        for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
           if (variant_ptr->evidence().infoData()) {
 
@@ -565,4 +485,3 @@ std::optional<std::shared_ptr<const kgl::InfoEvidenceHeader>> kgl::PopulationDB:
   return std::nullopt;
 
 }
-

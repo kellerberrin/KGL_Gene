@@ -43,6 +43,8 @@ void kgl::ExecutePackage::executeActive() const {
           ExecEnv::log().error("ExecutePackage::executeActive, Problem performing Read File Analysis for Package: {}", package_ident);
 
         }
+        // Explicitly call the file destructor. Packages must internally retain data across calls.
+        data_ptr = nullptr;
 
       }
 

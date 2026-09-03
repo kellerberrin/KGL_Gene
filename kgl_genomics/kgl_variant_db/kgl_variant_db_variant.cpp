@@ -4,6 +4,7 @@
 
 #include "kgl_variant_db_variant.h"
 
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -12,31 +13,26 @@ void kgl::VariantDBVariant::createVariantDB(const std::shared_ptr<const Populati
 
   // Get the unique variants for this population.
   auto unique_variant_map = population_ptr->uniqueVariants();
-  // Create the variant index.
-  auto variant_index_ptr = std::make_unique<VariantDBVariantIndex>();
-  size_t index{0};
-  for (auto &[hgvs, variant_ptr]: unique_variant_map) {
 
-    auto [insert_iter, result] = variant_index_ptr->try_emplace(hgvs, std::pair<std::shared_ptr<const Variant>, size_t>{variant_ptr, index});
+  // Create the variant index.
+  for (auto const& [index, hgvs_pair] : std::views::enumerate(unique_variant_map)) {
+
+    auto const& [hgvs, variant_ptr] = hgvs_pair;
+    auto [insert_iter, result] = variant_index_.try_emplace(hgvs, std::pair{variant_ptr, index});
     if (not result) {
 
       ExecEnv::log().error("VariantDBVariant::createVariantDB; Unable to insert variant: {}, unexpected duplicate", hgvs);
-      continue;
 
     }
 
-    ++index;
-
   }
-  const size_t variant_size = variant_index_ptr->size();
+  const size_t variant_size = variant_index_.size();
 
-  // Create the Genome index and std>::shared_ptr data vector
-  auto genome_index_ptr = std::make_unique<VariantDBGenomeIndex>();
-  auto genome_data_ptr = std::make_unique<VariantDBGenomeData>();
-  index = 0;
-  for (auto &[genome_id, genome_ptr]: population_ptr->getMap()) {
+  // Create the Genome index and genome data vector.
+  for (auto const& [index, genome_pair] : std::views::enumerate(population_ptr->getMap())) {
 
-    auto [insert_iter, result] = genome_index_ptr->try_emplace(genome_id, index);
+    auto const& [genome_id, genome_ptr] = genome_pair;
+    auto [insert_iter, result] = genome_index_.try_emplace(genome_id, index);
     if (not result) {
 
       ExecEnv::log().error("VariantDBVariant::createVariantDB; Unable to insert Genome: {}, unexpected duplicate", genome_id);
@@ -44,81 +40,89 @@ void kgl::VariantDBVariant::createVariantDB(const std::shared_ptr<const Populati
 
     }
 
-    genome_data_ptr->emplace_back(genome_id, std::vector<uint8_t>(variant_size, 0));
-
-    ++index;
+    genome_data_.emplace_back(genome_id, std::vector<uint8_t>(variant_size, 0));
 
   }
 
-  // Local class to update the genome data vectors.
-  class LocalGenomeVariant {
+  // Multi-threaded update of the genome data vectors.
+  // Thread safety: each concurrent task updates the (disjoint) variant vector of a single genome.
+  population_ptr->processAll_MT([&](std::shared_ptr<const GenomeDB> genome_ptr, const std::shared_ptr<const Variant>& variant_ptr) -> bool {
 
-  public:
+    if (not genome_ptr or not variant_ptr) {
 
-    LocalGenomeVariant(std::unique_ptr<VariantDBVariantIndex> variant_index_ptr,
-                       std::unique_ptr<VariantDBGenomeIndex> genome_index_ptr,
-                       std::unique_ptr<VariantDBGenomeData> genome_data_ptr)
-                       : variant_index_ptr_(std::move(variant_index_ptr)),
-                       genome_index_ptr_(std::move(genome_index_ptr)),
-                       genome_data_ptr_(std::move(genome_data_ptr)) {}
-
-    bool processGenomeVariants(std::shared_ptr<const GenomeDB> genome_ptr, const std::shared_ptr<const Variant>& variant_ptr) {
-
-      if (not genome_ptr or not variant_ptr) {
-
-        ExecEnv::log().critical("LocalGenomeVariant::processGenomeVariants; Bad GenomeDB or Bad Variant pointer");
-
-      }
-
-      auto hgvs = variant_ptr->HGVS();
-      auto find_variant_iter = variant_index_ptr_->find(hgvs);
-      if (find_variant_iter == variant_index_ptr_->end()) {
-
-        ExecEnv::log().error("VariantDBVariant::createVariantDB; Genome: {}, Variant: {} not found in variant index", genome_ptr->genomeId(), hgvs);
-        return false;
-
-      }
-
-      auto const& [var_hgvs, var_pair] = *find_variant_iter;
-      auto const& [var_ptr, var_index] = var_pair;
-
-      auto find_genome_iter = genome_index_ptr_->find(genome_ptr->genomeId());
-      if (find_genome_iter == genome_index_ptr_->end()) {
-
-        ExecEnv::log().error("VariantDBVariant::createVariantDB; Genome: {} not found in genome index", genome_ptr->genomeId());
-        return false;
-
-      }
-
-      auto const& [genome, genome_index] = *find_genome_iter;
-      auto& [vec_genome, variant_array] = genome_data_ptr_->at(genome_index);
-
-      if (var_index >= variant_array.size() or genome_index >= genome_data_ptr_->size()) {
-
-        ExecEnv::log().critical("VariantDBVariant::createVariantDB; Genome: {}, Genome Index: {}, Variant Index: {} exceeds variant vector size: {}",
-                                genome, genome_index, var_index, variant_array.size());
-
-      }
-
-      ++(variant_array[var_index]);
-
-      return true;
+      ExecEnv::log().critical("VariantDBVariant::createVariantDB; Bad GenomeDB or Bad Variant pointer");
 
     }
 
-    std::unique_ptr<VariantDBVariantIndex> variant_index_ptr_;
-    std::unique_ptr<VariantDBGenomeIndex> genome_index_ptr_;
-    std::shared_ptr<VariantDBGenomeData> genome_data_ptr_;
+    auto find_variant_iter = variant_index_.find(variant_ptr->HGVS());
+    if (find_variant_iter == variant_index_.end()) {
 
-  };
+      ExecEnv::log().error("VariantDBVariant::createVariantDB; Genome: {}, Variant: {} not found in variant index", genome_ptr->genomeId(), variant_ptr->HGVS());
+      return false;
+
+    }
+
+    auto const& [var_hgvs, var_pair] = *find_variant_iter;
+    auto const& [var_ptr, var_index] = var_pair;
+
+    auto find_genome_iter = genome_index_.find(genome_ptr->genomeId());
+    if (find_genome_iter == genome_index_.end()) {
+
+      ExecEnv::log().error("VariantDBVariant::createVariantDB; Genome: {} not found in genome index", genome_ptr->genomeId());
+      return false;
+
+    }
+
+    auto const& [genome, genome_index] = *find_genome_iter;
+
+    // Bounds check before use (the genome data vector is structurally frozen before multi-threading commences).
+    if (genome_index >= genome_data_.size()) {
+
+      ExecEnv::log().critical("VariantDBVariant::createVariantDB; Genome: {}, Genome Index: {} exceeds genome data size: {}",
+                              genome, genome_index, genome_data_.size());
+
+    }
+
+    auto& [vec_genome, variant_array] = genome_data_[genome_index];
+
+    if (var_index >= variant_array.size()) {
+
+      ExecEnv::log().critical("VariantDBVariant::createVariantDB; Genome: {}, Variant Index: {} exceeds variant vector size: {}",
+                              genome, var_index, variant_array.size());
+
+    }
+
+    ++(variant_array[var_index]);
+
+    return true;
+
+  });
+
+}
 
 
-  LocalGenomeVariant genome_variant(std::move(variant_index_ptr), std::move(genome_index_ptr), std::move(genome_data_ptr));
-  population_ptr->processAll_MT(genome_variant, &LocalGenomeVariant::processGenomeVariants);
+// Classify an allele count (0, 1, 2) into the allele summary. Logs a warning if the allele count is non-diploid.
+void kgl::VariantDBVariant::classifyAllele(AlleleSummmary& allele_summary, uint8_t allele_type, const std::string& context) const {
 
-  variant_index_ = std::move(*genome_variant.variant_index_ptr_);
-  genome_index_ = std::move(*genome_variant.genome_index_ptr_);
-  genome_data_ = std::move(*genome_variant.genome_data_ptr_);
+  switch (allele_type) {
+
+    case 0:
+      ++allele_summary.referenceHomozygous_;
+      break;
+
+    case 1:
+      ++allele_summary.minorHeterozygous_;
+      break;
+
+    case 2:
+      ++allele_summary.minorHomozygous_;
+      break;
+
+    default:
+      ExecEnv::log().warn("VariantDBVariant; {}, has non-diploid allele count: {}", context, allele_type);
+      break;
+
+  }
 
 }
 
@@ -141,26 +145,7 @@ kgl::AlleleSummmary kgl::VariantDBVariant::summaryByVariant(const std::shared_pt
   // Loop through the Genomes.
   for (auto const& [genome, variant_vector] : genome_data_) {
 
-    switch (variant_vector[variant_index]) {
-
-      case 0:
-        ++allele_summary.referenceHomozygous_;
-        break;
-
-      case 1:
-        ++allele_summary.minorHeterozygous_;
-        break;
-
-      case 2:
-        ++allele_summary.minorHomozygous_;
-        break;
-
-      default:
-        ExecEnv::log().warn("VariantDBVariant::summaryByVariant; Genome: {}, Variant Index: {} has non diploid allele count: {}",
-                            genome, variant_index, variant_vector[variant_index]);
-        break;
-
-    }
+    classifyAllele(allele_summary, variant_vector[variant_index], std::format("summaryByVariant; Genome: {}, Variant Index: {}", genome, variant_index));
 
   }
 
@@ -177,11 +162,12 @@ kgl::AlleleSummmary kgl::VariantDBVariant::summaryByVariant(const std::shared_pt
 
 }
 
+
 kgl::AlleleSummmary kgl::VariantDBVariant::summaryByGenome(const GenomeId_t& genome) const {
 
   AlleleSummmary allele_summary;
 
-  // Retrieve the variant index
+  // Retrieve the genome index
   auto find_iter = genome_index_.find(genome);
   if (find_iter == genome_index_.end()) {
 
@@ -195,26 +181,7 @@ kgl::AlleleSummmary kgl::VariantDBVariant::summaryByGenome(const GenomeId_t& gen
   // Loop through the Variants.
   for (auto const& allele_type : allele_vector) {
 
-    switch (allele_type) {
-
-      case 0:
-        ++allele_summary.referenceHomozygous_;
-        break;
-
-      case 1:
-        ++allele_summary.minorHeterozygous_;
-        break;
-
-      case 2:
-        ++allele_summary.minorHomozygous_;
-        break;
-
-      default:
-        ExecEnv::log().warn("VariantDBVariant::summaryByGenome; Genome: {}, Genome Index: {} has non-diploid allele count: {}",
-                            genome, genome_index, allele_type);
-        break;
-
-    }
+    classifyAllele(allele_summary, allele_type, std::format("summaryByGenome; Genome: {}, Genome Index: {}", genome, genome_index));
 
   }
 
@@ -239,27 +206,9 @@ kgl::AlleleSummmary kgl::VariantDBVariant::populationSummary() const {
   for (auto const& [genome_id, allele_vector] : genome_data_) {
 
     // Loop through the Variants.
-    for (auto const &allele_type: allele_vector) {
+    for (auto const& allele_type : allele_vector) {
 
-      switch (allele_type) {
-
-        case 0:
-          ++allele_summary.referenceHomozygous_;
-          break;
-
-        case 1:
-          ++allele_summary.minorHeterozygous_;
-          break;
-
-        case 2:
-          ++allele_summary.minorHomozygous_;
-          break;
-
-        default:
-          ExecEnv::log().warn("VariantDBVariant::populationSummary; Genome Id: {}, has non-diploid allele count: {}", genome_id, allele_type);
-          break;
-
-      }
+      classifyAllele(allele_summary, allele_type, std::format("populationSummary; Genome Id: {}", genome_id));
 
     }
 

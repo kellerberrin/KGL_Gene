@@ -41,6 +41,9 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::viewFilter(const BaseFilte
   // A vector for futures.
   std::vector<std::future<std::shared_ptr<GenomeDB>>> future_vector;
   // The thread lambda.
+  // Note that the filter object is passed by const reference (std::ref). This is safe because the
+  // caller of viewFilter() outlives the thread pool. But as a consequence, filters passed to this
+  // function must not maintain mutable state between applyFilter() invocations.
   auto filter_lambda = [](std::shared_ptr<const GenomeDB> genome_ptr,
                           const BaseFilter& filter)-> std::shared_ptr<GenomeDB> {
 
@@ -63,7 +66,7 @@ std::unique_ptr<kgl::PopulationDB> kgl::PopulationDB::viewFilter(const BaseFilte
     std::shared_ptr<GenomeDB> filtered_genome_ptr = future.get();
     if (not filtered_population_ptr->addGenome(filtered_genome_ptr)) {
 
-      ExecEnv::log().error("PopulationDB::filter; could not add filtered genome to the population");
+      ExecEnv::log().error("PopulationDB::viewFilter; could not add filtered genome to the population");
 
     }
 
@@ -107,10 +110,12 @@ std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter
   // Calc how many threads required.
   size_t thread_count = WorkflowThreads::defaultThreads(getMap().size());
   WorkflowThreads thread_pool(thread_count);
-  // A vector for futures.
   std::vector<std::future<std::pair<size_t, size_t>>> future_vector;
-  // Required by the thread pool.
 
+  // The thread lambda.
+  // Note that the filter object is passed by const reference (std::ref). This is safe because the
+  // caller of selfFilter() outlives the thread pool. But as a consequence, filters passed to this
+  // function must not maintain mutable state between applyFilter() invocations.
   auto filter_lambda = [](std::shared_ptr<GenomeDB> genome_ptr,
                           const BaseFilter& filter) -> std::pair<size_t, size_t> {
 
@@ -139,5 +144,3 @@ std::pair<size_t, size_t> kgl::PopulationDB::selfFilter(const BaseFilter& filter
   return filter_counts;
 
 }
-
-

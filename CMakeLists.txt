@@ -69,7 +69,7 @@ set(Boost_NO_SYSTEM_PATHS ON)
 #set(BOOST_INCLUDEDIR /usr/local/include/boost)
 #include_directories(${Boost_INCLUDE_DIRS})
 #set(BOOST_LIBRARYDIR /usr/local/lib/boost)
-find_package( Boost REQUIRED COMPONENTS timer iostreams)
+find_package( Boost REQUIRED COMPONENTS timer program_options iostreams)
 #find_package(Boost CONFIG REQUIRED)
 #message(STATUS "Boost Lib: ${Boost_LIBRARIES}")
 # Add boost library directories

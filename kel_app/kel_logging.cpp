@@ -72,5 +72,12 @@ bool ExecEnvLogger::errorMessageLimits() noexcept {
 
 }
 
+// Finalizes logging. flushes and closes any open files. Called by logging a critical msg
+void ExecEnvLogger::flushStreamsImpl() noexcept {
+
+  log_impl_ptr_->flushStreamsImpl();
+
+}
+
 
 } // End namespace

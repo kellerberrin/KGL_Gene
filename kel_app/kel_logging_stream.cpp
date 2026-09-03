@@ -127,3 +127,9 @@ std::string kel::StreamLoggerImpl::location(const LogFormatLocation &format_loca
 
 }
 
+// Finalizes logging. flushes and closes any open files. Called by logging a critical msg
+void kel::StreamLoggerImpl::flushStreamsImpl() noexcept {
+
+  output_logfile_.close();
+
+}

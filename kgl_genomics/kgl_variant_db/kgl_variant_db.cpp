@@ -11,53 +11,66 @@ namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Variant class.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Common clone implementation for clone(), cloneNullVariant() and clonePhase().
+// Note that the sequences and evidence are always deep copied.
+std::unique_ptr<kgl::Variant> kgl::Variant::cloneImpl( VariantPhase phase_id,
+                                                       const DNA5SequenceLinear& reference,
+                                                       const DNA5SequenceLinear& alternate,
+                                                       const VariantEvidence& evidence) const {
+
+  return std::make_unique<Variant>( contigId(),
+                                     offset(),
+                                     phase_id,
+                                     identifier(),
+                                     DNA5SequenceLinear(StringDNA5(reference.getAlphabetString())),
+                                     DNA5SequenceLinear(StringDNA5(alternate.getAlphabetString())),
+                                     evidence);
+
+}
 
 
 std::unique_ptr<kgl::Variant> kgl::Variant::clone() const {
 
-  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  offset(),
-                                                                  phaseId(),
-                                                                  identifier(),
-                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
-                                                                  DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
-                                                                  evidence()));
+  return cloneImpl(phaseId(), reference(), alternate(), evidence());
 
-  return variant_ptr;
+}
+
+
+// Clone the variant, replacing the alternate with the reference (null variant) and invalidating the evidence.
+std::unique_ptr<kgl::Variant> kgl::Variant::cloneImplNull() const {
+
+  // Create a null evidence structure.
+  VariantEvidence null_evidence;
+
+  // The alternate sequence is set to the reference sequence and the evidence is invalidated.
+  return cloneImpl(phaseId(), reference(), reference(), null_evidence);
 
 }
 
 
 std::unique_ptr<kgl::Variant> kgl::Variant::cloneNullVariant() const {
 
-  VariantEvidence null_evidence; // no evidence is passed through.
-
-  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  offset(),
-                                                                  phaseId(),
-                                                                  identifier(),
-                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
-                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
-                                                                  null_evidence));
-
-  return variant_ptr;
+  return cloneImplNull();
 
 }
+
 
 std::unique_ptr<kgl::Variant> kgl::Variant::cloneCanonical() const {
 
   auto [canonical_ref, canonical_alt, canonical_offset] = canonicalSequences();
 
-  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  canonical_offset,
-                                                                  phaseId(),
-                                                                  identifier(),
-                                                                  std::move(canonical_ref),
-                                                                  std::move(canonical_alt),
-                                                                  evidence()));
+  auto variant_ptr = std::make_unique<Variant>( contigId(),
+                                                canonical_offset,
+                                                phaseId(),
+                                                identifier(),
+                                                std::move(canonical_ref),
+                                                std::move(canonical_alt),
+                                                evidence());
 
   // Check to be sure.
   if (not variant_ptr->isCanonical()) {
@@ -70,25 +83,20 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneCanonical() const {
 
 }
 
+
 // Clone with modified phase.
 std::unique_ptr<kgl::Variant> kgl::Variant::clonePhase(VariantPhase phaseId) const {
 
-  std::unique_ptr<Variant> variant_ptr(std::make_unique<Variant>( contigId(),
-                                                                  offset(),
-                                                                  phaseId,
-                                                                  identifier(),
-                                                                  DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
-                                                                  DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
-                                                                  evidence()));
-
-  return variant_ptr;
+  return cloneImpl(phaseId, reference(), alternate(), evidence());
 
 }
 
 
+// Note that variant level filters are applied concurrently (uncloned) by OffsetDB filtering.
+// Therefore variant level filters must not carry mutable per-invocation state.
 bool kgl::Variant::filterVariant(const BaseFilter& filter) const {
 
-  std::shared_ptr<const FilterVariants> variant_filter = std::dynamic_pointer_cast<const FilterVariants>(filter.clone());
+  const auto* variant_filter = dynamic_cast<const FilterVariants*>(&filter);
   if (variant_filter) {
 
     return variant_filter->applyFilter(*this);
@@ -120,8 +128,7 @@ kgl::VariantType kgl::Variant::variantType() const {
 // We extend the logic for this possibility.
 bool kgl::Variant::isSNP() const {
 
-
-    // Obvious SNP.
+  // Obvious SNP.
   if (reference_.length() == 1 and alternate_.length() == 1) {
 
     return true;
@@ -136,26 +143,21 @@ bool kgl::Variant::isSNP() const {
   }
 
   // Check only 1 nucleotide difference.
-  bool diff_found{false};
-  for (size_t i = 0; i < reference_.length(); ++i) {
+  std::string_view reference_view(reference().getStringView());
+  std::string_view alternate_view(alternate().getStringView());
+  auto [this_iter, alt_iter] = std::ranges::mismatch(reference_view, alternate_view);
+  if (this_iter == reference_view.end()) {
 
-    if (reference_[i] != alternate_[i]) {
-
-      if (diff_found) {
-
-        return false;
-
-      }
-
-      diff_found = true;
-
-    }
+    return true;   // Identical, which by convention is an SNP.
 
   }
 
-  return true;
+  // Check that the remainder of the sequences are identical.
+  return std::equal( std::next(this_iter), reference_view.end(),
+                     std::next(alt_iter), alternate_view.end());
 
 }
+
 
 // Reduces the variant to a canonical reference and alternate format.
 // Canonical SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
@@ -180,8 +182,8 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
   prefix_size = prefix_size > 0 ? (prefix_size - 1) : 0;  // Adjust for '1MnD' and '1MnI'.
   size_t suffix_size = commonSuffix();
   size_t min_size = std::min(referenceSize(), alternateSize());
-  int64_t adj_suffix_size = std::min(min_size - prefix_size - 1, suffix_size); // Adjust for '1MnD' and '1MnI'.
-  adj_suffix_size = adj_suffix_size < 0 ? 0 : adj_suffix_size;
+  // Adjust for '1MnD' and '1MnI'. Note that the sizes cannot underflow because isCanonical() is false.
+  size_t adj_suffix_size = std::min(min_size - prefix_size - 1, suffix_size);
 
   auto canonical_reference = reference().removePrefixSuffix(prefix_size, adj_suffix_size);
   auto canonical_alternate = alternate().removePrefixSuffix(prefix_size, adj_suffix_size);
@@ -218,6 +220,7 @@ bool kgl::Variant::isCanonical() const {
   return false;
 
 }
+
 
 // The interval() of the variant is used to assess if a CANONICAL variant modifies a particular interval [a, b).
 // An SNP offset is an interval size 1 with lower() = offset().
@@ -259,6 +262,7 @@ std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::modifyInterval
 
 }
 
+
 // Modify the insert interval to [member_interval.lower()-1, member_interval.lower+1)
 std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::memberInterval() const {
 
@@ -268,7 +272,17 @@ std::pair<kgl::VariantType, kel::OpenRightUnsigned> kgl::Variant::memberInterval
   // Otherwise the INSERTed interval is adjacent to the modified interval and does not modify it.
   if (variant_type == VariantType::INDEL_INSERT) {
 
-    member_interval.resize(member_interval.lower()-1, member_interval.lower()+1);
+    // Guard against the (pathological) case of an insert variant at offset 0.
+    if (member_interval.lower() == 0) {
+
+      ExecEnv::log().warn("Variant::memberInterval; insert variant at contig offset 0, interval lower: {}", member_interval.lower());
+      member_interval.resize(0, member_interval.upper());
+
+    } else {
+
+      member_interval.resize(member_interval.lower()-1, member_interval.lower()+1);
+
+    }
 
   }
 
@@ -283,6 +297,7 @@ std::string kgl::Variant::cigar() const {
 
 }
 
+
 // Unique upto phase.
 std::string kgl::Variant::HGVS() const {
 
@@ -290,9 +305,15 @@ std::string kgl::Variant::HGVS() const {
 
 }
 
+
 // Phase specific hash
 std::string kgl::Variant::HGVS_Phase() const {
 
-  return std::format("{}:g.{}{}>{}:{}", contigId(), offset(), reference().getStringView(), alternate().getStringView(), static_cast<uint8_t>(phaseId()));
+  return std::format("{}:g.{}{}>{}:{}",
+                     contigId(),
+                     offset(),
+                     reference().getStringView(),
+                     alternate().getStringView(),
+                     std::to_underlying(phaseId()));
 
 }

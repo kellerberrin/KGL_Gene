@@ -50,6 +50,9 @@ public:
                     const std::string &formatted_string,
                     ExecEnvLogger::LoggerSeverity severity) noexcept;
 
+  // Finalizes logging. flushes and closes any open files. Called by logging a critical msg
+  void flushStreamsImpl() noexcept;
+
 private:
 
   std::ofstream output_logfile_; // Output file is non ANSI (no color); std::cout is assumed to be an ANSI terminal.

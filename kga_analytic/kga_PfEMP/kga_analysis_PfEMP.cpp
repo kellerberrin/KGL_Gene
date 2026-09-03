@@ -98,6 +98,7 @@ bool kga::PfEMPAnalysis::fileReadAnalysis(std::shared_ptr<const DataDB> base_dat
 //  checkDistanceMatrix(population_ptr, filtered_population_ptr);
 
   // Analyze gene variant info
+  // todo: Modify the analytic so that variants are not held across file calls (memory hog).
   translation_gene_map_.getGeneVariants(filtered_population_ptr);
   antigenic_gene_map_.getGeneVariants(filtered_population_ptr);
   all_gene_map_.getGeneVariants(filtered_population_ptr);

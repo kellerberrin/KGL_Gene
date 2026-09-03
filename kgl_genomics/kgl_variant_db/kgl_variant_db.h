@@ -7,7 +7,6 @@
 
 #include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
-#include "kgl_variant_filter_virtual.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 
 #include "kel_interval_unsigned.h"
@@ -17,32 +16,37 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Genome information of the variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Variant Chromosome phase
+/// Variant Chromosome phase
 enum class VariantPhase : std::uint8_t { HAPLOID_PHASED = 0,
                                          DIPLOID_PHASE_A = 1, // By convention, the female derived contig_ref_ptr is first.
                                          DIPLOID_PHASE_B = 2,
                                          UNPHASED = 255 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // This variant class reflects the variant information presented in VCF files.
 // The object is completely constant (cannot be modified). This is because the object is simultaneously
 // held by multiple genomes to conserve memory. Therefore modifying a variant would modify the variant everywhere.
 // If a modified copy of the variant is required then it must be cloned with modified arguments.
 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Defined Variant Types.
+/// Defined Variant Types.
 enum class VariantType { INDEL_DELETE, INDEL_INSERT, SNP};
 
-// Type of variant equality, phased also checks the variant phase.
+/// Type of variant equality, phased also checks the variant phase.
 enum class VariantEquality { PHASED, UNPHASED };
 
+class BaseFilter;  // Forward declaration, full definition in 'kgl_variant_filter_virtual.h'.
+
+/// This variant class reflects the variant information presented in VCF files. The object is completely
+/// constant (immutable); it is simultaneously referenced by multiple genomes to conserve memory.
+/// Note that variant comparison and hashing use an HGVS style string signature and not field comparison.
 class Variant {
 
 public:
@@ -64,25 +68,25 @@ public:
 
   ~Variant() { --object_count_; }
 
-  // Create a copy of the variant on heap.
-  // Important - all the reference variant evidence is also attached to the new variant object.
+  /// Create a copy of the variant on heap.
+  /// Important - all the reference variant evidence is also attached to the new variant object.
   [[nodiscard]] std::unique_ptr<Variant> clone() const;
-  // Set the alternate to the reference; invalidates the evidence structure.
-  // Used to specify major alleles (no genome change).
+  /// Set the alternate to the reference; invalidates the evidence structure.
+  /// Used to specify major alleles (no genome change).
   [[nodiscard]] std::unique_ptr<Variant> cloneNullVariant() const;
-  // Clone the variant using canonical reference and alternate.
-  // SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
-  // The first argument is the adjusted reference, the second is the adjusted alternate,
-  // the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
-  // at which the first nucleotide of the canonical reference and canonical alternate is found.
+  /// Clone the variant using canonical reference and alternate.
+  /// SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+  /// The first argument is the adjusted reference, the second is the adjusted alternate,
+  /// the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
+  /// at which the first nucleotide of the canonical reference and canonical alternate is found.
   [[nodiscard]] std::unique_ptr<Variant> cloneCanonical() const;
-  // Check if the variants reference() and alternate() are in canonical form.
-  // The variant is canonical if SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
-  // A canonical SNP will have referenceSize() == alternateSize() == 1.
-  // A canonical delete will have referenceSize() > alternateSize() == 1.
-  // A canonical insert will have 1 == referenceSize() < alternateSize().
+  /// Check if the variants reference() and alternate() are in canonical form.
+  /// The variant is canonical if SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+  /// A canonical SNP will have referenceSize() == alternateSize() == 1.
+  /// A canonical delete will have referenceSize() > alternateSize() == 1.
+  /// A canonical insert will have 1 == referenceSize() < alternateSize().
   [[nodiscard]] bool isCanonical() const;
-  // Clone the variant with a different phase.
+  /// Clone the variant with a different phase.
   [[nodiscard]] std::unique_ptr<Variant> clonePhase(VariantPhase phase_id) const;
 
   [[nodiscard]] size_t alternateSize() const { return alternate_.length(); }
@@ -91,7 +95,7 @@ public:
 
   [[nodiscard]] VariantType variantType() const;
 
-  // Includes ref, alt comparison with 1'X' and n'M' cigars.
+  /// Includes ref, alt comparison with 1'X' and n'M' cigars.
   [[nodiscard]] bool isSNP() const;
 
   [[nodiscard]] const DNA5SequenceLinear& reference() const { return reference_; }
@@ -106,32 +110,32 @@ public:
 
   [[nodiscard]] bool filterVariant(const BaseFilter& filter) const;
 
-  // Location specific parameters.
-  // The identifier of contiguous region (chromosome or scaffold) where the variant is located.
+  /// Location specific parameters.
+  /// The identifier of contiguous region (chromosome or scaffold) where the variant is located.
   [[nodiscard]] const ContigId_t& contigId() const { return contig_id_; }
-  // The offset used for storing the allele in the database.
-  // The ZERO BASED offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
+  /// The offset used for storing the allele in the database.
+  /// The ZERO BASED offset of the allele in the VCF file. Note, this is NOT the 1 based offset used in VCFs, Gffs etc.
   [[nodiscard]] ContigOffset_t offset() const { return contig_reference_offset_; }
-  // The interval() of the variant is used to assess if a CANONICAL variant modifies a particular interval [a, b).
-  // An SNP offset is an interval size 1 with lower() = offset().
-  // A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
-  // An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
+  /// The interval() of the variant is used to assess if a CANONICAL variant modifies a particular interval [a, b).
+  /// An SNP offset is an interval size 1 with lower() = offset().
+  /// A delete interval is the number of deleted nucleotides with lower() = (offset() + 1).
+  /// An insert interval is the number of inserted nucleotides with lower= (offset() + 1).
   [[nodiscard]] std::pair<VariantType, OpenRightUnsigned> modifyInterval() const;
-  // Modify the insert interval to [offset+ 1, offset + 2)
+  /// Modify the insert interval to [offset+ 1, offset + 2)
   [[nodiscard]] std::pair<VariantType, OpenRightUnsigned> memberInterval() const;
 
   [[nodiscard]] VariantPhase phaseId() const { return phase_id_; }
-  // An assigned variant reference such as (HSapien) "rs187084".
+  /// An assigned variant reference such as (HSapien) "rs187084".
   [[nodiscard]] const std::string& identifier() const { return identifier_; }
 
-  // A string hash unique upto phase (not phase specific). In HGVS format.
-  // This string hash is extensively used as a map key for variants.
+  /// A string hash unique upto phase (not phase specific). In HGVS format.
+  /// This string hash is extensively used as a map key for variants.
   [[nodiscard]] std::string HGVS() const;
-  // Phase specific hash. In HGVS format plus the variant phase (if applicable - may be unphased) in the format ":B".
+  /// Phase specific hash. In HGVS format plus the variant phase (if applicable - may be unphased) in the format ":B".
   [[nodiscard]] std::string HGVS_Phase() const;
 
   // The following are comparison functions for ordering variants.
-  // Equality hash.
+  /// Equality hash.
   [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? HGVS_Phase() : HGVS(); }
 
   [[nodiscard]] bool equality(const Variant& cmp, VariantEquality type) const { return equalityHash(type) == cmp.equalityHash(type); }
@@ -144,16 +148,16 @@ public:
 
   [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return HGVS_Phase() < cmp_var.HGVS_Phase(); }
 
-  // Generate a CIGAR by comparing the reference to the alternate.
+  /// Generate a CIGAR by comparing the reference to the alternate.
   [[nodiscard]] std::string cigar() const;
-  // Reduces the variant to a canonical reference and alternate format.
-  // SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
-  // The first argument is the adjusted reference, the second is the adjusted alternate,
-  // the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
-  // at which the first nucleotide of the canonical reference and canonical alternate is found.
+  /// Reduces the variant to a canonical reference and alternate format.
+  /// SNPs are represented as '1X', deletes as '1MnD' and inserts as '1MnI'.
+  /// The first argument is the adjusted reference, the second is the adjusted alternate,
+  /// the third is the adjusted variant offset. The adjusted variant offset always indicates the offset
+  /// at which the first nucleotide of the canonical reference and canonical alternate is found.
   [[nodiscard]] std::tuple<DNA5SequenceLinear, DNA5SequenceLinear, ContigOffset_t> canonicalSequences() const;
 
-  // Used to check memory usage and identify any memory leaks.
+  /// Used to check memory usage and identify any memory leaks.
   [[nodiscard]] static size_t objectCount() { return object_count_; }
 
 private:
@@ -173,10 +177,19 @@ private:
   [[nodiscard]] size_t commonPrefix() const { return reference().commonPrefix(alternate()); }
   [[nodiscard]] size_t commonSuffix() const { return reference().commonSuffix(alternate()); }
 
+  // Common clone implementation for clone(), cloneNullVariant(), clonePhase().
+  [[nodiscard]] std::unique_ptr<Variant> cloneImpl( VariantPhase phase_id,
+                                                    const DNA5SequenceLinear& reference,
+                                                    const DNA5SequenceLinear& alternate,
+                                                    const VariantEvidence& evidence) const;
+
+  // Clone the variant, replacing the alternate with the reference (null variant) and invalidating the evidence.
+  [[nodiscard]] std::unique_ptr<Variant> cloneImplNull() const;
+
 };
 
 
-// Used in the processAll()) templates.
+/// Used in the processAll()) templates.
 template<class ObjFunc>
 using MemberVariantFunc = bool (ObjFunc::*)(const std::shared_ptr<const Variant>&);
 using VariantProcessFunc = std::function<bool(const std::shared_ptr<const Variant>&)>;
