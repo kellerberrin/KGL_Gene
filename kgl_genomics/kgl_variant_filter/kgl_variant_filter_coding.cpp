@@ -8,17 +8,17 @@
 
 
 #include <ranges>
+#include <utility>
 
 
 namespace kgl = kellerberrin::genome;
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Selection logic is somewhat convoluted because canonical INDEL variants actually operate on the NEXT (offset+1) offset.
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter unique variants for each offset.
+///
+/// Selection logic is somewhat convoluted because canonical INDEL variants actually operate on the NEXT (offset+1) offset.
+/// Indels at offset N are selected together with the variants at N+1; pending indels are flushed on offset gaps > 1
+/// and at loop end.
 std::unique_ptr<kgl::ContigDB> kgl::RandomCodingFilter::filterUnique(const ContigDB &contig) const {
 
   std::unique_ptr<ContigDB> filtered_contig_ptr = std::make_unique<ContigDB>(contig.contigId());
@@ -34,7 +34,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomCodingFilter::filterUnique(const Conti
 
       if (current_offset == indel_offset_vector.front()->offset() + 1) {
         // Next +1 offset add to current
-        current_offset_vector = indel_offset_vector;
+        current_offset_vector = std::move(indel_offset_vector);
 
       } else {
         // Else select unique
@@ -50,7 +50,7 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomCodingFilter::filterUnique(const Conti
 
       if (not variant_ptr->isCanonical()) {
 
-        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; variant NOT canonical: {}", variant_ptr->HGVS());
+        ExecEnv::log().error("RandomCodingFilter::filterUnique; variant NOT canonical: {}", variant_ptr->HGVS());
         continue;
 
       }
@@ -80,33 +80,17 @@ std::unique_ptr<kgl::ContigDB> kgl::RandomCodingFilter::filterUnique(const Conti
 void kgl::RandomCodingFilter::contigVector(std::unique_ptr<ContigDB>& filtered_contig_ptr,
                                            std::vector<std::shared_ptr<const Variant>>& offset_vector) const {
 
-
   // Select the candidate variants by allele frequency.
   if (not offset_vector.empty()) {
 
-    if (offset_vector.size() == 1) {
+    // A single candidate is taken as is; multiple candidates are resolved by the selectUnique() strategy.
+    auto selected_variant = offset_vector.size() == 1 ? offset_vector.front() : selectUnique(offset_vector);
 
-      // Don't need to select a single variant.
-      auto selected_variant = offset_vector.front();
-      // Add to the filtered contig_ref_ptr object.
-      if (not filtered_contig_ptr->addVariant(selected_variant)) {
+    // Add to the filtered contig object.
+    if (not filtered_contig_ptr->addVariant(selected_variant)) {
 
-        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
-                             selected_variant->HGVS(), filtered_contig_ptr->contigId());
-
-      }
-
-    } else {
-
-      // Else select by frequency.
-      auto selected_variant = selectUnique(offset_vector);
-      // Add to the filtered contig_ref_ptr object.
-      if (not filtered_contig_ptr->addVariant(selected_variant)) {
-
-        ExecEnv::log().error("UniqueOffsetFilter::applyFilter; unable to add variant: {} to contig_ref_ptr: {}",
-                             selected_variant->HGVS(), filtered_contig_ptr->contigId());
-
-      }
+      ExecEnv::log().error("RandomCodingFilter::contigVector; unable to add variant: {} to contig_ref_ptr: {}",
+                           selected_variant->HGVS(), filtered_contig_ptr->contigId());
 
     }
 
@@ -115,24 +99,23 @@ void kgl::RandomCodingFilter::contigVector(std::unique_ptr<ContigDB>& filtered_c
 }
 
 
+/// Deterministically selects the first candidate; the class name is historical.
 std::shared_ptr<const kgl::Variant> kgl::RandomCodingFilter::selectRandom(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
   if (variant_vector.empty()) {
 
-    ExecEnv::log().critical("UniqueOffsetFilter::selectRandom; selection vector is empty - cannot continue");
+    ExecEnv::log().critical("RandomCodingFilter::selectRandom; selection vector is empty - cannot continue");
 
   }
 
-  auto selected_variant = variant_vector.front();
-
-  return selected_variant;
+  // Deterministically selects the first candidate (the 'random' class name is historical).
+  return variant_vector.front();
 
 }
 
 
-
+/// Returns the allele frequency of the variant's alt allele from the AF info field (0.0 if absent or malformed).
 double kgl::RandomCodingFilter::getFrequency(const std::shared_ptr<const Variant>& variant_ptr) {
-
 
   size_t alt_count = variant_ptr->evidence().altVariantCount();
   size_t alt_index = variant_ptr->evidence().altVariantIndex();
@@ -143,7 +126,7 @@ double kgl::RandomCodingFilter::getFrequency(const std::shared_ptr<const Variant
     std::vector<double> info_vector = std::move(info_opt.value());
     if (info_vector.size() != alt_count) {
 
-      ExecEnv::log().error("FrequencyCodingFilter::getFrequency; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
+      ExecEnv::log().error("RandomCodingFilter::getFrequency; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
                            info_vector.size(), alt_count, AF_FIELD_);
 
       return 0.0;
@@ -151,8 +134,11 @@ double kgl::RandomCodingFilter::getFrequency(const std::shared_ptr<const Variant
     }
     if (info_vector.size() <= alt_index) {
 
-      ExecEnv::log().error("FrequencyCodingFilter::getFrequency; alt variant index: {} out of range for vector size:{}, Info field: {}",
+      ExecEnv::log().error("RandomCodingFilter::getFrequency; alt variant index: {} out of range for vector size:{}, Info field: {}",
                            alt_index, info_vector.size(), AF_FIELD_);
+
+      // Previously fell through to an out-of-bounds vector access; return 0.0 (lowest frequency) instead.
+      return 0.0;
 
     }
 
@@ -164,14 +150,18 @@ double kgl::RandomCodingFilter::getFrequency(const std::shared_ptr<const Variant
 
 }
 
+/// Selects the most frequently occurring variant (highest probability of occurring).
 std::shared_ptr<const kgl::Variant> kgl::RandomCodingFilter::selectFrequency(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
   if (variant_vector.empty()) {
 
-    ExecEnv::log().critical("UniqueOffsetFilter::selectRandom; selection vector is empty - cannot continue");
+    ExecEnv::log().critical("RandomCodingFilter::selectFrequency; selection vector is empty - cannot continue");
 
   }
 
+  // A multimap is used deliberately: rbegin() selects the LAST inserted among equal frequencies,
+  // which is the historical tie-break behaviour (it can select a different phase of an otherwise
+  // identical variant, which feeds PhaseFilter/HeterozygousFilter downstream).
   std::multimap<double, std::shared_ptr<const kgl::Variant>> frequency_map;
   for (auto const& variant_ptr : variant_vector) {
 
@@ -180,18 +170,21 @@ std::shared_ptr<const kgl::Variant> kgl::RandomCodingFilter::selectFrequency(con
 
   }
 
-  auto [selected_frequency, selected_variant] = *frequency_map.rbegin();
+  auto const& [selected_frequency, selected_variant] = *frequency_map.rbegin();
 
   return selected_variant;
 
 }
 
 
+/// Selects among deduplicated candidates by frequency.
+/// Note: homozygous preference is currently NOT implemented; the selector is frequency-only among
+/// the phase-deduplicated candidates (a homozygous pair collapses to a single variant).
 std::shared_ptr<const kgl::Variant> kgl::RandomCodingFilter::selectHomozygous(const std::vector<std::shared_ptr<const Variant>>& variant_vector) const {
 
   if (variant_vector.empty()) {
 
-    ExecEnv::log().critical("UniqueOffsetFilter::selectRandom; selection vector is empty - cannot continue");
+    ExecEnv::log().critical("RandomCodingFilter::selectHomozygous; selection vector is empty - cannot continue");
 
   }
 
@@ -202,24 +195,15 @@ std::shared_ptr<const kgl::Variant> kgl::RandomCodingFilter::selectHomozygous(co
 
   }
 
-  auto homozygous_offset_ptr = offset_db.viewFilter(HomozygousFilter());
-  auto unique_homozygous  = offset_db.viewFilter(UniqueUnphasedFilter());
+  auto unique_variants = offset_db.viewFilter(UniqueUnphasedFilter());
 
-  if (not unique_homozygous->getVariantArray().empty()) {
+  if (not unique_variants->getVariantArray().empty()) {
 
-    std::vector<std::shared_ptr<const Variant>> homozygous_variant_vector;
-    for (auto const& variant_ptr : unique_homozygous->getVariantArray()) {
-
-      homozygous_variant_vector.push_back(variant_ptr);
-
-    }
-
-    return selectFrequency(homozygous_variant_vector);
+    // getVariantArray() returns the exact const vector<shared_ptr<const Variant>>& that selectFrequency accepts.
+    return selectFrequency(unique_variants->getVariantArray());
 
   }
 
   return selectFrequency(variant_vector);
 
 }
-
-

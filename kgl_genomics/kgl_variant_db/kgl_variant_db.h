@@ -46,7 +46,8 @@ class BaseFilter;  // Forward declaration, full definition in 'kgl_variant_filte
 
 /// This variant class reflects the variant information presented in VCF files. The object is completely
 /// constant (immutable); it is simultaneously referenced by multiple genomes to conserve memory.
-/// Note that variant comparison and hashing use an HGVS style string signature and not field comparison.
+/// Note that variant equality (equivalent/analogous) uses direct field comparison;
+/// the HGVS style string signature is only used for ordering and as a map key.
 class Variant {
 
 public:
@@ -138,14 +139,32 @@ public:
   /// Equality hash.
   [[nodiscard]] std::string equalityHash(VariantEquality type) const { return (type == VariantEquality::PHASED) ? HGVS_Phase() : HGVS(); }
 
-  [[nodiscard]] bool equality(const Variant& cmp, VariantEquality type) const { return equalityHash(type) == cmp.equalityHash(type); }
+  /// Field based equality, phase included for PHASED, excluded for UNPHASED.
+  /// Direct field comparison is semantically identical to comparing the HGVS equality hash strings
+  /// but avoids rebuilding the (std::format based) strings on every comparison.
+  [[nodiscard]] bool equality(const Variant& cmp, VariantEquality type) const { return (type == VariantEquality::PHASED) ? equivalent(cmp) : analogous(cmp); }
 
-  [[nodiscard]] bool equivalent(const Variant& cmp_var) const { return equality(cmp_var, VariantEquality::PHASED); }
+  /// Field equality including phase.
+  [[nodiscard]] bool equivalent(const Variant& cmp_var) const {
+    return contigId() == cmp_var.contigId()
+        and offset() == cmp_var.offset()
+        and phaseId() == cmp_var.phaseId()
+        and reference() == cmp_var.reference()
+        and alternate() == cmp_var.alternate();
+  }
 
+  /// Two phased variants on the same allele (field equal, phase differs).
   [[nodiscard]] bool homozygous(const Variant& cmp_var) const { return analogous(cmp_var) and phaseId() != cmp_var.phaseId(); }
 
-  [[nodiscard]] bool analogous(const Variant& cmp_var) const { return equality(cmp_var, VariantEquality::UNPHASED); }
+  /// Field equality excluding phase.
+  [[nodiscard]] bool analogous(const Variant& cmp_var) const {
+    return contigId() == cmp_var.contigId()
+        and offset() == cmp_var.offset()
+        and reference() == cmp_var.reference()
+        and alternate() == cmp_var.alternate();
+  }
 
+  /// Ordering by the phase specific HGVS string (lexicographic), the analysis observable ordering.
   [[nodiscard]] bool lessThan(const Variant& cmp_var) const {   return HGVS_Phase() < cmp_var.HGVS_Phase(); }
 
   /// Generate a CIGAR by comparing the reference to the alternate.

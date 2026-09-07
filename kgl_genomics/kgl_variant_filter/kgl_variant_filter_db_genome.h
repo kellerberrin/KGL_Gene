@@ -2,28 +2,19 @@
 // Created by kellerberrin on 22/04/23.
 //
 
-#ifndef KGL_VARIANT_FILTER_DB_H
-#define KGL_VARIANT_FILTER_DB_H
+#ifndef KGL_VARIANT_FILTER_DB_GENOME_H
+#define KGL_VARIANT_FILTER_DB_GENOME_H
 
 #include "kgl_variant_filter_type.h"
 #include "kgl_variant_db_genome.h"
-#include "kel_utility.h"
-
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filters a population to the listed genomes (if they exist).
-// Note that this is a shallow copy of the reference population.
-// Use selfFilter() or deepCopy() to create a permanent population view.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/// Filters a population to the listed genomes (if they exist).
+/// Note that this is a shallow copy of the reference population.
+/// Use selfFilter() or deepCopy() to create a permanent population view.
 class GenomeListFilter : public FilterPopulations {
 
 public:
@@ -37,7 +28,7 @@ public:
 
 private:
 
-  std::set<GenomeId_t> genome_set_;
+  const std::set<GenomeId_t> genome_set_;
 
 };
 
@@ -47,4 +38,4 @@ private:
 
 
 
-#endif //KGL_VARIANT_FILTER_DB_H
+#endif //KGL_VARIANT_FILTER_DB_GENOME_H

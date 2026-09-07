@@ -5,6 +5,8 @@
 #include "kgl_variant_factory_vcf_evidence_analysis.h"
 #include "kgl_variant_db_freq.h"
 
+#include <algorithm>
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -169,13 +171,9 @@ std::optional<T> kgl::FrequencyDatabaseRead::infoFieldImpl( const Variant& varia
   }
 
   // Vector size mismatch, log and return missing.
-  std::string vector_str;
-  for (auto const& value : field_vec) {
-
-    vector_str += std::to_string(value);
-    vector_str += ";";
-
-  }
+  std::string vector_str = std::ranges::fold_left(field_vec,
+                                                  std::string{},
+                                                  [](std::string result, const auto& value) { return result + std::to_string(value) + ";"; });
 
   ExecEnv::log().warn("FrequencyDatabaseRead::info{}Field; Field: {} expected vector size 1, evidence variants: {}, evidence index: {},  get vector size: {}, vector: {}, Variant: {}",
                       field_type,

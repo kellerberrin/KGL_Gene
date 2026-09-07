@@ -2,30 +2,25 @@
 // Created by kellerberrin on 16/10/17.
 //
 
-#ifndef KGL_FILTER_H
-#define KGL_FILTER_H
+#ifndef KGL_VARIANT_FILTER_DB_VARIANT_H
+#define KGL_VARIANT_FILTER_DB_VARIANT_H
 
 #include "kgl_variant_db.h"
-#include "kel_utility.h"
-#include "kgl_variant_filter_db_variant.h"
 #include "kgl_variant_filter_type.h"
+
+#include <format>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to a specified minimum DP counts.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants to a specified minimum Ref+Alt base count.
 class RefAltCountFilter : public FilterVariants {
 
 public:
 
   explicit RefAltCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {
 
-    std::stringstream ss;
-    ss << "filter with minimum Ref+Alt base count:" << minimum_count_;
-    filterName(ss.str());
+    filterName(std::format("filter with minimum Ref+Alt base count:{}", minimum_count_));
 
   }
   ~RefAltCountFilter() override = default;
@@ -35,28 +30,21 @@ public:
 
 private:
 
-  size_t minimum_count_;
+  const size_t minimum_count_;
 
   [[nodiscard]] bool implementFilter(const Variant& variant) const;
-
 
 };
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to a specified minimum DP counts.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants to a specified minimum DP base count.
 class DPCountFilter : public FilterVariants {
 
 public:
 
   explicit DPCountFilter(size_t minimum_count) : minimum_count_(minimum_count) {
 
-    std::stringstream ss;
-    ss << "filter with minimum DP base count:" << minimum_count_;
-    filterName(ss.str());
+    filterName(std::format("filter with minimum DP base count:{}", minimum_count_));
 
   }
   ~DPCountFilter() override = default;
@@ -66,18 +54,14 @@ public:
 
 private:
 
-  size_t minimum_count_;
+  const size_t minimum_count_;
 
   [[nodiscard]] bool implementFilter(const Variant& variant) const;
-
 
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants on phasing.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants on phasing.
 class PhaseFilter : public FilterVariants {
 
 public:
@@ -92,7 +76,6 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.phaseId() == phase_; }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<PhaseFilter>(*this); }
 
-
 private:
 
   const VariantPhase phase_;
@@ -100,10 +83,7 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to SNPs (single and compound)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants to those marked 'Pass' for filters in the VCF.
 class PassFilter : public FilterVariants {
 
 public:
@@ -114,16 +94,10 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.evidence().passFilter(); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<PassFilter>(*this); }
 
-
-private:
-
-
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to SNPs (single and compound)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// Filter variants to SNPs (single and compound).
 class SNPFilter : public FilterVariants {
 
 public:
@@ -134,17 +108,10 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return variant.isSNP(); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<SNPFilter>(*this); }
 
-
-private:
-
-
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Indels that are not mod3 in size.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter to indels that are not mod3 in size (frameshift).
 class FrameShiftFilter : public FilterVariants {
 
 public:
@@ -155,7 +122,6 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return implementFilter(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FrameShiftFilter>(*this); }
 
-
 private:
 
   [[nodiscard]] bool implementFilter(const Variant& variant) const;
@@ -163,11 +129,7 @@ private:
 };
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// True Filter - performs no filtering. If combined with the NotFilter below, would filter every variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// True filter - performs no filtering. If combined with the NotFilter below, would filter every variant.
 class TrueFilter : public FilterVariants {
 
 public:
@@ -182,15 +144,10 @@ public:
   [[nodiscard]] bool applyFilter(const Variant&) const override { return true; }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<TrueFilter>(*this); }
 
-
-private:
-
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// False Filter - unconditionally filters all variants. Useful for deleting large populations.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// False filter - unconditionally filters all variants. Useful for deleting large populations.
 class FalseFilter : public FilterVariants {
 
 public:
@@ -205,23 +162,18 @@ public:
   [[nodiscard]] bool applyFilter(const Variant&) const override { return false; }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<FalseFilter>(*this); }
 
-private:
-
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Negation Filter, the logical negation of a supplied filter.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Negation filter, the logical negation of a supplied filter.
 class NotFilter : public FilterVariants {
 
 public:
 
-  explicit NotFilter(const FilterVariants& filter) {
+  explicit NotFilter(const FilterVariants& filter)
+      : filter_ptr_(std::static_pointer_cast<FilterVariants>(filter.clone())) {
 
-    filter_ptr_ = std::dynamic_pointer_cast<FilterVariants>(filter.clone());
-    filterName(std::string("NOT(") + filter_ptr_->filterName() + std::string(")"));
+    filterName(std::format("NOT({})", filter_ptr_->filterName()));
 
   }
   ~NotFilter() override = default;
@@ -231,26 +183,21 @@ public:
 
 private:
 
-
-  std::shared_ptr<FilterVariants> filter_ptr_;
+  const std::shared_ptr<FilterVariants> filter_ptr_;
 
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// And Filter, logical and of two supplied filters.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// And filter, logical and of two supplied filters.
 class AndFilter : public FilterVariants {
 
 public:
 
-  AndFilter(const FilterVariants& filter1, const FilterVariants& filter2) {
+  AndFilter(const FilterVariants& filter1, const FilterVariants& filter2)
+      : filter1_ptr_(std::static_pointer_cast<FilterVariants>(filter1.clone())),
+        filter2_ptr_(std::static_pointer_cast<FilterVariants>(filter2.clone())) {
 
-    filter1_ptr_ = std::dynamic_pointer_cast<FilterVariants>(filter1.clone());
-    filter2_ptr_ = std::dynamic_pointer_cast<FilterVariants>(filter2.clone());
-
-    filterName("AND(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")");
+    filterName(std::format("AND({}, {})", filter1_ptr_->filterName(), filter2_ptr_->filterName()));
 
   }
   ~AndFilter() override = default;
@@ -258,29 +205,24 @@ public:
   [[nodiscard]] bool applyFilter(const Variant& variant) const override { return filter1_ptr_->applyFilter(variant) and filter2_ptr_->applyFilter(variant); }
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<AndFilter>(*this); }
 
-
 private:
 
-  std::shared_ptr<FilterVariants> filter1_ptr_;
-  std::shared_ptr<FilterVariants> filter2_ptr_;
+  const std::shared_ptr<FilterVariants> filter1_ptr_;
+  const std::shared_ptr<FilterVariants> filter2_ptr_;
 
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Or Filter, logical or of two supplied filters.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Or filter, logical or of two supplied filters.
 class OrFilter : public FilterVariants {
 
 public:
 
-  OrFilter(const FilterVariants& filter1, const FilterVariants& filter2) {
+  OrFilter(const FilterVariants& filter1, const FilterVariants& filter2)
+      : filter1_ptr_(std::static_pointer_cast<FilterVariants>(filter1.clone())),
+        filter2_ptr_(std::static_pointer_cast<FilterVariants>(filter2.clone())) {
 
-    filter1_ptr_ = std::dynamic_pointer_cast<FilterVariants>(filter1.clone());
-    filter2_ptr_ = std::dynamic_pointer_cast<FilterVariants>(filter2.clone());
-
-    filterName("OR(" + filter1_ptr_->filterName() + ", " + filter2_ptr_->filterName() + ")");
+    filterName(std::format("OR({}, {})", filter1_ptr_->filterName(), filter2_ptr_->filterName()));
 
   }
   ~OrFilter() override = default;
@@ -290,8 +232,8 @@ public:
 
 private:
 
-  std::shared_ptr<FilterVariants> filter1_ptr_;
-  std::shared_ptr<FilterVariants> filter2_ptr_;
+  const std::shared_ptr<FilterVariants> filter1_ptr_;
+  const std::shared_ptr<FilterVariants> filter2_ptr_;
 
 };
 
@@ -300,4 +242,4 @@ private:
 }   // end namespace
 
 
-#endif //KGL_FILTER_H
+#endif //KGL_VARIANT_FILTER_DB_VARIANT_H

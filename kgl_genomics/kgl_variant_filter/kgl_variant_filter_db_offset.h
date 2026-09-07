@@ -8,23 +8,15 @@
 
 #include "kgl_variant_filter_type.h"
 #include "kgl_variant_db_genome.h"
-#include "kel_utility.h"
-
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter homozygous variants. For Example if there are 6 variants defined at the offset consisting of
-// two homozygous pairs and 2 singleton (heterozygous) variants. Only the homozygous pairs will be returned.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class HomozygousFilter: public FilterOffsets {
+/// Filter to offsets consisting of exactly two identical (homozygous) variants.
+/// All other offset sizes yield an empty offset. For example, an offset with 6 variants consisting
+/// of two homozygous pairs and 2 singleton (heterozygous) variants returns an EMPTY offset.
+class HomozygousFilter : public FilterOffsets {
 
 public:
 
@@ -35,21 +27,13 @@ public:
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HomozygousFilter>(); }
 
-
-private:
-
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter heterozygous variants. For Example if there are 6 variants defined at the offset consisting of
-// two homozygous pairs and 2 singleton heterozygous variants. Only the heterozygous (singleton) variants will be returned.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class HeterozygousFilter: public FilterOffsets {
+/// Filter to singleton (heterozygous) variants only.
+/// For example, if there are 6 variants at the offset consisting of two homozygous pairs and
+/// 2 singleton heterozygous variants, only the heterozygous (singleton) variants are returned.
+class HeterozygousFilter : public FilterOffsets {
 
 public:
 
@@ -60,19 +44,11 @@ public:
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<HeterozygousFilter>(); }
 
-
-private:
-
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Ensure max 2 variants per offset.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class DiploidFilter: public FilterOffsets {
+/// Ensure max 2 variants per offset.
+class DiploidFilter : public FilterOffsets {
 
 public:
 
@@ -82,16 +58,11 @@ public:
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<DiploidFilter>(); }
 
-private:
-
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Unique variants disregarding phase. For example, if homozygous then filter to a single variant.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class UniqueUnphasedFilter: public FilterOffsets {
+/// Unique variants disregarding phase. For example, if homozygous then filter to a single variant.
+class UniqueUnphasedFilter : public FilterOffsets {
 
 public:
 
@@ -101,28 +72,18 @@ public:
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<UniqueUnphasedFilter>(*this); }
 
-
-private:
-
-
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Unique variants including phase.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class UniquePhasedFilter: public FilterOffsets {
+/// Unique variants including phase.
+class UniquePhasedFilter : public FilterOffsets {
 
 public:
 
   UniquePhasedFilter() { filterName("UniquePhasedFilter"); }
-  UniquePhasedFilter(const UniquePhasedFilter&) = default;
 
   [[nodiscard]] std::unique_ptr<OffsetDB> applyFilter(const OffsetDB& offset) const override;
   [[nodiscard]] std::shared_ptr<BaseFilter> clone() const override { return std::make_shared<UniquePhasedFilter>(*this); }
-
-private:
-
 
 };
 

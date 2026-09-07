@@ -8,18 +8,18 @@
 #include <string>
 #include <memory>
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The abstract VariantFilter class uses the visitor pattern.
-// Concrete variant filters are defined in kgl_filter.h
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace kellerberrin::genome {   //  organization level namespace
 
-// Runtime Filter Type Enum. Filters are processed differently according to type.
+// Runtime filter type enum. Filters are processed differently according to type.
 enum class FilterBaseType { POPULATION_FILTER, GENOME_FILTER, CONTIG_FILTER, OFFSET_FILTER, VARIANT_FILTER };
 
 
-namespace kellerberrin::genome {   //  organization level namespace
-
-
+/// Abstract base of every filter. Concrete filters are dispatched by the DB layer on filterType().
+///
+/// State protocol (load-bearing, enforced by the DB layer in kgl_variant_db):
+///   - Variant filters are applied concurrently WITHOUT cloning and must be stateless.
+///   - Population/Genome/Contig/Offset filters are cloned by the DB layer before each use and
+///     may hold per-invocation mutable state.
 class BaseFilter {
 
 public:
@@ -28,7 +28,7 @@ public:
   virtual ~BaseFilter() = default;
 
   [[nodiscard]] std::string filterName() const { return filter_name_; }
-  void filterName(std::string filter_name) { filter_name_ = std::move(filter_name); }
+  void filterName(std::string filter_name) noexcept { filter_name_ = std::move(filter_name); }
 
   [[nodiscard]] virtual FilterBaseType filterType() const = 0;
   [[nodiscard]] virtual std::shared_ptr<BaseFilter> clone() const = 0;

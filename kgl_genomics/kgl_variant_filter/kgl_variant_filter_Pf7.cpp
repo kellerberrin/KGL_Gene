@@ -9,71 +9,54 @@
 namespace kgl = kellerberrin::genome;
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Frequency filter using AF or MLEAF
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/// Frequency filter using AF or MLEAF.
 bool kgl::P7FrequencyFilter::applyFilter(const Variant &variant) const {
 
   size_t alt_count = variant.evidence().altVariantCount();
   size_t alt_index = variant.evidence().altVariantIndex();
 
-  ++freq_filter_stats_.unfiltered_;
+  freq_filter_stats_.countUnfiltered();
 
-  std::string info_field = info_field_ == FreqInfoField::AF ? AF_FIELD_ : MLEAF_FIELD_;
-  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<std::vector<double>>(variant, info_field);
+  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<std::vector<double>>(variant, info_field_);
   if (info_opt) {
 
     std::vector<double> info_vector = std::move(info_opt.value());
     if (info_vector.size() != alt_count) {
 
-      ExecEnv::log().error("P7FrequencyFilter::contains; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
-                           info_vector.size(), alt_count, info_field);
+      ExecEnv::log().error("P7FrequencyFilter::applyFilter; AF vector size: {}, not equal alt variant count: {}, Info field: {}",
+                           info_vector.size(), alt_count, info_field_);
 
       return false;
 
     }
     if (info_vector.size() <= alt_index) {
 
-      ExecEnv::log().error("P7FrequencyFilter::contains; alt variant index: {} out of range for vector size:{}, Info field: {}",
-                           alt_index, info_vector.size(), info_field);
+      ExecEnv::log().error("P7FrequencyFilter::applyFilter; alt variant index: {} out of range for vector size:{}, Info field: {}",
+                           alt_index, info_vector.size(), info_field_);
       return false;
 
     }
 
     if (info_vector[alt_index] >= freq_cutoff_) {
 
-      ++freq_filter_stats_.accepted_;
+      freq_filter_stats_.countAccepted();
       return true;
-
-    } else {
-
-      ++freq_filter_stats_.rejected_;
-      return false;
 
     }
 
+    freq_filter_stats_.countRejected();
+    return false;
+
   }
 
-  ++freq_filter_stats_.missing_;
+  freq_filter_stats_.countMissing();
 
   return true;
 
 }
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Simple object to collect filter statistics for each filter field.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/// Simple object to collect filter statistics for each filter field.
 void kgl::FilterFieldInfo::printStats(double filter_level) const {
 
   ExecEnv::log().info("Filter: {}, Level: {}, Variants: {}, Accepted: {:.2f}%, Rejected: {:.2f}%, Rejection Rate: {:.2f}%, Missing Info Field: {:.2f}%",
@@ -88,14 +71,23 @@ void kgl::FilterFieldInfo::printStats(double filter_level) const {
 }
 
 
+/// Checks a double info field against a threshold; pass_if_greater_equal selects >= vs <=.
+kgl::P7VariantFilter::FieldOutcome kgl::P7VariantFilter::checkInfoField(const Variant& variant, const char* field, double level, bool pass_if_greater_equal) {
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Bespoke variant quality filter for the P7 Pf database.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>(variant, field);
+  if (not info_opt) {
+
+    return FieldOutcome::MISSING;
+
+  }
+
+  bool pass = pass_if_greater_equal ? info_opt.value() >= level : info_opt.value() <= level;
+  return pass ? FieldOutcome::PASS : FieldOutcome::FAIL;
+
+}
 
 
+/// Bespoke variant quality filter for the P7 Pf database.
 // Before filtering.
 void kgl::P7VariantFilter::initializeStats() {
 
@@ -116,8 +108,8 @@ void kgl::P7VariantFilter::printStats() {
 
   vqslod_stats_.printStats(VQSLOD_LEVEL_);
   qd_stats_.printStats(QD_LEVEL_);
-  mq_stats_.printStats(MQ_LEVEL_),
-      sor_stats_.printStats(SOR_LEVEL_);
+  mq_stats_.printStats(MQ_LEVEL_);
+  sor_stats_.printStats(SOR_LEVEL_);
   mqrs_stats_.printStats(MQRANKSUM_LEVEL_);
   rprs_stats_.printStats(READPOSRANKSUM_LEVEL_);
   if constexpr (READDEPTH_ACTIVE_)  depth_stats_.printStats(MINIMUM_READDEPTH_);
@@ -139,146 +131,84 @@ bool kgl::P7VariantFilter::applyFilter(const Variant & variant) const {
 
   // if VQSLOD is present then only use this filter
   ////////////////////////////////////////////////////////////////////////////////////////////////////
-  ++vqslod_stats_.unfiltered_;
-  auto info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, VQSLOD_FIELD_);
-  if (info_opt) {
+  vqslod_stats_.countUnfiltered();
+  switch (checkInfoField(variant, VQSLOD_FIELD_, VQSLOD_LEVEL_, true)) {
 
-    if (info_opt.value() >= VQSLOD_LEVEL_) {
-
-      ++vqslod_stats_.accepted_;
+    case FieldOutcome::PASS:
+      vqslod_stats_.countAccepted();
       ++accepted_variants_;
       return true;
 
-    } else {
-
-      ++vqslod_stats_.rejected_;
+    case FieldOutcome::FAIL:
+      vqslod_stats_.countRejected();
       return false;
 
-    }
+    case FieldOutcome::MISSING:
+      vqslod_stats_.countMissing();
+      break;
 
   }
-  ++vqslod_stats_.missing_;
 
   // If the variant is missing the VQSLOD field, then use all the following filters.
   // QD
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ++qd_stats_.unfiltered_;
-  info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, QD_FIELD_);
-  if (info_opt) {
+  qd_stats_.countUnfiltered();
+  switch (checkInfoField(variant, QD_FIELD_, QD_LEVEL_, true)) {
 
-    if (info_opt.value() >= QD_LEVEL_) {
-
-      ++qd_stats_.accepted_;
-
-    } else {
-
-      ++qd_stats_.rejected_;
-      return false;
-
-    }
-
-  } else {
-
-    ++qd_stats_.missing_;
+    case FieldOutcome::MISSING: qd_stats_.countMissing();  break;
+    case FieldOutcome::PASS:    qd_stats_.countAccepted(); break;
+    case FieldOutcome::FAIL:    qd_stats_.countRejected(); return false;
 
   }
 
   // MQ
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ++mq_stats_.unfiltered_;
-  info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, MQ_FIELD_);
-  if (info_opt) {
+  mq_stats_.countUnfiltered();
+  // Variants in the 'Pf7_Pf3D7_MITO' contig_ref_ptr have a lower MQ threshold.
+  double mq_level = variant.contigId() == Pf7_Pf3D7_MITO ? Pf7_Pf3D7_MITO_MQ_LEVEL_ : MQ_LEVEL_;
+  switch (checkInfoField(variant, MQ_FIELD_, mq_level, true)) {
 
-    // Variants in the 'Pf7_Pf3D7_MITO' contig_ref_ptr have a lower MQ threshold.
-    double mq_level = variant.contigId() == Pf7_Pf3D7_MITO ? Pf7_Pf3D7_MITO_MQ_LEVEL_ : MQ_LEVEL_;
-    if (info_opt.value() >= mq_level) {
-
-      ++mq_stats_.accepted_;
-
-    } else {
-
-      ++mq_stats_.rejected_;
-      return false;
-
-    }
-
-  } else {
-
-    ++mq_stats_.missing_;
+    case FieldOutcome::MISSING: mq_stats_.countMissing();  break;
+    case FieldOutcome::PASS:    mq_stats_.countAccepted(); break;
+    case FieldOutcome::FAIL:    mq_stats_.countRejected(); return false;
 
   }
 
   // SOR
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ++sor_stats_.unfiltered_;
-  info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, SOR_FIELD_);
-  if (info_opt) {
+  sor_stats_.countUnfiltered();
+  switch (checkInfoField(variant, SOR_FIELD_, SOR_LEVEL_, false)) {
 
-    if (info_opt.value() <= SOR_LEVEL_) {
-
-      ++sor_stats_.accepted_;
-
-    } else {
-
-      ++sor_stats_.rejected_;
-      return false;
-
-    }
-
-  } else {
-
-    ++sor_stats_.missing_;
+    case FieldOutcome::MISSING: sor_stats_.countMissing();  break;
+    case FieldOutcome::PASS:    sor_stats_.countAccepted(); break;
+    case FieldOutcome::FAIL:    sor_stats_.countRejected(); return false;
 
   }
 
   // MQRANKSUM
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ++mqrs_stats_.unfiltered_;
-  info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, MQRANKSUM_FIELD_);
-  if (info_opt) {
+  mqrs_stats_.countUnfiltered();
+  switch (checkInfoField(variant, MQRANKSUM_FIELD_, MQRANKSUM_LEVEL_, true)) {
 
-    if (info_opt.value() >= MQRANKSUM_LEVEL_) {
-
-      ++mqrs_stats_.accepted_;
-
-    } else {
-
-      ++mqrs_stats_.rejected_;
-      return false;
-
-    }
-
-  } else {
-
-    ++mqrs_stats_.missing_;
+    case FieldOutcome::MISSING: mqrs_stats_.countMissing();  break;
+    case FieldOutcome::PASS:    mqrs_stats_.countAccepted(); break;
+    case FieldOutcome::FAIL:    mqrs_stats_.countRejected(); return false;
 
   }
 
   // READPOSRANKSUM
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ++rprs_stats_.unfiltered_;
-  info_opt = InfoEvidenceAnalysis::getTypedInfoData<double>( variant, READPOSRANKSUM_FIELD_);
-  if (info_opt) {
+  rprs_stats_.countUnfiltered();
+  switch (checkInfoField(variant, READPOSRANKSUM_FIELD_, READPOSRANKSUM_LEVEL_, true)) {
 
-    if (info_opt.value() >= READPOSRANKSUM_LEVEL_) {
-
-      ++rprs_stats_.accepted_;
-
-    } else {
-
-      ++rprs_stats_.rejected_;
-      return false;
-
-    }
-
-  } else {
-
-    ++rprs_stats_.missing_;
+    case FieldOutcome::MISSING: rprs_stats_.countMissing();  break;
+    case FieldOutcome::PASS:    rprs_stats_.countAccepted(); break;
+    case FieldOutcome::FAIL:    rprs_stats_.countRejected(); return false;
 
   }
 
@@ -286,24 +216,23 @@ bool kgl::P7VariantFilter::applyFilter(const Variant & variant) const {
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   if constexpr (READDEPTH_ACTIVE_) {
 
-    ++depth_stats_.unfiltered_;
-    if (variant.evidence().formatData()) {
+    depth_stats_.countUnfiltered();
+    if (auto const& format_data = variant.evidence().formatData()) {
 
-      auto const &format_data = *(variant.evidence().formatData().value());
-      if (format_data.DPCount() >= MINIMUM_READDEPTH_) {
+      if ((*format_data)->DPCount() >= MINIMUM_READDEPTH_) {
 
-        ++depth_stats_.accepted_;
+        depth_stats_.countAccepted();
 
       } else {
 
-        ++depth_stats_.rejected_;
+        depth_stats_.countRejected();
         return false;
 
       }
 
     } else {
 
-      ++depth_stats_.missing_;
+      depth_stats_.countMissing();
 
     }
 
@@ -314,4 +243,3 @@ bool kgl::P7VariantFilter::applyFilter(const Variant & variant) const {
   return true;
 
 }
-

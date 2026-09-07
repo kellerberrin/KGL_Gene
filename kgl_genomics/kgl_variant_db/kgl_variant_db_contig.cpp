@@ -58,18 +58,9 @@ bool kgl::ContigDB::addOffset(ContigOffset_t offset, std::unique_ptr<OffsetDB> o
   // Lock this function to concurrent access.
   std::scoped_lock lock(lock_contig_mutex_);
 
-  auto [insert_iter, insert_result] = contig_offset_map_.try_emplace(offset);
-  if (insert_result) {
-
-    // Add the new offset.
-    insert_iter->second = std::shared_ptr<OffsetDB>(std::move(offset_db));
-
-  } else {
-
-    // Note that this overwrites any offset that already exists at this offset.
-    insert_iter->second = std::shared_ptr<OffsetDB>(std::move(offset_db));
-
-  }
+  // Note that this overwrites any offset database that already exists at this offset.
+  auto [insert_iter, _] = contig_offset_map_.try_emplace(offset);
+  insert_iter->second = std::shared_ptr<OffsetDB>(std::move(offset_db));
 
   return true;
 

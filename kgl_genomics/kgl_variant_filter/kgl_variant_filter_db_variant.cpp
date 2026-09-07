@@ -6,59 +6,42 @@
 
 
 namespace kgl = kellerberrin::genome;
-namespace kel = kellerberrin;
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to a base count.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants to a minimum Ref+Alt base count.
 bool kgl::RefAltCountFilter::implementFilter(const Variant& variant) const {
 
-  if (variant.evidence().formatData()) {
+  if (auto const& format_data = variant.evidence().formatData()) {
 
-    auto const& format_data = *(variant.evidence().formatData().value());
-    return (format_data.refCount() + format_data.altCount()) >= minimum_count_;
-
-  } else {
-
-    ExecEnv::log().info("RefAltCountFilter; variant does not have Ref+Alt base count evidence");
+    auto const& fd = *format_data;
+    return (fd->refCount() + fd->altCount()) >= minimum_count_;
 
   }
+
+  ExecEnv::log().info("RefAltCountFilter; variant does not have Ref+Alt base count evidence");
 
   return true;
 
 }
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Filter variants to a base count.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Filter variants to a minimum DP base count.
 bool kgl::DPCountFilter::implementFilter(const Variant& variant) const {
 
+  if (auto const& format_data = variant.evidence().formatData()) {
 
-  if (variant.evidence().formatData()) {
-
-    auto const& format_data = *(variant.evidence().formatData().value());
-    return format_data.DPCount() >= minimum_count_;
-
-  } else {
-
-    ExecEnv::log().info("DPCountFilter; variant does not have base count evidence");
+    return (*format_data)->DPCount() >= minimum_count_;
 
   }
+
+  ExecEnv::log().info("DPCountFilter; variant does not have base count evidence");
 
   return true;
 
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Indels that are not mod3 in size.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// Filter to indels that are not mod3 in size (frameshift).
 bool kgl::FrameShiftFilter::implementFilter(const Variant& variant) const {
 
   if (variant.isSNP()) {
@@ -67,11 +50,6 @@ bool kgl::FrameShiftFilter::implementFilter(const Variant& variant) const {
 
   }
 
-  const auto [variant_type, modify_interval] = variant.modifyInterval();
-
-  return (modify_interval.size() % 3) != 0;
+  return (variant.modifyInterval().second.size() % 3) != 0;
 
 }
-
-
-

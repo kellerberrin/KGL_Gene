@@ -6,6 +6,7 @@
 #include "kgl_variant_filter_db_variant.h"
 #include "kel_workflow_threads.h"
 
+#include <algorithm>
 #include <ranges>
 
 namespace kgl = kellerberrin::genome;
@@ -92,11 +93,22 @@ size_t kgl::PopulationDB::variantCount() const {
     return 0;
 
   }
+
+  // Avoid thread pool overhead for small populations; a serial sum is faster.
+  if (getMap().size() < 4) {
+
+    return std::ranges::fold_left(getMap() | std::views::values,
+                                  size_t{0},
+                                  [](size_t sum, const auto& genome_ptr) { return sum + genome_ptr->variantCount(); });
+
+  }
+
   // Calc how many threads required.
   size_t thread_count = std::min(getMap().size(), WorkflowThreads::defaultThreads());
   WorkflowThreads thread_pool(thread_count);
   // A vector for futures.
   std::vector<std::future<size_t>> future_vector;
+  future_vector.reserve(getMap().size());
   // Thread pool work lambda
   auto count_lambda =  [](const std::shared_ptr<const GenomeDB>& genome_ptr)->size_t { return genome_ptr->variantCount(); };
   // Queue a thread for each genome.
@@ -121,12 +133,8 @@ std::map<std::string, std::shared_ptr<const kgl::Variant>> kgl::PopulationDB::un
   std::map<std::string, std::shared_ptr<const kgl::Variant>> unique_map;
   processAll([&unique_map](const std::shared_ptr<const Variant>& variant_ptr) -> bool {
 
-    auto hgvs = variant_ptr->HGVS();
-    if (not unique_map.contains(hgvs)) {
-
-      unique_map.try_emplace(std::move(hgvs), variant_ptr);
-
-    }
+    // Note that try_emplace only inserts (and hashes the key) if the variant is not already present.
+    unique_map.try_emplace(variant_ptr->HGVS(), variant_ptr);
 
     return true;
 
@@ -185,16 +193,28 @@ std::map<kgl::ContigId_t , size_t> kgl::PopulationDB::contigCountMap() const {
 
 std::optional<size_t> kgl::PopulationDB::contigCount(const ContigId_t& contig) const {
 
-  auto contig_map = contigCountMap();
+  // Scan directly for the requested contig rather than building the entire contig count map.
+  size_t contig_count{0};
+  bool contig_found{false};
+  for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-  auto find_iter = contig_map.find(contig);
-  if (find_iter == contig_map.end()) {
+    auto find_iter = genome_ptr->getMap().find(contig);
+    if (find_iter != genome_ptr->getMap().end()) {
+
+      contig_count += find_iter->second->variantCount();
+      contig_found = true;
+
+    }
+
+  }
+
+  if (not contig_found) {
 
     return std::nullopt;
 
   }
 
-  return find_iter->second;
+  return contig_count;
 
 }
 
@@ -206,7 +226,7 @@ size_t kgl::PopulationDB::squareContigs() {
   std::set<std::string> contig_set;
   for (auto const& [genome_id, genome_ptr] : getMap()) {
 
-    for (auto const& [contig_id, contig_ptr] : genome_ptr->getMap()) {
+    for (auto const& contig_id : genome_ptr->getMap() | std::views::keys) {
 
       contig_set.insert(contig_id);
 
@@ -411,22 +431,15 @@ std::shared_ptr<kgl::PopulationDB> kgl::PopulationDB::uniqueUnphasedGenome() con
     auto unphased_hash = variant_ptr->HGVS(); // Create a unique HGVS hash, phasing excluded.
     {
 
-      // Acquire the mutex and check if the variant is already in the map.
+      // Acquire the mutex and insert the variant if it is not already in the map.
+      // Note that try_emplace only inserts (and hashes the key) if the variant is not already present.
       std::scoped_lock lock(map_mutex);
 
-      if (variant_map.contains(unphased_hash)) {
-
-        // If already present, just return.
-        return true;
-
-      }
-
-      // If not present, then add to the map.
       auto [insert_iter, insert_result] = variant_map.try_emplace(std::move(unphased_hash), variant_ptr);
       if (not insert_result) {
 
-        ExecEnv::log().error("PopulationDB::uniqueUnphasedGenome, cannot add duplicate variant hash: {}", variant_ptr->HGVS());
-        return false;
+        // If already present, just return.
+        return true;
 
       }
 

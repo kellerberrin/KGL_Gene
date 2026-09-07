@@ -106,15 +106,7 @@ bool kel::Utility::fileExistsCreate(const std::string& file_path) {
 bool kel::Utility::directoryExists(const std::string& path) {
 
   std::error_code ec;
-  bool exists = fs::is_directory(fs::path(path), ec);
-
-  if (ec) {
-
-    ExecEnv::log().error("Utility::directoryExists; error checking {}: {}", path, ec.message());
-    return false;
-
-  }
-  return exists;
+  return fs::is_directory(fs::path(path), ec);
 
 }
 

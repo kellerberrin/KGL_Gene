@@ -102,7 +102,7 @@ void kgl::VariantDBVariant::createVariantDB(const std::shared_ptr<const Populati
 
 
 // Classify an allele count (0, 1, 2) into the allele summary. Logs a warning if the allele count is non-diploid.
-void kgl::VariantDBVariant::classifyAllele(AlleleSummmary& allele_summary, uint8_t allele_type, const std::string& context) const {
+void kgl::VariantDBVariant::classifyAllele(AlleleSummmary& allele_summary, uint8_t allele_type, const char* context, const GenomeId_t& genome_id, size_t index) const {
 
   switch (allele_type) {
 
@@ -119,7 +119,9 @@ void kgl::VariantDBVariant::classifyAllele(AlleleSummmary& allele_summary, uint8
       break;
 
     default:
-      ExecEnv::log().warn("VariantDBVariant; {}, has non-diploid allele count: {}", context, allele_type);
+      // Note that the context string is only formatted on this (rare) warning path.
+      ExecEnv::log().warn("VariantDBVariant; {}, Genome: {}, Index: {}, has non-diploid allele count: {}",
+                          context, genome_id, index, allele_type);
       break;
 
   }
@@ -145,7 +147,7 @@ kgl::AlleleSummmary kgl::VariantDBVariant::summaryByVariant(const std::shared_pt
   // Loop through the Genomes.
   for (auto const& [genome, variant_vector] : genome_data_) {
 
-    classifyAllele(allele_summary, variant_vector[variant_index], std::format("summaryByVariant; Genome: {}, Variant Index: {}", genome, variant_index));
+    classifyAllele(allele_summary, variant_vector[variant_index], "summaryByVariant", genome, variant_index);
 
   }
 
@@ -181,7 +183,7 @@ kgl::AlleleSummmary kgl::VariantDBVariant::summaryByGenome(const GenomeId_t& gen
   // Loop through the Variants.
   for (auto const& allele_type : allele_vector) {
 
-    classifyAllele(allele_summary, allele_type, std::format("summaryByGenome; Genome: {}, Genome Index: {}", genome, genome_index));
+    classifyAllele(allele_summary, allele_type, "summaryByGenome", genome, genome_index);
 
   }
 
@@ -208,7 +210,7 @@ kgl::AlleleSummmary kgl::VariantDBVariant::populationSummary() const {
     // Loop through the Variants.
     for (auto const& allele_type : allele_vector) {
 
-      classifyAllele(allele_summary, allele_type, std::format("populationSummary; Genome Id: {}", genome_id));
+      classifyAllele(allele_summary, allele_type, "populationSummary", genome_id, 0);
 
     }
 

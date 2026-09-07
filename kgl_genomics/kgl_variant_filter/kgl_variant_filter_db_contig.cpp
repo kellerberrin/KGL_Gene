@@ -12,11 +12,7 @@
 namespace kgl = kellerberrin::genome;
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Contig Region filter - Uses the half open interval convention [Begin, End).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Contig Region filter - Uses the half open interval convention [Begin, End).
 std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const ContigDB& contig) const {
 
   std::unique_ptr<ContigDB> contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
@@ -44,14 +40,9 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigRegionFilter::applyFilter(const Contig
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Contig Modify filter - All variants that modify the region [Begin, End).
-// Important - this includes upstream indel deletes that extend into the region.
-// The offset these deletes is less than start but the delete variants extends into the region.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/// Contig Modify filter - All variants that modify the region [Begin, End).
+/// Important - this includes upstream indel deletes that extend into the region.
+/// The offset of these deletes is less than start but the delete variant extends into the region.
 std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const ContigDB& contig) const {
 
   std::unique_ptr<ContigDB> region_contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
@@ -71,7 +62,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 
       // Note that memberInterval() is not the same as modifyInterval().
       // This function is used to determine if a variant actually modifies the interval of interest
-      // rather than just modifying a region adjacent (Insert) to the interval and translating it's offset.
+      // rather than just modifying a region adjacent (Insert) to the interval and translating its offset.
       auto [variant_type, variant_interval] = variant_ptr->memberInterval();
 
       bool add_variant{false};
@@ -109,17 +100,14 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigModifyFilter::applyFilter(const Contig
 }
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Filter out all variants that will be deleted by an upstream Delete variant.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+/// Filter out all variants that will be deleted by an upstream Delete variant.
 std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const ContigDB& contig) const {
 
   std::unique_ptr<ContigDB> contig_ptr(std::make_unique<ContigDB>(contig.contigId()));
+
+  // Upstream delete map is indexed by the upper() value of the delete variant regions.
+  // Function-local: the filter is stateless and correct by construction (no clone-copy cost).
+  IntervalUpperMultiMapType<std::shared_ptr<const Variant>> upstream_delete_map;
 
   for (auto const& [offset, offset_ptr] : contig.getMap()) {
 
@@ -128,21 +116,15 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
       auto const [variant_type, member_interval] = variant_ptr->memberInterval();
 
       OpenRightUnsigned lower_bound_key{member_interval.lower(), member_interval.lower()}; // Zero sized.
-      auto const lower_bound = upstream_delete_map_.lower_bound(lower_bound_key);
-      auto const upper_bound = upstream_delete_map_.end();
+      auto const lower_bound = upstream_delete_map.lower_bound(lower_bound_key);
+      auto const upper_bound = upstream_delete_map.end();
 
-      bool upstream_delete{false};
+      bool upstream_delete = std::ranges::any_of(std::ranges::subrange(lower_bound, upper_bound),
+                                                 [&member_interval](auto const& entry) {
 
-      for (auto const& [delete_interval, delete_variant_ptr] : std::ranges::subrange(lower_bound, upper_bound)) {
+                                                   return entry.first.intersects(member_interval);
 
-        if (delete_interval.intersects(member_interval)) {
-
-          upstream_delete = true;
-          break;
-
-        }
-
-      }
+                                                 });
 
       if (not upstream_delete) {
 
@@ -155,7 +137,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 
         if (variant_type == VariantType::INDEL_DELETE) {
 
-          upstream_delete_map_.emplace(member_interval, variant_ptr);
+          upstream_delete_map.emplace(member_interval, variant_ptr);
 
         } // If delete.
 
@@ -170,15 +152,9 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigUpstreamFilter::applyFilter(const Cont
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Returns a contig containing all variants in *this contig that match the template contig_ref_ptr.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// This search algorithm has n^2 complexity.
-// The variants in the template contig_ref_ptr are unique. Variant phase is disregarded.
+/// Returns a contig containing all variants in *this contig that match the template contig.
+// The variants in the template contig are unique. Variant phase is disregarded.
+// The algorithm is linear in variants: per-offset hash-set build plus a hash lookup per variant.
 std::unique_ptr<kgl::ContigDB> kgl::ContigTemplateFilter::applyFilter(const ContigDB& contig) const {
 
   auto found_contig_ptr = std::make_unique<ContigDB>(reference_ptr_->contigId());
@@ -188,15 +164,16 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigTemplateFilter::applyFilter(const Cont
     auto find_iter = contig.getMap().find(offset);
     if (find_iter != contig.getMap().end()) {
 
-      // Create a set of allele hashs to search.
+      // Create a set of allele hashes to search.
       std::unordered_set<std::string> search_hash;
+      search_hash.reserve(offset_ptr->getVariantArray().size());
       for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
         search_hash.insert(variant_ptr->HGVS());
 
       }
 
-      // Search the set of hashs.
+      // Search the set of hashes.
       auto const& [this_offset, this_offset_ptr] = *find_iter;
       for (auto const& this_variant_ptr : this_offset_ptr->getVariantArray()) {
 
@@ -204,7 +181,7 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigTemplateFilter::applyFilter(const Cont
 
           if (not found_contig_ptr->addVariant(this_variant_ptr)) {
 
-            ExecEnv::log().error( "ContigDB::findContig; cannot add variant: {}", this_variant_ptr->HGVS());
+            ExecEnv::log().error("ContigTemplateFilter::applyFilter; cannot add variant: {}", this_variant_ptr->HGVS());
 
           }
 
@@ -220,4 +197,3 @@ std::unique_ptr<kgl::ContigDB> kgl::ContigTemplateFilter::applyFilter(const Cont
   return found_contig_ptr;
 
 }
-

@@ -21,7 +21,8 @@ namespace kellerberrin::genome {   //  organization level namespace
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/// The variant vector held by an offset object. Each element is either null (0), heterozygous (1) or homozygous (2).
+/// The variant vector held by an offset object. All variants in the vector share the same contig offset;
+/// a variant is held by multiple phases at the same offset (phase identity is part of the Variant object).
 using OffsetDBArray = std::vector<std::shared_ptr<const Variant>>;
 
 /// This is the low-level variant container. A vector of variants that all share the same contig offset.

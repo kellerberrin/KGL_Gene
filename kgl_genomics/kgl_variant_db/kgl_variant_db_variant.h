@@ -79,7 +79,9 @@ private:
   void createVariantDB(const std::shared_ptr<const PopulationDB>& population_ptr);
 
   // Classify an allele count (0, 1, 2) into the allele summary. Logs a warning if the allele count is non-diploid.
-  void classifyAllele(AlleleSummmary& allele_summary, uint8_t allele_type, const std::string& context) const;
+  // The context arguments (function label, genome id and optional index) are only formatted into the
+  // warning message on the (rare) non-diploid path, no strings are built on the happy path.
+  void classifyAllele(AlleleSummmary& allele_summary, uint8_t allele_type, const char* context, const GenomeId_t& genome_id, size_t index) const;
 
 };
 
