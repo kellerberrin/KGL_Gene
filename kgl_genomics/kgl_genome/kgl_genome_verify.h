@@ -7,6 +7,7 @@
 
 #include "kgl_genome_prelim.h"
 
+#include <memory>
 #include <vector>
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -20,11 +21,6 @@ namespace kellerberrin::genome {   //  organization level namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct SequenceValidityStatistics {
-
-public:
-
-  SequenceValidityStatistics() =default;
-  ~SequenceValidityStatistics() =default;
 
   [[nodiscard]] size_t ncRNA() const { return ncRNA_; }
   [[nodiscard]] size_t validProtein() const { return valid_protein_; }

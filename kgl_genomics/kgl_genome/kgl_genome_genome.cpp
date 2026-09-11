@@ -43,7 +43,6 @@ std::shared_ptr<kgl::GenomeReference> kgl::GenomeReference::createGenomeDatabase
 
   }
 
-  // return a const pointer.
   return genome_db_ptr;
 
 }
@@ -53,11 +52,10 @@ bool kgl::GenomeReference::addContigSequence(const kgl::ContigId_t& contig_id,
                                              const std::string& description,
                                              std::shared_ptr<kgl::DNA5SequenceLinear> sequence_ptr) {
 
-  using ContigPtr = std::shared_ptr<kgl::ContigReference>;
-  ContigPtr contig_ptr(std::make_shared<kgl::ContigReference>(contig_id, sequence_ptr));
+  auto contig_ptr = std::make_shared<kgl::ContigReference>(contig_id, sequence_ptr);
   contig_ptr->description(description);
 
-  auto result = genome_sequence_map_.insert(std::make_pair(contig_id, std::move(contig_ptr)));
+  auto result = genome_sequence_map_.emplace(contig_id, std::move(contig_ptr));
 
   return result.second;
 
@@ -80,9 +78,9 @@ std::optional<std::shared_ptr<const kgl::ContigReference>> kgl::GenomeReference:
 
 void kgl::GenomeReference::createVerifyGenomeDatabase() {
 
-  for (auto contig_pair : genome_sequence_map_) {
+  for (const auto& [contig_id, contig_ptr] : genome_sequence_map_) {
 
-    contig_pair.second->verifyFeatureHierarchy();
+    contig_ptr->verifyFeatureHierarchy();
 
   }
 
@@ -94,7 +92,7 @@ void kgl::GenomeReference::setTranslationTable(const std::string& table) {
 
   ExecEnv::log().info("GenomeReference::setTranslationTable; All contigs set to Amino translation table: {}", table);
 
-  for (auto [contig_id, contig_ptr] : genome_sequence_map_) {
+  for (const auto& [contig_id, contig_ptr] : genome_sequence_map_) {
 
     if (not contig_ptr->setTranslationTable(table)) {
 
@@ -130,12 +128,12 @@ bool kgl::GenomeReference::equivalent(const GenomeReference& lhs) const {
 
   }
 
-  for (auto const& [contig_id, contig_reference] : lhs.genome_sequence_map_) {
+  // Check for contigs in the comparison genome that are not in this genome.
+  for (auto const& [lhs_contig_id, lhs_contig_reference] : lhs.genome_sequence_map_) {
 
-    auto contig_opt = getContigSequence(contig_id);
-    if (not contig_opt) {
+    if (not getContigSequence(lhs_contig_id)) {
 
-      ExecEnv::log().warn("GenomeReference::equivalent; comparison contig_ref_ptr: {} not found", contig_id);
+      ExecEnv::log().warn("GenomeReference::equivalent; comparison contig_ref_ptr: {} not found", lhs_contig_id);
       equivalent_contigs = false;
 
     }

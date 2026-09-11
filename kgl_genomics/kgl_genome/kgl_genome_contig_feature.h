@@ -2,8 +2,8 @@
 // Created by kellerberrin on 1/12/18.
 //
 
-#ifndef KGL_GENOME_AUX_H
-#define KGL_GENOME_AUX_H
+#ifndef KGL_GENOME_CONTIG_FEATURE_H
+#define KGL_GENOME_CONTIG_FEATURE_H
 
 
 #include <memory>
@@ -56,12 +56,15 @@ protected:
   void verifyFeatureHierarchy();
   void clearHierarchy();
 
+  // Mutable lookup for internal hierarchy wiring.
+  [[nodiscard]] std::vector<std::shared_ptr<Feature>> findMutableFeatureId(const FeatureIdent_t& feature_id);
+
 private:
 
   OffsetFeatureMap offset_feature_map_;
   IdFeatureMap id_feature_map_;
 
-  void verifyContigOverlap() const;
+  void verifyContigOverlap();
   size_t verifySubFeatureDuplicates() const;
   void removeSubFeatureDuplicates();
 
@@ -103,10 +106,9 @@ private:
   void createGeneMap();
   void setupFeatureHierarchy();
   void verifyGeneExonHierarchy();
-  static bool checkSubFeatures( const std::shared_ptr<const Feature>& feature_ptr
-                              , const std::shared_ptr<const Feature>& sub_feature_ptr);
-  static bool checkSuperFeature( const std::shared_ptr<const Feature>& feature_ptr
-                               , const std::shared_ptr<const Feature>& super_feature_ptr);
+
+  // Containment test: true if inner lies within outer, with TSS/UTR exemptions.
+  static bool checkContained(const Feature& outer_feature, const Feature& inner_feature);
 
   };
 
@@ -116,4 +118,4 @@ private:
 }   // end namespace
 
 
-#endif //KGL_GENOME_AUX_H
+#endif //KGL_GENOME_CONTIG_FEATURE_H

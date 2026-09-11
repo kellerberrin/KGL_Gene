@@ -6,6 +6,10 @@
 #include "kel_utility.h"
 #include "kel_exec_env.h"
 
+#include <ranges>
+#include <iterator>
+#include <string_view>
+
 
 namespace kgl = kellerberrin::genome;
 
@@ -17,14 +21,9 @@ namespace kgl = kellerberrin::genome;
 // Returns false if key not found.
 bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::string> &values) const {
 
-  auto iter_pair = attributes_.equal_range(key);
-
   values.clear();
-  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
-
-    values.push_back(iter->second);
-
-  }
+  auto const [first, last] = attributes_.equal_range(key);
+  std::ranges::copy(std::ranges::subrange(first, last) | std::views::values, std::back_inserter(values));
 
   return not values.empty();
 
@@ -35,19 +34,13 @@ bool kgl::Attributes::getAttributes(const std::string &key, std::vector<std::str
 std::vector<std::string> kgl::Attributes::getAttributes(const std::string &key) const {
 
   std::vector<std::string> values;
-  auto const [first, last] = attributes_.equal_range(key);
-  for (auto iter = first; iter != last; ++iter) {
-
-    values.push_back(iter->second);
-
-  }
-
+  getAttributes(key, values);
   return values;
 
 }
 
 
-// Always succeeds; keys are uppercase.
+// Always succeeds; keys are uppercased on insert but looked up verbatim.
 void kgl::Attributes::insertAttribute(const std::string& key, const std::string& value) {
 
   // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
@@ -55,23 +48,28 @@ void kgl::Attributes::insertAttribute(const std::string& key, const std::string&
 
 }
 
-// Always succeeds; keys are uppercase.
+// Always succeeds; keys are uppercased on insert but looked up verbatim.
 void kgl::Attributes::insertAttribute(std::string&& key, std::string&& value) {
 
   // Convert the key to upper case to avoid the vagaries of non-standard case in keys.
-  attributes_.emplace(Utility::toupper(Utility::trimEndWhiteSpace(key)), value);
+  // The key must still be transformed, so only the value can be moved.
+  attributes_.emplace(Utility::toupper(Utility::trimEndWhiteSpace(key)), std::move(value));
 
 }
 
 std::string kgl::Attributes::getHGNC() const {
 
   std::string hgnc_id;
+  constexpr size_t HGNC_LEN = std::string_view{HGNC_}.size();
 
-  for (auto const& [key, attrib] : attributes_) {
+  auto const [first, last] = attributes_.equal_range(DBXREF_);
+  // Keep scanning the whole DBXREF range so the LAST matching HGNC attribute wins,
+  // preserving the reference semantics (no early break).
+  for (auto const& [key, attrib] : std::ranges::subrange(first, last)) {
 
-    if (key == DBXREF_ and attrib.find(HGNC_) == 0) {
+    if (attrib.starts_with(HGNC_)) {
 
-      hgnc_id = attrib.substr(std::string(HGNC_).length(), std::string::npos);
+      hgnc_id = attrib.substr(HGNC_LEN);
       hgnc_id = Utility::trimEndWhiteSpace(hgnc_id);
 
     }
@@ -91,11 +89,7 @@ void kgl::Attributes::getSuperFeatureIds(std::vector<std::string> &value_vec) co
   for (auto const& super_feature : super_vec) {
 
     auto parsed_features = Utility::charTokenizer(super_feature, SUPER_FEATURE_DELIMITER);
-    for (auto feature : parsed_features) {
-
-      value_vec.emplace_back(feature);
-
-    }
+    std::ranges::copy(parsed_features, std::back_inserter(value_vec));
 
   }
 

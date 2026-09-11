@@ -6,6 +6,9 @@
 #include "kgl_genome_contig_feature.h"
 #include "kgl_genome_contig.h"
 
+#include <set>
+#include <ranges>
+#include <algorithm>
 
 namespace kgl = kellerberrin::genome;
 
@@ -26,21 +29,22 @@ void kgl::StructuredFeatures::addFeature(std::shared_ptr<kgl::Feature>& feature_
 
 std::vector<std::shared_ptr<const kgl::Feature>> kgl::StructuredFeatures::findFeatureId(const FeatureIdent_t& feature_id) const {
 
-  std::vector<std::shared_ptr<const Feature>> feature_ptr_vec;
-
   auto const [lower_eq, upper_eq] = id_feature_map_.equal_range(feature_id);
-  for (auto const& [feature_ident, feature_ptr] : std::ranges::subrange(lower_eq, upper_eq)) {
-
-    feature_ptr_vec.emplace_back(feature_ptr);
-
-  }
-
-  return feature_ptr_vec;
+  return std::ranges::to<std::vector<std::shared_ptr<const Feature>>>(
+      std::ranges::subrange(lower_eq, upper_eq) | std::views::values);
 
 }
 
 
-void kgl::StructuredFeatures::verifyContigOverlap() const {
+std::vector<std::shared_ptr<kgl::Feature>> kgl::StructuredFeatures::findMutableFeatureId(const FeatureIdent_t& feature_id) {
+
+  auto const [lower_eq, upper_eq] = id_feature_map_.equal_range(feature_id);
+  return std::ranges::to<std::vector>(std::ranges::subrange(lower_eq, upper_eq) | std::views::values);
+
+}
+
+
+void kgl::StructuredFeatures::verifyContigOverlap() {
 
   // If feature dimensions are [1, size] instead of [0, size) then assume that conversion from the
   // Gff convention of [1, size] has not been performed correctly during feature read from disk.
@@ -50,8 +54,8 @@ void kgl::StructuredFeatures::verifyContigOverlap() const {
   for (auto& [offset, feature_ptr] : offsetFeatureMap()) {
 
     Feature &feature = *feature_ptr;
-    // Error if feature overlaps the and of the contig_ref_ptr.
-    // If [1,contig_size] then adjust to [0, contig_size)
+    // If [1, contig_size] then adjust to [0, contig_size).
+    // Note: a feature with both begin == 1 and end > contig length only has its begin adjusted.
 
     if (feature.sequence().begin() == 1) { // adjust to [0, size)
 
@@ -59,7 +63,7 @@ void kgl::StructuredFeatures::verifyContigOverlap() const {
       adj_sequence.begin(0);
       feature.sequence(adj_sequence);
       ExecEnv::log().warn("Contig: {} 1-offset features [1, {}], adjusted to zero-offset [0, {})",
-                          feature.contig_ref_ptr()->contigId(), feature.contig_ref_ptr()->sequence().length(), feature.contig_ref_ptr()->sequence().length());
+                          feature.contig_ref_ptr()->contigId(), feature.sequence().end(), feature.sequence().end());
 
     } else if (feature.sequence().end() > feature.contig_ref_ptr()->sequence().length()) { // No features larger than the contig_ref_ptr.
 
@@ -90,7 +94,7 @@ size_t kgl::StructuredFeatures::verifySubFeatureDuplicates() const {
     std::set<FeatureIdent_t> check_duplicate_set;
     for (auto const& [sub_feature_ident, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-         check_duplicate_set.insert(sub_feature_ident);
+      check_duplicate_set.insert(sub_feature_ident);
 
     }
 
@@ -119,7 +123,7 @@ void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
 
     for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-      std::map<std::string, std::shared_ptr<const Feature>> unique_features_map;
+      std::map<FeatureIdent_t, std::shared_ptr<const Feature>> unique_features_map;
       for (auto const& [sub_feature_ident, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
         unique_features_map[sub_feature_ident] = sub_feature_ptr;
@@ -133,11 +137,7 @@ void kgl::StructuredFeatures::removeSubFeatureDuplicates() {
                             duplicates_removed, feature_ident);
 
         feature_ptr->subFeatures().clear();
-        for (auto const& [sub_feature_ident, sub_feature_ptr] : unique_features_map) {
-
-          feature_ptr->subFeatures().emplace(sub_feature_ident, sub_feature_ptr);
-
-        }
+        feature_ptr->subFeatures().insert(unique_features_map.begin(), unique_features_map.end());
 
       } // If sub-feature duplicates
 
@@ -153,8 +153,7 @@ void kgl::StructuredFeatures::clearHierarchy() {
   // Remove all hierarchies for all features.
   for (auto const& [feature_ident, feature_ptr] : idFeatureMap()) {
 
-    // Remove feature hierarchy.
-    feature_ptr->clearHierachy();
+    feature_ptr->clearHierarchy();
 
   }
 
@@ -165,7 +164,6 @@ void kgl::StructuredFeatures::verifyFeatureHierarchy() {
 
   verifyContigOverlap();
   removeSubFeatureDuplicates();
-  verifySubFeatureDuplicates();
 
 }
 
@@ -190,7 +188,7 @@ bool kgl::StructuredFeatures::equivalent(const StructuredFeatures& lhs) const {
     }
 
     auto& [lhs_offset, lhs_offset_ptr] = *lhs_offset_iter;
-    if (offset != lhs_offset and offset_ptr->equivalent(*lhs_offset_ptr)) {
+    if (offset != lhs_offset or not offset_ptr->equivalent(*lhs_offset_ptr)) {
 
       return false;
 
@@ -217,7 +215,7 @@ bool kgl::StructuredFeatures::equivalent(const StructuredFeatures& lhs) const {
     }
 
     auto& [lhs_id, lhs_id_ptr] = *lhs_id_iter;
-    if (id != lhs_id and id_ptr->equivalent(*lhs_id_ptr)) {
+    if (id != lhs_id or not id_ptr->equivalent(*lhs_id_ptr)) {
 
       return false;
 
@@ -277,12 +275,13 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
     // Add parent pointers for the child and child pointers for the super_features.
     for (auto const& super_feature_id : super_features) {
 
-      std::vector<std::shared_ptr<const Feature>> super_ptr_vec = findFeatureId(super_feature_id);
+      auto super_ptr_vec = findMutableFeatureId(super_feature_id);
       if (super_ptr_vec.empty()) {
 
         // Flag an Error; could not find super feature.
         ExecEnv::log().error("GeneExonFeatures::setupFeatureHierarchy; Feature: {}; Super Feature: {} does not exist",
                              feature_ident, super_feature_id);
+        continue;
 
       }
       if (super_ptr_vec.size() > 1) {
@@ -292,12 +291,9 @@ void kgl::GeneExonFeatures::setupFeatureHierarchy() {
                             super_feature_id, super_ptr_vec.size());
 
       }
-      if (not super_ptr_vec.empty()) {
 
-        feature_ptr->setSuperFeature(super_ptr_vec.front());
-        std::const_pointer_cast<Feature>(super_ptr_vec.front())->addSubFeature(feature_ident, feature_ptr);
-
-      } // For all super_features with same id.
+      feature_ptr->setSuperFeature(super_ptr_vec.front());
+      super_ptr_vec.front()->addSubFeature(feature_ident, feature_ptr);
 
     } // For all parent ids.
 
@@ -326,8 +322,7 @@ void kgl::GeneExonFeatures::createGeneMap() {
     if (feature_ptr->isGene()) {
 
       // Note that genes are indexed by their END offset.
-      ContigOffset_t end_offset = feature_ptr->sequence().end();
-      gene_map_.emplace(end_offset, std::static_pointer_cast<GeneFeature>(feature_ptr));
+      gene_map_.emplace(feature_ptr->sequence().end(), std::static_pointer_cast<GeneFeature>(feature_ptr));
 
     }
 
@@ -345,19 +340,19 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
     for (auto const& [sub_feature_id, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-      if (not checkSubFeatures(feature_ptr, sub_feature_ptr)) {
+      if (not checkContained(*feature_ptr, *sub_feature_ptr)) {
 
         ExecEnv::log().warn("SubFeature: {}, type: {}; {}[{}:{}) overlaps Feature {} type: {}; {}[{}:{})",
-                                  sub_feature_ptr->id(),
+                            sub_feature_ptr->id(),
                             sub_feature_ptr->type(),
-                                  sub_feature_ptr->sequence().strandText(),
-                                  sub_feature_ptr->sequence().begin(),
-                                  sub_feature_ptr->sequence().end(),
-                                  feature_ptr->id(),
+                            sub_feature_ptr->sequence().strandText(),
+                            sub_feature_ptr->sequence().begin(),
+                            sub_feature_ptr->sequence().end(),
+                            feature_ptr->id(),
                             feature_ptr->type(),
-                                  feature_ptr->sequence().strandText(),
-                                  feature_ptr->sequence().begin(),
-                                  feature_ptr->sequence().end());
+                            feature_ptr->sequence().strandText(),
+                            feature_ptr->sequence().begin(),
+                            feature_ptr->sequence().end());
 
 
       } // if sub-feature overlaps feature
@@ -369,19 +364,19 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 
       auto super_feature_ptr = feature_ptr->getSuperFeature();
 
-      if (not checkSuperFeature(feature_ptr, super_feature_ptr)) {
+      if (not checkContained(*super_feature_ptr, *feature_ptr)) {
 
         ExecEnv::log().warn("Feature: {}, type: {}; {}[{}:{}) overlaps SuperFeature {}, type: {}; {}[{}:{})",
-                                  feature_ptr->id(),
+                            feature_ptr->id(),
                             feature_ptr->type(),
-                                  feature_ptr->sequence().strandText(),
-                                  feature_ptr->sequence().begin(),
-                                  feature_ptr->sequence().end(),
-                                  super_feature_ptr->id(),
+                            feature_ptr->sequence().strandText(),
+                            feature_ptr->sequence().begin(),
+                            feature_ptr->sequence().end(),
+                            super_feature_ptr->id(),
                             super_feature_ptr->type(),
-                                  super_feature_ptr->sequence().strandText(),
-                                  super_feature_ptr->sequence().begin(),
-                                  super_feature_ptr->sequence().end());
+                            super_feature_ptr->sequence().strandText(),
+                            super_feature_ptr->sequence().begin(),
+                            super_feature_ptr->sequence().end());
 
       } // If feature overlaps super-feature.
 
@@ -392,67 +387,31 @@ void kgl::GeneExonFeatures::verifySubFeatureSuperFeatureDimensions() {
 }
 
 
-bool kgl::GeneExonFeatures::checkSubFeatures( const std::shared_ptr<const Feature>& feature_ptr
-                                             , const std::shared_ptr<const Feature>& sub_feature_ptr) {
+bool kgl::GeneExonFeatures::checkContained(const Feature& outer_feature, const Feature& inner_feature) {
 
-  // TSS blocks can overlap features.
-  if (sub_feature_ptr->isTSS()) {
-
-    return true;
-
-  }
-
-  // 5' UTR should be at the beginning of the mRNA feature but can overlap.
-  if (sub_feature_ptr->isUTR5() and feature_ptr->ismRNA()) {
-
-    return true;
-
-  }
-
-  // 3' UTR should be at the end of the mRNA feature but can overlap.
-  if (sub_feature_ptr->isUTR3() and feature_ptr->ismRNA()) {
-
-    return true;
-
-  }
-
-  // Else just check the sub_feature is within the feature.
-  bool valid_subfeature = sub_feature_ptr->sequence().begin() >= feature_ptr->sequence().begin()
-  and sub_feature_ptr->sequence().end() <= feature_ptr->sequence().end();
-
-  return valid_subfeature;
-
-}
-
-
-bool kgl::GeneExonFeatures::checkSuperFeature( const std::shared_ptr<const Feature>& feature_ptr
-    , const std::shared_ptr<const Feature>& super_feature_ptr) {
-
-  // TSS blocks can overlap superfeatures.
-  if (feature_ptr->isTSS()) {
+  // TSS blocks can overlap outer features.
+  if (inner_feature.isTSS()) {
 
     return true;
 
   }
 
   // 5' UTR should be at the beginning of the mRNA feature but can overlap.
-  if (feature_ptr->isUTR5() and super_feature_ptr->ismRNA()) {
+  if (inner_feature.isUTR5() and outer_feature.ismRNA()) {
 
     return true;
 
   }
 
   // 3' UTR should be at the end of the mRNA feature but can overlap.
-  if (feature_ptr->isUTR3() and super_feature_ptr->ismRNA()) {
+  if (inner_feature.isUTR3() and outer_feature.ismRNA()) {
 
     return true;
 
   }
 
-  // Else just check the feature is within the superfeature.
-  bool valid_feature = feature_ptr->sequence().begin() >= super_feature_ptr->sequence().begin()
-      and feature_ptr->sequence().end() <= super_feature_ptr->sequence().end();
-
-  return valid_feature;
+  // Else just check the inner feature is within the outer feature.
+  return inner_feature.sequence().begin() >= outer_feature.sequence().begin()
+     and inner_feature.sequence().end() <= outer_feature.sequence().end();
 
 }

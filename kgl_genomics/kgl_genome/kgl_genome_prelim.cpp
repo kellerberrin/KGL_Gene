@@ -6,6 +6,7 @@
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig.h"
 
+#include <algorithm>
 #include <ranges>
 
 
@@ -19,38 +20,18 @@ namespace kel = kellerberrin;
 
 // Returns the strand adjusted feature begin (-ve is end-1) to the
 // target strand adjusted feature begin (-ve is end-1)
-// and returns the relative begin transcription parentDistance as a +ve offset.
+// and returns the relative begin transcription distance as a +ve offset.
 kgl::ContigOffset_t kgl::FeatureSequence::distance(const FeatureSequence& compare_feature) const {
 
-  ContigOffset_t target_begin_offset;
-  if (compare_feature.strand() == StrandSense::FORWARD) {
+  ContigOffset_t target_begin_offset = (compare_feature.strand() == StrandSense::FORWARD)
+                                     ? compare_feature.begin()
+                                     : compare_feature.end() - 1;
 
-    target_begin_offset = compare_feature.begin();
+  ContigOffset_t begin_offset = (strand() == StrandSense::FORWARD)
+                              ? begin()
+                              : end() - 1;
 
-  } else {
-
-    target_begin_offset = compare_feature.end() - 1;
-
-  }
-
-  ContigOffset_t begin_offset;
-  if (strand() == StrandSense::FORWARD) {
-
-    begin_offset = begin();
-
-  } else {
-
-    begin_offset = end() - 1;
-
-  }
-
-  if (begin_offset <= target_begin_offset) {
-
-    return target_begin_offset - begin_offset;
-
-  }
-
-  return begin_offset - target_begin_offset;
+  return std::max(target_begin_offset, begin_offset) - std::min(target_begin_offset, begin_offset);
 
 }
 
@@ -88,7 +69,7 @@ kel::IntervalSetLower kgl::TranscriptionSequence::getIntronIntervals() const {
       auto [insert_iter, result] = intron_set.insert(intron_interval);
       if (not result) {
 
-        ExecEnv::log().warn("Unable to enter insert intron interval: {} (duplicate)", intron_interval.toString());
+        ExecEnv::log().warn("Unable to insert intron interval: {} (duplicate)", intron_interval.toString());
 
       }
 
@@ -108,28 +89,27 @@ kgl::StrandSense kgl::TranscriptionSequence::strand() const {
 }
 
 
-// Offset of the start of the sequence - not strand adjusted. Uses half interval [start, end).
-kgl::ContigOffset_t kgl::TranscriptionSequence::start() const {
+kgl::ContigOffset_t kgl::TranscriptionSequence::firstFeatureBegin() const {
 
-  // Safety first.
   if (transcription_feature_map_.empty()) {
 
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    ExecEnv::log().error("TranscriptionSequence::firstFeatureBegin; coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().begin();
+
   }
 
   return transcription_feature_map_.begin()->second->sequence().begin();
 
 }
 
-// Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted. Uses half interval [start, end).
-kgl::ContigOffset_t kgl::TranscriptionSequence::end() const {
 
-  // Safety first.
+kgl::ContigOffset_t kgl::TranscriptionSequence::lastFeatureEnd() const {
+
   if (transcription_feature_map_.empty()) {
 
-    ExecEnv::log().error("prime_5(), coding sequence for gene id: {} is empty", getGene()->id());
+    ExecEnv::log().error("TranscriptionSequence::lastFeatureEnd; coding sequence for gene id: {} is empty", getGene()->id());
     return getGene()->sequence().end();
+
   }
 
   return transcription_feature_map_.rbegin()->second->sequence().end();
@@ -137,9 +117,23 @@ kgl::ContigOffset_t kgl::TranscriptionSequence::end() const {
 }
 
 
+// Offset of the start of the sequence - not strand adjusted. Uses half interval [start, end).
+kgl::ContigOffset_t kgl::TranscriptionSequence::start() const {
+
+  return firstFeatureBegin();
+
+}
+
+// Offset of the end of the sequence (last nucleotide + 1) - not strand adjusted. Uses half interval [start, end).
+kgl::ContigOffset_t kgl::TranscriptionSequence::end() const {
+
+  return lastFeatureEnd();
+
+}
+
+
 kel::OpenRightUnsigned kgl::TranscriptionSequence::prime5Region(ContigSize_t requested_size) const {
 
-  // Safety first.
   if (transcription_feature_map_.empty()) {
 
     ExecEnv::log().error("Prime_5 sequence for gene id: {} is empty", getGene()->id());
@@ -152,18 +146,18 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::prime5Region(ContigSize_t req
   switch(strand()) {
 
     case StrandSense::FORWARD:
-      end_offset = transcription_feature_map_.begin()->second->sequence().begin();
-      begin_offset = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(end_offset) - static_cast<SignedOffset_t>(requested_size));
+      end_offset = firstFeatureBegin();
+      begin_offset = (end_offset > requested_size) ? end_offset - requested_size : 0;
       break;
 
     case StrandSense::REVERSE:
-      begin_offset = transcription_feature_map_.rbegin()->second->sequence().end();
+      begin_offset = lastFeatureEnd();
       end_offset = begin_offset + requested_size;
       break;
 
   }
 
-  OpenRightUnsigned prime_5_interval{ begin_offset, end_offset};
+  OpenRightUnsigned prime_5_interval{begin_offset, end_offset};
   // Ensure the interval is within the contig.
   prime_5_interval = prime_5_interval.intersection(contig()->sequence().interval());
 
@@ -174,7 +168,6 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::prime5Region(ContigSize_t req
 
 kel::OpenRightUnsigned kgl::TranscriptionSequence::prime3Region(ContigSize_t requested_size) const {
 
-  // Safety first.
   if (transcription_feature_map_.empty()) {
 
     ExecEnv::log().error("Prime_3 sequence for gene id: {} is empty", getGene()->id());
@@ -187,34 +180,34 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::prime3Region(ContigSize_t req
   switch(strand()) {
 
     case StrandSense::REVERSE:
-      end_offset = transcription_feature_map_.begin()->second->sequence().begin();
-      begin_offset = std::max<SignedOffset_t>(0, static_cast<SignedOffset_t>(end_offset) - static_cast<SignedOffset_t>(requested_size));
+      end_offset = firstFeatureBegin();
+      begin_offset = (end_offset > requested_size) ? end_offset - requested_size : 0;
       break;
 
     case StrandSense::FORWARD:
-      begin_offset = transcription_feature_map_.rbegin()->second->sequence().end();
+      begin_offset = lastFeatureEnd();
       end_offset = begin_offset + requested_size;
       break;
 
   }
 
-  OpenRightUnsigned prime_3_interval{ begin_offset, end_offset};
+  OpenRightUnsigned prime_3_interval{begin_offset, end_offset};
   // Ensure the interval is within the contig.
   prime_3_interval = prime_3_interval.intersection(contig()->sequence().interval());
 
-  return { prime_3_interval};
+  return prime_3_interval;
 
 }
 
 kel::OpenRightUnsigned kgl::TranscriptionSequence::extendInterval(ContigSize_t request_5_extend, ContigSize_t request_3_extend) const {
 
-  // Extend the transcript by the 3_prime buffer.
-  auto const transcript_interval =  interval();
+  // Extend the transcript by the 5' and 3' buffers.
+  auto const transcript_interval = interval();
   auto extended_interval = transcript_interval;
 
   if (request_5_extend > 0) {
 
-    auto const prime_5_interval = prime3Region(request_5_extend);
+    auto const prime_5_interval = prime5Region(request_5_extend);
     extended_interval = prime_5_interval.merge(extended_interval);
     if (extended_interval.empty() or extended_interval.size() <= transcript_interval.size()) {
 
@@ -233,7 +226,7 @@ kel::OpenRightUnsigned kgl::TranscriptionSequence::extendInterval(ContigSize_t r
     if (extended_interval.empty() or extended_interval.size() <= transcript_interval.size()) {
 
       ExecEnv::log().warn("3 prime interval: {}, does not extend transcript interval: {}, transcript: {}",
-                          prime_3_interval.toString(), transcript_interval.toString(),  getParent()->id());
+                          prime_3_interval.toString(), transcript_interval.toString(), getParent()->id());
       return {0, 0};
 
     }
@@ -258,7 +251,7 @@ kgl::ContigSize_t kgl::TranscriptionSequence::codingNucleotides() const {
   // Loop through and test membership of each cds. Reminder; testing for [begin, end)
   for (const auto& cds : transcription_feature_map_) {
 
-    coding_size += (cds.second->sequence().end() - cds.second->sequence().begin());
+    coding_size += cds.second->sequence().length();
 
   }
 
@@ -270,33 +263,33 @@ kgl::ContigSize_t kgl::TranscriptionSequence::codingNucleotides() const {
 
 void kgl::TranscriptionSequenceArray::printSequence(std::shared_ptr<const TranscriptionSequenceArray> coding_seq_ptr) {
 
-  long vector_count = 0;
-  for (const auto& sequence : coding_seq_ptr->getMap()) {
+  size_t vector_count = 0;
+  for (const auto& [parent_id, sequence_ptr] : coding_seq_ptr->getMap()) {
 
     ExecEnv::log().info("Gene: {}, begin: {}, end: {} strand: {}",
-                        sequence.second->getGene()->id(),
-                        sequence.second->getGene()->sequence().begin(),
-                        sequence.second->getGene()->sequence().end(),
-                        static_cast<char>(sequence.second->getGene()->sequence().strand()));
+                        sequence_ptr->getGene()->id(),
+                        sequence_ptr->getGene()->sequence().begin(),
+                        sequence_ptr->getGene()->sequence().end(),
+                        sequence_ptr->getGene()->sequence().strandText());
 
     ExecEnv::log().info("Parent Feature: {}, begin: {}, end: {} strand: {}",
-                        sequence.second->getParent()->id(),
-                        sequence.second->getParent()->sequence().begin(),
-                        sequence.second->getParent()->sequence().end(),
-                        static_cast<char>(sequence.second->getParent()->sequence().strand()));
+                        sequence_ptr->getParent()->id(),
+                        sequence_ptr->getParent()->sequence().begin(),
+                        sequence_ptr->getParent()->sequence().end(),
+                        sequence_ptr->getParent()->sequence().strandText());
 
     ++vector_count;
 
     ExecEnv::log().info("++++++++++++++ CDS Vector : {} ********************", vector_count);
 
-    for (const auto& cds : sequence.second->getFeatureMap()) {
+    for (const auto& [cds_offset, cds_ptr] : sequence_ptr->getFeatureMap()) {
 
       ExecEnv::log().info("CDS: {}, Type: {}, begin: {}, end: {} strand: {}",
-                          cds.second->id(),
-                          cds.second->type(),
-                          cds.second->sequence().begin(),
-                          cds.second->sequence().end(),
-                          static_cast<char>(cds.second->sequence().strand()));
+                          cds_ptr->id(),
+                          cds_ptr->type(),
+                          cds_ptr->sequence().begin(),
+                          cds_ptr->sequence().end(),
+                          cds_ptr->sequence().strandText());
 
     }
 
@@ -313,17 +306,9 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequence::codingType() const {
 
   }
 
-  auto const& [offset, feature_ptr]  = *transcription_feature_map_.begin();
-
-  if (feature_ptr->superType() == Feature::CDS_TYPE_) {
-
-    return TranscriptionSequenceType::PROTEIN;
-
-  } else {
-
-    return TranscriptionSequenceType::NCRNA;
-
-  }
+  return transcription_feature_map_.begin()->second->superType() == Feature::CDS_TYPE_
+         ? TranscriptionSequenceType::PROTEIN
+         : TranscriptionSequenceType::NCRNA;
 
 }
 
@@ -355,7 +340,7 @@ kgl::TranscriptionSequence::checkSequenceStatus(const std::shared_ptr<const Tran
 
   }
 
-  DNA5SequenceCoding &coding_sequence = coding_sequence_opt.value();
+  const auto& coding_sequence = coding_sequence_opt.value();
 
   return contig_ref_ptr->checkValidCodingSequence(coding_sequence);
 
@@ -364,27 +349,9 @@ kgl::TranscriptionSequence::checkSequenceStatus(const std::shared_ptr<const Tran
 
 bool kgl::TranscriptionSequenceArray::insertSequence(std::shared_ptr<const TranscriptionSequence> coding_sequence_ptr) {
 
-#ifdef CODING_SEQUENCE_ISMAP // Using a map
-
-  auto insert = transcription_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getCDSParent()->id(),
-                                                           coding_sequence_ptr));
-
-  if (not insert.second) {
-
-    ExecEnv::log().warn("Duplicate CDS parent: {} at contig offset: {}",
-                        coding_sequence_ptr->getCDSParent()->id(),
-                        coding_sequence_ptr->getCDSParent()->sequence().begin());
-  }
-
-  return insert.second;
-
-#else // Using a multimap. Same parent features permitted 
-
-  transcription_sequence_map_.insert(std::make_pair(coding_sequence_ptr->getParent()->id(), coding_sequence_ptr));
+  transcription_sequence_map_.emplace(coding_sequence_ptr->getParent()->id(), coding_sequence_ptr);
 
   return true;
-
-#endif
 
 }
 
@@ -397,9 +364,7 @@ kgl::TranscriptionSequenceType kgl::TranscriptionSequenceArray::codingType() con
 
   }
 
-  auto const& first_sequence = getFirst();
-
-  return first_sequence->codingType();
+  return getFirst()->codingType();
 
 }
 
@@ -420,14 +385,14 @@ std::unique_ptr<const kgl::TranscriptionSequenceArray> kgl::TranscriptionSequenc
 
   auto sequence_array_ptr = std::make_unique<TranscriptionSequenceArray>();
 
-  for (auto const& [offset, transcript_ptr] : getMap()) {
+  for (auto const& [parent_id, transcript_ptr] : getMap()) {
 
     auto sequence_validity = TranscriptionSequence::checkSequenceStatus(transcript_ptr);
     if (TranscriptionSequence::checkValidSequence(sequence_validity)) {
 
       if (not sequence_array_ptr->insertSequence(transcript_ptr)) {
 
-        ExecEnv::log().error("Duplicate offset sequence, gene id: {}, offset: {}", transcript_ptr->getGene()->id(), offset);
+        ExecEnv::log().error("Duplicate parent sequence, gene id: {}, parent id: {}", transcript_ptr->getGene()->id(), parent_id);
 
       }
 
@@ -438,6 +403,3 @@ std::unique_ptr<const kgl::TranscriptionSequenceArray> kgl::TranscriptionSequenc
   return sequence_array_ptr;
 
 }
-
-
-

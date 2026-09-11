@@ -8,10 +8,10 @@
 
 #include "kgl_genome_contig.h"
 #include "kgl_properties_resource.h"
+#include "kgl_gaf_parser.h"
 
 #include <memory>
 #include <string>
-#include <vector>
 #include <map>
 
 
@@ -59,7 +59,7 @@ public:
                                                                              const std::string& translation_table);
 
   // Compares two genome references for equality (used for testing).
-  bool equivalent(const GenomeReference& lhs) const;
+  [[nodiscard]] bool equivalent(const GenomeReference& lhs) const;
 
 private:
 

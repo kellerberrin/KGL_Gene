@@ -9,14 +9,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <optional>
 #include "kgl_properties.h"
 #include "kgl_genome_types.h"
 #include "kgl_sequence_amino.h"
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig_feature.h"
-#include "kgl_genome_contig_aux.h"
-#include "kgl_gaf_parser.h"
-#include "kel_interval_unsigned.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
@@ -31,12 +29,7 @@ class ContigReference {
 public:
 
   ContigReference(ContigId_t contig_id,
-                  const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr)
-                  : contig_id_(std::move(contig_id)), sequence_ptr_(sequence_ptr) {}
-  ContigReference(const ContigReference&) = default;
-  ~ContigReference() = default;
-
-  ContigReference& operator=(const ContigReference&) = default;
+                  const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr);
 
   // Add parsed features to the different feature structures.
   [[nodiscard]] bool addContigFeature(std::shared_ptr<Feature>& feature_ptr);
@@ -71,7 +64,7 @@ public:
 
   // Given a transcript return the associated coding sequence.
   [[nodiscard]] std::optional<DNA5SequenceCoding>
-    codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
+    codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const;
 
   // Generate Amino acid sequences using the table specified for this contig_ref_ptr.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& sequence_ptr) const;

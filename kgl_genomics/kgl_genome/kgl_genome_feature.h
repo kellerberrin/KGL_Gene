@@ -17,7 +17,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ContigReference; // Forward decl;
-using SubFeatureMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const Feature>>;
+using SubFeatureMap = std::multimap<FeatureIdent_t, std::shared_ptr<const Feature>>;
 using SuperFeaturePtr = std::weak_ptr<const Feature>;
 
 class Feature {
@@ -29,11 +29,11 @@ public:
           FeatureType_t super_type, // High level feature classification such as 'GENE'
           std::shared_ptr<const ContigReference> contig_ref_ptr,
           FeatureSequence sequence): id_(std::move(id)), type_(std::move(type)), super_type_(std::move(super_type)),
-                                     contig_ref_ptr_(std::move(contig_ref_ptr)), sequence_(sequence) {}
+                                     contig_ref_ptr_(std::move(contig_ref_ptr)), sequence_(std::move(sequence)) {}
   Feature(const Feature&) = default;
   virtual ~Feature() = default;
 
-//  Feature& operator=(const Feature&) = default;
+  // Note that copy assignment is not available (deleted) because of the const data members.
 
   [[nodiscard]] const FeatureIdent_t& id() const { return id_; }
   [[nodiscard]] const FeatureSequence& sequence() const { return sequence_; }
@@ -42,12 +42,12 @@ public:
   [[nodiscard]] const Attributes& getAttributes() const { return attributes_; }
   [[nodiscard]] const FeatureType_t& type() const { return type_; } // The actual Gff classification such as 'NCRNA_GENE'
   [[nodiscard]] const FeatureType_t& superType() const { return super_type_; } // High level feature classification such as 'GENE'
-  [[nodiscard]] bool verifyStrand(const TranscriptionFeatureMap& Feature_map) const;   // Check feature strand consistency
-  void recusivelyPrintsubfeatures(size_t feature_level = 1) const; // useful debug function.
+
+  void recursivePrintSubFeatures(size_t feature_level = 1) const; // useful debug function.
   [[nodiscard]] std::string featureText(char delimiter = ' ') const; // also useful for debug
   [[nodiscard]] std::string descriptionText(char delimiter = ' ') const; // Displays feature description.
   // Hierarchy routines.
-  void clearHierachy() { sub_features_.clear(); super_feature_ptr_.reset(); }
+  void clearHierarchy() { sub_features_.clear(); super_feature_ptr_.reset(); }
   void addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr);
 
   constexpr static const char GENE_TYPE_[] = "GENE";
@@ -89,7 +89,6 @@ private:
   SuperFeaturePtr super_feature_ptr_;
   Attributes attributes_;
 
-  [[nodiscard]] bool verifyMod3(const TranscriptionFeatureMap& feature_map) const;
 };
 
 

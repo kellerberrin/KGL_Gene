@@ -230,8 +230,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_variant_db/kgl_variant_db_population.h
         kgl_genomics/kgl_genome/kgl_genome_contig_feature.h
         kgl_genomics/kgl_genome/kgl_genome_contig_feature.cpp
-        kgl_genomics/kgl_genome/kgl_genome_contig_aux.cpp
-        kgl_genomics/kgl_genome/kgl_genome_contig_aux.h
         kgl_genomics/kgl_classification/kgl_classification_tree.cpp
         kgl_genomics/kgl_classification/kgl_classification_tree.h
         kgl_genomics/kgl_parser/kgl_variant_vcf_record.h

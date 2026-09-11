@@ -7,6 +7,7 @@
 #include "kgl_genome_contig.h"
 
 #include <ranges>
+#include <optional>
 
 namespace kgl = kellerberrin::genome;
 
@@ -14,6 +15,19 @@ namespace kgl = kellerberrin::genome;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Contig Reference members.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+kgl::ContigReference::ContigReference(ContigId_t contig_id,
+                                      const std::shared_ptr<const DNA5SequenceLinear>& sequence_ptr)
+                                      : contig_id_(std::move(contig_id)), sequence_ptr_(sequence_ptr) {
+
+  if (not sequence_ptr_) {
+
+    ExecEnv::log().critical("ContigReference::ContigReference; contig id: {} has a null sequence pointer", contig_id_);
+
+  }
+
+}
 
 
 bool kgl::ContigReference::addContigFeature(std::shared_ptr<kgl::Feature>& feature_ptr) {
@@ -54,8 +68,7 @@ kgl::ContigReference::getTranscription(const FeatureIdent_t& gene_id, const Feat
 
   std::vector<std::shared_ptr<const Feature>> feature_ptr_vec = findFeatureId(gene_id);
 
-  auto find_gene = [](const std::shared_ptr<const Feature>& feature_ptr)->bool { return feature_ptr->isGene(); };
-  auto find_iter = std::ranges::find_if(feature_ptr_vec, find_gene);
+  auto find_iter = std::ranges::find_if(feature_ptr_vec, [](const std::shared_ptr<const Feature>& feature_ptr) { return feature_ptr->isGene(); });
   if (find_iter == feature_ptr_vec.end()) {
 
     ExecEnv::log().warn("Feature id: {} is not a Gene", gene_id);
@@ -64,8 +77,15 @@ kgl::ContigReference::getTranscription(const FeatureIdent_t& gene_id, const Feat
   }
 
   auto gene_ptr = std::dynamic_pointer_cast<const GeneFeature>(*find_iter);
+  if (not gene_ptr) {
+
+    ExecEnv::log().error("ContigReference::getTranscription; Feature id: {} is marked as a gene but is not a GeneFeature", gene_id);
+    return std::nullopt;
+
+  }
+
   auto transcript_array_ptr = GeneFeature::getTranscriptionSequences(gene_ptr);
-  for (const auto& [tran_id, transcript_ptr] : transcript_array_ptr->getMap()) {
+  for (const auto& transcript_ptr : transcript_array_ptr->getMap() | std::views::values) {
 
     if (transcript_ptr->getParent()->id() == transcript_id) {
 
@@ -83,38 +103,16 @@ kgl::ContigReference::getTranscription(const FeatureIdent_t& gene_id, const Feat
 
 bool kgl::ContigReference::equivalent(const ContigReference& lhs) const {
 
-  if (contig_id_ != lhs.contig_id_) {
-
-    return false;
-
-  }
-
-  bool compare_sequence = *sequence_ptr_ == *lhs.sequence_ptr_;
-  if (not compare_sequence) {
-
-    return false;
-
-  }
-
-  if (not gene_exon_features_.equivalent(lhs.gene_exon_features_)) {
-
-    return false;
-
-  }
-
-  if (coding_table_.translationTableName() != lhs.coding_table_.translationTableName()) {
-
-    return false;
-
-  }
-
-  return true;
+  return contig_id_ == lhs.contig_id_
+         and *sequence_ptr_ == *lhs.sequence_ptr_
+         and gene_exon_features_.equivalent(lhs.gene_exon_features_)
+         and coding_table_.translationTableName() == lhs.coding_table_.translationTableName();
 
 }
 
 // Given a gene transcript, generate the associated (strand adjusted) coding sequence.
 std::optional<kgl::DNA5SequenceCoding>
-kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const {
+kgl::ContigReference::codingSequence(const std::shared_ptr<const TranscriptionSequence>& transcript_ptr) const {
 
   const auto cds_interval_set = transcript_ptr->getExonIntervals();
   auto concat_sequence_opt = sequence().concatSequences(cds_interval_set);
@@ -131,4 +129,3 @@ kgl::ContigReference::codingSequence( const std::shared_ptr<const TranscriptionS
   return concat_sequence.codingSequence(transcript_ptr->strand());
 
 }
-

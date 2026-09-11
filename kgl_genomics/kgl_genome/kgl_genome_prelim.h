@@ -27,18 +27,14 @@ class FeatureSequence {
 
 public:
 
-  FeatureSequence(const ContigOffset_t& begin_offset,
-                  const ContigOffset_t& end_offset,
-                  const StrandSense& strand_sense,
+  FeatureSequence(ContigOffset_t begin_offset,
+                  ContigOffset_t end_offset,
+                  StrandSense strand_sense,
                   uint32_t phase = 0)
   : begin_offset_(begin_offset),
     end_offset_(end_offset),
     strand_sense_(strand_sense),
     phase_(phase) {}
-  ~FeatureSequence() = default;
-  FeatureSequence(const FeatureSequence&) = default;
-
-  FeatureSequence& operator=(const FeatureSequence&) = default;
 
   [[nodiscard]] ContigOffset_t begin() const { return begin_offset_; }
   [[nodiscard]] ContigOffset_t end() const { return end_offset_; }
@@ -52,7 +48,7 @@ public:
   void strand(StrandSense strand) { strand_sense_ = strand; }
   // Returns the strand adjusted feature begin (-ve is end-1) to the
   // target strand adjusted feature begin (-ve is end-1)
-  // and returns the relative begin transcription parentDistance as a +ve offset.
+  // and returns the relative begin transcription distance as a +ve offset.
   [[nodiscard]] ContigOffset_t distance(const FeatureSequence& compare_feature) const;
 
   // Primarily used for testing.
@@ -96,7 +92,6 @@ public:
                         TranscriptionFeatureMap feature_map): gene_ptr_(std::move(gene_ptr)),
                                                               parent_ptr_(std::move(parent_ptr)),
                                                               transcription_feature_map_(std::move(feature_map)) {}
-  ~TranscriptionSequence() = default;
 
   [[nodiscard]] IntervalSetLower getExonIntervals() const;
   [[nodiscard]] IntervalSetLower getIntronIntervals() const; // Empty for a 1 exon gene.
@@ -126,22 +121,18 @@ private:
   std::shared_ptr<const Feature> parent_ptr_;  // Generally an mRNAFeature, or whatever was the CDS array superFeature().
   TranscriptionFeatureMap transcription_feature_map_;
 
+  // Helpers that log and fall back to the gene span if the feature map is empty.
+  [[nodiscard]] ContigOffset_t firstFeatureBegin() const;
+  [[nodiscard]] ContigOffset_t lastFeatureEnd() const;
+
 };
 
 // A sorted array of coding sequences. Sorted by CDS parent (generally mRNA) feature ident.
-// #define CODING_SEQUENCE_ISMAP 1  // Uncomment this if the requirement is for distinct CDS parent features.
-#ifdef CODING_SEQUENCE_ISMAP
-using TranscriptionSequenceMap = std::map<const FeatureIdent_t, std::shared_ptr<const TranscriptionSequence>>; // For distinct parent features.
-#else
-using TranscriptionSequenceMap = std::multimap<const FeatureIdent_t, std::shared_ptr<const TranscriptionSequence>>;  // Same parent features permitted.
-#endif
+using TranscriptionSequenceMap = std::multimap<FeatureIdent_t, std::shared_ptr<const TranscriptionSequence>>;  // Same parent features permitted.
 
 class TranscriptionSequenceArray {
 
 public:
-
-  TranscriptionSequenceArray() = default;
-  ~TranscriptionSequenceArray() = default;
 
   [[nodiscard]] const TranscriptionSequenceMap& getMap() const { return transcription_sequence_map_; }
   [[nodiscard]] TranscriptionSequenceMap& getMap() { return transcription_sequence_map_; }

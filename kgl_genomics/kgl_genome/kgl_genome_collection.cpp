@@ -4,10 +4,14 @@
 
 #include "kgl_genome_collection.h"
 
+#include "kel_exec_env.h"
+
+#include <optional>
+
 namespace kgl = kellerberrin::genome;
 
-// Returns false if the genome does not exist.
-[[nodiscard]] std::shared_ptr<const kgl::GenomeReference> kgl::GenomeCollection::getGenome(const std::string &resource_id) const {
+// Terminates with a critical log if the genome does not exist.
+std::shared_ptr<const kgl::GenomeReference> kgl::GenomeCollection::getGenome(const std::string &resource_id) const {
 
   std::optional<std::shared_ptr<const GenomeReference>> resource_opt = getOptionalGenome(resource_id);
   if (not resource_opt) {
@@ -16,24 +20,16 @@ namespace kgl = kellerberrin::genome;
 
   }
 
-  return resource_opt.value();
+  return resource_opt.value(); // Unreachable after critical(), kept to silence return-path warnings.
 
 }
 
 
 
-[[nodiscard]] std::optional<std::shared_ptr<const kgl::GenomeReference>> kgl::GenomeCollection::getOptionalGenome(const std::string &resource_id) const {
+std::optional<std::shared_ptr<const kgl::GenomeReference>> kgl::GenomeCollection::getOptionalGenome(const std::string &resource_id) const {
 
   auto result = genome_map_.find(resource_id);
-  if (result != genome_map_.end()) {
-
-    return result->second;
-
-  } else {
-
-    return std::nullopt;
-
-  }
+  return result != genome_map_.end() ? std::optional{result->second} : std::nullopt;
 
 }
 
@@ -43,7 +39,7 @@ bool kgl::GenomeCollection::addGenome(const std::shared_ptr<const GenomeReferenc
 
   if (not genome_ptr) {
 
-    ExecEnv::log().error("ResourceCollection::addGenome; attempt to add resource: {} with nullptr or empty resource id.", genome_ptr->genomeId());
+    ExecEnv::log().error("GenomeCollection::addGenome; attempt to add a null GenomeReference");
     return false;
 
   }

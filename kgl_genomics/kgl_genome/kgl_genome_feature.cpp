@@ -6,8 +6,9 @@
 #include "kgl_genome_feature.h"
 #include "kgl_genome_contig.h"
 
-#include <sstream>
-#include <list>
+#include <format>
+#include <algorithm>
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -19,18 +20,18 @@ namespace kgl = kellerberrin::genome;
 
 void kgl::Feature::addSubFeature(const FeatureIdent_t& sub_feature_id, std::shared_ptr<const Feature> sub_feature_ptr) {
 
-  sub_features_.insert(std::make_pair(sub_feature_id, sub_feature_ptr));
+  sub_features_.emplace(sub_feature_id, std::move(sub_feature_ptr));
 
 }
 
 
-void kgl::Feature::recusivelyPrintsubfeatures(size_t feature_level) const {
+void kgl::Feature::recursivePrintSubFeatures(size_t feature_level) const {
 
   ExecEnv::log().info("Level: {};  {}", feature_level, featureText());
 
   for (const auto& [feature_id, feature_ptr] : sub_features_) {
 
-    feature_ptr->recusivelyPrintsubfeatures(feature_level + 1); // Recursive call for the sub-feature.
+    feature_ptr->recursivePrintSubFeatures(feature_level + 1); // Recursive call for the sub-feature.
 
   }
 
@@ -39,31 +40,22 @@ void kgl::Feature::recusivelyPrintsubfeatures(size_t feature_level) const {
 
 std::string kgl::Feature::featureText(char delimiter) const {
 
-  std::stringstream ss;
+  const std::string super_feature_id = hasSuperfeature() ? getSuperFeature()->id() : "<TopLevel>";
 
-  ss << "Contig Id:" << delimiter
-     << contig_ref_ptr()->contigId() << delimiter
-     << "Feature Id:" << delimiter
-     << id() << delimiter
-     << "Type:" << delimiter
-     << type() << delimiter
-     << "SuperFeature:" << delimiter
-     << (hasSuperfeature() ? getSuperFeature()->id() : "<TopLevel>") << delimiter
-     << "SubFeatures:" << delimiter
-     << subFeatures().size() << delimiter
-     << "Length:" << delimiter
-     << sequence().length() << delimiter
-     << "Offset:[" << delimiter
-     << sequence().begin() << delimiter
-     << sequence().end() << delimiter
-     << ") Strand:" << delimiter
-      << sequence().strandText() << delimiter
-     << "Phase:" << delimiter
-     << sequence().phase() << delimiter
-     << "Description:" << delimiter
-     << descriptionText(delimiter);
-
-  return ss.str();
+  return std::format(
+      "Contig Id:{0}{1}{0}Feature Id:{0}{2}{0}Type:{0}{3}{0}SuperFeature:{0}{4}{0}SubFeatures:{0}{5}{0}Length:{0}{6}{0}Offset:[{0}{7}{0}{8}{0}) Strand:{0}{9}{0}Phase:{0}{10}{0}Description:{0}{11}",
+      delimiter,
+      contig_ref_ptr()->contigId(),
+      id(),
+      type(),
+      super_feature_id,
+      subFeatures().size(),
+      sequence().length(),
+      sequence().begin(),
+      sequence().end(),
+      sequence().strandText(),
+      sequence().phase(),
+      descriptionText(delimiter));
 
 }
 
@@ -71,13 +63,12 @@ std::string kgl::Feature::descriptionText(char delimiter) const {
 
   std::string description_text;
 
-  auto description_vector = getAttributes().getDescription();
-  for (auto const& description : description_vector) {
+  for (auto const& description : getAttributes().getDescription()) {
 
     description_text += description;
     description_text += delimiter;
 
-  } // Gene
+  }
 
   return description_text;
 
@@ -86,31 +77,10 @@ std::string kgl::Feature::descriptionText(char delimiter) const {
 
 bool kgl::Feature::equivalent(const Feature& lhs) const {
 
-  if (id_ != lhs.id_) {
-
-    return false;
-
-  }
-
-  if (type_ != lhs.type_) {
-
-    return false;
-
-  }
-
-  if (sequence_.equivalent(lhs.sequence_)) {
-
-    return false;
-
-  }
-
-  if (attributes_.equivalent(lhs.attributes_)) {
-
-    return false;
-
-  }
-
-  return true;
+  return id_ == lhs.id_
+         and type_ == lhs.type_
+         and sequence_.equivalent(lhs.sequence_)
+         and attributes_.equivalent(lhs.attributes_);
 
 }
 
@@ -123,7 +93,7 @@ bool kgl::Feature::equivalent(const Feature& lhs) const {
 std::shared_ptr<const kgl::TranscriptionSequenceArray>
 kgl::GeneFeature::getTranscriptionSequences(const std::shared_ptr<const GeneFeature>& gene_ptr) {
 
-  std::shared_ptr<TranscriptionSequenceArray> sequence_array_ptr(std::make_unique<TranscriptionSequenceArray>());
+  auto sequence_array_ptr = std::make_shared<TranscriptionSequenceArray>();
   if (not getCodingSequences(gene_ptr, gene_ptr, *sequence_array_ptr)) {
 
     ExecEnv::log().error("GeneFeature::getTranscriptionSequences; Unable to retrieve coding sequences for Gene: {}, type: {}", gene_ptr->id(), gene_ptr->type());
@@ -150,7 +120,7 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
 
   }
 
-  std::list<std::shared_ptr<const Feature>> leaf_features;
+  std::vector<std::shared_ptr<const Feature>> leaf_features;
   bool CDS_found{false};
   // Loop through all sub_features.
   for (const auto& [feature_id, sub_feature_ptr] : parent_ptr->subFeatures()) {
@@ -175,8 +145,7 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
 
   if (CDS_found) {
   // Remove all non-cds (EXONS) from the list
-    auto not_feature_CDS = [](const std::shared_ptr<const Feature>& feature)->bool { return feature->superType() != CDS_TYPE_; };
-    leaf_features.remove_if(not_feature_CDS);
+    std::erase_if(leaf_features, [](const std::shared_ptr<const Feature>& feature) { return feature->superType() != CDS_TYPE_; });
 
   } else {
   // Check that all the leaf features are EXONS and the gene is ncRNA.
@@ -187,7 +156,7 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
     if (not std::ranges::all_of(leaf_features, leaf_type)) {
 
       ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Unexpected leaf feature detected", gene_ptr->id());
-      gene_ptr->recusivelyPrintsubfeatures();
+      gene_ptr->recursivePrintSubFeatures();
 
     }
 
@@ -196,7 +165,7 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
   TranscriptionFeatureMap parent_feature_map;
   for (auto const& leaf : leaf_features) {
 
-    auto [iter, insert_result] = parent_feature_map.insert(std::make_pair(leaf->sequence().begin(), leaf));
+    auto [iter, insert_result] = parent_feature_map.emplace(leaf->sequence().begin(), leaf);
 
     // Some GFF files may have multiple coding features at the same logical level and the same begin offset.
     // This is true of the GFF supplied by NCBI for the SARS-COV-2 organism with multiple gene coding for the RdRp gene.
@@ -205,7 +174,7 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
       ExecEnv::log().warn("GeneFeature::getCodingSequences; Gene: {}, Duplicate coding feature: {}",
                           gene_ptr->id(),
                           leaf->featureText());
-      gene_ptr->recusivelyPrintsubfeatures();
+      gene_ptr->recursivePrintSubFeatures();
       return true;
 
     }
@@ -214,11 +183,8 @@ bool kgl::GeneFeature::getCodingSequences(const std::shared_ptr<const GeneFeatur
 
   if (not parent_feature_map.empty()) {
 
-    std::shared_ptr<const TranscriptionSequence> coding_sequence(std::make_shared<const TranscriptionSequence>(gene_ptr,
-                                                                                                               parent_ptr,
-                                                                                                               parent_feature_map));
-
-    result = result and sequence_array.insertSequence(coding_sequence);
+    auto coding_sequence = std::make_shared<const TranscriptionSequence>(gene_ptr, parent_ptr, std::move(parent_feature_map));
+    result = result and sequence_array.insertSequence(std::move(coding_sequence));
 
   }
 
@@ -238,13 +204,11 @@ bool kgl::GeneFeature::findSuperType(const FeatureType_t& super_type, const std:
 
   for (auto const& [feature_id, sub_feature_ptr] : feature_ptr->subFeatures()) {
 
-
     if (findSuperType(super_type, sub_feature_ptr)) {
 
       return true;
 
     }
-
 
   }
 
