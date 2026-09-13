@@ -6,23 +6,22 @@
 #define KGL_ALPHABET_DNA5_H
 
 
-
 #include <cstdint>
 #include <string>
+#include <vector>
 #include "kgl_genome_types.h"
-#include "kel_exec_env.h"
 #include "kgl_alphabet_coding_dna5.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This class defines DNA sequences.
 // The sequences that contain this class have NOT been strand converted.
 // Do not use this alphabet to generate amino sequences.
 // Only implements a truncated subset (5)of the IUPAC nucleotide code
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // Standard 5 letter nucleotide.
@@ -86,70 +85,42 @@ public:
     V = V_NUCLEOTIDE
   };
 
-  // ReturnType a boolean if the character is in the extended alphabet (defined as enum ExtendedAlphabet).
+  /// ReturnType a boolean if the character is in the extended alphabet (defined as enum ExtendedAlphabet).
   [[nodiscard]] static bool isExtended(Nucleotide_t char_letter);
 
-  // ReturnType a vector of all valid alphabet values.
+  /// ReturnType a vector of all valid alphabet values.
   [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
-  // Checks for possible memory corruption.
+  /// Checks for possible memory corruption.
   [[nodiscard]] static bool validAlphabet(Alphabet nucleotide);
 
-  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+  /// The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   [[nodiscard]] static Alphabet convertChar(char chr_base);
 
-  // Find complementary bases.
+  /// Find complementary bases.
   [[nodiscard]] static CodingDNA5::Alphabet complementNucleotide(Alphabet nucleotide);
 
-  // Transversion or Transition. Unknown nucleotides always return false.
-  // Transitions involve interchanges of nucleotides of similar shapes: two-ring purines (A<>G)
-  // or one-ring pyrimidines (C<>T).
-  // Transversions involve interchanges of one-ring and two-ring structures (A<>C, A<>T, G<>T, G<>C).
-  // A Transversion is simply the complement of a transition_, i.e. not(transition_).
+  /// Transversion or Transition. Unknown nucleotides always return false.
+  /// Transitions involve interchanges of nucleotides of similar shapes: two-ring purines (A<>G)
+  /// or one-ring pyrimidines (C<>T).
+  /// Transversions involve interchanges of one-ring and two-ring structures (A<>C, A<>T, G<>T, G<>C).
+  /// A Transversion is simply the complement of a transition_, i.e. not(transition_).
   [[nodiscard]] static bool isTransition(Alphabet nucleotide_1, Alphabet nucleotide_2);
-  // Convert to CodingDNA5 without complementary base conversion.
-  // Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
+  /// Convert to CodingDNA5 without complementary base conversion.
+  /// Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
   [[nodiscard]] static CodingDNA5::Alphabet convertToCodingDNA5(Alphabet nucleotide) { return static_cast<CodingDNA5::Alphabet>(nucleotide); }
 
-  // Convert from coding DNA5.
-  // Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
+  /// Convert from coding DNA5.
+  /// Warning - assumes that CodingDNA5::Alphabet and DNA5::Alphabet nucleotides have the same enum values.
   [[nodiscard]] static DNA5::Alphabet convertFromCodingDNA5(CodingDNA5::Alphabet nucleotide) { return static_cast<DNA5::Alphabet>(nucleotide); }
 
-  // Find complementary bases and convert to DNA5.
-  [[nodiscard]] static DNA5::Alphabet convertComplementNucleotide(CodingDNA5::Alphabet nucleotide) {
-
-    return convertFromCodingDNA5(complementNucleotide(convertFromCodingDNA5(nucleotide)));
-
-  }
-
-  // Convert a base to an array offset.
+  /// Convert a base to an array offset.
   [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet nucleotide);
 
-  // ReturnType nucleotide as a char.
+  /// ReturnType nucleotide as a char.
   [[nodiscard]] static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
 
-  // Converts an array offset into a base.
-  [[nodiscard]] static Alphabet offsetToNucleotide(ContigOffset_t offset) {
-
-    // Translate the nucleotide to an array column
-    switch (offset) {
-
-      case A_NUCLEOTIDE_OFFSET: return Alphabet::A;
-      case C_NUCLEOTIDE_OFFSET: return Alphabet::C;
-      case G_NUCLEOTIDE_OFFSET: return Alphabet::G;
-      case T_NUCLEOTIDE_OFFSET: return Alphabet::T;
-      case N_NUCLEOTIDE_OFFSET: return Alphabet::N;
-
-      default:
-        ExecEnv::log().warn("DNA5::offsetToNucleotide(), Invalid/Extended Nucleotide Offset", offset);
-        return Alphabet::N;
-    }
-
-  }
-
 };
-
-
 
 
 }   // end namespace

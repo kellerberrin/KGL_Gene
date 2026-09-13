@@ -11,16 +11,14 @@
 #include "kel_interval_unsigned.h"
 
 #include <string>
-#include <set>
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A template Sequence class to hold the alphabet strings for each sequence.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 template<typename Alphabet>
@@ -51,67 +49,65 @@ public:
   [[nodiscard]] ContigSize_t length() const { return alphabet_string_.length(); }
   [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_string_.length() }; }
 
-  // Assumes that sequence alphabets are 1 byte (char) and map onto ascii char types. Avoids a sequence byte copy and conversion.
+  /// Assumes that sequence alphabets are 1 byte (char) and map onto ascii char types. Avoids a sequence byte copy and conversion.
   [[nodiscard]] std::string_view getStringView() const override { return std::string_view{alphabet_string_.c_str(), alphabet_string_.length()}; }
 
   [[nodiscard]] const AlphabetString<Alphabet>& getAlphabetString() const { return alphabet_string_; }
 
-  // Check for memory corruption.
+  /// Check for memory corruption.
   [[nodiscard]] bool verifySequence() const { return alphabet_string_.verifyString(); }
 
-  // A hash value of the sequence.
-  [[nodiscard]] size_t hashSequence() const { return alphabet_string_.hashString(); }
-
-  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+  /// Insert offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool append(const AlphabetSequence& inserted_sequence);
 
-  // Search for all subsequences.
+  /// Search for all subsequences.
   [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetSequence& sub_sequence) const { return alphabet_string_.findAll(sub_sequence.alphabet_string_); }
 
-  // Count all alphabet symbols in sequence.
+  /// Count all alphabet symbols in sequence.
   [[nodiscard]] std::vector<std::pair<typename Alphabet::Alphabet, size_t>> countSymbols() const { return alphabet_string_.countSymbols(); }
 
-  // ReturnType the count of ordered alphabet pairs (generally used for counting CpG islands).
+  /// ReturnType the count of ordered alphabet pairs (generally used for counting CpG islands).
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const { return alphabet_string_.countTwoSymbols(first_symbol, second_symbol); }
 
-  // find the longest common prefix.
+  /// find the longest common prefix.
   [[nodiscard]] size_t commonPrefix(const AlphabetSequence& cmp_sequence) const { return alphabet_string_.commonPrefix(cmp_sequence.alphabet_string_); }
-  // find the longest common suffix.
+  /// find the longest common suffix.
   [[nodiscard]] size_t commonSuffix(const AlphabetSequence& cmp_sequence) const { return alphabet_string_.commonSuffix(cmp_sequence.alphabet_string_); }
-  // Extract the sequence prefix, suffix and mid-section. Generally used with commonPrefix() and commonSuffix() above.
+  /// Extract the sequence prefix, suffix and mid-section. Generally used with commonPrefix() and commonSuffix() above.
   [[nodiscard]] AlphabetSequence removePrefix(size_t prefix_size) const { return AlphabetSequence(alphabet_string_.removePrefix(prefix_size)); }
   [[nodiscard]] AlphabetSequence removeSuffix(size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removeSuffix(suffix_size)); }
   [[nodiscard]] AlphabetSequence removePrefixSuffix(size_t prefix_size, size_t suffix_size) const { return AlphabetSequence(alphabet_string_.removePrefixSuffix(prefix_size, suffix_size)); }
-  // Equality of sub-sequence.
+  /// Equality of sub-sequence.
   [[nodiscard]] bool compareSubSequence(ContigOffset_t offset, const AlphabetSequence& sub_sequence) const {
 
     return alphabet_string_.compareSubString(offset, sub_sequence.alphabet_string_);
 
   }
-  [[nodiscard]] bool compareletter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
+  [[nodiscard]] bool compareLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
 
     return alphabet_string_.compareLetter(offset, letter);
 
   }
 
-  // Ptr to the base of the alphabet string. Used to initialize a SequenceView object.
-  [[nodiscard]] const Alphabet::Alphabet* data() const { return alphabet_string_.data(); }
+  /// Ptr to the base of the alphabet string. Used to initialize a SequenceView object.
+  [[nodiscard]] const typename Alphabet::Alphabet* data() const { return alphabet_string_.data(); }
 
   // Sequence comparison using the spaceship operator.
-  [[nodiscard]] constexpr auto operator<=>(const AlphabetSequence& rhs) const { return getStringView() <=> rhs.getStringView(); }
-  [[nodiscard]] constexpr bool operator==(const AlphabetSequence& rhs) const { return getStringView() == rhs.getStringView(); }
+  // Note - not constexpr: the comparison dispatches through the virtual getStringView() interface.
+  [[nodiscard]] auto operator<=>(const AlphabetSequence& rhs) const { return getStringView() <=> rhs.getStringView(); }
+  [[nodiscard]] bool operator==(const AlphabetSequence& rhs) const { return getStringView() == rhs.getStringView(); }
 
 protected:
 
   AlphabetString<Alphabet> alphabet_string_;
 
-  // Letter offset is relative to the begining of the sequence (0 is the first letter).
+  /// Letter offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool modifyLetter(ContigOffset_t sequence_offset, typename Alphabet::Alphabet letter);
-  // Delete offset is relative to the begining of the sequence (0 is the first letter).
+  /// Delete offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool deleteOffset(ContigOffset_t delete_offset, ContigSize_t delete_size);
-  // Insert offset is relative to the begining of the sequence (0 is the first letter).
+  /// Insert offset is relative to the begining of the sequence (0 is the first letter).
   [[nodiscard]] bool insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence);
-  // Returns bool false if offset and/or size are out of bounds.
+  /// Returns bool false if offset and/or size are out of bounds.
   [[nodiscard]] std::optional<AlphabetSequence> getSubsequence(const OpenRightUnsigned& sub_interval) const;
 
 private:
@@ -160,6 +156,7 @@ bool AlphabetSequence<Alphabet>::deleteOffset(ContigOffset_t delete_offset, Cont
 
 }
 
+
 template<typename Alphabet>
 bool AlphabetSequence<Alphabet>::append(const AlphabetSequence& inserted_sequence) {
 
@@ -179,27 +176,8 @@ bool AlphabetSequence<Alphabet>::append(const AlphabetSequence& inserted_sequenc
 template<typename Alphabet>
 bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, const AlphabetSequence& inserted_sequence) {
 
-  if (insert_offset < length()) {
-
-    if (not alphabet_string_.insert(insert_offset, inserted_sequence.alphabet_string_)) {
-
-      ExecEnv::log().error("Problem inserting a sub-sequence , insert offset: {}, insert sub-sequence: {}",
-                           insert_offset, inserted_sequence.getStringView());
-      return false;
-
-    }
-
-  } else if (insert_offset == length()) {
-
-    if (not alphabet_string_.append(inserted_sequence.alphabet_string_)) {
-
-      ExecEnv::log().error("Problem appending a sub-sequence , insert offset: {}, insert sub-sequence: {}",
-                           insert_offset, inserted_sequence.getStringView());
-      return false;
-
-    }
-
-  } else {
+  // std::basic_string::insert() appends when the offset equals the string length.
+  if (insert_offset > length()) {
 
     ExecEnv::log().error("Attempt to insert past the end a sequence string length:{}, insert offset: {}, insert sub-sequence: {}",
                          length(), insert_offset, inserted_sequence.getStringView());
@@ -207,6 +185,13 @@ bool AlphabetSequence<Alphabet>::insertOffset(ContigOffset_t insert_offset, cons
 
   }
 
+  if (not alphabet_string_.insert(insert_offset, inserted_sequence.alphabet_string_)) {
+
+    ExecEnv::log().error("Problem inserting a sub-sequence , insert offset: {}, insert sub-sequence: {}",
+                         insert_offset, inserted_sequence.getStringView());
+    return false;
+
+  }
 
   return true;
 

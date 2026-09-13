@@ -8,10 +8,12 @@
 
 
 #include <string>
+#include <array>
 #include <algorithm>
 #include <functional>
 #include <optional>
 #include "kgl_genome_types.h"
+#include "kel_exec_env.h"
 #include "kgl_alphabet_dna5.h"
 #include "kgl_alphabet_amino.h"
 
@@ -19,9 +21,9 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Template class implements string functionality for the Nucleotide and Amino Acid alphabets.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -34,22 +36,18 @@ public:
   explicit AlphabetString(std::basic_string<typename Alphabet::Alphabet>&& base_string) noexcept : base_string_(std::move(base_string)) {}
   explicit AlphabetString(const std::basic_string_view<typename Alphabet::Alphabet>& base_view) : base_string_(base_view) {}
   explicit AlphabetString(const std::string& alphabet_str) { convertFromCharString(alphabet_str); }
-  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept : base_string_(std::move(alphabet_string.base_string_)) {}
+  AlphabetString(AlphabetString<Alphabet>&& alphabet_string) noexcept = default;
   AlphabetString(const AlphabetString<Alphabet>& alphabet_string) : base_string_(alphabet_string.base_string_) {}
   ~AlphabetString() = default;
 
   // Assignment operators
   // For Performance reasons, don't allow naive assignments.
   AlphabetString& operator=(const AlphabetString& copy) = delete;
-  // Only allow move assignments
-  AlphabetString& operator=(AlphabetString&& moved) noexcept {
+  // Only allow move assignments. Note that the defaulted operator moves the base string
+  // (the previous hand-written version copied it and was noexcept while copying can throw).
+  AlphabetString& operator=(AlphabetString&& moved) noexcept = default;
 
-    base_string_ = moved.base_string_;
-    return *this;
-
-  }
-
-  // Iterators to access the underlying std::basic_string
+  /// Iterators to access the underlying std::basic_string
   using const_iterator = typename std::basic_string<typename Alphabet::Alphabet>::const_iterator;
   using const_reverse_iterator = typename std::basic_string<typename Alphabet::Alphabet>::const_reverse_iterator;
   using value_type = typename Alphabet::Alphabet;
@@ -59,7 +57,6 @@ public:
   [[nodiscard]] const_iterator end() const { return base_string_.end(); }
   [[nodiscard]] const_reverse_iterator rend() const { return base_string_.rend(); }
   void push_back(typename Alphabet::Alphabet nucleotide) { base_string_.push_back(nucleotide); }
-  void pop_back() { base_string_.pop_back(); }
 
 
   [[nodiscard]] ContigSize_t length() const { return base_string_.length(); }
@@ -70,35 +67,27 @@ public:
 
   [[nodiscard]] bool erase(ContigOffset_t offset, ContigSize_t size) {
 
-    try {
-
-      base_string_.erase(offset, size);
-      return true;
-
-    }
-    catch(...) {
+    if (offset > base_string_.size()) {
 
       return false;
 
     }
+
+    base_string_.erase(offset, size);
+    return true;
 
   }
 
-  void assignString(const std::string &alphabet_str) { convertFromCharString(alphabet_str); }
-
   [[nodiscard]] bool insert(ContigOffset_t offset, const AlphabetString& sub_string) {
 
-    try {
-
-      base_string_.insert(offset, sub_string.base_string_);
-      return true;
-
-    }
-    catch(...) {
+    if (offset > base_string_.size()) {
 
       return false;
 
     }
+
+    base_string_.insert(offset, sub_string.base_string_);
+    return true;
 
   }
 
@@ -119,6 +108,7 @@ public:
 
   [[nodiscard]] bool append(const AlphabetString& sub_string) {
 
+    // The append guard is retained: a reserved string append can still fail on std::length_error.
     try {
 
       base_string_.append(sub_string.base_string_);
@@ -136,27 +126,24 @@ public:
 
   [[nodiscard]] bool substring(ContigOffset_t offset, ContigSize_t size, AlphabetString& substring) const {
 
-    try {
-
-      substring.base_string_ = base_string_.substr(offset, size);
-      return true;
-
-    }
-    catch(...) {
+    if (offset > base_string_.size()) {
 
       return false;
 
     }
 
+    substring.base_string_ = base_string_.substr(offset, size);
+    return true;
+
   }
 
 
-  // Generally used to count CpG islands. Look for ocurrances of [first, second] in the string.
+  /// Generally used to count CpG islands. Look for ocurrances of [first, second] in the string (non-overlapping).
   [[nodiscard]] size_t countTwoSymbols(typename Alphabet::Alphabet first_symbol, typename Alphabet::Alphabet second_symbol) const;
 
   [[nodiscard]] std::vector<std::pair<typename Alphabet::Alphabet, size_t>> countSymbols() const;
 
-  typename Alphabet::Alphabet operator[] (ContigOffset_t& offset) const { return base_string_[offset]; }
+  [[nodiscard]] typename Alphabet::Alphabet operator[] (ContigOffset_t offset) const { return base_string_[offset]; }
 
   void modifyLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) {
 
@@ -168,7 +155,7 @@ public:
 
   }
 
-  bool compareLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) {
+  [[nodiscard]] bool compareLetter(ContigOffset_t offset, typename Alphabet::Alphabet letter) const {
 
     if (offset < base_string_.size()) {
 
@@ -180,21 +167,22 @@ public:
 
   }
 
+  /// ReturnType the base string as a std::string.
   [[nodiscard]] std::string str() const { return convertToCharString(); }
   // Yes, this is as dodgy as it looks. But if Alphabets are always implemented as char (byte) sized objects it should be ok.
   // The motivation is to avoid the overhead of the byte copy of convertToCharString() above.
   [[nodiscard]] const char* c_str() const { return reinterpret_cast<const char*>(base_string_.c_str()); }
-  // Pointer to the base of the alphabet string. Points to the same address as the above but is not coerced into a const char*
-  [[nodiscard]] const Alphabet::Alphabet* data() const { return base_string_.data(); }
+  /// Pointer to the base of the alphabet string. Points to the same address as the above but is not coerced into a const char*
+  [[nodiscard]] const typename Alphabet::Alphabet* data() const { return base_string_.data(); }
 
-  bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
+  [[nodiscard]] bool operator==(const AlphabetString& compare_string) const { return (base_string_ == compare_string.base_string_); }
 
-  std::vector<ContigOffset_t> findAll(const AlphabetString& sub_string) const {
+  [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetString& sub_string) const {
 
     std::vector<ContigOffset_t> offset_vector;
     size_t offset = base_string_.find(sub_string.base_string_);
 
-    while (offset != std::basic_string<Alphabet>::npos) {
+    while (offset != base_string_.npos) {
 
       offset_vector.push_back(static_cast<ContigOffset_t>(offset));
       offset = base_string_.find(sub_string.base_string_, offset + 1);
@@ -216,8 +204,6 @@ public:
 
   [[nodiscard]] bool verifyString() const;
 
-  [[nodiscard]] size_t hashString() const;
-
 private:
 
   std::basic_string<typename Alphabet::Alphabet> base_string_;
@@ -227,17 +213,14 @@ private:
 
   [[nodiscard]] std::optional<std::basic_string_view<typename Alphabet::Alphabet>> getViewSubString(ContigOffset_t offset, ContigSize_t size) const {
 
-    std::basic_string_view<typename Alphabet::Alphabet>base_view (base_string_);
-    try {
-
-      return base_view.substr(offset, size); // throws: pos > size()
-
-    }
-    catch (...) {
+    if (offset > base_string_.size()) {
 
       return std::nullopt;
 
     }
+
+    std::basic_string_view<typename Alphabet::Alphabet>base_view (base_string_);
+    return base_view.substr(offset, size);
 
   }
 
@@ -278,24 +261,25 @@ size_t AlphabetString<Alphabet>::commonPrefix(const AlphabetString& cmp_string) 
 
   return common_prefix;
 
-
 }
 
+
+// Delegation to removePrefixSuffix is behaviour-identical including the clamp-to-empty semantics.
 template<typename Alphabet>
 AlphabetString<Alphabet> AlphabetString<Alphabet>::removePrefix(size_t prefix_size) const {
 
-  auto iter = std::ranges::next(base_string_.begin(), prefix_size, base_string_.end());
-  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(iter, base_string_.end()));
+  return removePrefixSuffix(prefix_size, 0);
 
 }
+
 
 template<typename Alphabet>
 AlphabetString<Alphabet> AlphabetString<Alphabet>::removeSuffix(size_t suffix_size) const {
 
-  auto iter = std::ranges::prev(base_string_.end(), suffix_size, base_string_.begin());
-  return AlphabetString(std::basic_string<typename Alphabet::Alphabet>(base_string_.begin(), iter));
+  return removePrefixSuffix(0, suffix_size);
 
 }
+
 
 template<typename Alphabet>
 AlphabetString<Alphabet> AlphabetString<Alphabet>::removePrefixSuffix(size_t prefix_size, size_t suffix_size) const {
@@ -338,7 +322,7 @@ size_t AlphabetString<Alphabet>::countTwoSymbols(typename Alphabet::Alphabet fir
 template<typename Alphabet>
 std::vector<std::pair<typename Alphabet::Alphabet, size_t>> AlphabetString<Alphabet>::countSymbols() const {
 
-  const std::vector<typename Alphabet::Alphabet> alphabet = Alphabet::enumerateAlphabet();
+  const auto& alphabet = Alphabet::enumerateAlphabet();
 
   std::vector<std::pair<typename Alphabet::Alphabet, size_t>> symbol_count_vector;
   for (auto const symbol : alphabet) {
@@ -358,25 +342,16 @@ std::vector<std::pair<typename Alphabet::Alphabet, size_t>> AlphabetString<Alpha
 }
 
 
-template<typename Alphabet>
-size_t AlphabetString<Alphabet>::hashString() const {
-
-  return std::hash<std::string>{}(str());
-
-}
-
 
 
 template<typename Alphabet>
 bool AlphabetString<Alphabet>::verifyString() const {
 
-  for (ContigSize_t idx = 0; idx < length(); ++idx) {
+  for (size_t index = 0; index < length(); ++index) {
 
-    bool compare = Alphabet::validAlphabet(base_string_.at(idx));
+    if (not Alphabet::validAlphabet(base_string_[index])) {
 
-    if (not compare) {
-
-      ExecEnv::log().error("AlphabetString::verifyString(), invalid Alphabet value (int): {} found at index: {}", static_cast<size_t>(base_string_.at(idx)), idx);
+      ExecEnv::log().error("AlphabetString::verifyString(), invalid Alphabet value (int): {} found at index: {}", static_cast<size_t>(base_string_[index]), index);
       return false;
 
     }

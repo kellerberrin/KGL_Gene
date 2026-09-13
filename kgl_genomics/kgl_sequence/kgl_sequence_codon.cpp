@@ -20,13 +20,10 @@ kgl::Codon::Codon(const DNA5SequenceCoding& coding_sequence, ContigOffset_t codo
 
   }
 
-  codon_index = static_cast<ContigOffset_t>(codon_index * Codon::CODON_SIZE);
+  ContigOffset_t base_offset = codon_index * CODON_SIZE;
 
-  bases_[0] = coding_sequence.at(codon_index);
-  ++codon_index;
-  bases_[1] = coding_sequence.at(codon_index);
-  ++codon_index;
-  bases_[2] = coding_sequence.at(codon_index);
+  bases_[0] = coding_sequence.at(base_offset);
+  bases_[1] = coding_sequence.at(base_offset + 1);
+  bases_[2] = coding_sequence.at(base_offset + 2);
 
 }
-

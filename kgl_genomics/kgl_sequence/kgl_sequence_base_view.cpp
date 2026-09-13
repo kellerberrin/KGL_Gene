@@ -14,7 +14,7 @@ namespace kgl = kellerberrin::genome;
 
 
 kgl::AminoSequenceView::AminoSequenceView(const AminoSequence& sequence)
-: AlphabetView<AminoAcid>(sequence) {};
+: AlphabetView<AminoAcid>(sequence) {}
 
 
 kgl::DNA5SequenceCodingView::DNA5SequenceCodingView(const DNA5SequenceCoding& coding_sequence)
@@ -25,52 +25,31 @@ kgl::DNA5SequenceLinearView::DNA5SequenceLinearView(const DNA5SequenceLinear& se
 : AlphabetView<DNA5>(sequence) {}
 
 
-// Returns subsequence view.
+// Returns subsequence view. getSubView() validates the interval and logs a warning if out of bounds.
 std::optional<kgl::AminoSequenceView> kgl::AminoSequenceView::subView(const OpenRightUnsigned& sub_interval) const {
 
   auto sub_view_opt = getSubView(sub_interval);
-  if (not sub_view_opt) {
-
-    ExecEnv::log().error("Cannot get sub-sequence view: {} from amino sequence: {}", sub_interval.toString(), interval().toString());
-    return std::nullopt;
-
-  }
-
-  AminoSequenceView amino_view(sub_view_opt.value());
-  return {amino_view};
+  if (not sub_view_opt) return std::nullopt;
+  return AminoSequenceView(sub_view_opt.value());
 
 }
 
-// Returns subsequence view.
+// Returns subsequence view. getSubView() validates the interval and logs a warning if out of bounds.
 std::optional<kgl::DNA5SequenceCodingView> kgl::DNA5SequenceCodingView::subView(const OpenRightUnsigned& sub_interval) const {
 
   auto sub_view_opt = getSubView(sub_interval);
-  if (not sub_view_opt) {
-
-    ExecEnv::log().error("Cannot get sub-sequence view: {} from coding sequence: {}", sub_interval.toString(), interval().toString());
-    return std::nullopt;
-
-  }
-
-  DNA5SequenceCodingView coding_view(sub_view_opt.value(), strand());
-  return {coding_view};
+  if (not sub_view_opt) return std::nullopt;
+  return DNA5SequenceCodingView(sub_view_opt.value(), strand());
 
 }
 
 
-// Returns subsequence view.
+// Returns subsequence view. getSubView() validates the interval and logs a warning if out of bounds.
 std::optional<kgl::DNA5SequenceLinearView> kgl::DNA5SequenceLinearView::subView(const OpenRightUnsigned& sub_interval) const {
 
   auto sub_view_opt = getSubView(sub_interval);
-  if (not sub_view_opt) {
-
-    ExecEnv::log().error("Cannot get sub-sequence view: {} from linear sequence: {}", sub_interval.toString(), interval().toString());
-    return std::nullopt;
-
-  }
-
-  DNA5SequenceLinearView linear_view(sub_view_opt.value());
-  return {linear_view};
+  if (not sub_view_opt) return std::nullopt;
+  return DNA5SequenceLinearView(sub_view_opt.value());
 
 }
 

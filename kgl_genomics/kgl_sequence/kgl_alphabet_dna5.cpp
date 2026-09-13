@@ -4,88 +4,96 @@
 
 
 #include "kgl_alphabet_dna5.h"
+#include "kgl_alphabet_dna5_tables.h"
+#include "kel_exec_env.h"
 
 
 namespace kgl = kellerberrin::genome;
 
 
+namespace kellerberrin::genome::detail {   //  DNA5-specific tables (not shared with CodingDNA5).
+
+
+// Extended IUPAC nucleotide codes (R,Y,S,W,K,M,B,D,H,V): accepted on input but converted to 'N'.
+inline constexpr auto EXTENDED_TABLE = []() consteval {
+
+  std::array<bool, 256> table{};
+  table[static_cast<unsigned char>(DNA5::R_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::Y_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::S_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::W_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::K_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::M_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::B_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::D_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::H_NUCLEOTIDE)] = true;
+  table[static_cast<unsigned char>(DNA5::V_NUCLEOTIDE)] = true;
+  return table;
+
+}();
+
+
+// Complementary bases indexed over the unsigned char domain.
+// Only the 5 canonical values map to a complement; every other (corrupted) value maps to N,
+// matching the reference switch plus its trailing 'never reached' return.
+inline constexpr auto COMPLEMENT_TABLE = []() consteval {
+
+  std::array<CodingDNA5::Alphabet, 256> table{};
+  table.fill(CodingDNA5::Alphabet::N);
+  table[static_cast<unsigned char>(DNA5::Alphabet::A)] = CodingDNA5::Alphabet::T;
+  table[static_cast<unsigned char>(DNA5::Alphabet::C)] = CodingDNA5::Alphabet::G;
+  table[static_cast<unsigned char>(DNA5::Alphabet::G)] = CodingDNA5::Alphabet::C;
+  table[static_cast<unsigned char>(DNA5::Alphabet::T)] = CodingDNA5::Alphabet::A;
+  table[static_cast<unsigned char>(DNA5::Alphabet::N)] = CodingDNA5::Alphabet::N;
+  return table;
+
+}();
+
+
+}   // end namespace
+
 
 [[nodiscard]] bool kgl::DNA5::isExtended(Nucleotide_t char_letter) {
 
-  switch(char_letter) {
-
-    case R_NUCLEOTIDE:
-    case Y_NUCLEOTIDE:
-    case S_NUCLEOTIDE:
-    case W_NUCLEOTIDE:
-    case K_NUCLEOTIDE:
-    case M_NUCLEOTIDE:
-    case B_NUCLEOTIDE:
-    case D_NUCLEOTIDE:
-    case H_NUCLEOTIDE:
-    case V_NUCLEOTIDE:
-      return true;
-
-    default:
-      return false;
-  }
+  return detail::EXTENDED_TABLE[static_cast<unsigned char>(char_letter)];
 
 }
 
 
 bool kgl::DNA5::validAlphabet(Alphabet nucleotide) {
 
-  auto int_value = static_cast<size_t>(nucleotide);
-
-// We DO NOT use a switch here.
-// Because the switch assumes we can only have 5 base types (and a memory corrupted sequence may not).
-  bool compare = int_value == static_cast<size_t>(Alphabet::A)
-                 or int_value == static_cast<size_t>(Alphabet::C)
-                 or int_value == static_cast<size_t>(Alphabet::G)
-                 or int_value == static_cast<size_t>(Alphabet::T)
-                 or int_value == static_cast<size_t>(Alphabet::N);
-
-  return compare;
+  // We DO NOT use a switch here.
+  // Because the switch assumes we can only have 5 base types (and a memory corrupted sequence may not).
+  return detail::NucleotideTables<DNA5>::VALID_TABLE[static_cast<unsigned char>(nucleotide)];
 
 }
-
 
 
 // Convert char to Alphabet enum type.
 kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 
+  const Alphabet nucleotide = detail::NucleotideTables<DNA5>::ALPHABET_TABLE[static_cast<unsigned char>(chr_base)];
 
-  switch (std::toupper(chr_base)) {
+  // The reference switch distinguishes valid input characters (including 'N' in both cases,
+  // which map to N) from the default error branch - the valid-character table preserves
+  // exactly that distinction (A1).
+  if (not detail::NucleotideTables<DNA5>::VALID_CHAR_TABLE[static_cast<unsigned char>(chr_base)]) {
 
-    case A_NUCLEOTIDE:return Alphabet::A;
+    static bool report_extended = false;
+    if (isExtended(chr_base) and not report_extended) {
 
-    case C_NUCLEOTIDE: return Alphabet::C;
+      ExecEnv::log().warn("DNA5::convertChar(), IUPAC extended nucleotides detected, all converted to the unknown nucleotide 'N'");
+      report_extended = true;
 
-    case G_NUCLEOTIDE: return Alphabet::G;
+    } else if (not isExtended(chr_base)) {
 
-    case U_NUCLEOTIDE:
-    case T_NUCLEOTIDE: return Alphabet::T;
-
-    case N_NUCLEOTIDE: return Alphabet::N;
-
-    default: {
-
-      static bool report_extended = false;
-      if (isExtended(chr_base) && not report_extended) {
-
-        ExecEnv::log().warn("DNA5::convertchar(), IUPAC extended nucleotides detected, all converted to the unknown nucleotide 'N'");
-        report_extended = true;
-
-      } else if (not isExtended(chr_base)) {
-
-        ExecEnv::log().error("DNA5::convertchar(), Unknown nucleotide detected: '{}', ascii value: {}. Input is probably corrupt or not DNA text.", chr_base, static_cast<size_t>(chr_base));
-
-      }
-      return Alphabet::N;
+      ExecEnv::log().error("DNA5::convertChar(), Unknown nucleotide detected: '{}', ascii value: {}. Input is probably corrupt or not DNA text.", chr_base, static_cast<size_t>(chr_base));
 
     }
 
   }
+
+  return nucleotide;
 
 }
 
@@ -93,18 +101,9 @@ kgl::DNA5::Alphabet kgl::DNA5::convertChar(char chr_base) {
 // Find complementary bases.
 kgl::CodingDNA5::Alphabet kgl::DNA5::complementNucleotide(Alphabet nucleotide) {
 
-  // Translate the nucleotide
-  switch (nucleotide) {
-
-    case Alphabet::A: return CodingDNA5::Alphabet::T;
-    case Alphabet::C: return CodingDNA5::Alphabet::G;
-    case Alphabet::G: return CodingDNA5::Alphabet::C;
-    case Alphabet::T: return CodingDNA5::Alphabet::A;
-    case Alphabet::N: return CodingDNA5::Alphabet::N;
-
-  }
-
-  return CodingDNA5::Alphabet::N; //  Never reached, to keep the compiler happy.
+  // Total lookup over the unsigned char domain: a corrupted raw value cannot index
+  // out of bounds and maps to N exactly as the reference did (A2).
+  return detail::COMPLEMENT_TABLE[static_cast<unsigned char>(nucleotide)];
 
 }
 
@@ -112,20 +111,11 @@ kgl::CodingDNA5::Alphabet kgl::DNA5::complementNucleotide(Alphabet nucleotide) {
 // Convert a base to an array offset.
 kgl::ContigOffset_t kgl::DNA5::symbolToColumn(Alphabet nucleotide) {
 
-  // Translate the nucleotide to an array column
-  switch (nucleotide) {
-
-    case Alphabet::A: return A_NUCLEOTIDE_OFFSET;
-    case Alphabet::C: return C_NUCLEOTIDE_OFFSET;
-    case Alphabet::G: return G_NUCLEOTIDE_OFFSET;
-    case Alphabet::T: return T_NUCLEOTIDE_OFFSET;
-    case Alphabet::N: return N_NUCLEOTIDE_OFFSET;
-
-  }
-
-  return N_NUCLEOTIDE_OFFSET; //  Never reached, to keep the compiler happy.
+  // The table lookup is total so a corrupted raw value cannot index out of bounds.
+  return detail::NucleotideTables<DNA5>::COLUMN_TABLE[static_cast<unsigned char>(nucleotide)];
 
 }
+
 
 // Transitions involve interchanges of nucleotides of similar shapes: two-ring purines (A<>G)
 // or one-ring pyrimidines (C<>T). A transversion_ is simply the complement of this function.
@@ -141,8 +131,6 @@ bool kgl::DNA5::isTransition(Alphabet nucleotide_1, Alphabet nucleotide_2) {
 
 const std::vector<kgl::DNA5::Alphabet>& kgl::DNA5::enumerateAlphabet() {
 
-  static std::vector<Alphabet> alphabet_vector = {Alphabet::A, Alphabet::C, Alphabet::G, Alphabet::T, Alphabet::N};
-
-  return alphabet_vector;
+  return detail::NucleotideTables<DNA5>::ALPHABET_VECTOR;
 
 }

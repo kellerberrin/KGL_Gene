@@ -209,7 +209,6 @@ set(GENETIC_LIBRARY_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_distance_tree_upgma.h
         kgl_genomics/kgl_classification/kgl_distance_tree_upgma.cpp
         kgl_genomics/kgl_sequence/kgl_table_impl.h
-        kgl_genomics/kgl_sequence/kgl_table_impl.cpp
         kgl_genomics/kgl_sequence/kgl_table_organism.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.h
         kgl_genomics/kgl_parser/kgl_gaf_parser.cpp

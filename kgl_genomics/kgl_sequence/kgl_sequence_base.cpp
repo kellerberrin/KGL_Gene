@@ -12,13 +12,13 @@ namespace kgl = kellerberrin::genome;
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The base DNA5 sequence class.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Letter offset is relative to the begining of the sequence (0 is the first letter).
 bool kgl::DNA5SequenceLinear::modifyBase(ContigOffset_t base_offset, DNA5::Alphabet nucleotide) {
@@ -75,34 +75,18 @@ kgl::DNA5SequenceLinear kgl::DNA5SequenceLinear::downConvertToLinear(const DNA5S
 
 // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
 // A -ve strand returns the reverse complement as expected.
+// Delegates to the sequence view, which operates on exactly the same bytes with the same transforms.
 kgl::DNA5SequenceCoding kgl::DNA5SequenceLinear::codingSequence(StrandSense strand) const {
 
-
-  StringCodingDNA5 coding_string;
-  coding_string.reserve(length()); // pre-allocate for efficiency.
-
-  if (strand == StrandSense::REVERSE) {
-
-    auto complement_coding = [](DNA5::Alphabet base)->CodingDNA5::Alphabet { return DNA5::complementNucleotide(base); };
-    auto reversed_string = std::ranges::views::reverse(getAlphabetString());
-    std::ranges::transform(reversed_string, std::back_inserter(coding_string), complement_coding);
-
-  } else {
-
-    auto convert_coding = [](DNA5::Alphabet base)->CodingDNA5::Alphabet { return DNA5::convertToCodingDNA5(base); };
-    std::ranges::transform(getAlphabetString(), std::back_inserter(coding_string), convert_coding);
-
-  }
-
-  return DNA5SequenceCoding(std::move(coding_string), strand);
+  return getView().codingSequence(strand);
 
 }
 
 std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(const IntervalSetLower& interval_set) const {
 
-
-  // Extract the modified sequence views and store in a vector.
-  std::vector<DNA5SequenceLinearView> concat_vector;
+  // Concatenate the extracted sub-sequence views in interval (sorted) order.
+  // The first sub-view initialises the result; the rest are appended.
+  std::optional<DNA5SequenceLinear> concatenated_sequence;
   for (auto const& sub_interval : interval_set) {
 
     auto sub_view_opt = getView().subView(sub_interval);
@@ -113,33 +97,30 @@ std::optional<kgl::DNA5SequenceLinear> kgl::DNA5SequenceLinear::concatSequences(
 
     }
 
-    concat_vector.push_back(sub_view_opt.value());
+    if (concatenated_sequence) {
+
+      if (not concatenated_sequence->append(DNA5SequenceLinear(sub_view_opt.value()))) {
+
+        ExecEnv::log().warn("Unable to concatenate modified sequence for interval");
+        return std::nullopt;
+
+      }
+
+    } else {
+
+      concatenated_sequence.emplace(sub_view_opt.value());
+
+    }
 
   }
 
-  if (concat_vector.empty()) {
+  if (not concatenated_sequence) {
 
     ExecEnv::log().warn("No concat sub-sequences for interval set size: {}", interval_set.size());
     return std::nullopt;
 
   }
 
-  // Copy the first view
-  DNA5SequenceLinear concatenated_sequence(concat_vector.front());
-  // Vector will preserve sort order, drop first view
-  for (auto const& concat_view : std::ranges::drop_view{ concat_vector, 1}) {
-
-    bool result = concatenated_sequence.append(DNA5SequenceLinear(concat_view));
-    if (not result) {
-
-      ExecEnv::log().warn("Unable to concatenate modified sequence for interval");
-      return std::nullopt;
-
-    }
-
-  }
-
   return concatenated_sequence;
 
 }
-

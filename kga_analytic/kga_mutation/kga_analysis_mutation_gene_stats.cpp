@@ -20,11 +20,21 @@ bool kga::GeneCharacteristic::geneDefinition( const std::shared_ptr<const GeneFe
 {
 
   std::vector<std::string> description_vec;
-  gene_ptr->getAttributes().getDescription(description_vec);
+  bool result = gene_ptr->getAttributes().getDescription(description_vec);
+  if (not result) {
+
+    ExecEnv::log().warn("GeneCharacteristic::geneDefinition() failed to get gene description.");
+
+  }
   std::string description_str = description_vec.empty() ? "" : description_vec.front();
 
   std::vector<std::string> gene_biotype_vec;
-  gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
+  result = gene_ptr->getAttributes().getGeneBioType(gene_biotype_vec);
+  if (not result) {
+
+    ExecEnv::log().warn("GeneCharacteristic::geneDefinition() failed to get gene biological type (coding or ncRNA).");
+
+  }
   std::string biotype_str = gene_biotype_vec.empty() ? "" : gene_biotype_vec.front();
 
   genome_ = genome_id;

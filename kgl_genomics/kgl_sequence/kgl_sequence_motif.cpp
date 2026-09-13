@@ -9,91 +9,60 @@
 namespace kgl = kellerberrin::genome;
 
 
-std::string kgl::SearchSequence::IUPACRegex(const std::string_view& IUPAC_search) {
+namespace kellerberrin::genome::detail {   //  IUPAC code to regex string mapping.
+
+
+// The code is mapped to its regex fragment; unmapped codes fall through to the default warn (identical output).
+inline constexpr std::array<std::pair<char, std::string_view>, 17> IUPAC_REGEX_TABLE {{
+  { 'A', "A" },    // Adenine
+  { 'C', "C" },    // Cytosine
+  { 'G', "G" },    // Guanine
+  { 'T', "[TU]" }, // Thymine (or Uracil)
+  { 'U', "[TU]" }, // Thymine (or Uracil)
+  { 'R', "[AG]" }, // A or G
+  { 'Y', "[CT]" }, // C or T
+  { 'S', "[GC]" }, // G or C
+  { 'W', "[AT]" }, // A or T
+  { 'K', "[GT]" }, // G or T
+  { 'M', "[AC]" }, // A or C
+  { 'B', "[CGT]"}, // C or G or T
+  { 'D', "[AGT]"}, // A or G or T
+  { 'H', "[ACT]"}, // A or C or T
+  { 'V', "[ACG]"}, // A or C or G
+  { 'N', "." },    // any
+  { '-', "." }     // any
+}};
+
+
+}   // end namespace
+
+
+std::string kgl::SearchSequence::IUPACRegex(std::string_view IUPAC_search) {
 
   std::string upper_search = Utility::toupper(std::string(IUPAC_search));
   std::string regex_str;
+  regex_str.reserve(upper_search.size() * 3);
 
   for (const char c : upper_search) {
 
-    switch(c) {
+    const auto table_iter = std::ranges::find(detail::IUPAC_REGEX_TABLE, c, &std::pair<char, std::string_view>::first);
+    if (table_iter != detail::IUPAC_REGEX_TABLE.end()) {
 
-      case 'A': // Adenine
-        regex_str += "A";
-        break;
+      regex_str += table_iter->second;
 
-      case 'C':	// Cytosine
-        regex_str += "C";
-        break;
+    } else if (c == '.') {
 
-      case 'G': //	Guanine
-        regex_str += "G";
-        break;
+      // Missing or any - the base is optional in the regex.
+      regex_str += "?";
 
-      case 'T': //	Thymine (or Uracil)
-      case 'U': //	Thymine (or Uracil)
-        regex_str += "[TU]";
-        break;
+    } else {
 
-      case 'R':	// A or G
-        regex_str += "[AG]";
-        break;
-
-      case 'Y': //	C or T
-        regex_str += "[CT]";
-        break;
-
-      case 'S': //	G or C
-        regex_str += "[GC]";
-        break;
-
-      case 'W':	// A or T
-        regex_str += "[AT]";
-        break;
-
-      case 'K': // G or T
-        regex_str += "[GT]";
-        break;
-
-      case 'M':	// A or C
-        regex_str += "[AC]";
-        break;
-
-      case 'B': //C or G or T
-        regex_str += "[CGT]";
-        break;
-
-      case 'D':	// A or G or T
-        regex_str += "[AGT]";
-        break;
-
-      case 'H': //	A or C or T
-        regex_str += "[ACT]";
-        break;
-
-      case 'V': //	A or C or G
-        regex_str += "[ACG]";
-        break;
-
-      case 'N': // any
-      case '-': // any
-        regex_str += ".";
-        break;
-
-      case '.': // missing or any
-        regex_str += "?";
-        break;
-
-      default:
-        ExecEnv::log().warn("Non IUPAC nucleotide code: {} encountered in search string: {} - ignored", c, upper_search);
-        break;
+      ExecEnv::log().warn("Non IUPAC nucleotide code: {} encountered in search string: {} - ignored", c, upper_search);
 
     }
-
 
   }
 
   return regex_str;
 
 }
-

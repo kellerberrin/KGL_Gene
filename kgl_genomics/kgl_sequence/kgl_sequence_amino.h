@@ -9,32 +9,32 @@
 #include "kgl_sequence_base.h"
 #include "kgl_table.h"
 
+#include <memory>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The Amino alphabet strings are defined here.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 using StringAminoAcid = AlphabetString<AminoAcid>;
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amino Sequence - A container for Amino Acid (protein) sequences.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class AminoSequence: public AlphabetSequence<AminoAcid> {
 
 public:
 
-  AminoSequence(AminoSequence&& sequence) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence)) {};
-  explicit AminoSequence(const AminoSequenceView& sequence_view) : AlphabetSequence<AminoAcid>(sequence_view.getSequence()) {};
-  explicit AminoSequence(StringAminoAcid&& sequence_string) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence_string)) {};
-  AminoSequence(AminoSequence& sequence) = delete; // For Performance reasons, don't allow copy constructors.
+  AminoSequence(AminoSequence&& sequence) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence)) {}
+  explicit AminoSequence(const AminoSequenceView& sequence_view) : AlphabetSequence<AminoAcid>(sequence_view.getSequence()) {}
+  explicit AminoSequence(StringAminoAcid&& sequence_string) noexcept : AlphabetSequence<AminoAcid>(std::move(sequence_string)) {}
+  AminoSequence(const AminoSequence& sequence) = delete; // For Performance reasons, don't allow copy constructors.
   ~AminoSequence() override = default;
 
   // For Performance reasons, don't allow naive assignments.
@@ -47,7 +47,7 @@ public:
 
   }
 
-  //Return a view.
+  ///Return a view.
   [[nodiscard]] AminoSequenceView getView() const { return AminoSequenceView(*this); }
 
 private:
@@ -56,67 +56,42 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TranslateToAmino - Convert DNA/RNA base sequences to Amino acid sequences.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class TranslateToAmino {
 
 public:
 
 
-  TranslateToAmino() : table_ptr_(std::make_shared<AminoTranslationTable>())  {}
+  TranslateToAmino() = default;
   ~TranslateToAmino() = default;
 
-  [[nodiscard]] std::string translationTableName() const { return table_ptr_->TableName(); }
+  /// ReturnType the name of the translation table.
+  [[nodiscard]] std::string translationTableName() const { return table_.TableName(); }
 
-  [[nodiscard]] std::string translationTableDescription() const { return table_ptr_->TableDescription(); }
-
-  [[nodiscard]] bool settranslationTable(const std::string& table_name) { return table_ptr_->setTranslationTable(table_name); }
+  /// Set the translation table by name.
+  [[nodiscard]] bool settranslationTable(const std::string& table_name) { return table_.setTranslationTable(table_name); }
 
 
   [[nodiscard]] bool checkStartCodon(const AminoSequence& amino_sequence) const;
   [[nodiscard]] bool checkStopCodon(const AminoSequence& amino_sequence) const;
-  // Find the size of the sequence including the first stop codon.
-  // If not found, bool is false and the sequence length is returned.
+  /// Find the size of the sequence including the first stop codon.
+  /// If not found, bool is false and the sequence length is returned.
   [[nodiscard]] std::pair<size_t, bool> firstStopSequenceSize(const AminoSequence& amino_sequence) const;
 
+  /// ReturnType the amino acid sequence for the coding sequence.
   [[nodiscard]] AminoSequence getAminoSequence(const DNA5SequenceCoding& coding_sequence) const;
+  /// ReturnType the amino acid for the codon. AminoAcid::Unknown if any bases are 'N'
   [[nodiscard]] AminoAcid::Alphabet getAmino(const Codon& codon) const;
-
-  // const DNA5SequenceCoding& functions.
-  [[nodiscard]] Codon firstCodon(const DNA5SequenceCoding& coding_sequence) const {
-
-    return Codon(coding_sequence, 0);
-
-  }
-
-  [[nodiscard]] bool checkStartCodon(const DNA5SequenceCoding& coding_sequence) const {
-
-    return table_ptr_->isStartCodon(firstCodon(coding_sequence));
-
-  }
-
-  [[nodiscard]] Codon lastCodon(const DNA5SequenceCoding& coding_sequence) const {
-
-    return Codon(coding_sequence, Codon::codonLength(coding_sequence) - 1);
-
-  }
-
-  [[nodiscard]] bool checkStopCodon(const DNA5SequenceCoding& coding_sequence) const {
-
-    return table_ptr_->isStopCodon(lastCodon(coding_sequence));
-
-  }
-
-  [[nodiscard]] size_t checkNonsenseMutation(const DNA5SequenceCoding& coding_sequence) const;
-
-  [[nodiscard]] AminoAcid::Alphabet getAmino(const DNA5SequenceCoding& coding_sequence, ContigSize_t codon_index) const;
 
 
 private:
 
-  std::shared_ptr<AminoTranslationTable> table_ptr_;
+  // The translation table is never null and never shared: a value member removes
+  // the shared_ptr indirection on the per-codon translation hot path.
+  AminoTranslationTable table_;
 
 };
 

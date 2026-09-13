@@ -9,17 +9,15 @@
 #include "kgl_genome_prelim.h"
 
 #include <string>
-#include <memory>
 
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Amino Sequence View - A view on Amino Acid (protein) sequences.
 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward.
 class AminoSequence;
@@ -32,6 +30,7 @@ public:
   AminoSequenceView(const AminoSequenceView& amino_view) = default;
   ~AminoSequenceView() override = default;
 
+  /// Returns a subsequence view or std::nullopt if the interval is out of bounds.
   [[nodiscard]] std::optional<AminoSequenceView> subView(const OpenRightUnsigned& sub_interval) const;
 
 private:
@@ -40,11 +39,11 @@ private:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A view on a STRANDED DNA string that can be converted to an AMINO sequence.
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward.
 class DNA5SequenceCoding;
@@ -57,9 +56,10 @@ public:
   DNA5SequenceCodingView(const DNA5SequenceCodingView& copy) = default;
   ~DNA5SequenceCodingView() override = default;
 
+  /// Returns a subsequence view or std::nullopt if the interval is out of bounds.
   [[nodiscard]] std::optional<DNA5SequenceCodingView> subView(const OpenRightUnsigned& sub_interval) const;
 
-  // Returns the sequence strand, FORWARD '+' or REVERSE '-'.
+  /// Returns the sequence strand, FORWARD '+' or REVERSE '-'.
   [[nodiscard]] StrandSense strand() const { return strand_; }
 
 private:
@@ -71,13 +71,13 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A view of a  linear and contiguous DNA5 sequence that cannot be used to directly generate an Amino Acid sequence
 // This sequence is NOT STRANDED.
 // However, it can return the STRANDED sequence DNA5SequenceCoding using a TranscriptionSequence (array of CDS).
 // It can also be down-converted from a stranded sequence using the static linearSequence function.
 // A string of the standard 5 nucleotide DNA/RNA alphabet A, C, G, T/U, N
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward.
 class DNA5SequenceLinear;
@@ -90,17 +90,17 @@ public:
   DNA5SequenceLinearView(const DNA5SequenceLinearView& copy) = default;
   ~DNA5SequenceLinearView() override = default;
 
-  // Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
-  // A -ve strand returns the reverse complement as expected.
+  /// Up-converts a linear UNSTANDED DNA sequence to a STRANDED coding sequence (swaps the logical alphabet from DNA5 to CodingDNA5).
+  /// A -ve strand returns the reverse complement as expected.
   [[nodiscard]] DNA5SequenceCoding codingSequence(StrandSense strand) const;
+  /// Returns a subsequence view or std::nullopt if the interval is out of bounds.
   [[nodiscard]] std::optional<DNA5SequenceLinearView> subView(const OpenRightUnsigned& sub_interval) const;
-  
+
 private:
 
   explicit DNA5SequenceLinearView(const AlphabetView<DNA5>& sequence) :  AlphabetView<DNA5>(sequence) {}
 
 };
-
 
 
 }   // end namespace

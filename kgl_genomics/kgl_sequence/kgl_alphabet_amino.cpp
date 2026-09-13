@@ -3,51 +3,113 @@
 //
 
 #include "kgl_alphabet_amino.h"
+#include "kel_exec_env.h"
 
 namespace kgl = kellerberrin::genome;
 
 
+namespace kellerberrin::genome::detail {   //  Shared constexpr tables for the amino alphabet.
 
-// Covert from char to alphabet
-kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {
 
-  // Translate the nucleotide to an array column
-  switch (chr_base) {
+// Total lookup tables over the unsigned char domain: branch-free and a memory-corrupted
+// raw value can never index out of bounds (the no-switch intent of the original code).
 
-    case PHENYLALANINE: return Alphabet::F;
-    case LEUCINE: return Alphabet::L;
-    case SERINE: return Alphabet::S;
-    case TYROSINE: return Alphabet::Y;
-    case CYSTEINE: return Alphabet::C;
-    case TRYPTOPHAN: return Alphabet::W;
-    case PROLINE: return Alphabet::P;
-    case HISTIDINE: return Alphabet::H;
-    case GLUTAMINE: return Alphabet::Q;
-    case ARGININE: return Alphabet::R;
-    case ISOLEUCINE: return Alphabet::I;
-    case METHIONINE: return Alphabet::M;
-    case THREONINE: return Alphabet::T;
-    case ASPARAGINE: return Alphabet::N;
-    case LYSINE: return Alphabet::K;
-    case VALINE: return Alphabet::V;
-    case ALANINE: return Alphabet::A;
-    case ASPARTIC: return Alphabet::D;
-    case GLUTAMIC: return Alphabet::E;
-    case GLYCINE: return Alphabet::G;
-      // Rare - The additional two amino acids encoded using stop codons by some species.
-    case SELENOCYSTEINE: return Alphabet::U;
-    case PYRROLYSINE: return Alphabet::O;
-      // The three stop codons.
-    case STOP_CODON: return Alphabet::_;
-      // The special unknown amino acid generated when the DNA5 codon
-      // contains the unknown base 'N'.
-    case UNKNOWN_AMINO: return Alphabet::Z;
 
-    default:
-      ExecEnv::log().error("AminoAcid::Alphabet(), Invalid nucleotide: {}", chr_base);
-      return Alphabet::Z;
+inline constexpr auto AMINO_COLUMN_TABLE = []() consteval {
+
+  std::array<ContigOffset_t, 256> table{};
+  table.fill(AminoAcid::UNKNOWN_AMINO_OFFSET);
+  table[static_cast<unsigned char>(AminoAcid::PHENYLALANINE)] = AminoAcid::PHENYLALANINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::LEUCINE)] = AminoAcid::LEUCINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::SERINE)] = AminoAcid::SERINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::TYROSINE)] = AminoAcid::TYROSINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::CYSTEINE)] = AminoAcid::CYSTEINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::TRYPTOPHAN)] = AminoAcid::TRYPTOPHAN_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::PROLINE)] = AminoAcid::PROLINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::HISTIDINE)] = AminoAcid::HISTIDINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::GLUTAMINE)] = AminoAcid::GLUTAMINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::ARGININE)] = AminoAcid::ARGININE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::ISOLEUCINE)] = AminoAcid::ISOLEUCINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::METHIONINE)] = AminoAcid::METHIONINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::THREONINE)] = AminoAcid::THREONINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::ASPARAGINE)] = AminoAcid::ASPARAGINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::LYSINE)] = AminoAcid::LYSINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::VALINE)] = AminoAcid::VALINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::ALANINE)] = AminoAcid::ALANINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::ASPARTIC)] = AminoAcid::ASPARTIC_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::GLUTAMIC)] = AminoAcid::GLUTAMIC_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::GLYCINE)] = AminoAcid::GLYCINE_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::STOP_CODON)] = AminoAcid::STOP_CODON_OFFSET;
+  table[static_cast<unsigned char>(AminoAcid::UNKNOWN_AMINO)] = AminoAcid::UNKNOWN_AMINO_OFFSET;
+  return table;
+
+}();
+
+// B3a: includes the rare selenocysteine (U) and pyrrolysine (O) so a parsed sequence
+// containing them passes the module's own verifyString() corruption check.
+inline constexpr auto AMINO_VALID_TABLE = []() consteval {
+
+  std::array<bool, 256> table{};
+  for (size_t index = 0; index < 256; ++index) {
+
+    table[index] = (index == static_cast<unsigned char>(AminoAcid::UNKNOWN_AMINO))
+                   or (AMINO_COLUMN_TABLE[index] != AminoAcid::UNKNOWN_AMINO_OFFSET);
 
   }
+  table[static_cast<unsigned char>(AminoAcid::SELENOCYSTEINE)] = true;
+  table[static_cast<unsigned char>(AminoAcid::PYRROLYSINE)] = true;
+  return table;
+
+}();
+
+inline constexpr auto AMINO_ALPHABET_TABLE = []() consteval {
+
+  using Alphabet = AminoAcid::Alphabet;
+  std::array<Alphabet, 256> table{};
+  table.fill(Alphabet::Z);
+  table[static_cast<unsigned char>(AminoAcid::PHENYLALANINE)] = Alphabet::F;
+  table[static_cast<unsigned char>(AminoAcid::LEUCINE)] = Alphabet::L;
+  table[static_cast<unsigned char>(AminoAcid::SERINE)] = Alphabet::S;
+  table[static_cast<unsigned char>(AminoAcid::TYROSINE)] = Alphabet::Y;
+  table[static_cast<unsigned char>(AminoAcid::CYSTEINE)] = Alphabet::C;
+  table[static_cast<unsigned char>(AminoAcid::TRYPTOPHAN)] = Alphabet::W;
+  table[static_cast<unsigned char>(AminoAcid::PROLINE)] = Alphabet::P;
+  table[static_cast<unsigned char>(AminoAcid::HISTIDINE)] = Alphabet::H;
+  table[static_cast<unsigned char>(AminoAcid::GLUTAMINE)] = Alphabet::Q;
+  table[static_cast<unsigned char>(AminoAcid::ARGININE)] = Alphabet::R;
+  table[static_cast<unsigned char>(AminoAcid::ISOLEUCINE)] = Alphabet::I;
+  table[static_cast<unsigned char>(AminoAcid::METHIONINE)] = Alphabet::M;
+  table[static_cast<unsigned char>(AminoAcid::THREONINE)] = Alphabet::T;
+  table[static_cast<unsigned char>(AminoAcid::ASPARAGINE)] = Alphabet::N;
+  table[static_cast<unsigned char>(AminoAcid::LYSINE)] = Alphabet::K;
+  table[static_cast<unsigned char>(AminoAcid::VALINE)] = Alphabet::V;
+  table[static_cast<unsigned char>(AminoAcid::ALANINE)] = Alphabet::A;
+  table[static_cast<unsigned char>(AminoAcid::ASPARTIC)] = Alphabet::D;
+  table[static_cast<unsigned char>(AminoAcid::GLUTAMIC)] = Alphabet::E;
+  table[static_cast<unsigned char>(AminoAcid::GLYCINE)] = Alphabet::G;
+  table[static_cast<unsigned char>(AminoAcid::SELENOCYSTEINE)] = Alphabet::U;
+  table[static_cast<unsigned char>(AminoAcid::PYRROLYSINE)] = Alphabet::O;
+  table[static_cast<unsigned char>(AminoAcid::STOP_CODON)] = Alphabet::_;
+  table[static_cast<unsigned char>(AminoAcid::UNKNOWN_AMINO)] = Alphabet::Z;
+  return table;
+
+}();
+
+
+}   // end namespace
+
+
+// Covert from char to alphabet.
+kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {
+
+  const Alphabet amino = detail::AMINO_ALPHABET_TABLE[static_cast<unsigned char>(chr_base)];
+  if (amino == Alphabet::Z and chr_base != UNKNOWN_AMINO) {
+
+    ExecEnv::log().error("AminoAcid::convertChar(), Invalid amino acid: '{}', ascii value: {}. Input is probably corrupt or not protein text.", chr_base, static_cast<size_t>(chr_base));
+
+  }
+
+  return amino;
 
 }
 
@@ -55,77 +117,27 @@ kgl::AminoAcid::Alphabet kgl::AminoAcid::convertChar(char chr_base) {
 // Covert alphabet symbol to an offset, used with the function above to create and access vectors of AA symbols.
 kgl::ContigOffset_t kgl::AminoAcid::symbolToColumn(Alphabet amino) {
 
-  // Translate the nucleotide to an array column
-  switch (amino) {
+  // The table lookup is total so a corrupted raw value cannot index out of bounds.
+  const ContigOffset_t column = detail::AMINO_COLUMN_TABLE[static_cast<unsigned char>(amino)];
 
-    case Alphabet::F: return PHENYLALANINE_OFFSET;
-    case Alphabet::L: return LEUCINE_OFFSET;
-    case Alphabet::S: return SERINE_OFFSET;
-    case Alphabet::Y: return TYROSINE_OFFSET;
-    case Alphabet::C: return CYSTEINE_OFFSET;
-    case Alphabet::W: return TRYPTOPHAN_OFFSET;
-    case Alphabet::P: return PROLINE_OFFSET;
-    case Alphabet::H: return HISTIDINE_OFFSET;
-    case Alphabet::Q: return GLUTAMINE_OFFSET;
-    case Alphabet::R: return ARGININE_OFFSET;
-    case Alphabet::I: return ISOLEUCINE_OFFSET;
-    case Alphabet::M: return METHIONINE_OFFSET;
-    case Alphabet::T: return THREONINE_OFFSET;
-    case Alphabet::N: return ASPARAGINE_OFFSET;
-    case Alphabet::K: return LYSINE_OFFSET;
-    case Alphabet::V: return VALINE_OFFSET;
-    case Alphabet::A: return ALANINE_OFFSET;
-    case Alphabet::D: return ASPARTIC_OFFSET;
-    case Alphabet::E: return GLUTAMIC_OFFSET;
-    case Alphabet::G: return GLYCINE_OFFSET;
-      // The three stop codons.
-    case Alphabet::_: return STOP_CODON_OFFSET;
-      // The special unknown amino acid generated when the DNA5 codon
-      // contains the unknown base 'N'.
-    case Alphabet::Z: return UNKNOWN_AMINO_OFFSET;
+  // The reference logged a corruption diagnostic here; restore it in table form.
+  // validAlphabet() includes the B3a-approved U/O (silent); only corrupted values log.
+  if (not validAlphabet(amino)) {
 
-    default:
-      ExecEnv::log().error("AminoAcid::Alphabet(), Invalid amino symbol: {}", static_cast<char>(amino));
-      return UNKNOWN_AMINO_OFFSET;
+    ExecEnv::log().error("AminoAcid::symbolToColumn(), Invalid amino symbol: {}", static_cast<char>(amino));
 
   }
+
+  return column;
 
 }
 
 
-
 bool kgl::AminoAcid::validAlphabet(Alphabet amino) {
 
-  auto int_value = static_cast<size_t>(amino);
-
-// We DO NOT use a switch here.
-// Because the switch always assumes we can only have the enum values (and a memory corrupted sequence may not).
-  bool compare = int_value == static_cast<size_t>(Alphabet::F)
-                 or int_value == static_cast<size_t>(Alphabet::L)
-                 or int_value == static_cast<size_t>(Alphabet::S)
-                 or int_value == static_cast<size_t>(Alphabet::Y)
-                 or int_value == static_cast<size_t>(Alphabet::C)
-                 or int_value == static_cast<size_t>(Alphabet::W)
-                 or int_value == static_cast<size_t>(Alphabet::P)
-                 or int_value == static_cast<size_t>(Alphabet::H)
-                 or int_value == static_cast<size_t>(Alphabet::Q)
-                 or int_value == static_cast<size_t>(Alphabet::R)
-                 or int_value == static_cast<size_t>(Alphabet::I)
-                 or int_value == static_cast<size_t>(Alphabet::M)
-                 or int_value == static_cast<size_t>(Alphabet::T)
-                 or int_value == static_cast<size_t>(Alphabet::N)
-                 or int_value == static_cast<size_t>(Alphabet::K)
-                 or int_value == static_cast<size_t>(Alphabet::V)
-                 or int_value == static_cast<size_t>(Alphabet::A)
-                 or int_value == static_cast<size_t>(Alphabet::D)
-                 or int_value == static_cast<size_t>(Alphabet::E)
-                 or int_value == static_cast<size_t>(Alphabet::G)
-//                 or INTEGER_VALUE == static_cast<size_t>(Alphabet::U)
-//                 or INTEGER_VALUE == static_cast<size_t>(Alphabet::O)
-                 or int_value == static_cast<size_t>(Alphabet::_)
-                 or int_value == static_cast<size_t>(Alphabet::Z);
-
-  return compare;
+  // We DO NOT use a switch here.
+  // Because the switch always assumes we can only have the enum values (and a memory corrupted sequence may not).
+  return detail::AMINO_VALID_TABLE[static_cast<unsigned char>(amino)];
 
 }
 

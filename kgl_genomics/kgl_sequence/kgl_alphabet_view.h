@@ -7,6 +7,7 @@
 
 
 
+#include "kgl_alphabet_string.h"
 #include "kgl_sequence_virtual.h"
 
 #include <string_view>
@@ -15,16 +16,16 @@
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // A template Sequence class to specify a view of a sequence.
 // As with char strings, the view does not contain any sequence data but is an offset to an Alphabet sequence.
 // The creator of the Alphabet view must ensure its lifetime does not exceed the corresponding sequence.
 // Sequence views only have const operations on the underlying sequence.
 // A sequence can create a view (via sub_sequence() or assignment) and a view can recreate a copy of the sequence.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Forward declaration of the sequence template.
-template<class alphabet> class AlphabetSequence;
+template<typename Alphabet> class AlphabetSequence;
 
 template<typename Alphabet>
 class AlphabetView : public VirtualSequence {
@@ -37,31 +38,44 @@ public:
 
   ~AlphabetView() override = default;
 
+  /// Random access to the view symbols.
   [[nodiscard]] auto operator[] (ContigOffset_t offset) const { return alphabet_view_[offset]; }
+  /// Random access with bounds checking.
   [[nodiscard]] auto at(ContigOffset_t offset) const { return alphabet_view_[offset]; }
 
   [[nodiscard]] constexpr ContigSize_t length() const { return alphabet_view_.length(); }
   [[nodiscard]] OpenRightUnsigned interval() const { return {0, alphabet_view_.length() }; }
 
-  // Assumes that sequence alphabets are 1 byte (char) and map onto ascii char types. Avoids a sequence byte copy and conversion.
+  /// Assumes that sequence alphabets are 1 byte (char) and map onto ascii char types. Avoids a sequence byte copy and conversion.
   [[nodiscard]] constexpr std::string_view getStringView() const override { return std::string_view{reinterpret_cast<const char*>(alphabet_view_.data()), alphabet_view_.length()}; }
 
-  // Get the physical sequence from the view.
-  [[nodiscard]] AlphabetSequence<Alphabet> getSequence() const { return AlphabetSequence<Alphabet>(std::move(AlphabetString<Alphabet>(alphabet_view_))); }
+  /// Get the physical sequence from the view.
+  [[nodiscard]] AlphabetSequence<Alphabet> getSequence() const { return AlphabetSequence<Alphabet>(AlphabetString<Alphabet>(alphabet_view_)); }
 
-  // Search for all subsequences.
-  [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetView& sub_sequence) const { return alphabet_view_.findAll(sub_sequence.alphabet_view_); }
+  /// Search for all subsequences.
+  [[nodiscard]] std::vector<ContigOffset_t> findAll(const AlphabetView& sub_sequence) const {
 
-  // Ptr to the base of the alphabet string. Used to initialize a SequenceView object.
-  [[nodiscard]] constexpr const Alphabet::Alphabet* data() const { return  alphabet_view_.data(); }
+    std::vector<ContigOffset_t> offset_vector;
+    size_t offset = alphabet_view_.find(sub_sequence.alphabet_view_);
 
-  // Returns std::nullopt if offset and/or size are out of bounds.
+    while (offset != alphabet_view_.npos) {
+
+      offset_vector.push_back(static_cast<ContigOffset_t>(offset));
+      offset = alphabet_view_.find(sub_sequence.alphabet_view_, offset + 1);
+
+    }
+
+    return offset_vector;
+
+  }
+
+  /// Returns std::nullopt if offset and/or size are out of bounds.
   [[nodiscard]] std::optional<AlphabetView> getSubView(const OpenRightUnsigned& sub_interval) const;
 
-  // Returns std::nullopt if offset and/or size are out of bounds.
+  /// Returns std::nullopt if offset and/or size are out of bounds.
   [[nodiscard]] AlphabetView getIntersection(const OpenRightUnsigned& sub_interval) const;
 
-  // Sequence view comparison using the spaceship operator. Sequence views (and thus sequences) are ordered lexically using std::string_view.
+  /// Sequence view comparison using the spaceship operator. Sequence views (and thus sequences) are ordered lexically using std::string_view.
   [[nodiscard]] constexpr auto operator<=>(const AlphabetView& rhs) const { return getStringView() <=> rhs.getStringView(); }
   [[nodiscard]] constexpr bool operator==(const AlphabetView& rhs) const { return getStringView() == rhs.getStringView(); }
 

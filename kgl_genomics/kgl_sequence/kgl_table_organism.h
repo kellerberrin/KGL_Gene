@@ -6,110 +6,41 @@
 #define KGL_TABLE_ORGANISM_H
 
 
+#include <array>
+#include <string_view>
 #include "kgl_genome_types.h"
 #include "kgl_table_impl.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Defines Organism Specific DNA/RNA to Amino Acid translation tables.
 // Plasmodium Falciparum codon table downloaded from http://plasmodb.org (same as the standard table)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+namespace OrganismTables {
 
-class OrganismTables {
+  inline constexpr std::string_view PF_TABLE_NAME = "P_FALCIPARUM";
+  inline constexpr std::string_view PF_TABLE_DESC = "Organism Plasmodium Falciparum codon table downloaded from http://plasmodb.org";
 
-public:
+  // The compact encoding (see kgl_table_ncbi.h for the format).
+  // Note - CTG and TTG code L but are NOT start codons in this table (unlike the standard table).
+  inline constexpr std::string_view ENCODED_PF_TABLE =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGAR- AGCS- AGGR- AGTS- ATAI- ATCI- ATGMM ATTI- "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAL- CTCL- CTGL- CTTL- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGV- GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGA** TGCC- TGGW- TGTC- TTAL- TTCF- TTGL- TTTF-";
 
-  OrganismTables() = delete; // Singleton
-  ~OrganismTables() = delete;
-
-
-  constexpr static const int PF_CODON_OFFSET = 48;
-  constexpr static const char *PF_TABLE_NAME = "P_FALCIPARUM";
-  constexpr static const char *PF_TABLE_DESC = "Organism Plasmodium Falciparum codon table downloaded from http://plasmodb.org";
-  constexpr static const AminoTableColumn PFTranslationTable[Tables::AMINO_TABLE_SIZE]
-  { { 'K', '-', 'A', 'A', 'A'},
-  { 'N', '-', 'A', 'A', 'C'},
-  { 'K', '-', 'A', 'A', 'G'},
-  { 'N', '-', 'A', 'A', 'T'},
-  { 'T', '-', 'A', 'C', 'A'},
-  { 'T', '-', 'A', 'C', 'C'},
-  { 'T', '-', 'A', 'C', 'G'},
-  { 'T', '-', 'A', 'C', 'T'},
-  { 'R', '-', 'A', 'G', 'A'},
-  { 'S', '-', 'A', 'G', 'C'},
-  { 'R', '-', 'A', 'G', 'G'},
-  { 'S', '-', 'A', 'G', 'T'},
-  { 'I', '-', 'A', 'T', 'A'},
-  { 'I', '-', 'A', 'T', 'C'},
-  { 'M', 'M', 'A', 'T', 'G'},
-  { 'I', '-', 'A', 'T', 'T'},
-  { 'Q', '-', 'C', 'A', 'A'},
-  { 'H', '-', 'C', 'A', 'C'},
-  { 'Q', '-', 'C', 'A', 'G'},
-  { 'H', '-', 'C', 'A', 'T'},
-  { 'P', '-', 'C', 'C', 'A'},
-  { 'P', '-', 'C', 'C', 'C'},
-  { 'P', '-', 'C', 'C', 'G'},
-  { 'P', '-', 'C', 'C', 'T'},
-  { 'R', '-', 'C', 'G', 'A'},
-  { 'R', '-', 'C', 'G', 'C'},
-  { 'R', '-', 'C', 'G', 'G'},
-  { 'R', '-', 'C', 'G', 'T'},
-  { 'L', '-', 'C', 'T', 'A'},
-  { 'L', '-', 'C', 'T', 'C'},
-  { 'L', '-', 'C', 'T', 'G'},
-  { 'L', '-', 'C', 'T', 'T'},
-  { 'E', '-', 'G', 'A', 'A'},
-  { 'D', '-', 'G', 'A', 'C'},
-  { 'E', '-', 'G', 'A', 'G'},
-  { 'D', '-', 'G', 'A', 'T'},
-  { 'A', '-', 'G', 'C', 'A'},
-  { 'A', '-', 'G', 'C', 'C'},
-  { 'A', '-', 'G', 'C', 'G'},
-  { 'A', '-', 'G', 'C', 'T'},
-  { 'G', '-', 'G', 'G', 'A'},
-  { 'G', '-', 'G', 'G', 'C'},
-  { 'G', '-', 'G', 'G', 'G'},
-  { 'G', '-', 'G', 'G', 'T'},
-  { 'V', '-', 'G', 'T', 'A'},
-  { 'V', '-', 'G', 'T', 'C'},
-  { 'V', '-', 'G', 'T', 'G'},
-  { 'V', '-', 'G', 'T', 'T'},
-  { '*', '*', 'T', 'A', 'A'},
-  { 'Y', '-', 'T', 'A', 'C'},
-  { '*', '*', 'T', 'A', 'G'},
-  { 'Y', '-', 'T', 'A', 'T'},
-  { 'S', '-', 'T', 'C', 'A'},
-  { 'S', '-', 'T', 'C', 'C'},
-  { 'S', '-', 'T', 'C', 'G'},
-  { 'S', '-', 'T', 'C', 'T'},
-  { '*', '*', 'T', 'G', 'A'},
-  { 'C', '-', 'T', 'G', 'C'},
-  { 'W', '-', 'T', 'G', 'G'},
-  { 'C', '-', 'T', 'G', 'T'},
-  { 'L', '-', 'T', 'T', 'A'},
-  { 'F', '-', 'T', 'T', 'C'},
-  { 'L', '-', 'T', 'T', 'G'},
-  { 'F', '-', 'T', 'T', 'T'} };
-
-  // Check the array size at compile time.
-  static_assert( sizeof(PFTranslationTable)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
-
-  // Define the standard translation table.
-  constexpr static const TranslationTable P_FALCIPARUM{PFTranslationTable, PF_TABLE_NAME, PF_TABLE_DESC, PF_CODON_OFFSET};
-
-
-};  // OrganismTable
-
+}   // namespace OrganismTables
 
 
 }   // end namespace
-
 
 
 #endif //KGL_TABLE_ORGANISM_H

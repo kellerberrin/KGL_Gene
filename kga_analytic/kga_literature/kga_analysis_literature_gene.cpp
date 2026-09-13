@@ -24,7 +24,12 @@ void kga::GeneLiterature::defineGenes( const std::shared_ptr<const GenomeReferen
     for (auto const& [offset, gene_ptr] : contig_ptr->getGeneMap()) {
 
       std::vector<std::string> name_vec;
-      gene_ptr->getAttributes().getName(name_vec);
+      bool result = gene_ptr->getAttributes().getName(name_vec);
+      if (not result) {
+
+        ExecEnv::log().warn("GeneCharacteristic::geneDefinition() failed to get gene name.");
+
+      }
       std::string symbol_id;
       std::string gaf_id;
 

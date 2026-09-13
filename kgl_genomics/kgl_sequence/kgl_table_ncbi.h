@@ -6,429 +6,100 @@
 #define KGL_TABLE_NCBI_H
 
 
+#include <array>
+#include <string_view>
 #include "kgl_genome_types.h"
 #include "kgl_table_impl.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Defines DNA/RNA to Amino Acid translation tables.
 // These are found at the NCBI website: https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 // At the current time only 5 tables are implemented (there are 31) as it is a somewhat tedious task.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// The NCBI tables, re-encoded as compact compile-time data (T2).
+// Each table is a string of 64 groups of 5 characters: "base1 base2 base3 amino start".
+// The rows are in canonical NCBI order: codon index = 16*base1 + 4*base2 + base3 with A=0, C=1, G=2, T=3.
+// The decoding into AminoTableColumn arrays is performed at compile time (see DecodeTable below);
+// the spot-check static_asserts below pin the transcription (ATG start, TAA/TAG/TGA stop, table 2 AGA/AGG stop).
 
-class NCBITables {
+namespace NCBITables {
 
-public:
+  inline constexpr std::string_view AMINO_TABLE_NAME = "NCBI_TABLE_1";
+  inline constexpr std::string_view AMINO_TABLE_DESC = "The Standard Amino Code";
 
-  NCBITables() = delete; // Singleton
-  ~NCBITables() = delete;
+  inline constexpr std::string_view ENCODED_TABLE_1 =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGAR- AGCS- AGGR- AGTS- ATAI- ATCI- ATGMM ATTI- "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAL- CTCL- CTGLM CTTL- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGV- GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGA** TGCC- TGGW- TGTC- TTAL- TTCF- TTGLM TTTF-";
 
+  // The Vertebrate Mitochondrial Code (transl_table=2)
+  inline constexpr std::string_view AMINO_TABLE_2_NAME = "NCBI_TABLE_2";
+  inline constexpr std::string_view AMINO_TABLE_2_DESC = "The Vertebrate Mitochondrial Code";
 
-  constexpr static const int STOP_CODON_OFFSET = 48;
-  constexpr static const char *AMINO_TABLE_NAME = "NCBI_TABLE_1";
-  constexpr static const char *AMINO_TABLE_DESC = "The Standard Amino Code";
-  constexpr static const AminoTableColumn StandardTranslationTable[Tables::AMINO_TABLE_SIZE]
-  {{'K', '-', 'A', 'A', 'A'},
-   {'N', '-', 'A', 'A', 'C'},
-   {'K', '-', 'A', 'A', 'G'},
-   {'N', '-', 'A', 'A', 'T'},
-   {'T', '-', 'A', 'C', 'A'},
-   {'T', '-', 'A', 'C', 'C'},
-   {'T', '-', 'A', 'C', 'G'},
-   {'T', '-', 'A', 'C', 'T'},
-   {'R', '-', 'A', 'G', 'A'},
-   {'S', '-', 'A', 'G', 'C'},
-   {'R', '-', 'A', 'G', 'G'},
-   {'S', '-', 'A', 'G', 'T'},
-   {'I', '-', 'A', 'T', 'A'},
-   {'I', '-', 'A', 'T', 'C'},
-   {'M', 'M', 'A', 'T', 'G'},
-   {'I', '-', 'A', 'T', 'T'},
-   {'Q', '-', 'C', 'A', 'A'},
-   {'H', '-', 'C', 'A', 'C'},
-   {'Q', '-', 'C', 'A', 'G'},
-   {'H', '-', 'C', 'A', 'T'},
-   {'P', '-', 'C', 'C', 'A'},
-   {'P', '-', 'C', 'C', 'C'},
-   {'P', '-', 'C', 'C', 'G'},
-   {'P', '-', 'C', 'C', 'T'},
-   {'R', '-', 'C', 'G', 'A'},
-   {'R', '-', 'C', 'G', 'C'},
-   {'R', '-', 'C', 'G', 'G'},
-   {'R', '-', 'C', 'G', 'T'},
-   {'L', '-', 'C', 'T', 'A'},
-   {'L', '-', 'C', 'T', 'C'},
-   {'L', 'M', 'C', 'T', 'G'},
-   {'L', '-', 'C', 'T', 'T'},
-   {'E', '-', 'G', 'A', 'A'},
-   {'D', '-', 'G', 'A', 'C'},
-   {'E', '-', 'G', 'A', 'G'},
-   {'D', '-', 'G', 'A', 'T'},
-   {'A', '-', 'G', 'C', 'A'},
-   {'A', '-', 'G', 'C', 'C'},
-   {'A', '-', 'G', 'C', 'G'},
-   {'A', '-', 'G', 'C', 'T'},
-   {'G', '-', 'G', 'G', 'A'},
-   {'G', '-', 'G', 'G', 'C'},
-   {'G', '-', 'G', 'G', 'G'},
-   {'G', '-', 'G', 'G', 'T'},
-   {'V', '-', 'G', 'T', 'A'},
-   {'V', '-', 'G', 'T', 'C'},
-   {'V', '-', 'G', 'T', 'G'},
-   {'V', '-', 'G', 'T', 'T'},
-   {'*', '*', 'T', 'A', 'A'},
-   {'Y', '-', 'T', 'A', 'C'},
-   {'*', '*', 'T', 'A', 'G'},
-   {'Y', '-', 'T', 'A', 'T'},
-   {'S', '-', 'T', 'C', 'A'},
-   {'S', '-', 'T', 'C', 'C'},
-   {'S', '-', 'T', 'C', 'G'},
-   {'S', '-', 'T', 'C', 'T'},
-   {'*', '*', 'T', 'G', 'A'},
-   {'C', '-', 'T', 'G', 'C'},
-   {'W', '-', 'T', 'G', 'G'},
-   {'C', '-', 'T', 'G', 'T'},
-   {'L', '-', 'T', 'T', 'A'},
-   {'F', '-', 'T', 'T', 'C'},
-   {'L', 'M', 'T', 'T', 'G'},
-   {'F', '-', 'T', 'T', 'T'}};
+  inline constexpr std::string_view ENCODED_TABLE_2 =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGA** AGCS- AGG** AGTS- ATAMM ATCIM ATGMM ATTIM "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAL- CTCL- CTGL- CTTL- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGVM GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGAW- TGCC- TGGW- TGTC- TTAL- TTCF- TTGL- TTTF-";
 
-  // Check the array size at compile time.
-  static_assert( sizeof(StandardTranslationTable)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
+  // The Yeast Mitochondrial Code (transl_table=3)
+  inline constexpr std::string_view AMINO_TABLE_3_NAME = "NCBI_TABLE_3";
+  inline constexpr std::string_view AMINO_TABLE_3_DESC = "The Yeast Mitochondrial Code";
 
-  // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_1{StandardTranslationTable, AMINO_TABLE_NAME, AMINO_TABLE_DESC, STOP_CODON_OFFSET};
+  inline constexpr std::string_view ENCODED_TABLE_3 =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGAR- AGCS- AGGR- AGTS- ATAMM ATCI- ATGMM ATTI- "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAT- CTCT- CTGT- CTTT- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGV- GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGAW- TGCC- TGGW- TGTC- TTAL- TTCF- TTGL- TTTF-";
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The Vertebrate Mitochondrial Code (transl_table=2)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  constexpr static const int STOP_CODON_OFFSET_2 = 48;
-  constexpr static const char *AMINO_TABLE_2_NAME = "NCBI_TABLE_2";
-  constexpr static const char *AMINO_TABLE_2_DESC = "The Vertebrate Mitochondrial Code";
-  constexpr static const AminoTableColumn TranslationTable_2[Tables::AMINO_TABLE_SIZE]
-  {{ 'K' ,'-' ,'A' ,'A' ,'A' },
-   { 'N' ,'-' ,'A' ,'A' ,'C' },
-   { 'K' ,'-' ,'A' ,'A' ,'G' },
-   { 'N' ,'-' ,'A' ,'A' ,'T' },
-   { 'T' ,'-' ,'A' ,'C' ,'A' },
-   { 'T' ,'-' ,'A' ,'C' ,'C' },
-   { 'T' ,'-' ,'A' ,'C' ,'G' },
-   { 'T' ,'-' ,'A' ,'C' ,'T' },
-   { '*' ,'*' ,'A' ,'G' ,'A' },
-   { 'S' ,'-' ,'A' ,'G' ,'C' },
-   { '*' ,'*' ,'A' ,'G' ,'G' },
-   { 'S' ,'-' ,'A' ,'G' ,'T' },
-   { 'M' ,'M' ,'A' ,'T' ,'A' },
-   { 'I' ,'M' ,'A' ,'T' ,'C' },
-   { 'M' ,'M' ,'A' ,'T' ,'G' },
-   { 'I' ,'M' ,'A' ,'T' ,'T' },
-   { 'Q' ,'-' ,'C' ,'A' ,'A' },
-   { 'H' ,'-' ,'C' ,'A' ,'C' },
-   { 'Q' ,'-' ,'C' ,'A' ,'G' },
-   { 'H' ,'-' ,'C' ,'A' ,'T' },
-   { 'P' ,'-' ,'C' ,'C' ,'A' },
-   { 'P' ,'-' ,'C' ,'C' ,'C' },
-   { 'P' ,'-' ,'C' ,'C' ,'G' },
-   { 'P' ,'-' ,'C' ,'C' ,'T' },
-   { 'R' ,'-' ,'C' ,'G' ,'A' },
-   { 'R' ,'-' ,'C' ,'G' ,'C' },
-   { 'R' ,'-' ,'C' ,'G' ,'G' },
-   { 'R' ,'-' ,'C' ,'G' ,'T' },
-   { 'L' ,'-' ,'C' ,'T' ,'A' },
-   { 'L' ,'-' ,'C' ,'T' ,'C' },
-   { 'L' ,'-' ,'C' ,'T' ,'G' },
-   { 'L' ,'-' ,'C' ,'T' ,'T' },
-   { 'E' ,'-' ,'G' ,'A' ,'A' },
-   { 'D' ,'-' ,'G' ,'A' ,'C' },
-   { 'E' ,'-' ,'G' ,'A' ,'G' },
-   { 'D' ,'-' ,'G' ,'A' ,'T' },
-   { 'A' ,'-' ,'G' ,'C' ,'A' },
-   { 'A' ,'-' ,'G' ,'C' ,'C' },
-   { 'A' ,'-' ,'G' ,'C' ,'G' },
-   { 'A' ,'-' ,'G' ,'C' ,'T' },
-   { 'G' ,'-' ,'G' ,'G' ,'A' },
-   { 'G' ,'-' ,'G' ,'G' ,'C' },
-   { 'G' ,'-' ,'G' ,'G' ,'G' },
-   { 'G' ,'-' ,'G' ,'G' ,'T' },
-   { 'V' ,'-' ,'G' ,'T' ,'A' },
-   { 'V' ,'-' ,'G' ,'T' ,'C' },
-   { 'V' ,'M' ,'G' ,'T' ,'G' },
-   { 'V' ,'-' ,'G' ,'T' ,'T' },
-   { '*' ,'*' ,'T' ,'A' ,'A' },
-   { 'Y' ,'-' ,'T' ,'A' ,'C' },
-   { '*' ,'*' ,'T' ,'A' ,'G' },
-   { 'Y' ,'-' ,'T' ,'A' ,'T' },
-   { 'S' ,'-' ,'T' ,'C' ,'A' },
-   { 'S' ,'-' ,'T' ,'C' ,'C' },
-   { 'S' ,'-' ,'T' ,'C' ,'G' },
-   { 'S' ,'-' ,'T' ,'C' ,'T' },
-   { 'W' ,'-' ,'T' ,'G' ,'A' },
-   { 'C' ,'-' ,'T' ,'G' ,'C' },
-   { 'W' ,'-' ,'T' ,'G' ,'G' },
-   { 'C' ,'-' ,'T' ,'G' ,'T' },
-   { 'L' ,'-' ,'T' ,'T' ,'A' },
-   { 'F' ,'-' ,'T' ,'T' ,'C' },
-   { 'L' ,'-' ,'T' ,'T' ,'G' },
-   { 'F' ,'-' ,'T' ,'T' ,'T' }};
-
-  // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_2)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
-
-  // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_2{TranslationTable_2, AMINO_TABLE_2_NAME, AMINO_TABLE_2_DESC, STOP_CODON_OFFSET_2};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The Yeast Mitochondrial Code (transl_table=3)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  constexpr static const int STOP_CODON_OFFSET_3 = 48;
-  constexpr static const char *AMINO_TABLE_3_NAME = "NCBI_TABLE_3";
-  constexpr static const char *AMINO_TABLE_3_DESC = "The Yeast Mitochondrial Code";
-  constexpr static const AminoTableColumn TranslationTable_3[Tables::AMINO_TABLE_SIZE]
-  {{ 'K' ,'-' ,'A' ,'A' ,'A' },
-   { 'N' ,'-' ,'A' ,'A' ,'C' },
-   { 'K' ,'-' ,'A' ,'A' ,'G' },
-   { 'N' ,'-' ,'A' ,'A' ,'T' },
-   { 'T' ,'-' ,'A' ,'C' ,'A' },
-   { 'T' ,'-' ,'A' ,'C' ,'C' },
-   { 'T' ,'-' ,'A' ,'C' ,'G' },
-   { 'T' ,'-' ,'A' ,'C' ,'T' },
-   { 'R' ,'-' ,'A' ,'G' ,'A' },
-   { 'S' ,'-' ,'A' ,'G' ,'C' },
-   { 'R' ,'-' ,'A' ,'G' ,'G' },
-   { 'S' ,'-' ,'A' ,'G' ,'T' },
-   { 'M' ,'M' ,'A' ,'T' ,'A' },
-   { 'I' ,'-' ,'A' ,'T' ,'C' },
-   { 'M' ,'M' ,'A' ,'T' ,'G' },
-   { 'I' ,'-' ,'A' ,'T' ,'T' },
-   { 'Q' ,'-' ,'C' ,'A' ,'A' },
-   { 'H' ,'-' ,'C' ,'A' ,'C' },
-   { 'Q' ,'-' ,'C' ,'A' ,'G' },
-   { 'H' ,'-' ,'C' ,'A' ,'T' },
-   { 'P' ,'-' ,'C' ,'C' ,'A' },
-   { 'P' ,'-' ,'C' ,'C' ,'C' },
-   { 'P' ,'-' ,'C' ,'C' ,'G' },
-   { 'P' ,'-' ,'C' ,'C' ,'T' },
-   { 'R' ,'-' ,'C' ,'G' ,'A' },
-   { 'R' ,'-' ,'C' ,'G' ,'C' },
-   { 'R' ,'-' ,'C' ,'G' ,'G' },
-   { 'R' ,'-' ,'C' ,'G' ,'T' },
-   { 'T' ,'-' ,'C' ,'T' ,'A' },
-   { 'T' ,'-' ,'C' ,'T' ,'C' },
-   { 'T' ,'-' ,'C' ,'T' ,'G' },
-   { 'T' ,'-' ,'C' ,'T' ,'T' },
-   { 'E' ,'-' ,'G' ,'A' ,'A' },
-   { 'D' ,'-' ,'G' ,'A' ,'C' },
-   { 'E' ,'-' ,'G' ,'A' ,'G' },
-   { 'D' ,'-' ,'G' ,'A' ,'T' },
-   { 'A' ,'-' ,'G' ,'C' ,'A' },
-   { 'A' ,'-' ,'G' ,'C' ,'C' },
-   { 'A' ,'-' ,'G' ,'C' ,'G' },
-   { 'A' ,'-' ,'G' ,'C' ,'T' },
-   { 'G' ,'-' ,'G' ,'G' ,'A' },
-   { 'G' ,'-' ,'G' ,'G' ,'C' },
-   { 'G' ,'-' ,'G' ,'G' ,'G' },
-   { 'G' ,'-' ,'G' ,'G' ,'T' },
-   { 'V' ,'-' ,'G' ,'T' ,'A' },
-   { 'V' ,'-' ,'G' ,'T' ,'C' },
-   { 'V' ,'-' ,'G' ,'T' ,'G' },
-   { 'V' ,'-' ,'G' ,'T' ,'T' },
-   { '*' ,'*' ,'T' ,'A' ,'A' },
-   { 'Y' ,'-' ,'T' ,'A' ,'C' },
-   { '*' ,'*' ,'T' ,'A' ,'G' },
-   { 'Y' ,'-' ,'T' ,'A' ,'T' },
-   { 'S' ,'-' ,'T' ,'C' ,'A' },
-   { 'S' ,'-' ,'T' ,'C' ,'C' },
-   { 'S' ,'-' ,'T' ,'C' ,'G' },
-   { 'S' ,'-' ,'T' ,'C' ,'T' },
-   { 'W' ,'-' ,'T' ,'G' ,'A' },
-   { 'C' ,'-' ,'T' ,'G' ,'C' },
-   { 'W' ,'-' ,'T' ,'G' ,'G' },
-   { 'C' ,'-' ,'T' ,'G' ,'T' },
-   { 'L' ,'-' ,'T' ,'T' ,'A' },
-   { 'F' ,'-' ,'T' ,'T' ,'C' },
-   { 'L' ,'-' ,'T' ,'T' ,'G' },
-   { 'F' ,'-' ,'T' ,'T' ,'T' }};
-
-  // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_3)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
-
-  // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_3{TranslationTable_3, AMINO_TABLE_3_NAME, AMINO_TABLE_3_DESC, STOP_CODON_OFFSET_3};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code (transl_table=4)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  constexpr static const int STOP_CODON_OFFSET_4 = 48;
-  constexpr static const char *AMINO_TABLE_4_NAME = "NCBI_TABLE_4";
-  constexpr static const char *AMINO_TABLE_4_DESC =
+  // The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code (transl_table=4)
+  inline constexpr std::string_view AMINO_TABLE_4_NAME = "NCBI_TABLE_4";
+  inline constexpr std::string_view AMINO_TABLE_4_DESC =
   "The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code";
-  constexpr static const AminoTableColumn TranslationTable_4[Tables::AMINO_TABLE_SIZE]
-  {{ 'K' ,'-' ,'A' ,'A' ,'A' },
-   { 'N' ,'-' ,'A' ,'A' ,'C' },
-   { 'K' ,'-' ,'A' ,'A' ,'G' },
-   { 'N' ,'-' ,'A' ,'A' ,'T' },
-   { 'T' ,'-' ,'A' ,'C' ,'A' },
-   { 'T' ,'-' ,'A' ,'C' ,'C' },
-   { 'T' ,'-' ,'A' ,'C' ,'G' },
-   { 'T' ,'-' ,'A' ,'C' ,'T' },
-   { 'R' ,'-' ,'A' ,'G' ,'A' },
-   { 'S' ,'-' ,'A' ,'G' ,'C' },
-   { 'R' ,'-' ,'A' ,'G' ,'G' },
-   { 'S' ,'-' ,'A' ,'G' ,'T' },
-   { 'I' ,'M' ,'A' ,'T' ,'A' },
-   { 'I' ,'M' ,'A' ,'T' ,'C' },
-   { 'M' ,'M' ,'A' ,'T' ,'G' },
-   { 'I' ,'M' ,'A' ,'T' ,'T' },
-   { 'Q' ,'-' ,'C' ,'A' ,'A' },
-   { 'H' ,'-' ,'C' ,'A' ,'C' },
-   { 'Q' ,'-' ,'C' ,'A' ,'G' },
-   { 'H' ,'-' ,'C' ,'A' ,'T' },
-   { 'P' ,'-' ,'C' ,'C' ,'A' },
-   { 'P' ,'-' ,'C' ,'C' ,'C' },
-   { 'P' ,'-' ,'C' ,'C' ,'G' },
-   { 'P' ,'-' ,'C' ,'C' ,'T' },
-   { 'R' ,'-' ,'C' ,'G' ,'A' },
-   { 'R' ,'-' ,'C' ,'G' ,'C' },
-   { 'R' ,'-' ,'C' ,'G' ,'G' },
-   { 'R' ,'-' ,'C' ,'G' ,'T' },
-   { 'L' ,'-' ,'C' ,'T' ,'A' },
-   { 'L' ,'-' ,'C' ,'T' ,'C' },
-   { 'L' ,'M' ,'C' ,'T' ,'G' },
-   { 'L' ,'-' ,'C' ,'T' ,'T' },
-   { 'E' ,'-' ,'G' ,'A' ,'A' },
-   { 'D' ,'-' ,'G' ,'A' ,'C' },
-   { 'E' ,'-' ,'G' ,'A' ,'G' },
-   { 'D' ,'-' ,'G' ,'A' ,'T' },
-   { 'A' ,'-' ,'G' ,'C' ,'A' },
-   { 'A' ,'-' ,'G' ,'C' ,'C' },
-   { 'A' ,'-' ,'G' ,'C' ,'G' },
-   { 'A' ,'-' ,'G' ,'C' ,'T' },
-   { 'G' ,'-' ,'G' ,'G' ,'A' },
-   { 'G' ,'-' ,'G' ,'G' ,'C' },
-   { 'G' ,'-' ,'G' ,'G' ,'G' },
-   { 'G' ,'-' ,'G' ,'G' ,'T' },
-   { 'V' ,'-' ,'G' ,'T' ,'A' },
-   { 'V' ,'-' ,'G' ,'T' ,'C' },
-   { 'V' ,'M' ,'G' ,'T' ,'G' },
-   { 'V' ,'-' ,'G' ,'T' ,'T' },
-   { '*' ,'*' ,'T' ,'A' ,'A' },
-   { 'Y' ,'-' ,'T' ,'A' ,'C' },
-   { '*' ,'*' ,'T' ,'A' ,'G' },
-   { 'Y' ,'-' ,'T' ,'A' ,'T' },
-   { 'S' ,'-' ,'T' ,'C' ,'A' },
-   { 'S' ,'-' ,'T' ,'C' ,'C' },
-   { 'S' ,'-' ,'T' ,'C' ,'G' },
-   { 'S' ,'-' ,'T' ,'C' ,'T' },
-   { 'W' ,'-' ,'T' ,'G' ,'A' },
-   { 'C' ,'-' ,'T' ,'G' ,'C' },
-   { 'W' ,'-' ,'T' ,'G' ,'G' },
-   { 'C' ,'-' ,'T' ,'G' ,'T' },
-   { 'L' ,'M' ,'T' ,'T' ,'A' },
-   { 'F' ,'-' ,'T' ,'T' ,'C' },
-   { 'L' ,'M' ,'T' ,'T' ,'G' },
-   { 'F' ,'-' ,'T' ,'T' ,'T' }};
 
-  // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_4)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
+  inline constexpr std::string_view ENCODED_TABLE_4 =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGAR- AGCS- AGGR- AGTS- ATAIM ATCIM ATGMM ATTIM "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAL- CTCL- CTGLM CTTL- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGVM GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGAW- TGCC- TGGW- TGTC- TTALM TTCF- TTGLM TTTF-";
 
-  // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_4{TranslationTable_4, AMINO_TABLE_4_NAME, AMINO_TABLE_4_DESC, STOP_CODON_OFFSET_4};
+  // The Invertebrate Mitochondrial Code (transl_table=5)
+  inline constexpr std::string_view AMINO_TABLE_5_NAME = "NCBI_TABLE_5";
+  inline constexpr std::string_view AMINO_TABLE_5_DESC = "The Invertebrate Mitochondrial Code";
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The Invertebrate Mitochondrial Code (transl_table=5)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  inline constexpr std::string_view ENCODED_TABLE_5 =
+    "AAAK- AACN- AAGK- AATN- ACAT- ACCT- ACGT- ACTT- "
+    "AGAS- AGCS- AGGS- AGTS- ATAMM ATCIM ATGMM ATTIM "
+    "CAAQ- CACH- CAGQ- CATH- CCAP- CCCP- CCGP- CCTP- "
+    "CGAR- CGCR- CGGR- CGTR- CTAL- CTCL- CTGL- CTTL- "
+    "GAAE- GACD- GAGE- GATD- GCAA- GCCA- GCGA- GCTA- "
+    "GGAG- GGCG- GGGG- GGTG- GTAV- GTCV- GTGVM GTTV- "
+    "TAA** TACY- TAG** TATY- TCAS- TCCS- TCGS- TCTS- "
+    "TGAW- TGCC- TGGW- TGTC- TTAL- TTCF- TTGLM TTTF-";
 
-  constexpr static const int STOP_CODON_OFFSET_5 = 48;
-  constexpr static const char *AMINO_TABLE_5_NAME = "NCBI_TABLE_5";
-  constexpr static const char *AMINO_TABLE_5_DESC = "The Invertebrate Mitochondrial Code";
-  constexpr static const AminoTableColumn TranslationTable_5[Tables::AMINO_TABLE_SIZE]
-  {{ 'K' ,'-' ,'A' ,'A' ,'A' },
-   { 'N' ,'-' ,'A' ,'A' ,'C' },
-   { 'K' ,'-' ,'A' ,'A' ,'G' },
-   { 'N' ,'-' ,'A' ,'A' ,'T' },
-   { 'T' ,'-' ,'A' ,'C' ,'A' },
-   { 'T' ,'-' ,'A' ,'C' ,'C' },
-   { 'T' ,'-' ,'A' ,'C' ,'G' },
-   { 'T' ,'-' ,'A' ,'C' ,'T' },
-   { 'S' ,'-' ,'A' ,'G' ,'A' },
-   { 'S' ,'-' ,'A' ,'G' ,'C' },
-   { 'S' ,'-' ,'A' ,'G' ,'G' },
-   { 'S' ,'-' ,'A' ,'G' ,'T' },
-   { 'M' ,'M' ,'A' ,'T' ,'A' },
-   { 'I' ,'M' ,'A' ,'T' ,'C' },
-   { 'M' ,'M' ,'A' ,'T' ,'G' },
-   { 'I' ,'M' ,'A' ,'T' ,'T' },
-   { 'Q' ,'-' ,'C' ,'A' ,'A' },
-   { 'H' ,'-' ,'C' ,'A' ,'C' },
-   { 'Q' ,'-' ,'C' ,'A' ,'G' },
-   { 'H' ,'-' ,'C' ,'A' ,'T' },
-   { 'P' ,'-' ,'C' ,'C' ,'A' },
-   { 'P' ,'-' ,'C' ,'C' ,'C' },
-   { 'P' ,'-' ,'C' ,'C' ,'G' },
-   { 'P' ,'-' ,'C' ,'C' ,'T' },
-   { 'R' ,'-' ,'C' ,'G' ,'A' },
-   { 'R' ,'-' ,'C' ,'G' ,'C' },
-   { 'R' ,'-' ,'C' ,'G' ,'G' },
-   { 'R' ,'-' ,'C' ,'G' ,'T' },
-   { 'L' ,'-' ,'C' ,'T' ,'A' },
-   { 'L' ,'-' ,'C' ,'T' ,'C' },
-   { 'L' ,'-' ,'C' ,'T' ,'G' },
-   { 'L' ,'-' ,'C' ,'T' ,'T' },
-   { 'E' ,'-' ,'G' ,'A' ,'A' },
-   { 'D' ,'-' ,'G' ,'A' ,'C' },
-   { 'E' ,'-' ,'G' ,'A' ,'G' },
-   { 'D' ,'-' ,'G' ,'A' ,'T' },
-   { 'A' ,'-' ,'G' ,'C' ,'A' },
-   { 'A' ,'-' ,'G' ,'C' ,'C' },
-   { 'A' ,'-' ,'G' ,'C' ,'G' },
-   { 'A' ,'-' ,'G' ,'C' ,'T' },
-   { 'G' ,'-' ,'G' ,'G' ,'A' },
-   { 'G' ,'-' ,'G' ,'G' ,'C' },
-   { 'G' ,'-' ,'G' ,'G' ,'G' },
-   { 'G' ,'-' ,'G' ,'G' ,'T' },
-   { 'V' ,'-' ,'G' ,'T' ,'A' },
-   { 'V' ,'-' ,'G' ,'T' ,'C' },
-   { 'V' ,'M' ,'G' ,'T' ,'G' },
-   { 'V' ,'-' ,'G' ,'T' ,'T' },
-   { '*' ,'*' ,'T' ,'A' ,'A' },
-   { 'Y' ,'-' ,'T' ,'A' ,'C' },
-   { '*' ,'*' ,'T' ,'A' ,'G' },
-   { 'Y' ,'-' ,'T' ,'A' ,'T' },
-   { 'S' ,'-' ,'T' ,'C' ,'A' },
-   { 'S' ,'-' ,'T' ,'C' ,'C' },
-   { 'S' ,'-' ,'T' ,'C' ,'G' },
-   { 'S' ,'-' ,'T' ,'C' ,'T' },
-   { 'W' ,'-' ,'T' ,'G' ,'A' },
-   { 'C' ,'-' ,'T' ,'G' ,'C' },
-   { 'W' ,'-' ,'T' ,'G' ,'G' },
-   { 'C' ,'-' ,'T' ,'G' ,'T' },
-   { 'L' ,'-' ,'T' ,'T' ,'A' },
-   { 'F' ,'-' ,'T' ,'T' ,'C' },
-   { 'L' ,'M' ,'T' ,'T' ,'G' },
-   { 'F' ,'-' ,'T' ,'T' ,'T' }};
-
-  // Check the array size at compile time.
-  static_assert( sizeof(TranslationTable_5)/sizeof(AminoTableColumn) == Tables::AMINO_TABLE_SIZE
-  , "Error - the standard amino acid translation table should have 64 elements");
-
-  // Define the standard translation table.
-  constexpr static const TranslationTable TABLE_5{TranslationTable_5, AMINO_TABLE_5_NAME, AMINO_TABLE_5_DESC, STOP_CODON_OFFSET_5};
-
-
-};  // NCBITable
-
+}   // namespace NCBITables
 
 
 }   // end namespace

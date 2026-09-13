@@ -6,15 +6,15 @@
 #define KGL_ALPHABET_AMINO_H
 
 
-#include "kel_exec_env.h"
+#include <vector>
 #include "kgl_genome_types.h"
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Defines the standard Amino Acids.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class AminoAcid {
@@ -73,11 +73,6 @@ public:
   // The three stop codons.
   inline static constexpr Amino_t STOP_CODON = '*';
   inline static constexpr ContigOffset_t STOP_CODON_OFFSET = 20;
-  inline static constexpr Amino_t STOP_AMBER_TAG = '*';
-  inline static constexpr Amino_t STOP_OCHRE_TAA = '*';
-  inline static constexpr Amino_t STOP_OPAL_TGA = '*';
-  // Null Amino Type used in the translation tables.
-  inline static constexpr Amino_t NULL_AMINO = '-';
   // The special unknown amino acid generated when the DNA5 codon
   // contains the unknown base 'N'.
   inline static constexpr Amino_t UNKNOWN_AMINO = 'Z';
@@ -117,23 +112,24 @@ public:
   inline static constexpr Alphabet AMINO_STOP = Alphabet::_;
   inline static constexpr Alphabet AMINO_UNKNOWN = Alphabet::Z;
 
-  // ReturnType a vector of all valid alphabet values (only the 20 'natural'
-  // and the 'unknown'  amino acids are returned).
+  /// ReturnType a vector of all valid alphabet values (only the 20 'natural',
+  /// the stop and the 'unknown' amino acids are returned).
   [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
-  // Checks for possible memory corruption.
+  /// Checks for possible memory corruption.
   [[nodiscard]] static bool validAlphabet(Alphabet amino);
 
-  // Convert an amino into an array offset.
-  // Should be in the same ascending order as the vector returned by enumerateAlphabet();
-  // Only the 20 'natural' AAs and the unknown AA are indexed.
+  /// Convert an amino into an array offset.
+  /// Should be in the same ascending order as the vector returned by enumerateAlphabet();
+  /// Only the 20 'natural' AAs, the stop AA and the unknown AA are indexed.
   [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet amino);
 
-  // The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
+  /// The Alphabet convertChar(char) function must be defined -see kgl_alphabet_string.h
   [[nodiscard]] static Alphabet convertChar(char chr_aa);
 
-  // ReturnType amino acid as a char.
+  /// ReturnType amino acid as a char.
   [[nodiscard]] static char convertToChar(Alphabet amino) { return static_cast<char>(amino); }
+
 
 };
 

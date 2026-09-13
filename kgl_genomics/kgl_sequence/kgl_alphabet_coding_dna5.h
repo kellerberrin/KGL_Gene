@@ -7,11 +7,9 @@
 
 
 
-
 #include <cstdint>
-#include <string>
+#include <vector>
 #include "kgl_genome_types.h"
-#include "kel_exec_env.h"
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -20,7 +18,7 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is a semantic class that defines strand converted DNA sequences.
 // Sequences that contain strings of this class have been STRANDED and can be used to generate amino acids.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class CodingDNA5 {
@@ -56,18 +54,17 @@ public:
   };
 
 
-  // ReturnType a vector of all valid alphabet values.
+  /// ReturnType a vector of all valid alphabet values.
   [[nodiscard]] static const std::vector<Alphabet>& enumerateAlphabet();
 
-  // Checks for possible memory corruption.
+  /// Checks for possible memory corruption.
   [[nodiscard]] static bool validAlphabet(Alphabet nucleotide);
 
-  // Convert a base to an array offset.
+  /// Convert a base to an array offset.
   [[nodiscard]] static ContigOffset_t symbolToColumn(Alphabet nucleotide);
 
-  // ReturnType nucleotide as a char.
+  /// ReturnType nucleotide as a char.
   [[nodiscard]] static char convertToChar(Alphabet nucleotide) { return static_cast<char>(nucleotide); }
-
 
 
 };
