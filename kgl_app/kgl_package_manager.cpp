@@ -4,7 +4,7 @@
 
 #include "kgl_package_manager.h"
 #include "kgl_resource_factory.h"
-#include "../kgl_variant_parser/kgl_variant_factory_parsers.h"
+#include "kgl_variant_factory_parsers.h"
 
 
 namespace kgl = kellerberrin::genome;

@@ -2,7 +2,7 @@
 // Created by kellerberrin on 16/8/21.
 //
 
-#include "kgl_literature/kgl_literature.h"
+#include "kgl_literature.h"
 
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;

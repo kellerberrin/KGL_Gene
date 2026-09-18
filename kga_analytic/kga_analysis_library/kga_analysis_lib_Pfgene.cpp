@@ -185,11 +185,11 @@ void kga::AnalysisGenePf::varIntron(const GeneVector& gene_vector,
   //  i_promoter_ptr = i_promoter_ptr_rev;
 
   //  StringDNA5
-  DNA5SequenceLinear i_complement_promoter(std::move(StringDNA5(I_COMPLEMENT_PROMOTER_)));
+  Sequence<DNA5> i_complement_promoter(I_COMPLEMENT_PROMOTER_);
   DNA5SequenceLinear i_complement_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_complement_promoter.codingSequence(StrandSense::REVERSE));
   //  i_complement_promoter_ptr = i_complement_promoter_ptr_rev;
 
-  DNA5SequenceLinear i_5_promoter(std::move(StringDNA5(I_5_PROMOTER_)));
+  DNA5SequenceLinear i_5_promoter(I_5_PROMOTER_);
   DNA5SequenceLinear i_5_promoter_rev = DNA5SequenceLinear::downConvertToLinear(i_5_promoter.codingSequence(StrandSense::REVERSE));
   //  i_5_promoter_ptr = i_5_promoter_ptr_rev;
 

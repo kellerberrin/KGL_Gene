@@ -5,8 +5,8 @@
 #include "kol_ParserGoXml.h"
 #include "contrib/kol_GoGraphImpl.h"
 
-#include "../contrib/rapidxml/rapidxml_utils.h"
-#include "../contrib/rapidxml/rapidxml.h"
+#include "rapidxml_utils.h"
+#include "rapidxml.h"
 
 namespace kol = kellerberrin::ontology;
 
