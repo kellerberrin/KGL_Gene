@@ -7,7 +7,7 @@
 
 
 #include "kgl_sequence_amino.h"
-#include "kgl_sequence_base.h"
+#include "kgl_sequence.h"
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_distance_tree_node.h"
 
@@ -20,7 +20,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Important - for performance reasons; only sequence views are stored.
-// The underlying sequences must remain on memory while this tree node exists or a seg-fault will surely occur.
+// The underlying sequences must remain in memory while this tree node exists or a seg-fault will surely occur.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

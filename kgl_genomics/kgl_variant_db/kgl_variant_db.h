@@ -5,7 +5,6 @@
 #ifndef KGL_VARIANT_H
 #define KGL_VARIANT_H
 
-#include "kgl_sequence_base.h"
 #include "kgl_variant_evidence.h"
 #include "kgl_variant_factory_vcf_parse_cigar.h"
 

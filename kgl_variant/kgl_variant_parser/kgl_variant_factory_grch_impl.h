@@ -56,9 +56,9 @@ private:
 // Progress counters.
   size_t variant_count_{0};
 
-  bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const;
+  [[nodiscard]] bool addThreadSafeVariant(const std::shared_ptr<const Variant>& variant_ptr, const GenomeId_t& genome) const;
 // Filters the variants to be added to the population structure.
-  virtual bool filterVariant(const std::shared_ptr<const Variant>&,  const GenomeId_t&) const { return true; }
+  [[nodiscard]] virtual bool filterVariant(const std::shared_ptr<const Variant>&,  const GenomeId_t&) const { return true; }
 
 };
 
@@ -79,7 +79,7 @@ public:
 private:
 
   // Filters the variants to be added to the population structure.
-  bool filterVariant(const std::shared_ptr<const Variant>& variant_ptr,  const GenomeId_t& genome) const override;
+  [[nodiscard]] bool filterVariant(const std::shared_ptr<const Variant>& variant_ptr,  const GenomeId_t& genome) const override;
 
 };
 

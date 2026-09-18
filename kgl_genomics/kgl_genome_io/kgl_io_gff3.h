@@ -8,7 +8,7 @@
 
 #include "kgl_genome_prelim.h"
 #include "kgl_genome_genome.h"
-#include "kgl_sequence_virtual.h"
+#include "kgl_sequence_view.h"
 
 #include <memory>
 #include <string>

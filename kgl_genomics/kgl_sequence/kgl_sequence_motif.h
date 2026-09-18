@@ -1,74 +1,56 @@
 //
-// Created by kellerberrin on 11/12/23.
+// kgl_sequence_motif.h — IUPAC nucleotide code to regex conversion and Pf motif search.
+//
+// SearchSequence is retained as a namespace so the reference call spelling is unchanged.
 //
 
 #ifndef KGL_SEQUENCE_MOTIF_H
 #define KGL_SEQUENCE_MOTIF_H
 
-#include "kgl_sequence_virtual.h"
+
+#include <regex>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "kgl_genome_types.h"
+#include "kgl_sequence_view.h"
+#include "kel_interval_unsigned.h"
 
 
-namespace kellerberrin::genome{   //  organization level namespace
+namespace kellerberrin::genome {   //  organization::project level namespace
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// IUPAC nucleotide codes.
-//
-// A	=> Adenine
-// C	=> Cytosine
-// G	=> Guanine
-// T (or U)	=> Thymine (or Uracil)
-// R	=> A or G
-// Y	=> C or T
-// S	=> G or C
-// W	=> A or T
-// K	=> G or T
-// M	=> A or C
-// B	=> C or G or T
-// D	=> A or G or T
-// H	=> A or C or T
-// V	=> A or C or G
-// N	=> any base (one base)
-// . => any base is accepted at this position (the base is optional in the regex)
-// - => any base (one base)
-//
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A namespace (not a deleted-constructor class): the call sites
+// SearchSequence::PfPolymerase_III_ABox(...) compile unchanged.
+namespace SearchSequence {
 
-// Object cannot be created, just supplies scope and visibility.
-class SearchSequence {
-
-public:
-
-  SearchSequence() = delete;
-  ~SearchSequence() = delete;
+  inline constexpr std::string_view PF_POL_III_A_BOX_{"TRGYNNANNNG"};   // Pf Polymerase III 'A' box
+  inline constexpr std::string_view PF_POL_III_B_BOX_{"GWTCRANNC"};    // Pf Polymerase III 'B' box
 
   /// Convenience routine to convert IUPAC nucleotide codes into a regex string.
-  [[nodiscard]] static std::string IUPACRegex(std::string_view IUPAC_search);
-  /// Search for DNA motifs.
-  [[nodiscard]] static std::vector<OpenRightUnsigned> PfPolymerase_III_ABox(const VirtualSequence& sequence) {
+  [[nodiscard]] std::string IUPACRegex(std::string_view IUPAC_search);
 
-    return sequence.regexSearch(IUPACRegex(PF_POL_III_A_BOX_));
+  /// Search for DNA motifs.
+  [[nodiscard]] inline std::vector<OpenRightUnsigned> PfPolymerase_III_ABox(SequenceLike auto const& sequence) {
+
+    static const std::regex compiled{IUPACRegex(PF_POL_III_A_BOX_)};
+    return regexSearch(sequence, compiled);
 
   }
 
   /// Search for DNA motifs.
-  [[nodiscard]] static std::vector<OpenRightUnsigned> PfPolymerase_III_BBox(const VirtualSequence& sequence) {
+  [[nodiscard]] inline std::vector<OpenRightUnsigned> PfPolymerase_III_BBox(SequenceLike auto const& sequence) {
 
-    return sequence.regexSearch(IUPACRegex(PF_POL_III_B_BOX_));
+    static const std::regex compiled{IUPACRegex(PF_POL_III_B_BOX_)};
+    return regexSearch(sequence, compiled);
 
   }
 
-private:
-
-  inline static constexpr std::string_view PF_POL_III_A_BOX_{"TRGYNNANNNG"}; // Pf Polymerase III 'A' box
-  inline static constexpr std::string_view PF_POL_III_B_BOX_{"GWTCRANNC"}; // Pf Polymerase III 'B' box
-
-};
+}   // namespace SearchSequence
 
 
-} // Namespace
-
+}   // end namespace
 
 
 #endif //KGL_SEQUENCE_MOTIF_H

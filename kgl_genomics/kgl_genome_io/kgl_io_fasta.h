@@ -6,13 +6,11 @@
 #define KGL_FASTA_H
 
 
-#include "kgl_genome_prelim.h"
 #include "kgl_genome_genome.h"
-#include "kgl_sequence_virtual.h"
+#include "kgl_sequence_view.h"
 
 #include <memory>
 #include <string>
-#include <map>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -35,20 +33,20 @@ public:
   WriteFastaSequence(const WriteFastaSequence& copy) = default;
   WriteFastaSequence( std::string fasta_id,
                       std::string fasta_description,
-                      std::shared_ptr<const VirtualSequence> fasta_sequence_ptr) : fasta_id_(std::move(fasta_id)),
-                                                                                   fasta_description_(std::move(fasta_description)),
-                                                                                   fasta_sequence_ptr_(std::move(fasta_sequence_ptr)) {}
+                      SequenceRef sequence) : fasta_id_(std::move(fasta_id)),
+                                              fasta_description_(std::move(fasta_description)),
+                                              fasta_sequence_(std::move(sequence)) {}
   ~WriteFastaSequence() = default;
 
   [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
   [[nodiscard]] const std::string& fastaDescription() const { return fasta_description_; }
-  [[nodiscard]] const std::shared_ptr<const VirtualSequence>& fastaSequence() const { return fasta_sequence_ptr_; }
+  [[nodiscard]] const SequenceRef& fastaSequence() const { return fasta_sequence_; }
 
 private:
 
   std::string fasta_id_;
   std::string fasta_description_;
-  std::shared_ptr<const VirtualSequence> fasta_sequence_ptr_;
+  SequenceRef fasta_sequence_;
 
 };
 

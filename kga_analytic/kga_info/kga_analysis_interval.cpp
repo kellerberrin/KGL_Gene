@@ -386,7 +386,7 @@ bool kga::IntervalAnalysis::variantIntervalCount(std::shared_ptr<const Populatio
 
             ++snp_count;
 
-            if (DNA5::isTransition(variant->alternate().at(0), variant->reference().at(0))) {
+            if (DNA5::isTransition(variant->alternate()[0], variant->reference()[0])) {
 
               ++transition_count;
 
@@ -467,7 +467,7 @@ bool kga::IntervalAnalysis::writeHeader(std::ostream& output, char delimiter, bo
   output << "MaxEmptyOffset" << delimiter;
   output << "MaxEmptyInterval" << delimiter;
   output << "AvEmptyInterval" << delimiter;
-  std::vector<DNA5::Alphabet> symbols = DNA5::enumerateAlphabet();
+  const auto& symbols = DNA5::enumerateAlphabet();
   for (auto const symbol : symbols) {
 
     output << static_cast<char>(symbol) << delimiter;

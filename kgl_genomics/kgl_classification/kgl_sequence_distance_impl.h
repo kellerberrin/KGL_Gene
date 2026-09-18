@@ -93,11 +93,6 @@ public:
 };
 
 
-using VirtualDistanceMetric = SequenceDistanceMetric<VirtualSequence>;
-
-inline static const VirtualDistanceMetric LevenshteinGlobalVirtual{LevenshteinGlobalImpl<VirtualSequence>};
-inline static const VirtualDistanceMetric LevenshteinLocalVirtual{LevenshteinLocalImpl<VirtualSequence>};
-
 using AminoDistanceMetric = SequenceDistanceMetric<AminoSequence>;
 
 inline static const AminoDistanceMetric LevenshteinGlobalAmino{LevenshteinGlobalImpl<AminoSequence>};

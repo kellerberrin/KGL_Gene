@@ -367,7 +367,7 @@ std::string kgl::GenomicSequence::outputRegionHeader(char delimiter) {
   ss << "RegionSize" << delimiter;
   ss << "Distance" << delimiter;
   ss << "CpG" << delimiter;
-  std::vector<DNA5::Alphabet> symbols = DNA5::enumerateAlphabet();
+  const auto& symbols = DNA5::enumerateAlphabet();
   for (auto symbol : symbols) {
 
     ss << static_cast<char>(symbol) << delimiter;

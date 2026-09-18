@@ -8,7 +8,7 @@
 
 
 #include "kgl_sequence_amino.h"
-#include "kgl_sequence_base.h"
+#include "kgl_sequence.h"
 #include "kgl_sequence_distance_impl.h"
 #include "kgl_distance_tree_node.h"
 

@@ -27,8 +27,8 @@ std::unique_ptr<kgl::Variant> kgl::Variant::cloneImpl( VariantPhase phase_id,
                                      offset(),
                                      phase_id,
                                      identifier(),
-                                     DNA5SequenceLinear(StringDNA5(reference.getAlphabetString())),
-                                     DNA5SequenceLinear(StringDNA5(alternate.getAlphabetString())),
+                                     DNA5SequenceLinear(StringDNA5(reference.clone())),
+                                     DNA5SequenceLinear(StringDNA5(alternate.clone())),
                                      evidence);
 
 }
@@ -171,8 +171,8 @@ std::tuple<kgl::DNA5SequenceLinear, kgl::DNA5SequenceLinear, kgl::ContigOffset_t
   // Variant may already be in canonical form.
   if (isCanonical()) {
 
-    return { DNA5SequenceLinear(StringDNA5(reference().getAlphabetString())),
-             DNA5SequenceLinear(StringDNA5(alternate().getAlphabetString())),
+    return { DNA5SequenceLinear(StringDNA5(reference().clone())),
+             DNA5SequenceLinear(StringDNA5(alternate().clone())),
              offset() };
 
   }

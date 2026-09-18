@@ -8,10 +8,10 @@
 
 #include <memory>
 #include <string>
-#include <map>
 #include <sstream>
+#include <vector>
 #include "kgl_genome_types.h"
-#include "kgl_sequence_base.h"
+
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace

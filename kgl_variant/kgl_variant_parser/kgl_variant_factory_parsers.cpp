@@ -8,7 +8,7 @@
 #include "kgl_variant_factory_grch_impl.h"
 #include "kgl_variant_factory_1000_impl.h"
 #include "kgl_variant_factory_gnomad_impl.h"
-#include "kgl_json_parser.h"
+#include "kgl_parser/kgl_json_parser.h"
 #include "kgl_bio_pmid_parser.h"
 
 

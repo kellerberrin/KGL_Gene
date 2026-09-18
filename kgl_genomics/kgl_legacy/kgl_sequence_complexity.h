@@ -5,7 +5,6 @@
 #ifndef KGL_SEQUENCE_COMPLEXITY_H
 #define KGL_SEQUENCE_COMPLEXITY_H
 
-#include "kgl_sequence_base.h"
 
 namespace kellerberrin::genome {   //  organization level namespace
 
@@ -17,19 +16,19 @@ public:
   SequenceComplexity() = delete;
   ~SequenceComplexity() = delete;
 
-  template<typename Alphabet>
-  [[nodiscard]] static size_t kmerCount( const AlphabetSequence<Alphabet>& sequence,
-                                         const AlphabetSequence<Alphabet>& kmer);
+  template<typename Policy>
+  [[nodiscard]] static size_t kmerCount( const Sequence<Policy>& sequence,
+                                         const Sequence<Policy>& kmer);
 
   [[nodiscard]] static double relativeCpGIslands(const DNA5SequenceCoding& sequence);
   [[nodiscard]] static double relativeCpGIslands(const DNA5SequenceLinear& sequence);
   // Calculate Entropy
-  template<typename Alphabet>
-  [[nodiscard]] static double alphabetEntropy( const AlphabetSequence<Alphabet>& sequence,
-                                               const std::vector<std::pair<typename Alphabet::Alphabet, size_t>>& symbol_vector);
+  template<typename Policy>
+  [[nodiscard]] static double alphabetEntropy( const Sequence<Policy>& sequence,
+                                               const std::vector<std::pair<typename Policy::Alphabet, size_t>>& symbol_vector);
   // Different for different sequence lengths.
-  template<typename Alphabet>
-  [[nodiscard]] static size_t complexityLempelZiv(const AlphabetSequence<Alphabet>& sequence);
+  template<typename Policy>
+  [[nodiscard]] static size_t complexityLempelZiv(const Sequence<Policy>& sequence);
   // Calculate Nucleotide content.
 
 private:
@@ -38,7 +37,7 @@ private:
 
 inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceCoding& sequence) {
 
-  size_t count = sequence.AlphabetSequence<CodingDNA5>::countTwoSymbols(CodingDNA5::Alphabet::C, CodingDNA5::Alphabet::G);
+  size_t count = sequence.countTwoSymbols(CodingDNA5::Alphabet::C, CodingDNA5::Alphabet::G);
 
   // Combinatorial theory tells us there is an expected CpG every 32 random nucleotides.
   return (static_cast<double>(count) * 32.0) / static_cast<double>(sequence.length());
@@ -47,7 +46,7 @@ inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceCoding& s
 
 inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceLinear& sequence) {
 
-  size_t count = sequence.AlphabetSequence<DNA5>::countTwoSymbols(DNA5::Alphabet::C, DNA5::Alphabet::G);
+  size_t count = sequence.countTwoSymbols(DNA5::Alphabet::C, DNA5::Alphabet::G);
 
   // Combinatorial theory tells us there is an expected CpG every 32 random nucleotides.
   return (static_cast<double>(count) * 32.0) / static_cast<double>(sequence.length());
@@ -56,9 +55,9 @@ inline double SequenceComplexity::relativeCpGIslands(const DNA5SequenceLinear& s
 
 
 // Calculate Entropy
-template<typename Alphabet>
-double SequenceComplexity::alphabetEntropy( const AlphabetSequence<Alphabet>& sequence,
-                                            const std::vector<std::pair<typename Alphabet::Alphabet, size_t>>& symbol_vector) {
+template<typename Policy>
+double SequenceComplexity::alphabetEntropy( const Sequence<Policy>& sequence,
+                                            const std::vector<std::pair<typename Policy::Alphabet, size_t>>& symbol_vector) {
 
   if (sequence.length() == 0) {
 
@@ -93,8 +92,8 @@ double SequenceComplexity::alphabetEntropy( const AlphabetSequence<Alphabet>& se
 
 
 
-template<typename Alphabet>
-size_t SequenceComplexity::kmerCount(const AlphabetSequence<Alphabet>& sequence, const AlphabetSequence<Alphabet>& kmer) {
+template<typename Policy>
+size_t SequenceComplexity::kmerCount(const Sequence<Policy>& sequence, const Sequence<Policy>& kmer) {
 
   std::map<std::string, size_t> word_map;
 
@@ -135,8 +134,8 @@ size_t SequenceComplexity::kmerCount(const AlphabetSequence<Alphabet>& sequence,
 
 }
 
-template<typename Alphabet>
-inline size_t SequenceComplexity::complexityLempelZiv(const AlphabetSequence<Alphabet>& sequence) {
+template<typename Policy>
+inline size_t SequenceComplexity::complexityLempelZiv(const Sequence<Policy>& sequence) {
 
   size_t u = 0;
   size_t v = 1;
@@ -148,7 +147,7 @@ inline size_t SequenceComplexity::complexityLempelZiv(const AlphabetSequence<Alp
 
   while (true) {
 
-    if (sequence.at(u + v - 1) == sequence.at(w + v - 1)) {
+    if (sequence[u + v - 1] == sequence[w + v - 1]) {
 
       v += 1;
 

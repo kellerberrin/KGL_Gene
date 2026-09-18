@@ -91,13 +91,13 @@ kga::MutateGenes::mutateTranscript( const std::shared_ptr<const GeneFeature>& ge
 
   ExecEnv::log().info("Filtered Gene: {}, Transcript: {}, Description: {}",
                       gene_ptr->id(), transcript_id, gene_ptr->descriptionText());
-  ExecEnv::log().info("Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted: {}",
+  ExecEnv::log().info("Processed Variants: {}, Duplicate Variants: {}, Total Genomes: {}, Mutant Genomes: {} Duplicate Genomes: {}, Upstream Deleted Genomes: {}",
                       mutate_stats.total_variants_,
                       mutate_stats.duplicate_variants_,
                       population_ptr->getMap().size(),
                       mutate_stats.mutant_genomes_,
                       mutate_stats.duplicate_genomes_,
-                      mutate_stats.upstream_delete_variants_);
+                      mutate_stats.upstream_delete_genomes_);
 
   // Multiple Offset/variant statistics for each transcript.
   TranscriptMutateRecord transcript_record( gene_ptr, transcript_ptr, mutate_stats);

@@ -284,7 +284,7 @@ std::pair<bool, kgl::SignedOffset_t> kgl::AdjustedSequence::updateSequenceSNP(co
 
   }
 
-  if (not modified_sequence_.modifyBase(sequence_offset, interval_update.variantPtr()->alternate().at(0))) {
+  if (not modified_sequence_.modifyBase(sequence_offset, interval_update.variantPtr()->alternate()[0])) {
 
     ExecEnv::log().error("Could not modify base (SNP) at adjusted offset: {}", sequence_offset);
     return {false, 0};
