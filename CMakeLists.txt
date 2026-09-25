@@ -3,8 +3,9 @@ project(KGL)
 
 set(CMAKE_CXX_STANDARD 23)
 
+######################################################################################################################
+# Include and lib directories,
 
-# add extra include directories
 include_directories(contrib/edlib # 3rd party library for fast Levenshtein sequence matching.
                     /usr_local/include
                     /usr/local/include/nlopt
@@ -28,6 +29,7 @@ include_directories(contrib/edlib # 3rd party library for fast Levenshtein seque
                     kgl_genomics/kgl_genome # Genome library
                     kgl_genomics/kgl_genome_io # Genome IO library
                     kgl_genomics/kgl_variant_analysis # Variant analysis library
+                    kgl_genomics/kgl_consensus # Consensus sequence library
                     kgl_genomics/kgl_mutation # Mutation library
                     kgl_genomics/kgl_legacy # Legacy Genetic library
                     kol_ontology        # Experimental Ontology Library
@@ -71,9 +73,11 @@ link_directories(/usr/local/lib/boost
                  /usr/local/lib/nlopt
                  /usr/local/lib)
 
+#######################################################################################################################
+# 3rd party libraries.
+# Specify only static libraries for portability.
 
-# Specify only static libraries for portability
-cmake_policy(SET CMP0167 NEW)
+cmake_policy(SET CMP0167 NEW) # Is this wise? Check this.
 set(CMAKE_PREFIX_PATH /usr/local/lib/boost/cmake)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
@@ -82,16 +86,7 @@ set(Boost_USE_STATIC_RUNTIME ON)
 set(Boost_DEBUG ON)
 set(Boost_VERBOSE ON)
 set(Boost_NO_SYSTEM_PATHS ON)
-# Find the Boost packages used.
-# Set the cmake behaviour to use newer config-package.
-#set(Boost_DIR /usr/local/lib/boost/cmake)
-#set(BOOST_INCLUDEDIR /usr/local/include/boost)
-#include_directories(${Boost_INCLUDE_DIRS})
-#set(BOOST_LIBRARYDIR /usr/local/lib/boost)
 find_package( Boost REQUIRED COMPONENTS timer program_options iostreams)
-#find_package(Boost CONFIG REQUIRED)
-#message(STATUS "Boost Lib: ${Boost_LIBRARIES}")
-# Add boost library directories
 
 
 # zlib for compressed VCF files.
@@ -99,6 +94,9 @@ find_package(ZLIB)
 if (ZLIB_FOUND)
     include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
+
+##################################################################################################################
+## Toolchain c++23
 
 # Debug g++
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++23 -fPIC -fconcepts -ggdb")
@@ -126,6 +124,9 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_ERROR_WARNING_FLAG
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../..)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../lib)
+
+#################################################################################################################
+# Source libraries.
 
 #Basic application setup with logger.
 set(RUNTIME_SOURCE_FILES
@@ -171,8 +172,7 @@ set(THREAD_SOURCE_FILES
         kel_thread/kel_workflow_async.h
         kel_thread/kel_queue_monitor.h
         kel_thread/kel_workflow_example.cpp
-        kel_thread/kel_workflow_pipeline.h
-)
+        kel_thread/kel_workflow_pipeline.h)
 
 # The basic I/O library.
 set(IO_SOURCE_FILES
@@ -219,18 +219,28 @@ set(GENOME_IO_SOURCE_FILES
 
 #Apply variant to a model organism sequence to reproduce the actual observed sequence.
 set(MUTATION_SOURCE_FILES
-        kgl_genomics/kgl_mutation/kgl_mutation_variant_filter.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_variant_filter.h
-        kgl_genomics/kgl_mutation/kgl_mutation_interval.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_interval.h
         kgl_genomics/kgl_mutation/kgl_mutation_variant_map.h
-        kgl_genomics/kgl_mutation/kgl_mutation_sequence.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_sequence.h
-        kgl_genomics/kgl_mutation/kgl_mutation_transcript.cpp
         kgl_genomics/kgl_mutation/kgl_mutation_transcript.h
-        kgl_genomics/kgl_mutation/kgl_mutation_translate.cpp
-        kgl_genomics/kgl_mutation/kgl_mutation_translate.h
-        kgl_genomics/kgl_mutation/kgl_mutation_sequence_update.cpp)
+        kgl_genomics/kgl_mutation/kgl_mutation_translate.h)
+
+
+#Apply variants to offsets and sequences.
+set(CONSENSUS_SOURCE_FILES
+        kgl_genomics/kgl_consensus/kgl_consensus.h
+        kgl_genomics/kgl_consensus/kgl_consensus_compat.h
+        kgl_genomics/kgl_consensus/kgl_consensus_compat.cpp
+        kgl_genomics/kgl_consensus/kgl_consensus_offset.h
+        kgl_genomics/kgl_consensus/kgl_consensus_offset.cpp
+        kgl_genomics/kgl_consensus/kgl_consensus_select.h
+        kgl_genomics/kgl_consensus/kgl_consensus_select.cpp
+        kgl_genomics/kgl_consensus/kgl_consensus_sequence.h
+        kgl_genomics/kgl_consensus/kgl_consensus_sequence.cpp
+        kgl_genomics/kgl_consensus/kgl_consensus_transcript.h
+        kgl_genomics/kgl_consensus/kgl_consensus_transcript.cpp)
+
 
 #Genetic distance trees (only UPGMA implemented).
 set(CLASSIFICATION_SOURCE_FILES
@@ -389,152 +399,16 @@ set(EDLIB_SOURCE_FILES
         contrib/rapidxml/rapidxml_print.h
         contrib/rapidxml/rapidxml_utils.h)
 
-# Gene ontology library
-set(ONTOLOGY_SOURCE_FILES
-        kol_ontology/contrib/kol_Accumulators.h
-        kol_ontology/kol_ParserGoObo.h
-        kol_ontology/kol_ParserGoXml.h
-        kol_ontology/kol_PolicyEvidence.h
-        kol_ontology/kol_PolicyRelationship.h
-        kol_ontology/kol_SetSimilarityAllPairsAverage.h
-        kol_ontology/kol_SetSimilarityAllPairsMax.h
-        kol_ontology/kol_InformationAncestorMean.h
-        kol_ontology/kol_TermAnnotation.h
-        kol_ontology/kol_SetSimilarityBestMatchAverage.h
-        kol_ontology/kol_InformationCoutoGraSMAdjusted.h
-        kol_ontology/kol_InformationCoutoGraSM.h
-        kol_ontology/kol_EnrichmentTools.h
-        kol_ontology/kol_InformationExclusiveInherited.h
-        kol_ontology/kol_InformationFrontier.h
-        kol_ontology/kol_SetSimilarityGentlemanSimUI.h
-        kol_ontology/kol_ParserAnnotationGaf.h
-        kol_ontology/kol_library.h
-        kol_ontology/kol_GoEnums.h
-        kol_ontology/contrib/kol_GoGraphImpl.h
-        kol_ontology/kol_ParserGoFactory.h
-        kol_ontology/kol_ParserGoInterface.h
-        kol_ontology/kol_SetSimilarityJaccard.h
-        kol_ontology/kol_SetSimilarityMazanduSimDIC.h
-        kol_ontology/kol_SetSimilarityMazanduSimUIC.h
-        kol_ontology/kol_SimilarityJiangConrath.h
-        kol_ontology/kol_SimilarityLin.h
-        kol_ontology/kol_SimilarityResnik.h
-        kol_ontology/kol_SimilarityPekarStaab.h
-        kol_ontology/kol_SetSimilarityPesquitaSimGIC.h
-        kol_ontology/kol_SimilarityMatrix.h
-        kol_ontology/kol_ParserGoRapidXml.h
-        kol_ontology/kol_SetUtilities.h
-        kol_ontology/kol_InformationInterface.h
-        kol_ontology/kol_InformationDepthMap.h
-        kol_ontology/kol_InformationContentDAG.h
-        kol_ontology/kol_SetSimilarityInterface.h
-        kol_ontology/kol_SimilarityInterface.h
-        kol_ontology/kol_SimilarityWriter.h
-        kol_ontology/kol_SimilarityCache.h
-        kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/contrib/kol_GoGraphImpl.cpp
-        kol_ontology/kol_InformationFrontier.cpp
-        kol_ontology/kol_SimilarityCache.cpp
-        kol_ontology/kol_SimilarityCacheAsymmetric.cpp
-        kol_ontology/kol_SimilarityCacheAsymmetric.h
-        kol_ontology/kol_SetSimilarityBestMatchAverage.cpp
-        kol_ontology/kol_SetSimilarityAllPairsAverage.cpp
-        kol_ontology/kol_SetSimilarityAllPairsMax.cpp
-        kol_ontology/kol_SetSimilarityGentlemanSimUI.cpp
-        kol_ontology/kol_SetSimilarityJaccard.cpp
-        kol_ontology/kol_SetSimilarityMazanduSimDIC.cpp
-        kol_ontology/kol_SetSimilarityMazanduSimUIC.cpp
-        kol_ontology/kol_SetSimilarityPesquitaSimGIC.cpp
-        kol_ontology/kol_InformationExclusiveInherited.cpp
-        kol_ontology/kol_InformationCoutoGraSM.cpp
-        kol_ontology/kol_InformationCoutoGraSMAdjusted.cpp
-        kol_ontology/kol_ParserGoObo.cpp
-        kol_ontology/kol_ParserGoXml.cpp
-        kol_ontology/kol_InformationAncestorMean.cpp
-        kol_ontology/kol_InformationDepthMap.cpp
-        kol_ontology/kol_SimilarityPekarStaab.cpp
-        kol_ontology/kol_SimilarityWriter.cpp
-        kol_ontology/kol_ParserGoRapidXml.cpp
-        kol_ontology/kol_SimilarityMatrix.cpp
-        kol_ontology/kol_SimilarityImpl.cpp
-        kol_ontology/kol_EnrichmentTools.cpp
-        kol_ontology/kgl_ontology/kgl_ontology_database.cpp
-        kol_ontology/kol_OntologyTypes.h
-        kol_ontology/kgl_ontology/kgl_ontology_database.h
-        kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
-        kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp
-        kol_ontology/kgl_ontology/kgl_ontology_database_test.h
-        kol_ontology/kol_SimilarityRelevance.h
-        kol_ontology/kol_InformationContent.h
-        kol_ontology/kol_InformationContentDAG.cpp
-        kol_ontology/kol_InformationContentImpl.cpp
-        kol_ontology/kol_InformationContentImpl.h
-        kol_ontology/kol_InformationContent.cpp
-        kol_ontology/kol_GoEnums.cpp
-        kol_ontology/kol_ParserAnnotationGaf.cpp
-        kol_ontology/kol_TermAnnotation.cpp
-        kol_ontology/kol_ParserGafRecord.cpp
-        kol_ontology/kol_ParserGafRecord.h
-        kol_ontology/kol_SetSimilarityAverageBestMatch.cpp
-        kol_ontology/kol_SetSimilarityAverageBestMatch.h
-        kol_ontology/kol_OntologyFactory.cpp
-        kol_ontology/kol_OntologyFactory.h
-        kol_ontology/kol_GoGraph.cpp
-        kol_ontology/kol_GoGraph.h)
-
-# Gene ontology unit test suite
-set(ONTOLOGY_UNIT_TEST_FILES
-        kol_ontology/unit_test/kol_test.cpp
-        kol_ontology/unit_test/kol_test_GoParsers.cpp
-        kol_ontology/unit_test/kol_test_GoGraph.cpp
-        kol_ontology/unit_test/kol_test.h
-        kol_ontology/unit_test/kol_test_AnnotateParsers.cpp
-        kol_ontology/unit_test/kol_test_Annotate.cpp
-        kol_ontology/unit_test/kol_test_EnrichmentTools.cpp
-        kol_ontology/unit_test/kol_test_JiangConrathSimilarity.cpp
-        kol_ontology/unit_test/kol_test_LinSimilarity.cpp
-        kol_ontology/unit_test/kol_test_similarity.h
-        kol_ontology/unit_test/kol_test_ResnikSimilarity.cpp
-        kol_ontology/unit_test/kol_test_PekarStaabSimilarity.cpp
-        kol_ontology/unit_test/kol_test_RelevanceSimilarity.cpp
-        kol_ontology/unit_test/kol_test_AllPairsMaxSet.cpp
-        kol_ontology/unit_test/kol_test_AllPairAvgSet.cpp
-        kol_ontology/unit_test/kol_test_setsimilarity.h
-        kol_ontology/unit_test/kol_test_BestPairAvgSet.cpp
-        kol_ontology/unit_test/kol_test_JaccardSet.cpp
-        kol_ontology/unit_test/kol_test_SimDICSet.cpp
-        kol_ontology/unit_test/kol_test_SimGICSet.cpp
-        kol_ontology/unit_test/kol_test_SimUISet.cpp
-        kol_ontology/unit_test/kol_test_SimUICSet.cpp
-        kol_ontology/unit_test/kol_test_SharedInfoAdjCouto.cpp
-        kol_ontology/unit_test/kol_test_sharedinfo.h
-        kol_ontology/unit_test/kol_test_SharedAncestorMean.cpp
-        kol_ontology/unit_test/kol_test_SharedCouto.cpp
-        kol_ontology/unit_test/kol_test_SharedExInherit.cpp
-        kol_ontology/unit_test/kol_test_SharedFrontier.cpp
-        kol_ontology/unit_test/kol_test_DepthMap.cpp
-        kol_ontology/unit_test/kol_test_TermInfoMap.cpp
-        kol_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
-        kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
-        kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
-        kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
-        kol_ontology/unit_test/kol_test_data.h
-        kol_ontology/unit_test/kol_test_SymbolicSet.cpp
-        kol_ontology/unit_test/kol_test_symbolicset.h
-        kol_ontology/unit_test/kol_test_OntologyDatabase.cpp)
 
 # Genetic analysis library
 set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_analysis_factory.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.cpp
         kga_analytic/kga_template_analysis/kga_analysis_null.h
-        kga_analytic/kga_info/kga_analysis_interval.cpp
-        kga_analytic/kga_info/kga_analysis_interval.h
-        kga_analytic/kga_info/kga_analysis_info_filter.cpp
-        kga_analytic/kga_info/kga_analysis_info_filter.h
-        kga_analytic/kga_info/kga_analysis_age.cpp
-        kga_analytic/kga_info/kga_analysis_age.h
+)
+
+#Analysis of inbreeding.
+set(ANALYSIS_INBREEDING_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_diploid.cpp
@@ -545,10 +419,6 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_locus.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_calc.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.cpp
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
-        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.cpp
-        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_freq.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_synthetic.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_output.cpp
@@ -559,8 +429,10 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_inbreed/kga_analysis_inbreed_execute.h
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.cpp
         kga_analytic/kga_inbreed/kga_analysis_inbreed_args.h
-        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.cpp
-        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.h
+)
+
+#Analysis of the effect of variants in mutating sequences.
+set(ANALYSIS_MUTATION_SOURCE_FILES
         kga_analytic/kga_mutation/kga_analysis_mutation.cpp
         kga_analytic/kga_mutation/kga_analysis_mutation.h
         kga_analytic/kga_mutation/kga_analysis_mutation_gene.cpp
@@ -574,32 +446,61 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_variant.h
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.cpp
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_stats.h
-        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.cpp
-        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.h
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.cpp
         kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele.h
         kga_analytic/kga_mutation/kga_analysis_mutation_data.h
         kga_analytic/kga_mutation/kga_analysis_mutation_data.cpp
-        kga_analytic/kga_info/kga_analysis_json.cpp
-        kga_analytic/kga_info/kga_analysis_json.h
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.cpp
+        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.h
+)
+
+#Literature analysis
+set(ANALYSIS_LITERATURE_SOURCE_FILES
+        kga_analytic/kga_literature/kga_analysis_literature_publication.cpp
+        kga_analytic/kga_literature/kga_analysis_literature_publication.h
         kga_analytic/kga_literature/kga_analysis_literature.cpp
         kga_analytic/kga_literature/kga_analysis_literature.h
         kga_analytic/kga_literature/kga_analysis_literature_gene.cpp
         kga_analytic/kga_literature/kga_analysis_literature_gene.h
-        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.cpp
-        kga_analytic/kga_mutation/kga_analysis_mutation_gene_allele_pop.h
-        kga_analytic/kga_literature/kga_analysis_literature_publication.cpp
-        kga_analytic/kga_literature/kga_analysis_literature_publication.h
+)
+
+# Sequence analysis
+set(ANALYSIS_SEQUENCE_SOURCE_FILES
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.cpp
+        kga_analytic/kga_sequence_analysis/kga_analysis_sequence.h
+)
+
+# P.Falciparum specific analysis
+set(ANALYSIS_PFEMP_SOURCE_FILES
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_distance.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_variant.h
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_heterozygous.h
-        kga_analytic/kga_analysis_library/kga_analysis_lib_PfFilter.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.cpp
         kga_analytic/kga_PfEMP/kga_analysis_PfEMP_FWS.h
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.cpp
-        kga_analytic/kga_sequence_analysis/kga_analysis_sequence_statistics.h
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.cpp
+        kga_analytic/kga_PfEMP/kga_analysis_PfEMP.h)
+
+# The info analysis (Gnomad data).
+set(ANALYSIS_INFO_SOURCE_FILES
+        kga_analytic/kga_info/kga_analysis_interval.cpp
+        kga_analytic/kga_info/kga_analysis_interval.h
+        kga_analytic/kga_info/kga_analysis_info_filter.cpp
+        kga_analytic/kga_info/kga_analysis_info_filter.h
+        kga_analytic/kga_info/kga_analysis_age.cpp
+        kga_analytic/kga_info/kga_analysis_age.h
+        kga_analytic/kga_info/kga_analysis_json.cpp
+        kga_analytic/kga_info/kga_analysis_json.h)
+
+# Analysis library files.
+set(ANALYSIS_LIBRARY_SOURCE_FILES
+        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_gene_ontology.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.cpp
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seqmutation.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_Pfgene.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_PfFilter.h
@@ -608,7 +509,8 @@ set(ANALYTIC_SOURCE_FILES
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.cpp
         kga_analytic/kga_analysis_library/kga_analysis_lib_utility.h
         kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.cpp
-        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.h)
+        kga_analytic/kga_analysis_library/kga_analysis_lib_seq_stats.h
+        kga_analytic/kga_analysis_library/kga_analysis_lib_PfFilter.cpp)
 
 # Deconvolution and mixture files.
 set(MIXTURE_SOURCE_FILES
@@ -731,19 +633,24 @@ set(RESOURCE_PARSER_SOURCE_FILES
         kgl_resource/kgl_parser/kgl_Pf7_physical_distance.h)
 
 
-add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES} ${MATHEMATICAL_SOURCE_FILES} ${EDLIB_SOURCE_FILES} )
+############################################################################################################
+# Create libraries and executable.
 
-add_library(kel_app STATIC ${RUNTIME_SOURCE_FILES})
+add_library(kel_utility STATIC ${UTILITY_SOURCE_FILES}
+                               ${MATHEMATICAL_SOURCE_FILES}
+                               ${EDLIB_SOURCE_FILES}
+                               ${THREAD_SOURCE_FILES}
+                               ${IO_SOURCE_FILES})
 
-add_library(kel_thread STATIC ${THREAD_SOURCE_FILES})
-
-add_library(kel_io STATIC ${IO_SOURCE_FILES})
+add_library(kel_app STATIC  ${RUNTIME_SOURCE_FILES}
+                            ${XML_PARSER_SOURCE_FILES})
 
 add_library(kgl_genomics STATIC ${GENOME_DATABASE_SOURCE_FILES}
                                 ${GENOME_IO_SOURCE_FILES}
                                 ${SEQUENCE_SOURCE_FILES}
                                 ${LEGACY_SOURCE_FILES}
                                 ${CLASSIFICATION_SOURCE_FILES}
+                                ${CONSENSUS_SOURCE_FILES}
                                 ${MUTATION_SOURCE_FILES})
 
 add_library(kgl_resource STATIC ${RESOURCE_FACTORY_SOURCE_FILES}
@@ -756,41 +663,176 @@ add_library(kgl_variant STATIC ${VARIANT_ANALYSIS_SOURCE_FILES}
                                ${VARIANT_DATABASE_SOURCE_FILES}
                                ${VARIANT_EVIDENCE_SOURCE_FILES})
 
-target_link_libraries(kgl_genomics kgl_variant kgl_resource kel_utility kel_thread)
+add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES}
+                                ${ANALYSIS_LIBRARY_SOURCE_FILES}
+                                ${ANALYSIS_INFO_SOURCE_FILES}
+                                ${ANALYSIS_PFEMP_SOURCE_FILES}
+                                ${ANALYSIS_SEQUENCE_SOURCE_FILES}
+                                ${ANALYSIS_LITERATURE_SOURCE_FILES}
+                                ${ANALYSIS_MUTATION_SOURCE_FILES}
+                                ${ANALYSIS_INBREEDING_SOURCE_FILES})
 
-add_library(kgl_analysis STATIC ${ANALYTIC_SOURCE_FILES})
-
-target_link_libraries(kgl_analysis kgl_genomics kgl_variant kgl_resource kel_utility kel_thread)
-
-#generate kgl_genome executable
-#add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} ${RESOURCE_SOURCE_FILES} ${RESOURCE_PARSER_SOURCE_FILES})
-add_executable (kgl_genome ${APPLICATION_SOURCE_FILES} ${XML_PARSER_SOURCE_FILES})
-
+# Because we are linking static libraries we need to define the dependency hierarchy of kgl_genomics.
+target_link_libraries(kgl_genomics kgl_variant kgl_resource kel_utility)
+# Because we are linking static libraries we need to define the dependency hierarchy of kgl_analysis.
+target_link_libraries(kgl_analysis kgl_genomics kgl_variant kgl_resource kel_utility)
+# Generate kgl_genome executable
+add_executable (kgl_genome ${APPLICATION_SOURCE_FILES})
 # Specify the static libraries.
 target_link_libraries(kgl_genome
-                      kgl_analysis
-                      kgl_genomics
-                      kgl_resource
-                      kgl_variant
-                      kol_ontology
-                      kel_app
-                      kel_utility
-                      kel_thread
-                      kel_io
-                      ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
+        kgl_analysis
+        kgl_genomics
+        kgl_resource
+        kgl_variant
+        kol_ontology
+        kel_app
+        kel_utility
+        ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} nlopt bz2 curl)
+
+############################################################################################################
+# Gene ontology library
+set(ONTOLOGY_SOURCE_FILES
+        kol_ontology/contrib/kol_Accumulators.h
+        kol_ontology/kol_ParserGoObo.h
+        kol_ontology/kol_ParserGoXml.h
+        kol_ontology/kol_PolicyEvidence.h
+        kol_ontology/kol_PolicyRelationship.h
+        kol_ontology/kol_SetSimilarityAllPairsAverage.h
+        kol_ontology/kol_SetSimilarityAllPairsMax.h
+        kol_ontology/kol_InformationAncestorMean.h
+        kol_ontology/kol_TermAnnotation.h
+        kol_ontology/kol_SetSimilarityBestMatchAverage.h
+        kol_ontology/kol_InformationCoutoGraSMAdjusted.h
+        kol_ontology/kol_InformationCoutoGraSM.h
+        kol_ontology/kol_EnrichmentTools.h
+        kol_ontology/kol_InformationExclusiveInherited.h
+        kol_ontology/kol_InformationFrontier.h
+        kol_ontology/kol_SetSimilarityGentlemanSimUI.h
+        kol_ontology/kol_ParserAnnotationGaf.h
+        kol_ontology/kol_library.h
+        kol_ontology/kol_GoEnums.h
+        kol_ontology/contrib/kol_GoGraphImpl.h
+        kol_ontology/kol_ParserGoFactory.h
+        kol_ontology/kol_ParserGoInterface.h
+        kol_ontology/kol_SetSimilarityJaccard.h
+        kol_ontology/kol_SetSimilarityMazanduSimDIC.h
+        kol_ontology/kol_SetSimilarityMazanduSimUIC.h
+        kol_ontology/kol_SimilarityJiangConrath.h
+        kol_ontology/kol_SimilarityLin.h
+        kol_ontology/kol_SimilarityResnik.h
+        kol_ontology/kol_SimilarityPekarStaab.h
+        kol_ontology/kol_SetSimilarityPesquitaSimGIC.h
+        kol_ontology/kol_SimilarityMatrix.h
+        kol_ontology/kol_ParserGoRapidXml.h
+        kol_ontology/kol_SetUtilities.h
+        kol_ontology/kol_InformationInterface.h
+        kol_ontology/kol_InformationDepthMap.h
+        kol_ontology/kol_InformationContentDAG.h
+        kol_ontology/kol_SetSimilarityInterface.h
+        kol_ontology/kol_SimilarityInterface.h
+        kol_ontology/kol_SimilarityWriter.h
+        kol_ontology/kol_SimilarityCache.h
+        kol_ontology/kgl_ontology/kgl_ontology_database.h
+        kol_ontology/contrib/kol_GoGraphImpl.cpp
+        kol_ontology/kol_InformationFrontier.cpp
+        kol_ontology/kol_SimilarityCache.cpp
+        kol_ontology/kol_SimilarityCacheAsymmetric.cpp
+        kol_ontology/kol_SimilarityCacheAsymmetric.h
+        kol_ontology/kol_SetSimilarityBestMatchAverage.cpp
+        kol_ontology/kol_SetSimilarityAllPairsAverage.cpp
+        kol_ontology/kol_SetSimilarityAllPairsMax.cpp
+        kol_ontology/kol_SetSimilarityGentlemanSimUI.cpp
+        kol_ontology/kol_SetSimilarityJaccard.cpp
+        kol_ontology/kol_SetSimilarityMazanduSimDIC.cpp
+        kol_ontology/kol_SetSimilarityMazanduSimUIC.cpp
+        kol_ontology/kol_SetSimilarityPesquitaSimGIC.cpp
+        kol_ontology/kol_InformationExclusiveInherited.cpp
+        kol_ontology/kol_InformationCoutoGraSM.cpp
+        kol_ontology/kol_InformationCoutoGraSMAdjusted.cpp
+        kol_ontology/kol_ParserGoObo.cpp
+        kol_ontology/kol_ParserGoXml.cpp
+        kol_ontology/kol_InformationAncestorMean.cpp
+        kol_ontology/kol_InformationDepthMap.cpp
+        kol_ontology/kol_SimilarityPekarStaab.cpp
+        kol_ontology/kol_SimilarityWriter.cpp
+        kol_ontology/kol_ParserGoRapidXml.cpp
+        kol_ontology/kol_SimilarityMatrix.cpp
+        kol_ontology/kol_SimilarityImpl.cpp
+        kol_ontology/kol_EnrichmentTools.cpp
+        kol_ontology/kgl_ontology/kgl_ontology_database.cpp
+        kol_ontology/kol_OntologyTypes.h
+        kol_ontology/kgl_ontology/kgl_ontology_database.h
+        kol_ontology/kgl_ontology/kgl_gene_cache_ontology.cpp
+        kol_ontology/kgl_ontology/kgl_gene_cache_ontology.h
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.cpp
+        kol_ontology/kgl_ontology/kgl_ontology_database_test.h
+        kol_ontology/kol_SimilarityRelevance.h
+        kol_ontology/kol_InformationContent.h
+        kol_ontology/kol_InformationContentDAG.cpp
+        kol_ontology/kol_InformationContentImpl.cpp
+        kol_ontology/kol_InformationContentImpl.h
+        kol_ontology/kol_InformationContent.cpp
+        kol_ontology/kol_GoEnums.cpp
+        kol_ontology/kol_ParserAnnotationGaf.cpp
+        kol_ontology/kol_TermAnnotation.cpp
+        kol_ontology/kol_ParserGafRecord.cpp
+        kol_ontology/kol_ParserGafRecord.h
+        kol_ontology/kol_SetSimilarityAverageBestMatch.cpp
+        kol_ontology/kol_SetSimilarityAverageBestMatch.h
+        kol_ontology/kol_OntologyFactory.cpp
+        kol_ontology/kol_OntologyFactory.h
+        kol_ontology/kol_GoGraph.cpp
+        kol_ontology/kol_GoGraph.h)
 
 add_library(kol_ontology STATIC ${ONTOLOGY_SOURCE_FILES})
 
+# Gene ontology unit test suite
+set(ONTOLOGY_UNIT_TEST_FILES
+        kol_ontology/unit_test/kol_test.cpp
+        kol_ontology/unit_test/kol_test_GoParsers.cpp
+        kol_ontology/unit_test/kol_test_GoGraph.cpp
+        kol_ontology/unit_test/kol_test.h
+        kol_ontology/unit_test/kol_test_AnnotateParsers.cpp
+        kol_ontology/unit_test/kol_test_Annotate.cpp
+        kol_ontology/unit_test/kol_test_EnrichmentTools.cpp
+        kol_ontology/unit_test/kol_test_JiangConrathSimilarity.cpp
+        kol_ontology/unit_test/kol_test_LinSimilarity.cpp
+        kol_ontology/unit_test/kol_test_similarity.h
+        kol_ontology/unit_test/kol_test_ResnikSimilarity.cpp
+        kol_ontology/unit_test/kol_test_PekarStaabSimilarity.cpp
+        kol_ontology/unit_test/kol_test_RelevanceSimilarity.cpp
+        kol_ontology/unit_test/kol_test_AllPairsMaxSet.cpp
+        kol_ontology/unit_test/kol_test_AllPairAvgSet.cpp
+        kol_ontology/unit_test/kol_test_setsimilarity.h
+        kol_ontology/unit_test/kol_test_BestPairAvgSet.cpp
+        kol_ontology/unit_test/kol_test_JaccardSet.cpp
+        kol_ontology/unit_test/kol_test_SimDICSet.cpp
+        kol_ontology/unit_test/kol_test_SimGICSet.cpp
+        kol_ontology/unit_test/kol_test_SimUISet.cpp
+        kol_ontology/unit_test/kol_test_SimUICSet.cpp
+        kol_ontology/unit_test/kol_test_SharedInfoAdjCouto.cpp
+        kol_ontology/unit_test/kol_test_sharedinfo.h
+        kol_ontology/unit_test/kol_test_SharedAncestorMean.cpp
+        kol_ontology/unit_test/kol_test_SharedCouto.cpp
+        kol_ontology/unit_test/kol_test_SharedExInherit.cpp
+        kol_ontology/unit_test/kol_test_SharedFrontier.cpp
+        kol_ontology/unit_test/kol_test_DepthMap.cpp
+        kol_ontology/unit_test/kol_test_TermInfoMap.cpp
+        kol_ontology/unit_test/kol_test_TermSimMatrix_JC_BP.cpp
+        kol_ontology/unit_test/kol_test_TermSimMatrix_LIN_MF.cpp
+        kol_ontology/unit_test/kol_test_TermSimMatrix_RES_CC.cpp
+        kol_ontology/unit_test/kol_test_TermSimCache_LIN_BP.cpp
+        kol_ontology/unit_test/kol_test_data.h
+        kol_ontology/unit_test/kol_test_SymbolicSet.cpp
+        kol_ontology/unit_test/kol_test_symbolicset.h
+        kol_ontology/unit_test/kol_test_OntologyDatabase.cpp)
 #generate libraries.
 add_executable(kol_test ${ONTOLOGY_UNIT_TEST_FILES})
 
-target_link_libraries (kol_test kol_ontology kel_app kel_utility kel_thread kel_io ${Boost_LIBRARIES})
-
+target_link_libraries (kol_test kol_ontology kel_app kel_utility ${Boost_LIBRARIES})
 
 ############################################################################################################
-# Generate the kpl executable.
-
-
+# Generate the kpl tree classification executable.
 
 set(KPL_LIBRARY_SOURCE_FILES
         kpl_phylogenetic/kpl_node.h
@@ -869,7 +911,7 @@ add_library(kpl_library_lib STATIC ${KPL_LIBRARY_SOURCE_FILES})
 add_executable (kpl kpl_phylogenetic/kpl_main.cpp)
 
 #specify link libraries.
-target_link_libraries(kpl kpl_library_lib kgl_genomics kel_app kel_utility kel_thread libncl.a ${Boost_LIBRARIES} hmsbeagle)
+target_link_libraries(kpl kpl_library_lib kgl_genomics kel_app kel_utility libncl.a ${Boost_LIBRARIES} hmsbeagle)
 
 ## DOXYGEN
 #set(BUILD_KGL_KGD_DOC ON CACHE BOOL "Use Doxygen to create the HTML/Latex based API documentation")

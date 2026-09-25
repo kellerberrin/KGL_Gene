@@ -9,6 +9,7 @@
 int main(int argc, char const ** argv)
 {
 
+  // Namespace alias to make the code more legible.
   namespace kgl = kellerberrin::genome;
   namespace kel = kellerberrin;
 
