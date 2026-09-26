@@ -2,16 +2,22 @@
 // Created by kellerberrin on 28/09/22.
 //
 
-
-
-
+#include "kel_basic_io.h"
 #include "kel_exec_env.h"
 #include "kel_utility.h"
 #include "kgl_io_gff3.h"
-#include "kel_mt_buffer.h"
 
-#include <functional>
+#include <algorithm>
+#include <cctype>
 #include <charconv>
+#include <functional>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 
 namespace kgl = kellerberrin::genome;
@@ -29,35 +35,28 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 
   std::map<std::string, size_t> type_count;
 
-  auto [result, record_ptr_vector] = readGffFile(gff_file_name);
-  if (result) {
+  bool result = parseGffFile(gff_file_name, [&](std::unique_ptr<GffRecord>&& record_ptr) {
 
-    for (auto& record_ptr : record_ptr_vector) {
+    ++type_count[record_ptr->type()];
 
-      if (type_count.contains(record_ptr->type())) {
+    if (not parseGffRecord(genome_db, *record_ptr)) {
 
-        ++type_count[record_ptr->type()];
-
-      } else {
-
-        type_count[record_ptr->type()] = 1;
-
-      }
-
-      if (not parseGffRecord(genome_db, *record_ptr)) {
-
-        ExecEnv::log().warn("ParseGff3::readGffFile; Error parsing feature in Contig: {}", record_ptr->contig());
-
-      }
+      ExecEnv::log().warn("ParseGff3::readGffFile; Error parsing feature in Contig: {}", record_ptr->contig());
 
     }
+
+  });
+
+  if (not result) {
+
+    ExecEnv::log().warn("ParseGff3::readGffFile; One or more GFF3 records could not be parsed in file: {}", gff_file_name);
 
   }
 
   // Generate some feature statistics.
   for (auto const& [type, count] : type_count) {
 
-    ExecEnv::log().info("ParseGffFasta::readGffFile; Feature Type: {}, Count: {}", type, count);
+    ExecEnv::log().info("ParseGff3::readGffFile; Feature Type: {}, Count: {}", type, count);
 
   }
 
@@ -67,41 +66,70 @@ void kgl::ParseGff3::readGffFile( const std::string &gff_file_name, kgl::GenomeR
 std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::readGffFile(const std::string& file_name) {
 
   std::vector<std::unique_ptr<GffRecord>> gff_records;
-  size_t record_counter{0};
+
+  bool result = parseGffFile(file_name, [&](std::unique_ptr<GffRecord>&& record_ptr) {
+
+    gff_records.push_back(std::move(record_ptr));
+
+  });
+
+  return {result, std::move(gff_records)};
+
+}
+
+
+bool kgl::ParseGff3::parseGffFile(const std::string& file_name,
+                                  const std::function<void(std::unique_ptr<GffRecord>&&)>& record_sink) {
+
   bool result{true};
-  StreamMTBuffer file_io;
+  size_t record_counter{0};
 
-  if (not file_io.open(file_name)) {
+  std::optional<std::unique_ptr<BaseStreamIO>> gff_stream_opt = BaseStreamIO::getStreamIO(file_name);
+  if (not gff_stream_opt) {
 
-    ExecEnv::log().critical("ParseGffFasta::readGffFile; I/O error; could not open file: {}", file_name);
+    ExecEnv::log().critical("ParseGff3::parseGffFile; I/O error; could not open file: {}", file_name);
 
   }
 
-  ExecEnv::log().info("ParseGffFasta::readGffFile; Opened GFF3 file: {} for processing", file_name);
+  ExecEnv::log().info("ParseGff3::parseGffFile; Opened GFF3 file: {} for processing", file_name);
 
   while (true) {
 
     // Get the line record.
-    auto line_record = file_io.readLine();
+    auto line_record = gff_stream_opt.value()->readLine();
 
     // Terminate on EOF
     if (line_record.EOFRecord()) break;
 
     // Get the line data.
-    auto const [line_count, record_str] = line_record.getLineData();
+    auto [line_count, record_str] = line_record.getLineData();
 
-    // Skip comments
-    if (record_str[0] == GFF_COMMENT_) {
+    // Strip a trailing carriage return so that CRLF files are treated as LF files.
+    if (not record_str.empty() and record_str.back() == '\r') {
 
-      continue;  // Skip comment lines.
+      record_str.pop_back();
 
     }
 
-    // Check for empty string
+    // Check for empty string.
     if (record_str.empty()) {
 
-      ExecEnv::log().warn("ParseGffFasta::readGffFile; unexpected zero length line found at parser Line: {}", line_count);
+      ExecEnv::log().warn("ParseGff3::parseGffFile; unexpected zero length line found at parser Line: {}", line_count);
       continue;
+
+    }
+
+    // Skip comments, but stop at the embedded FASTA directive (the remainder is sequence, not GFF).
+    if (record_str.front() == GFF_COMMENT_) {
+
+      if (record_str.starts_with(GFF3_FASTA_DIRECTIVE_)) {
+
+        ExecEnv::log().info("ParseGff3::parseGffFile; '##FASTA' directive found on line: {}; embedded sequence ignored", line_count);
+        break;
+
+      }
+
+      continue;  // Skip comment lines.
 
     }
 
@@ -110,22 +138,21 @@ std::pair<bool, std::vector<std::unique_ptr<kgl::GffRecord>>> kgl::ParseGff3::re
 
     if (not parse_result) {
 
-      ExecEnv::log().error("ParseGffFasta::readGffFile; Bad row field format on line number: {}, Line text: {}", line_count, record_str);
+      ExecEnv::log().error("ParseGff3::parseGffFile; Bad row field format on line number: {}, Line text: {}", line_count, record_str);
+      result = false;
       continue;
 
     }
 
-    gff_records.push_back(std::move(gff_record_ptr));
-
-    result = result and parse_result;
+    record_sink(std::move(gff_record_ptr));
 
     ++record_counter;
 
   }
 
-  ExecEnv::log().info("ParseGffFasta::readGffFile; Parsed: {} lines, GFF3 records: {}", record_counter, gff_records.size());
+  ExecEnv::log().info("ParseGff3::parseGffFile; Parsed: {} GFF3 records", record_counter);
 
-  return {result, std::move(gff_records)};
+  return result;
 
 }
 
@@ -137,36 +164,37 @@ std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record
 
   if (row_fields.size() != GFF3_FIELD_COUNT_) {
 
-    ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), gff_line);
+    ExecEnv::log().error("ParseGff3::parseGff3Record; Bad field count: {}, text: {}", row_fields.size(), gff_line);
     return {false, std::move(gff_record_ptr)};
 
   }
 
   bool parse_result{true};
 
-  const std::string_view& contig_field = row_fields[GFF3_CONTIG_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->contig(contig_field);
+  // Evaluate every field (no short-circuit) so that malformed lines report all their defects.
+  const bool contig_result = gff_record_ptr->contig(row_fields[GFF3_CONTIG_FIELD_IDX_]);
+  parse_result = parse_result and contig_result;
 
-  const std::string_view& source_field = row_fields[GFF3_SOURCE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->source(source_field);
+  const bool source_result = gff_record_ptr->source(row_fields[GFF3_SOURCE_FIELD_IDX_]);
+  parse_result = parse_result and source_result;
 
-  const std::string_view& type_field = row_fields[GFF3_TYPE_FIELD_IDX_];
-   parse_result = parse_result and gff_record_ptr->type(type_field);
+  const bool type_result = gff_record_ptr->type(row_fields[GFF3_TYPE_FIELD_IDX_]);
+  parse_result = parse_result and type_result;
 
-  const std::string_view& start_field = row_fields[GFF3_START_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->convertStartOffset(start_field);
+  const bool start_result = gff_record_ptr->convertStartOffset(row_fields[GFF3_START_FIELD_IDX_]);
+  parse_result = parse_result and start_result;
 
-  const std::string_view& end_field = row_fields[GFF3_END_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->convertEndOffset(end_field);
+  const bool end_result = gff_record_ptr->convertEndOffset(row_fields[GFF3_END_FIELD_IDX_]);
+  parse_result = parse_result and end_result;
 
-  const std::string_view& score_field = row_fields[GFF3_SCORE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->score(score_field);
+  const bool score_result = gff_record_ptr->score(row_fields[GFF3_SCORE_FIELD_IDX_]);
+  parse_result = parse_result and score_result;
 
-  const std::string_view& strand_field = row_fields[GFF3_STRAND_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->strand(strand_field);
+  const bool strand_result = gff_record_ptr->strand(row_fields[GFF3_STRAND_FIELD_IDX_]);
+  parse_result = parse_result and strand_result;
 
-  const std::string_view& phase_field = row_fields[GFF3_PHASE_FIELD_IDX_];
-  parse_result = parse_result and gff_record_ptr->phase(phase_field);
+  const bool phase_result = gff_record_ptr->phase(row_fields[GFF3_PHASE_FIELD_IDX_]);
+  parse_result = parse_result and phase_result;
 
   const std::string_view& tag_field = row_fields[GFF3_TAG_FIELD_IDX_];
   const std::vector<std::string_view> tag_items = Utility::viewTokenizer(tag_field, GFF3_TAG_FIELD_DELIMITER_);
@@ -174,31 +202,35 @@ std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record
   std::vector<std::pair<std::string_view, std::string_view>> tag_value_vec;
   for (auto const& item : tag_items) {
 
-    std::vector<std::string_view> tag_name = Utility::viewTokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
-    if (tag_name.size() != GFF3_ITEM_TAG_NAME_) {
+    // A missing attribute value (".") or a void item (trailing or doubled ';') is legal and skipped.
+    if (item.empty() or item == GffRecord::MISSING_VALUE) {
 
-      ExecEnv::log().error("ParseGffFasta::parseGff3Record; Bad 'tag=name' sub field: {}", item);
+      continue;
+
+    }
+
+    std::vector<std::string_view> tag_name = Utility::viewTokenizer(item, GFF3_TAG_ITEM_DELIMITER_);
+    if (tag_name.size() != GFF3_TAG_ITEM_FIELD_COUNT_) {
+
+      ExecEnv::log().error("ParseGff3::parseGff3Record; Bad 'tag=name' sub field: {}", item);
       parse_result = false;
 
     } else {
 
-      tag_value_vec.emplace_back(std::pair(tag_name[0], tag_name[1]));
+      tag_value_vec.emplace_back(tag_name[0], tag_name[1]);
 
     }
 
   }
 
-  parse_result = parse_result and gff_record_ptr->attributes(tag_value_vec);
+  const bool attributes_result = gff_record_ptr->attributes(tag_value_vec);
+  parse_result = parse_result and attributes_result;
 
   return {parse_result, std::move(gff_record_ptr)};
 
 }
 
 
-// Valgrind indicates memory leaks occurring in this function.
-// This could be due to the use of the FeatureSinkPtr function pointer to process
-// the genomic features.
-// todo: This memory leak needs further investigation.
 bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord& gff_record) {
   // Get the attributes.
   // Get (or construct) the feature ID.
@@ -226,6 +258,14 @@ bool kgl::ParseGff3::parseGffRecord(GenomeReference& genome_db, const GffRecord&
   if (not contig_opt) {
 
     ExecEnv::log().error("ParseGff3::parseGffRecord; Could not find contig_ref_ptr: {}", gff_record.contig());
+    return false;
+
+  }
+
+  // Check the record interval is well formed (GFF3 requires start <= end).
+  if (gff_record.begin() > gff_record.end()) {
+
+    ExecEnv::log().warn("ParseGff3::parseGffRecord; Feature: {} has invalid interval [{}, {})", feature_id, gff_record.begin(), gff_record.end());
     return false;
 
   }
@@ -305,7 +345,7 @@ bool kgl::GffRecord::contig(const std::string_view& contig_txt) {
 
   if (contig_txt.empty() or contig_txt == MISSING_VALUE) {
 
-    ExecEnv::log().error("GffRecord::id, feature record missing id, id text: {}", contig_txt);
+    ExecEnv::log().error("GffRecord::contig, feature record missing contig, contig text: {}", contig_txt);
     contig_.clear();
     return false;
 
@@ -338,14 +378,16 @@ bool kgl::GffRecord::type(const std::string_view& type_txt) {
 
   if (type_txt.empty() or type_txt == MISSING_VALUE) {
 
-    ExecEnv::log().error("GffRecord:type, feature record missing type, type text: {}", type_txt);
+    ExecEnv::log().error("GffRecord::type, feature record missing type, type text: {}", type_txt);
     type_.clear();
     return false;
 
   }
 
   type_ = type_txt;
-  std::transform(type_.begin(), type_.end(), type_.begin(), ::toupper);
+  std::transform(type_.begin(), type_.end(), type_.begin(), [](unsigned char chr) {
+    return static_cast<char>(std::toupper(chr));
+  });
 
   return true;
 
@@ -375,7 +417,7 @@ bool kgl::GffRecord::convertEndOffset(const std::string_view& offset_txt) {
   auto [ptr, ec] = std::from_chars(offset_txt.data(), offset_txt.data() + offset_txt.size(), end_position_);
   if (ec != ERRC_SUCCESS or end_position_ == 0) {
 
-    ExecEnv::log().error("GffRecord::convertStartOffset; bad feature start offset text: {}", offset_txt);
+    ExecEnv::log().error("GffRecord::convertEndOffset; bad feature end offset text: {}", offset_txt);
     end_position_ = INVALID_OFFSET;
     return false;
 
@@ -385,19 +427,19 @@ bool kgl::GffRecord::convertEndOffset(const std::string_view& offset_txt) {
 
 }
 
-bool kgl::GffRecord::score(const std::string_view& offset_txt) {
+bool kgl::GffRecord::score(const std::string_view& score_txt) {
 
-  if (offset_txt.empty() or offset_txt == MISSING_VALUE) {
+  if (score_txt.empty() or score_txt == MISSING_VALUE) {
 
     score_ = NO_SCORE;
     return true;
 
   }
 
-  auto [ptr, ec] = std::from_chars(offset_txt.data(), offset_txt.data() + offset_txt.size(), score_);
+  auto [ptr, ec] = std::from_chars(score_txt.data(), score_txt.data() + score_txt.size(), score_);
   if (ec != ERRC_SUCCESS) {
 
-    ExecEnv::log().error("GffRecord::score; bad feature score text: {}", offset_txt);
+    ExecEnv::log().error("GffRecord::score; bad feature score text: {}", score_txt);
     score_ = NO_SCORE;
     return false;
 
@@ -408,19 +450,19 @@ bool kgl::GffRecord::score(const std::string_view& offset_txt) {
 }
 
 
-bool kgl::GffRecord::phase(const std::string_view& offset_txt) {
+bool kgl::GffRecord::phase(const std::string_view& phase_txt) {
 
-  if (offset_txt.empty() or offset_txt == MISSING_VALUE) {
+  if (phase_txt.empty() or phase_txt == MISSING_VALUE) {
 
     phase_ = NO_PHASE;
     return true;
 
   }
 
-  auto [ptr, ec] = std::from_chars(offset_txt.data(), offset_txt.data() + offset_txt.size(), phase_);
+  auto [ptr, ec] = std::from_chars(phase_txt.data(), phase_txt.data() + phase_txt.size(), phase_);
   if (ec != ERRC_SUCCESS or phase_ > MAX_PHASE) {
 
-    ExecEnv::log().error("GffRecord::phase; bad feature phase text: {}", offset_txt);
+    ExecEnv::log().error("GffRecord::phase; bad feature phase text: {}", phase_txt);
     phase_ = INVALID_PHASE;
     return false;
 
@@ -462,13 +504,12 @@ bool kgl::GffRecord::strand(const std::string_view& strand_txt) {
 
 bool kgl::GffRecord::attributes(const std::vector<std::pair<std::string_view, std::string_view>>& tag_value_pairs) {
 
-  bool result{true};
   for (auto const& [tag, value] : tag_value_pairs) {
 
     record_attributes_.insertAttribute(std::string(tag), std::string(value));
 
   }
 
-  return result;
+  return true;
 
 }

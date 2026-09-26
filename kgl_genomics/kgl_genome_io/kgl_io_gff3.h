@@ -8,11 +8,14 @@
 
 #include "kgl_genome_prelim.h"
 #include "kgl_genome_genome.h"
-#include "kgl_sequence_view.h"
 
+#include <functional>
+#include <limits>
 #include <memory>
 #include <string>
-#include <map>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -24,14 +27,15 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 // And end_offset_ = gff.end
 // Note that always begin_offset_ < end_offset_. They are not strand adjusted.
 // They always correspond to zero based offsets on the relevant contig_ref_ptr.
+//
+// Conformance note: this is a "load the feature tree" parser, not a full GFF3 implementation.
+// Attribute values are stored verbatim (no %XX percent-decoding) and multi-valued attributes
+// (comma separated) are split by the consumer (e.g. Attributes::getSuperFeatureIds()).
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GffRecord {
 
 public:
-
-  GffRecord() = default;
-  ~GffRecord() = default;
 
   [[nodiscard]] bool contig(const std::string_view &contig);
   [[nodiscard]] bool source(const std::string_view &source);
@@ -80,11 +84,11 @@ private:
 };
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Read and write Gff3 files.
 // Static object to provide data hiding and namespace.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class ParseGff3 {
@@ -101,16 +105,17 @@ public:
 
   static std::pair<bool, std::unique_ptr<GffRecord>> parseGff3Record(const std::string& gff_line);
 
-  static bool parseGffRecord(GenomeReference& genome_db, const GffRecord& gff_record);
+  [[nodiscard]] static bool parseGffRecord(GenomeReference& genome_db, const GffRecord& gff_record);
 
 
 private:
 
-  static constexpr const char GFF_COMMENT_{'#'};
-  static constexpr const char GFF3_FIELD_DELIM_{'\t'};
-  static constexpr const char GFF3_TAG_FIELD_DELIMITER_{';'};
-  static constexpr const char GFF3_TAG_ITEM_DELIMITER_{'='};
-  static constexpr const size_t GFF3_ITEM_TAG_NAME_{2};
+  static constexpr char GFF_COMMENT_{'#'};
+  static constexpr std::string_view GFF3_FASTA_DIRECTIVE_{"##FASTA"};
+  static constexpr char GFF3_FIELD_DELIM_{'\t'};
+  static constexpr char GFF3_TAG_FIELD_DELIMITER_{';'};
+  static constexpr char GFF3_TAG_ITEM_DELIMITER_{'='};
+  static constexpr const size_t GFF3_TAG_ITEM_FIELD_COUNT_{2};
 
   // Gff field offsets
   static constexpr const size_t GFF3_FIELD_COUNT_{9};
@@ -123,6 +128,11 @@ private:
   static constexpr const size_t GFF3_STRAND_FIELD_IDX_{6};
   static constexpr const size_t GFF3_PHASE_FIELD_IDX_{7};
   static constexpr const size_t GFF3_TAG_FIELD_IDX_{8}; // The "xxxx=yyyy;aaaa=bbbb;..." tag field offset.
+
+  // Shared streaming parse loop. The sink receives each successfully parsed record; the
+  // returned flag is false if any line could not be parsed (bad lines are still skipped).
+  static bool parseGffFile(const std::string& file_name,
+                           const std::function<void(std::unique_ptr<GffRecord>&&)>& record_sink);
 
 
 };

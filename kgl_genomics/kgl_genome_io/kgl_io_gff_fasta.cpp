@@ -18,9 +18,4 @@ std::shared_ptr<kgl::GenomeReference> kgl::ParseGffFasta::readFastaGffFile( cons
   ParseGff3::readGffFile(gff_file_name, *genome_db_ptr);
   return genome_db_ptr;
 
-
 }
-
-
-
-

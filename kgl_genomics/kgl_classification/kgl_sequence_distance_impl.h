@@ -1,23 +1,25 @@
 //
+// kgl_sequence_distance_impl.h — sequence distance metrics (edlib backed).
+//
 // Created by kellerberrin on 22/02/18.
 //
 
 #ifndef KGL_SEQUENCE_DISTANCE_IMPL_H
 #define KGL_SEQUENCE_DISTANCE_IMPL_H
 
+#include "kgl_genome_types.h"
+#include "kgl_sequence.h"
+#include "kgl_genetic_code.h"
 
+#include <functional>
 #include <memory>
 #include <string>
-#include <map>
-#include "kgl_genome_types.h"
-#include "kgl_sequence_amino.h"
 
 
 namespace kellerberrin::genome {   //  organization level namespace
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Distance is conceptually different from comparison.
 // 1. Distances are always normalized for sequence length.
 // For local distances, this is the size of the match.
@@ -26,7 +28,7 @@ namespace kellerberrin::genome {   //  organization level namespace
 // 3. Distances are symmetric, d(x,y) = d(y,x)
 // 4. Distances observe the triangle inequality, d(x,y) + d(y,z) >= d(x,z)
 // 5. Distances are returned as a CompareDistance_t which is a double.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 CompareDistance_t LevenshteinGlobalImpl(const char* sequenceA,
@@ -57,9 +59,9 @@ CompareDistance_t LevenshteinLocalImpl(const Seq& sequenceA, const Seq& sequence
   auto sequenceA_view = sequenceA.getStringView();
   auto sequenceB_view = sequenceB.getStringView();
   return LevenshteinLocalImpl(sequenceA_view.data(),
-                              sequenceA_view.length(),
-                              sequenceB_view.data(),
-                              sequenceB_view.length());
+                               sequenceA_view.length(),
+                               sequenceB_view.data(),
+                               sequenceB_view.length());
 
 }
 
@@ -77,12 +79,12 @@ CompareDistance_t localblosum80Impl(const Seq&, const Seq&) {
 
 }
 
-// Define the parentDistance function object.
+// Define the distance function object.
 template<typename Seq>
 using SequenceDistanceMetricFn = std::function<CompareDistance_t(const Seq&, const Seq&)>;
 
 // Delete the default constructor.
-// The parentDistance function object must be initialized.
+// The distance function object must be initialized.
 template<typename Seq>
 class SequenceDistanceMetric : public SequenceDistanceMetricFn<Seq> {
 
@@ -117,8 +119,6 @@ inline static const LinearDistanceMetric LevenshteinGlobalLinear{LevenshteinGlob
 inline static const LinearDistanceMetric LevenshteinLocalLinear{LevenshteinLocalImpl<DNA5SequenceLinear>};
 
 }   // end namespace
-
-
 
 
 #endif //KGL_SEQUENCE_DISTANCE_IMPL_H

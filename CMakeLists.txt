@@ -252,7 +252,6 @@ set(CLASSIFICATION_SOURCE_FILES
         kgl_genomics/kgl_classification/kgl_classification_tree.h
         kgl_genomics/kgl_classification/kgl_distance_matrix.cpp
         kgl_genomics/kgl_classification/kgl_distance_matrix.h
-        kgl_genomics/kgl_classification/kgl_distance_matrix_triangular.h
         kgl_genomics/kgl_classification/kgl_sequence_node_view.h
         kgl_genomics/kgl_classification/kgl_distance_tree_node.cpp
         kgl_genomics/kgl_classification/kgl_distance_tree_node.h

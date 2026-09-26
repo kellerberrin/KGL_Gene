@@ -1,4 +1,6 @@
 //
+// kgl_distance_tree_node.h — tree classification nodes.
+//
 // Created by kellerberrin on 28/12/23.
 //
 
@@ -6,29 +8,27 @@
 #define KGL_DISTANCE_TREE_NODE_H
 
 
-
-#include <memory>
-#include <map>
-#include <vector>
-#include <fstream>
-
-#include "kel_exec_env.h"
 #include "kgl_distance_matrix.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 
 namespace kellerberrin::genome {   //  organization level namespace
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Tree Classification Nodes.
 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Used by the classification functions.
 class TreeNodeDistance;  // fwd.
-using BaseOutNodes = std::multimap<DistanceType_t , std::shared_ptr<TreeNodeDistance>>;
+using BaseOutNodes = std::multimap<DistanceType_t, std::shared_ptr<TreeNodeDistance>>;
 using BaseParentNode = std::shared_ptr<TreeNodeDistance>;
 
 class TreeNodeDistance {
@@ -40,12 +40,12 @@ public:
 
   void addOutNode(const std::shared_ptr<TreeNodeDistance>& node) { out_nodes_.insert({node->parentDistance(), node}); }
 
-  [[nodiscard]] DistanceType_t parentDistance() const { return parent_distance_; }
-  void parentDistance(DistanceType_t update) { parent_distance_ = update; }
-  [[nodiscard]] const std::optional<BaseParentNode>& parentNode() const { return parent_node_; }
-  void parentNode(const std::shared_ptr<TreeNodeDistance>& parent_ptr) { parent_node_ = parent_ptr; }
+  [[nodiscard]] DistanceType_t parentDistance() const noexcept { return parent_distance_; }
+  void parentDistance(DistanceType_t update) noexcept { parent_distance_ = update; }
+  [[nodiscard]] const std::optional<BaseParentNode>& parentNode() const noexcept { return parent_node_; }
+  void parentNode(const std::shared_ptr<TreeNodeDistance>& parent_ptr) noexcept { parent_node_ = parent_ptr; }
 
-  [[nodiscard]] const BaseOutNodes& outNodes() const { return out_nodes_; }
+  [[nodiscard]] const BaseOutNodes& outNodes() const noexcept { return out_nodes_; }
 
   // Node type.
   [[nodiscard]] bool isRoot() const { return not parent_node_; }
@@ -71,7 +71,7 @@ using TreeNodeVector = std::vector<std::shared_ptr<TreeNodeDistance>>;
 //
 // Clade (Branch) Nodes.
 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CladeNode : public TreeNodeDistance {
 
@@ -91,7 +91,6 @@ private:
   size_t leaf_nodes_;
 
 };
-
 
 
 }   // end namespace

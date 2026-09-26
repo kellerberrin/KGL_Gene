@@ -9,8 +9,11 @@
 #include "kgl_genome_genome.h"
 #include "kgl_sequence_view.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 
 namespace kellerberrin::genome {   //  organization::project level namespace
@@ -24,19 +27,16 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 class WriteFastaSequence {
 
 public:
 
   WriteFastaSequence() = delete;
-  WriteFastaSequence(const WriteFastaSequence& copy) = default;
   WriteFastaSequence( std::string fasta_id,
                       std::string fasta_description,
                       SequenceRef sequence) : fasta_id_(std::move(fasta_id)),
                                               fasta_description_(std::move(fasta_description)),
                                               fasta_sequence_(std::move(sequence)) {}
-  ~WriteFastaSequence() = default;
 
   [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
   [[nodiscard]] const std::string& fastaDescription() const { return fasta_description_; }
@@ -62,19 +62,26 @@ class ReadFastaSequence {
 public:
 
   ReadFastaSequence() = delete;
-  ReadFastaSequence(ReadFastaSequence&& copy) = default;
+  ReadFastaSequence(ReadFastaSequence&& moved) = default;
   ReadFastaSequence( std::string&& fasta_id,
                      std::string&& fasta_description,
-                     std::string&& fasta_sequence) : fasta_id_(fasta_id),
-                                                     fasta_description_(fasta_description),
-                                                     fasta_sequence_ptr_(std::make_unique<std::string>(fasta_sequence)) {}
+                     std::string&& fasta_sequence) : fasta_id_(std::move(fasta_id)),
+                                                     fasta_description_(std::move(fasta_description)),
+                                                     fasta_sequence_ptr_(std::make_unique<std::string>(std::move(fasta_sequence))) {}
   ReadFastaSequence( std::string&& fasta_id,
                      std::string&& fasta_description,
                      std::unique_ptr<std::string>&& fasta_sequence_ptr) : fasta_id_(std::move(fasta_id)),
                                                                           fasta_description_(std::move(fasta_description)),
-                                                                          fasta_sequence_ptr_(std::move(fasta_sequence_ptr)) {}
+                                                                          fasta_sequence_ptr_(std::move(fasta_sequence_ptr)) {
 
-  ~ReadFastaSequence() = default;
+    // Defensive; the accessor dereferences the pointer unchecked.
+    if (not fasta_sequence_ptr_) {
+
+      fasta_sequence_ptr_ = std::make_unique<std::string>();
+
+    }
+
+  }
 
   [[nodiscard]] const std::string& fastaId() const { return fasta_id_; }
   [[nodiscard]] const std::string& fastaDescription() const { return fasta_description_; }
@@ -101,7 +108,7 @@ class ParseFasta {
 
 public:
 
-  ParseFasta() =delete;
+  ParseFasta() = delete;
   ~ParseFasta() = delete;
 
   [[nodiscard]] static std::shared_ptr<GenomeReference> readFastaFile(const std::string& organism, const std::string& fasta_file_name);
@@ -113,12 +120,17 @@ public:
 
 private:
 
-  static constexpr const char FASTA_COMMENT_{';'};
-  static constexpr const char FASTA_ID_{'>'};
+  static constexpr char FASTA_COMMENT_{';'};
+  static constexpr char FASTA_ID_{'>'};
+  static constexpr size_t FASTA_LINE_LENGTH_{60};
 
-  static ReadFastaSequence createFastaSequence( const std::string& fasta_id,
-                                                const std::string& fasta_comment,
-                                                const std::vector<std::unique_ptr<const std::string>>& fasta_lines);
+  // Line predicates shared by the reader state machine.
+  [[nodiscard]] static bool isSkippableLine(std::string_view line);
+  [[nodiscard]] static bool isFastaIdLine(std::string_view line);
+
+  [[nodiscard]] static ReadFastaSequence createFastaSequence( const std::string& fasta_id,
+                                                              const std::string& fasta_comment,
+                                                              const std::vector<std::string>& fasta_lines);
 
 
 };

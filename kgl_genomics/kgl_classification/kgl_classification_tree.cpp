@@ -1,20 +1,20 @@
 //
+// kgl_classification_tree.cpp — abstract phylogenetic tree, Newick writer.
+//
 // Created by kellerberrin on 23/05/19.
 //
 
 #include "kgl_classification_tree.h"
 
-namespace kgl = kellerberrin::genome;
+#include "kel_exec_env.h"
+
+#include <fstream>
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace kellerberrin::genome {   //  organization level namespace
 
 
-bool kgl::ClassificationTree::writeNewick(const std::string& file_name, size_t max_depth) const {
+bool ClassificationTree::writeNewick(const std::string& file_name, size_t max_depth) const {
 
   std::ofstream newick_file;
 
@@ -27,7 +27,6 @@ bool kgl::ClassificationTree::writeNewick(const std::string& file_name, size_t m
   }
 
   if (tree_root_vector_.size() > 1) {
-
 
     ExecEnv::log().warn("Writing newick file: {}; expected root nodes = 1,  actual root nodes : {}",
                         file_name, tree_root_vector_.size());
@@ -48,11 +47,10 @@ bool kgl::ClassificationTree::writeNewick(const std::string& file_name, size_t m
 }
 
 // Recursive.
-void kgl::ClassificationTree::writeNode(const std::shared_ptr<TreeNodeDistance>& node,
-                                        std::ofstream& newick_file,
-                                        size_t max_depth,
-                                        size_t current_depth) const {
-
+void ClassificationTree::writeNode(const std::shared_ptr<TreeNodeDistance>& node,
+                                    std::ofstream& newick_file,
+                                    size_t max_depth,
+                                    size_t current_depth) const {
 
   ++current_depth;
   if (current_depth >= max_depth) {
@@ -102,3 +100,5 @@ void kgl::ClassificationTree::writeNode(const std::shared_ptr<TreeNodeDistance>&
 
 }
 
+
+}   // end namespace
