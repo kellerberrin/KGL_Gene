@@ -1,5 +1,5 @@
 //
-// Created for the deepseek-refactor consensus library.
+// Consensus library (glm-refactor polish of deepseek-refactor).
 //
 // Module 4: gene/transcript client.
 // Keeps the exact public surface of the reference SequenceTranscript so that all

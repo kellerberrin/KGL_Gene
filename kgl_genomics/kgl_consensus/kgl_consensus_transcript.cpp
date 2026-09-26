@@ -1,5 +1,5 @@
 //
-// Created for the deepseek-refactor consensus library.
+// Consensus library (glm-refactor polish of deepseek-refactor).
 //
 // Module 4 implementation: gene/transcript client.
 //
@@ -48,9 +48,13 @@ void kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const
     return;
 
   }
-  filter_stats_ = selected_opt->stats;
-
   // Module 2: global edit schedule and offset accounting.
+  // The resolved schedule owns the upstream_deleted_ statistic: it is taken
+  // after module 1's shadow pruning plus module 2's delete-union pruning, so
+  // edits erased by merged/adjacent delete spans are also counted (single-sourced).
+  // In the production path module 1's ContigUpstreamFilter already removed
+  // overlapping-delete conflicts, so the module 2 increment mostly fires for
+  // adjacent deletes and for directly constructed SelectedVariants (tests, probes).
   auto applied_opt = resolveVariants(*selected_opt);
   if (not applied_opt) {
 
@@ -58,6 +62,9 @@ void kgl::SequenceTranscript::createModifiedSequence(const std::shared_ptr<const
     return;
 
   }
+  selected_opt->stats.upstream_deleted_ = applied_opt->stats.upstream_deleted_;
+  filter_stats_ = selected_opt->stats;
+
   auto accounting_opt = OffsetAccounting::build(*applied_opt);
   if (not accounting_opt) {
 

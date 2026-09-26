@@ -1,6 +1,4 @@
 //
-// Created for the deepseek-refactor consensus library.
-//
 // Module 1 implementation: variant selection and filtering.
 //
 
@@ -19,6 +17,14 @@ namespace kgl = kellerberrin::genome;
 
 namespace {
 
+// The apply key of a canonical variant in the historical offset map:
+// an SNP is keyed at its offset, an indel at the offset the edit occurs (offset + 1).
+[[nodiscard]] kgl::ContigOffset_t applyKey(const kgl::Variant& variant) {
+
+  return variant.isSNP() ? variant.offset() : variant.offset() + 1;
+
+}
+
 // Canonicalise and reduce a raw contig to a canonical, one-variant-per-locus,
 // policy-filtered ContigDB. The window is applied by the caller for the
 // compatibility facade; selection itself is contig-global.
@@ -34,16 +40,28 @@ canonicalContig(const std::shared_ptr<const kgl::ContigDB>& raw_ptr) {
       auto clone_ptr = variant_ptr->cloneCanonical();
       if (clone_ptr and clone_ptr->isCanonical()) {
 
-        if (not canonical_ptr->addVariant(std::shared_ptr<const kgl::Variant>(std::move(clone_ptr)))) { return false; }
-        return true;
+        if (not canonical_ptr->addVariant(std::shared_ptr<const kgl::Variant>(std::move(clone_ptr)))) {
+
+          kellerberrin::ExecEnv::log().error("consensus::selectVariants; could not add canonical variant: {}", variant_ptr->HGVS());
+
+        }
+
+      } else {
+
+        kellerberrin::ExecEnv::log().warn("consensus::selectVariants; non-canonical variant skipped: {}", variant_ptr->HGVS());
 
       }
-      kellerberrin::ExecEnv::log().warn("consensus::selectVariants; non-canonical variant skipped: {}", variant_ptr->HGVS());
-      return true;   // skip
+
+      return true;   // skip: a bad variant never aborts the whole contig scan
 
     }
 
-    return canonical_ptr->addVariant(variant_ptr);
+    if (not canonical_ptr->addVariant(variant_ptr)) {
+
+      kellerberrin::ExecEnv::log().error("consensus::selectVariants; could not add variant: {}", variant_ptr->HGVS());
+
+    }
+
     return true;
 
   });
@@ -104,7 +122,6 @@ kgl::selectVariants(const std::shared_ptr<const ContigDB>& raw_variants, SeqVari
 
     case SeqVariantFilterType::DEFAULT_SEQ_FILTER:
     case SeqVariantFilterType::HIGHEST_FREQ_VARIANT:
-    default:
       filtered_ptr = std::move(unique_ptr);
       break;
 
@@ -119,60 +136,8 @@ kgl::selectVariants(const std::shared_ptr<const ContigDB>& raw_variants, SeqVari
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Window-scoped statistics
+// Windowed selection (the transcript production path)
 ////////////////////////////////////////////////////////////////////////////////
-
-kgl::FilteredVariantStats
-kgl::windowVariantStats(const std::shared_ptr<const ContigDB>& raw_variants,
-                        const OpenRightUnsigned& window) {
-
-  FilteredVariantStats stats;
-  if (not raw_variants) {
-
-    return stats;
-
-  }
-
-  // The same membership test as the reference ContigModifyFilter: a delete need only
-  // intersect the window; an SNP or insert member interval must be contained in it.
-  raw_variants->processAll([&stats, &window](const std::shared_ptr<const Variant>& variant_ptr) {
-
-    const auto [variant_type, member_interval] = variant_ptr->memberInterval();
-
-    bool modifies{false};
-    if (variant_type == VariantType::INDEL_DELETE) {
-
-      modifies = window.intersects(member_interval);
-
-    } else {
-
-      modifies = window.containsInterval(member_interval);
-
-    }
-
-    if (not modifies) {
-
-      return true;
-
-    }
-
-    ++stats.total_interval_variants_;
-    if (variant_ptr->isSNP()) {
-
-      ++stats.total_snp_variants_;
-
-    } else if ((variant_ptr->modifyInterval().second.size() % 3) != 0) {
-
-      ++stats.total_frame_shift_;
-
-    }
-    return true;
-
-  });
-
-  return stats;
-
-}
 
 namespace {
 
@@ -222,7 +187,6 @@ kgl::selectWindowVariants(const std::shared_ptr<const ContigDB>& raw_variants,
 
     case SeqVariantFilterType::DEFAULT_SEQ_FILTER:
     case SeqVariantFilterType::HIGHEST_FREQ_VARIANT:
-    default:
       policy_ptr = std::move(modify_ptr);
       break;
 
@@ -242,7 +206,7 @@ kgl::selectWindowVariants(const std::shared_ptr<const ContigDB>& raw_variants,
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      keys.insert(variant_ptr->isSNP() ? variant_ptr->offset() : variant_ptr->offset() + 1);
+      keys.insert(applyKey(*variant_ptr));
 
     }
 
@@ -293,11 +257,7 @@ void kgl::SequenceVariantFilter::collect(const std::shared_ptr<const ContigDB>& 
 
     for (auto const& variant_ptr : offset_ptr->getVariantArray()) {
 
-      const auto [variant_type, modify_interval] = variant_ptr->modifyInterval();
-      const ContigOffset_t key = variant_type == VariantType::SNP
-                                     ? variant_ptr->offset()
-                                     : variant_ptr->offset() + 1;
-      offset_variant_map_.try_emplace(key, variant_ptr);
+      offset_variant_map_.try_emplace(applyKey(*variant_ptr), variant_ptr);
 
     }
 

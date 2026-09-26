@@ -1,5 +1,5 @@
 //
-// Deprecated forwarding header (deepseek-refactor).
+// Deprecated forwarding header (consensus library).
 // Offset translation now lives in kgl_consensus_offset.h.
 //
 

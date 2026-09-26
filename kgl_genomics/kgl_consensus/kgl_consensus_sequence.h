@@ -1,6 +1,4 @@
 //
-// Created for the deepseek-refactor consensus library.
-//
 // Module 3: consensus sequence construction.
 //
 
@@ -17,8 +15,7 @@ namespace kellerberrin::genome {
 
 struct ConsensusOptions {
 
-  bool verify_reference{true};           // consumed bases must equal the variant reference
-  bool union_overlapping_deletes{true};  // else overlapping deletes are an error
+  bool verify_reference{true};   // consumed bases must equal the variant reference
 
 };
 

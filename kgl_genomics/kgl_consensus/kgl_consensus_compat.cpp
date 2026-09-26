@@ -1,5 +1,5 @@
 //
-// Created for the deepseek-refactor consensus library.
+// Consensus library (glm-refactor polish of deepseek-refactor).
 //
 // Compatibility layer implementation.
 //
@@ -23,6 +23,7 @@ bool kgl::AdjustedSequence::updateSequence(const std::shared_ptr<const ContigRef
   }
 
   const OpenRightUnsigned window = filtered_variants.sequenceInterval();
+  region_ = window;
 
   // Build a SelectedVariants directly from the facade's filtered map: the facade
   // performs the window and policy filtering; the core resolves and applies.
@@ -84,7 +85,7 @@ kgl::DualSeqOpt kgl::AdjustedSequence::moveSequenceClear() {
 
   }
 
-  std::pair<DNA5SequenceLinear, DNA5SequenceLinear> pair{std::move(original_), consensus_->bases().clone()};
+  std::pair<DNA5SequenceLinear, DNA5SequenceLinear> pair{std::move(original_), consensus_->takeBases()};
   clear();
   return pair;
 
@@ -94,5 +95,43 @@ void kgl::AdjustedSequence::clear() {
 
   consensus_.reset();
   original_.clear();
+  region_ = {0, 0};
+
+}
+
+std::optional<kgl::DNA5SequenceLinear>
+kgl::AdjustedSequence::modifiedSubSequence(const OpenRightUnsigned& sub_interval) const {
+
+  if (not consensus_) {
+
+    ExecEnv::log().warn("AdjustedSequence; no valid modified sequence available");
+    return std::nullopt;
+
+  }
+
+  return consensus_->slice(sub_interval);
+
+}
+
+std::optional<kgl::DNA5SequenceLinear>
+kgl::AdjustedSequence::originalSubSequence(const OpenRightUnsigned& sub_interval) const {
+
+  if (not consensus_) {
+
+    ExecEnv::log().warn("AdjustedSequence; no valid reference sequence available");
+    return std::nullopt;
+
+  }
+
+  if (not region_.containsInterval(sub_interval)) {
+
+    ExecEnv::log().warn("AdjustedSequence; sub interval: {} is not contained in region: {}",
+                        sub_interval.toString(), region_.toString());
+    return std::nullopt;
+
+  }
+
+  return original_.subSequence({sub_interval.lower() - region_.lower(),
+                                sub_interval.upper() - region_.lower()});
 
 }

@@ -1,4 +1,4 @@
-// Behavioural test for the deepseek-refactor consensus library.
+// Behavioural test for the consensus library.
 // Validates interval mapping (module 2) and consensus construction (module 3) against
 // the exact expectations in plans/consensus_algorithm.md and plans/coordinate_cases.md.
 #include "kgl_consensus.h"
@@ -331,6 +331,67 @@ static int runTests() {
           }
         }
       }
+    }
+  }
+
+  // ---- Policy statistics (D3 semantics): counters report window contents BEFORE the
+  //      policy filter, so FRAMESHIFT_ADJUSTED does not zero the frameshift column. ----
+  {
+    const kellerberrin::OpenRightUnsigned window{50, 100};
+    // In-window: one SNP, one frameshift insert (+3 is mod3, +2 is not).
+    auto selected_variants = makeContig({
+        makeVariant(60, reference.substr(60, 1), "A"),                                  // SNP
+        makeVariant(70, reference.substr(70, 1), reference.substr(70, 1) + "GG"),        // frameshift insert
+    });
+
+    auto frameshift = kgl::selectWindowVariants(selected_variants, window,
+                                                kgl::SeqVariantFilterType::FRAMESHIFT_ADJUSTED);
+    CHECK(frameshift.has_value());
+    if (frameshift) {
+      // Counters are pre-policy: the frameshift is counted even though it is filtered out.
+      CHECK(frameshift->stats.total_interval_variants_ == 2);
+      CHECK(frameshift->stats.total_snp_variants_ == 1);
+      CHECK(frameshift->stats.total_frame_shift_ == 1);
+      // The frameshift insert must NOT survive the policy: only the SNP is applied.
+      CHECK(frameshift->variants->variantCount() == 1);
+    }
+
+    auto snp_adjusted = kgl::selectWindowVariants(selected_variants, window,
+                                                  kgl::SeqVariantFilterType::SNP_ADJUSTED);
+    CHECK(snp_adjusted.has_value());
+    if (snp_adjusted) {
+      CHECK(snp_adjusted->stats.total_interval_variants_ == 2);
+      CHECK(snp_adjusted->stats.total_frame_shift_ == 1);
+      CHECK(snp_adjusted->variants->variantCount() == 1);
+    }
+
+    auto default_filter = kgl::selectWindowVariants(selected_variants, window);
+    CHECK(default_filter.has_value());
+    if (default_filter) {
+      // DEFAULT applies everything.
+      CHECK(default_filter->variants->variantCount() == 2);
+    }
+  }
+
+  // ---- upstream_deleted_ propagation: an edit erased only by module 2's delete-union
+  //      pruning must be counted in the resolved schedule's statistic. ----
+  {
+    // Two overlapping deletes [70, 75) and [72, 80) plus an SNP at 76 inside the union.
+    auto selected_variants = makeContig({
+        makeDelete(reference, 69, 5),    // delete [70, 75)
+        makeDelete(reference, 71, 8),    // delete [72, 80), overlaps the first
+        makeVariant(76, reference.substr(76, 1), "T"),   // SNP inside the union span
+    });
+
+    kgl::SelectedVariants selected;
+    selected.variants = selected_variants;
+    auto applied = kgl::resolveVariants(selected);
+    CHECK(applied.has_value());
+    if (applied) {
+      // The union delete [70, 80) survives once; the SNP is shadow-pruned and counted.
+      CHECK(applied->edits.size() == 1);
+      CHECK(applied->edits.front().kind == kgl::EditKind::Delete);
+      CHECK(applied->stats.upstream_deleted_ >= 1);
     }
   }
 

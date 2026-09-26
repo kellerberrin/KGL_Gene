@@ -1,6 +1,4 @@
 //
-// Created for the deepseek-refactor consensus library.
-//
 // Module 2 implementation: interval mapping and offset accounting.
 //
 
@@ -9,6 +7,7 @@
 #include "kel_exec_env.h"
 
 #include <algorithm>
+#include <ranges>
 
 namespace kgl = kellerberrin::genome;
 
@@ -18,13 +17,11 @@ std::string_view kgl::toString(ConsensusError error) noexcept {
 
     case ConsensusError::NullContig: return "null contig";
     case ConsensusError::EmptyReference: return "empty reference";
-    case ConsensusError::WindowOutOfBounds: return "window out of bounds";
     case ConsensusError::ReferenceOriginMismatch: return "reference/origin size mismatch";
     case ConsensusError::VariantNotCanonical: return "variant not canonical";
     case ConsensusError::VariantDuplicateLocus: return "duplicate variant locus";
     case ConsensusError::DeletesOverlap: return "overlapping deletes";
     case ConsensusError::ReferenceMismatch: return "reference base mismatch";
-    case ConsensusError::PayloadOutOfBounds: return "payload out of bounds";
     case ConsensusError::LengthInvariant: return "length invariant violated";
 
   }
@@ -53,17 +50,17 @@ kgl::ContigSize_t kgl::Edit::inserted() const noexcept {
 
 }
 
-std::string kgl::Edit::insertedPayload() const {
+std::string_view kgl::Edit::insertedPayload() const noexcept {
 
   if (kind == EditKind::Snp) {
 
-    return std::string(variant->alternate().getStringView().substr(0, 1));
+    return variant->alternate().getStringView().substr(0, 1);
 
   }
   if (kind == EditKind::Insert) {
 
     const ContigSize_t anchor = variant->referenceSize();
-    return std::string(variant->alternate().getStringView().substr(anchor));
+    return variant->alternate().getStringView().substr(anchor);
 
   }
   return {};
@@ -229,6 +226,8 @@ kgl::resolveVariants(const SelectedVariants& selected, DeleteOverlapPolicy overl
 
     if (shadowed) {
 
+      ExecEnv::log().info("consensus::resolveVariants; edit at offset: {} shadowed by a delete, variant: {}",
+                          edit.begin, edit.variant->HGVS());
       ++applied.stats.upstream_deleted_;
 
     } else {
@@ -300,26 +299,12 @@ kgl::OffsetAccounting::build(const AppliedVariants& applied) {
 
 namespace {
 
-size_t countEditsAtOrBefore(const std::vector<kellerberrin::genome::Edit>& edits, kellerberrin::genome::ContigOffset_t offset) {
+// Index of the first edit beginning after the offset. Both edit lists are sorted
+// by begin, so this is also the number of edits with begin <= offset (O(log V)).
+[[nodiscard]] size_t indexOfFirstEditAfter(const std::vector<genome::Edit>& edits, genome::ContigOffset_t offset) {
 
-  size_t low{0};
-  size_t high{edits.size()};
-  while (low < high) {
-
-    const size_t mid = (low + high) / 2;
-    if (edits[mid].begin <= offset) {
-
-      low = mid + 1;
-
-    } else {
-
-      high = mid;
-
-    }
-
-  }
-
-  return low;
+  const auto first_after = std::ranges::upper_bound(edits, offset, std::ranges::less{}, &genome::Edit::begin);
+  return static_cast<size_t>(std::ranges::distance(edits.begin(), first_after));
 
 }
 
@@ -327,7 +312,7 @@ size_t countEditsAtOrBefore(const std::vector<kellerberrin::genome::Edit>& edits
 
 kgl::ContigOffset_t kgl::OffsetAccounting::toModified(ContigOffset_t reference_offset) const noexcept {
 
-  const size_t count = countEditsAtOrBefore(edits_, reference_offset);
+  const size_t count = indexOfFirstEditAfter(edits_, reference_offset);
   if (count == 0) {
 
     return reference_offset;
@@ -374,7 +359,7 @@ kgl::SignedOffset_t kgl::OffsetAccounting::shift(ContigOffset_t reference_offset
 
 bool kgl::OffsetAccounting::isDeleted(ContigOffset_t reference_offset) const noexcept {
 
-  const size_t count = countEditsAtOrBefore(edits_, reference_offset);
+  const size_t count = indexOfFirstEditAfter(edits_, reference_offset);
   if (count == 0) {
 
     return false;
@@ -388,30 +373,15 @@ bool kgl::OffsetAccounting::isDeleted(ContigOffset_t reference_offset) const noe
 
 std::optional<kgl::ContigOffset_t> kgl::OffsetAccounting::toReference(ContigOffset_t modified_offset) const noexcept {
 
-  size_t low{0};
-  size_t high{modified_begin_.size()};
-  while (low < high) {
-
-    const size_t mid = (low + high) / 2;
-    if (modified_begin_[mid] <= modified_offset) {
-
-      low = mid + 1;
-
-    } else {
-
-      high = mid;
-
-    }
-
-  }
-
-  if (low == 0) {
+  // Index of the last edit whose modified begin is <= modified_offset.
+  const auto first_after = std::ranges::upper_bound(modified_begin_, modified_offset);
+  if (first_after == modified_begin_.begin()) {
 
     return modified_offset;
 
   }
 
-  const size_t index = low - 1;
+  const size_t index = static_cast<size_t>(std::ranges::distance(modified_begin_.begin(), first_after)) - 1;
   const Edit& edit = edits_[index];
 
   if (edit.kind == EditKind::Insert and modified_offset < modified_begin_[index] + edit.inserted()) {

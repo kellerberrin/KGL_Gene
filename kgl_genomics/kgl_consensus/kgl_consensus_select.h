@@ -1,6 +1,4 @@
 //
-// Created for the deepseek-refactor consensus library.
-//
 // Module 1: variant selection and filtering.
 // Produces a canonical, policy-filtered, one-variant-per-locus ContigDB.
 //
@@ -23,13 +21,11 @@ namespace kellerberrin::genome {
 enum class ConsensusError : std::uint8_t {
   NullContig,
   EmptyReference,
-  WindowOutOfBounds,
   ReferenceOriginMismatch,
   VariantNotCanonical,
   VariantDuplicateLocus,
   DeletesOverlap,
   ReferenceMismatch,
-  PayloadOutOfBounds,
   LengthInvariant,
 };
 
@@ -64,19 +60,12 @@ struct SelectedVariants {
 };
 
 // Canonicalise, apply the policy and resolve multiple variants per locus.
+// Contig-global selection; not used by the transcript client (which is window-scoped)
+// but retained for whole-contig / whole-chromosome consensus builds.
 // Non-canonical variants are logged and skipped; they are never silently applied.
 [[nodiscard]] std::expected<SelectedVariants, ConsensusError>
 selectVariants(const std::shared_ptr<const ContigDB>& raw_variants,
                SeqVariantFilterType policy = SeqVariantFilterType::DEFAULT_SEQ_FILTER);
-
-// Window-scoped variant statistics with the reference field semantics.
-// Counts only variants that can modify `window` (ContigModifyFilter membership,
-// including upstream deletes that extend into it), before the policy filter is
-// applied. This is the contract expected by transcript clients: the counts are
-// per window, not per contig.
-[[nodiscard]] FilteredVariantStats
-windowVariantStats(const std::shared_ptr<const ContigDB>& raw_variants,
-                   const OpenRightUnsigned& window);
 
 // Windowed selection: the pipeline used by transcript clients.
 // Reproduces the reference/constrained collection exactly:

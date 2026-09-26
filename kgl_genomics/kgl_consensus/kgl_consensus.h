@@ -1,5 +1,5 @@
 //
-// Created for the deepseek-refactor consensus library.
+// Consensus library (glm-refactor polish of deepseek-refactor).
 //
 // Umbrella header: the four consensus modules plus the compatibility layer.
 //

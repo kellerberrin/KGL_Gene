@@ -195,7 +195,7 @@ std::pair<bool, std::unique_ptr<kgl::GffRecord>> kgl::ParseGff3::parseGff3Record
 }
 
 
-// Valgrind indicates memory leaks ocurring in this function.
+// Valgrind indicates memory leaks occurring in this function.
 // This could be due to the use of the FeatureSinkPtr function pointer to process
 // the genomic features.
 // todo: This memory leak needs further investigation.

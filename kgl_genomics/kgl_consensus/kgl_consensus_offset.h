@@ -1,6 +1,4 @@
 //
-// Created for the deepseek-refactor consensus library.
-//
 // Module 2: interval mapping and offset accounting.
 // Pure interval mathematics: no sequence type is used or included.
 //
@@ -41,7 +39,8 @@ struct Edit {
   [[nodiscard]] ContigSize_t inserted() const noexcept;
   // Alternate bases to emit: the alternate base for a SNP, the inserted bases
   // (alternate minus the shared anchor) for an insert, empty for a delete.
-  [[nodiscard]] std::string insertedPayload() const;
+  // The variant is immutable so the view is stable for the edit's lifetime.
+  [[nodiscard]] std::string_view insertedPayload() const noexcept;
 
 };
 

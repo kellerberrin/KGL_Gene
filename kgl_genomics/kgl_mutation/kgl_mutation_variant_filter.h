@@ -1,5 +1,5 @@
 //
-// Deprecated forwarding header (deepseek-refactor).
+// Deprecated forwarding header (consensus library).
 // The variant selection module now lives in kgl_consensus_select.h.
 //
 
