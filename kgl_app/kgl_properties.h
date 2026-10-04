@@ -34,7 +34,9 @@ public:
   RuntimeProperties& operator=(RuntimeProperties&&) = delete;
 
   /// Reads and parses the properties from the specified XML file.
-  [[nodiscard]] bool readProperties(const std::string& properties_file);
+  [[nodiscard]] bool readProperties( const std::string& properties_file,
+                                     const std::string& options_write_file,
+                                     const std::string& parsed_write_file);
 
   /// Sets the work directory used to resolve relative file paths.
   void setWorkDirectory(const std::string& work_directory) { work_directory_ = work_directory; }

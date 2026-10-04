@@ -23,6 +23,10 @@ struct CmdLineArgs {
   std::string logFile{"kgl_phylo.log"};
   /// Runtime options XML file name.
   std::string options_file{"runtime_options.xml"};
+  /// Optional file for the post-processed options_file.
+  std::string option_file_out;
+  /// Optional file output of parsed XML options.
+  std::string parsedOptionOut;
   /// Maximum number of error messages before suppression.
   size_t max_error_count{1000};
   /// Maximum number of warning messages before suppression.

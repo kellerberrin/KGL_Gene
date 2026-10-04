@@ -28,7 +28,7 @@ namespace kel = kellerberrin;
 }
 
 
-// Simple command-line parser replacing boost::program_options.
+// Simple command-line parser.
 // Supports --flag=value and --flag value syntax for three required string flags
 // plus --help/-h as a boolean flag.
 struct ParsedArgs {
@@ -36,6 +36,8 @@ struct ParsedArgs {
   std::string workDirectory;
   std::string logFile;
   std::string optionFile;
+  std::string optionFileOut;
+  std::string parsedOptionOut;
   bool helpRequested{false};
 
 };
@@ -51,6 +53,8 @@ struct ParsedArgs {
     {"--workDirectory", &args.workDirectory},
     {"--logFile",       &args.logFile},
     {"--optionFile",    &args.optionFile},
+    {"--optionFileOut",    &args.optionFileOut},
+    {"--parsedTree",    &args.parsedOptionOut},
   };
 
   for (int i = 1; i < argc; ++i) {
@@ -113,18 +117,27 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
      << MODULE_NAME
      << " version: "
      << VERSION << '\n'
-     << "Usage: --workDirectory=<work_directory> --logFile=<log_file.log> --optionFile=<option_file.xml> (all arguments required)";
+     << "Required Arguments: --workDirectory=<work_directory> --logFile=<log_file.log> --optionFile=<option_file.xml>" << '\n'
+     << "Optional Arguments: --optionFileOut=<option_file_out.xml> --parsedTree=<parsed_tree.txt>" << '\n'
+     << "The optional arguments are used for debugging the option file and parsed option tree." << '\n'
+     << "To prevent accidental file overwrite it is a requirement that:" << '\n'
+     <<  "<option_file.xml> != <option_file_out.xml>, <option_file.xml> != <parsed_tree.txt>, <option_file_out.xml> != <parsed_tree.txt>";
+
   const std::string help_description = ss.str();
 
   if (argc <= 1) {
+
     std::cerr << "Required arguments not specified. Use '--help' for argument formats." << std::endl;
     std::cerr << help_description << std::endl;
     std::exit(EXIT_FAILURE);
+
   }
 
   auto parsed_opt = parseArgs(argc, argv);
   if (not parsed_opt) {
+
     fatalExit("Problem Parsing Command Line. Use '--help' for argument formats.");
+
   }
 
   auto const& parsed = *parsed_opt;
@@ -138,7 +151,9 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   // Work directory.
   if (parsed.workDirectory.empty()) {
+
     fatalExit("--workDirectory was not specified");
+
   }
   args_.workDirectory = parsed.workDirectory;
   std::cerr << "directory:" << args_.workDirectory << " was specified" << std::endl;
@@ -146,12 +161,16 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   bool valid_directory = Utility::directoryExists(getArgs().workDirectory);
 
   if (!valid_directory) {
+
     fatalExit("Specified work directory:" + getArgs().workDirectory + " does not exist.");
+
   }
 
   // Log file.
   if (parsed.logFile.empty()) {
+
     fatalExit("--logFile was not specified");
+
   }
 
   std::string log_file_name = parsed.logFile;
@@ -160,16 +179,75 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
   // truncate the log file.
   std::fstream log_file(log_file_path, std::fstream::out | std::fstream::trunc);
   if (!log_file) {
+
     fatalExit("Cannot open log file (--logFile):" + log_file_path);
+
   }
 
   args_.logFile = log_file_path;
 
   // Options file.
   if (parsed.optionFile.empty()) {
+
     fatalExit("--optionFile was not specified");
+
   }
+
+  if (parsed.optionFile == parsed.logFile) {
+
+    fatalExit("--optionFile cannot have the same file name as --logFile.");
+
+  }
+
   args_.options_file = parsed.optionFile;
+
+  // Check the temporary arguments.
+
+  if (not parsed.optionFileOut.empty()) {
+
+    if (parsed.optionFileOut == parsed.optionFile) {
+
+      fatalExit("--optionFileOut cannot have the same file name as --optionFile.");
+
+    }
+
+    if (parsed.optionFileOut == parsed.logFile) {
+
+      fatalExit("--optionFileOut cannot have the same file name as --logFile.");
+
+    }
+
+    if (not parsed.optionFileOut.empty() and not parsed.parsedOptionOut.empty()) {
+
+      if (parsed.optionFileOut == parsed.parsedOptionOut) {
+
+        fatalExit("--optionFileOut cannot have the same file name as --parsedTree");
+
+      }
+
+    }
+
+    args_.option_file_out = parsed.optionFileOut;
+
+  }
+
+  if (not parsed.parsedOptionOut.empty()) {
+
+    if (parsed.parsedOptionOut == parsed.optionFile) {
+
+      fatalExit("--parsedTree cannot have the same file name as --optionFile.");
+
+    }
+
+    if (parsed.optionFileOut == parsed.logFile) {
+
+      fatalExit("--parsedTree cannot have the same file name as --logFile.");
+
+    }
+
+    args_.parsedOptionOut = parsed.parsedOptionOut;
+
+  }
 
   return true;
 

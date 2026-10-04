@@ -11,10 +11,27 @@ namespace kgl = kellerberrin::genome;
 
 
 /// Reads the runtime properties from the specified XML file.
-bool kgl::RuntimeProperties::readProperties(const std::string& properties_file) {
+bool kgl::RuntimeProperties::readProperties( const std::string& properties_file,
+                                             const std::string& options_write_file,
+                                             const std::string& parsed_write_file) {
 
   std::string properties_path = Utility::filePath(properties_file, work_directory_);
-  return property_tree_ptr_->readProperties(properties_path);
+  std::string option_write_path;
+  std::string parsed_write_path;
+
+  if (not options_write_file.empty()) {
+
+    option_write_path = Utility::filePath(options_write_file, work_directory_);
+
+  }
+
+  if (not parsed_write_file.empty()) {
+
+    parsed_write_path = Utility::filePath(parsed_write_file, work_directory_);
+
+  }
+
+  return property_tree_ptr_->readProperties(properties_path, option_write_path, parsed_write_path);
 
 }
 

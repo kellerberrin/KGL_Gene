@@ -7,12 +7,13 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include <charconv>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <shared_mutex>
+#include <map>
 
 namespace kel = kellerberrin;
 namespace pt = boost::property_tree;
@@ -37,7 +38,11 @@ public:
   PropertyImpl(const PropertyImpl&) =default;
   ~PropertyImpl() = default;
 
-  [[nodiscard]] bool readPropertiesFile(const std::string& properties_file);
+  [[nodiscard]] bool readPropertiesFile( const std::string& properties_file,
+                                         const std::string& options_write_file,
+                                         const std::string& parsed_write_file);
+
+  [[nodiscard]] static bool writeProperties(const std::string& properties, const std::string& properties_write_file);
 
   [[nodiscard]] bool getProperty(const std::string& property_name, std::string& property) const;
 
@@ -47,8 +52,7 @@ public:
 
   [[nodiscard]] bool getProperty(const std::string& property_name, size_t& property) const;
 
-
-  void treeTraversal() const;
+  [[nodiscard]] std::stringstream treeTraversal() const;
 
   [[nodiscard]] bool checkProperty(const std::string& property_name) const;
 
@@ -60,17 +64,19 @@ public:
 
 private:
 
-  constexpr static const char* JSON_FILE_EXT_{"JSON"};
-  constexpr static const char* INCLUDE_TOKEN_{"#include"};
-  constexpr static const char* LINE_IGNORE_{"//"};
-  constexpr static const char INCLUDE_FILE_QUOTE_{'\"'};
+  constexpr static std::string INCLUDE_TOKEN_{"#include"};  // The include file directive.
+  constexpr static std::string LINE_IGNORE_{"//"};  // First 2 chars indicates a comment (pre-processor ignores line)
+  constexpr static char LOGICAL_VAR_{'$'};  // Logical variable $<logical_variable>$ <replacement_text>
+  constexpr static char INCLUDE_FILE_QUOTE_{'\"'};
 
   // boost property tree object
   pt::ptree property_tree_;
+  std::unordered_map<std::string, std::string> logical_map_;
 
-  void printTree(const std::string& parent, const pt::ptree& property_tree) const;
+  void recursivePrintTree(std::stringstream& ss, const pt::ptree& property_tree, const std::string& parent, size_t depth) const;
   // These functions are recursive and throw file exceptions which are caught in readPropertiesFile().
   std::stringstream preProcessPropertiesFile(const std::string& properties_file);
+  std::stringstream preProcessLogicalComments(const std::string& xml_file_name);  // Strips out comments and substitutes logical variables.
   void readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count);
 
 };
@@ -89,28 +95,24 @@ std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(cons
 
 }
 
-// This function preprocesses the runtime XML file by allowing a c++ style include directive, e.g. #include "subdir/include.xml".
-// This allows the runtime XML file to be broken up and simplified.
-// Redundant include statements can be disabled by prefixing with '//' in the first two characters of the line.
-// For example '//#include "subdir/include.xml' is a disabled include statement.
-void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count) {
+// Strips out comments and substitutes logical variables.
+std::stringstream kel::PropertyTree::PropertyImpl::preProcessLogicalComments(const std::string& xml_file_name) {
 
-  static const size_t include_token_size = std::string(INCLUDE_TOKEN_).size();
   static const size_t ignore_size = std::string(LINE_IGNORE_).size();
-
-  ++file_count;
-  std::ifstream xml_file(properties_file);
+  std::ifstream xml_file(xml_file_name);
 
   if (not xml_file.good()) {
 
-    ExecEnv::log().error("PropertyImpl::preProcessPropertiesFile; Unable to open runtime XML file: {}", properties_file);
-    throw std::runtime_error(properties_file);
+    ExecEnv::log().error("PropertyImpl::preProcessLogicalComments; Unable to open runtime XML file: {}", xml_file_name);
+    throw std::runtime_error(xml_file_name);
 
   }
 
+  std::stringstream scan_substitution;
+  // First pass finds any defined logical substitutions.
   std::string line;
-  while(std::getline(xml_file, line))
-  {
+  while(std::getline(xml_file, line)) {
+
     // If the first two characters are "//" then the line is ignored.
     std::string ignore_text = line.substr(0, ignore_size);
     if (ignore_text == LINE_IGNORE_) {
@@ -118,6 +120,83 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
       continue;
 
     }
+    // If the first character is '$' then the line defines a logical definition
+    if (line[0] == LOGICAL_VAR_) {
+
+      auto line_split = Utility::viewTokenizer(line, LOGICAL_VAR_);
+      if (line_split.size() != 3) {
+
+        ExecEnv::log().warn("$<logical_variable>$ \"<replacement_text>\"; Invalid logical format: {}, tokens: {}", line, line_split.size());
+        continue;
+      }
+
+      auto logical_var = line_split[1];
+      auto replacement_vec = Utility::viewTokenizer(line_split[2], INCLUDE_FILE_QUOTE_);
+      if (replacement_vec.size() < 2) {
+
+        ExecEnv::log().warn("\"<replacement_text>\"; Invalid format: {}", line_split[1]);
+        continue;
+
+      }
+      auto replacement = replacement_vec[1];
+
+      ExecEnv::log().info("Substitute: ${}$ -> \"{}\"", logical_var, replacement);
+      logical_map_.emplace(std::string(logical_var),std::string(replacement));
+
+      continue;
+
+    }
+
+    scan_substitution << line << '\n';
+
+  }
+
+  // Second pass substitutes any logical definitions with replacement text.
+  std::stringstream substituted_xml;
+  while(std::getline(scan_substitution, line)) {
+
+    auto line_split = Utility::viewTokenizer(line, LOGICAL_VAR_);
+    // A logical var will split the line into 3 tokens <text1>$<logical_var>$<text2>.
+    if (line_split.size() == 3) {
+
+      auto logical_iter = logical_map_.find(std::string(line_split[1]));
+      // Check if not found
+      if (logical_iter == logical_map_.end()) {
+
+        ExecEnv::log().warn("Logical variable ${}$ not found for line: {} - no substitution performed", line_split[1], line);
+
+      } else {
+
+        // Reconstruct the substituted line.
+        auto [logical_var, replacement] = *logical_iter;
+        line = std::string(line_split[0]) + replacement + std::string(line_split[2]);
+
+      }
+
+    }
+
+    substituted_xml << line << '\n';
+
+  }
+
+  return substituted_xml;
+
+}
+
+// This function preprocesses the runtime XML file by allowing a c++ style include directive, e.g. #include "subdir/include.xml".
+// This allows the runtime XML file to be broken up and simplified.
+// Redundant include statements can be disabled by prefixing with '//' in the first two characters of the line.
+// For example '//#include "subdir/include.xml' is a disabled include statement.
+void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count) {
+
+  static const size_t include_token_size = std::string(INCLUDE_TOKEN_).size();
+
+  ++file_count;
+  auto logicalProcessed = preProcessLogicalComments(properties_file);
+
+  std::string line;
+  while(std::getline(logicalProcessed, line))
+  {
 
     if (line.contains(INCLUDE_TOKEN_)) {
 
@@ -150,25 +229,40 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
 }
 
 
-bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& properties_file) {
-
-  std::string uc_file_extension = Utility::toupper(Utility::fileExtension(properties_file));
+bool kel::PropertyTree::PropertyImpl::readPropertiesFile( const std::string& properties_file,
+                                                          const std::string& options_write_file,
+                                                          const std::string& parsed_write_file) {
 
   try {
 
-    if (uc_file_extension == JSON_FILE_EXT_) {
+    std::stringstream ss = preProcessPropertiesFile(properties_file);
 
-      pt::read_json(properties_file, property_tree_);
+    // Write the text xml file (prior to parsing) if the option_file_out argument is specified.
+    if (not options_write_file.empty()) {
 
-    } else {
+      if (not writeProperties(ss.str(), options_write_file)) {
 
-      std::stringstream ss = preProcessPropertiesFile(properties_file);
-      pt::read_xml(ss, property_tree_);
+        ExecEnv::log().error("Cannot write processed options file {}", options_write_file);
+
+      }
 
     }
 
-  }
-  catch(const std::exception& e) {
+    // Parse the preprocessed text file into an xml tree.
+    pt::read_xml(ss, property_tree_);
+
+    // If an xml output file specified, then write out the parsed xml file.
+    if (not parsed_write_file.empty()) {
+
+      if (not writeProperties(treeTraversal().str(), parsed_write_file)) {
+
+        ExecEnv::log().error("Cannot write parsed xml file {}", parsed_write_file);
+
+      }
+
+    }
+
+  } catch(const std::exception& e) {
 
     ExecEnv::log().error("PropertyTree; Missing or Malformed property tree in file: {}, error: {}", properties_file, e.what());
     return false;
@@ -176,6 +270,23 @@ bool kel::PropertyTree::PropertyImpl::readPropertiesFile(const std::string& prop
   }
 
   return true;
+
+}
+
+bool kel::PropertyTree::PropertyImpl::writeProperties(const std::string& properties, const std::string& properties_write_file) {
+
+  std::ofstream properties_file(properties_write_file);
+
+  if (not properties_file.good()) {
+
+    ExecEnv::log().error("PropertyImpl::writePropertiesFile; could not open file: {} for properties file output", properties_write_file);
+    return false;
+
+  }
+
+  properties_file << properties;
+
+  return properties_file.good();
 
 }
 
@@ -216,7 +327,7 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 
     ExecEnv::log().error("Exception: PropertyTree::PropertyImpl::getProperty; Property: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("*********** Property Tree Contents *************");
-    treeTraversal();
+    ExecEnv::log().error(treeTraversal().str());
     ExecEnv::log().error("**********************************************");
     return false;
 
@@ -244,7 +355,7 @@ bool kel::PropertyTree::PropertyImpl::getPropertyVector(const std::string& prope
 
     ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", property_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
-    treeTraversal();
+    ExecEnv::log().error(treeTraversal().str());
     ExecEnv::log().error("**********************************************");
     return false;
 
@@ -275,7 +386,7 @@ bool kel::PropertyTree::PropertyImpl::getNodeVector(const std::string& node_name
 
     ExecEnv::log().error("PropertyTree::getPropertyVector; Property Vector: {} not found, error: {}", node_name, e.what());
     ExecEnv::log().error("***********Property Tree Contents*************");
-    treeTraversal();
+    ExecEnv::log().error(treeTraversal().str());
     ExecEnv::log().error("**********************************************");
     return false;
 
@@ -362,16 +473,25 @@ bool kel::PropertyTree::PropertyImpl::getProperty(const std::string& property_na
 }
 
 
-void kel::PropertyTree::PropertyImpl::treeTraversal() const {
+std::stringstream kel::PropertyTree::PropertyImpl::treeTraversal() const {
 
-  printTree("", property_tree_);
+  std::stringstream ss;
+  recursivePrintTree(ss, property_tree_, "", 0);
+
+  return ss;
 
 }
 
 
 
-void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const pt::ptree& property_tree) const {
+void kel::PropertyTree::PropertyImpl::recursivePrintTree( std::stringstream& ss,
+                                                          const pt::ptree& property_tree,
+                                                          const std::string& parent,
+                                                          size_t depth) const {
 
+  ++depth; // Next tree branch.
+  const size_t horiz_spaces = 2;  // Spaces per tree branch.
+  size_t spaces = horiz_spaces * depth;
 
   for (const auto& item : property_tree) {
 
@@ -390,20 +510,21 @@ void kel::PropertyTree::PropertyImpl::printTree(const std::string& parent, const
     value = Utility::trimEndWhiteSpace(value);
     if (not value.empty()) {
 
-      ExecEnv::log().info("PropertyTree; key: {}, value: {}", parent_key, value);
+      ss << std::format("{: <{}}{}={}\n", "", spaces, parent_key, value);
 
     } else {
 
-      ExecEnv::log().info("PropertyTree; key: {}", parent_key);
+      ss << std::format("{: <{}}{}\n", "", spaces, parent_key);
 
     }
-    printTree(parent_key, item.second);
+    // Recursive call to descend through the xml tree.
+    recursivePrintTree(ss, item.second, parent_key, depth);
+
+    ss << std::format("{: <{}}/{}\n", "", spaces, parent_key);
 
   }
 
 }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -426,10 +547,12 @@ kel::PropertyTree::~PropertyTree() {}  // Required because of incomplete pimpl t
 
 // Functionality passed to the implmentation.
 
-bool kel::PropertyTree::readProperties(const std::string& properties_file) {
+bool kel::PropertyTree::readProperties( const std::string& properties_file,
+                                        const std::string& options_write_file,
+                                        const std::string& parsed_write_file) {
 
   auto new_impl = std::make_unique<PropertyImpl>();
-  if (not new_impl->readPropertiesFile(properties_file)) {
+  if (not new_impl->readPropertiesFile(properties_file, options_write_file, parsed_write_file)) {
 
     return false;
 
@@ -473,7 +596,7 @@ bool kel::PropertyTree::getOptionalProperty(const std::string& property_name, st
 
 }
 
-void kel::PropertyTree::treeTraversal() const {
+std::stringstream kel::PropertyTree::treeTraversal() const {
 
   std::shared_lock lock(tree_mutex_);
   return properties_impl_ptr_->treeTraversal();
@@ -499,7 +622,9 @@ bool kel::PropertyTree::getFileProperty(const std::string& property_name, const 
     ExecEnv::log().warn("PropertyTree::getFileProperty; Requested file property: {} not found. A list of all valid properties follows:",
                         property_name);
 
-    properties_impl_ptr_->treeTraversal();
+    auto ss = properties_impl_ptr_->treeTraversal();
+    std::cout << ss.str() << std::endl;
+
     return false;
 
   }
@@ -529,7 +654,9 @@ bool kel::PropertyTree::getFileCreateProperty(const std::string& property_name, 
     ExecEnv::log().warn("PropertyTree::getFileCreateProperty; Requested file property: {} not found. A list of all valid properties follows:",
                         property_name);
 
-    properties_impl_ptr_->treeTraversal();
+    auto ss = properties_impl_ptr_->treeTraversal();
+    std::cout <<ss.str() << std::endl;
+
     return false;
 
   }

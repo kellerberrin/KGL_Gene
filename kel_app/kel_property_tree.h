@@ -19,10 +19,7 @@ namespace kellerberrin {  //  organization level namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This object is a facade over the boost:: property tree object
-// Properties may stored as XML or JSON. The actual format is determined at runtime
-// by a file extension of "xml" or "json". Any other file extension is assumed to be
-// formatted as XML. The choice of which of the two formats to use is at the
-// discretion of the program user and is transparent to this object.
+// Properties as stored as XML.
 // The boost:: functionality is hidden using the PIMPL idiom.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,8 +42,10 @@ public:
 
   ~PropertyTree(); // Defined in implementation file.
 
-  /// Reads and parses an XML (default) or JSON properties file. Returns true on success.
-  [[nodiscard]] bool readProperties(const std::string& properties_file);
+  /// Reads and parses an XML properties file. Returns true on success.
+  [[nodiscard]] bool readProperties( const std::string& properties_file,
+                                     const std::string& options_write_file,
+                                     const std::string& parsed_write_file);
 
   /// Retrieves the string value of the named property. Returns false if not present.
   [[nodiscard]] bool getProperty(const std::string& property_name, std::string& property) const;
@@ -85,7 +84,7 @@ public:
   [[nodiscard]] std::string getValue() const;
 
   /// Recursively logs the entire tree contents.
-  void treeTraversal() const;
+  [[nodiscard]] std::stringstream treeTraversal() const;
 
 private:
 

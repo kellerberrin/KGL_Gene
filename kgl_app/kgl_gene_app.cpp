@@ -18,7 +18,7 @@ void kgl::GeneExecEnv::executeApp() {
 
   // Read the XML program options.
   runtime_options_.setWorkDirectory(args.workDirectory);
-  if (not runtime_options_.readProperties(args.options_file)) {
+  if (not runtime_options_.readProperties(args.options_file, args.option_file_out, args.parsedOptionOut)) {
 
     std::string options_file_path = Utility::filePath(args.options_file, args.workDirectory);
     ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", options_file_path);
