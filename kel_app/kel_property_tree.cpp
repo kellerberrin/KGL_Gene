@@ -38,7 +38,8 @@ public:
   PropertyImpl(const PropertyImpl&) =default;
   ~PropertyImpl() = default;
 
-  [[nodiscard]] bool readPropertiesFile( const std::string& properties_file,
+  [[nodiscard]] bool readPropertiesFile( const std::string& reference_directory,
+                                         const std::string& properties_file,
                                          const std::string& options_write_file,
                                          const std::string& parsed_write_file);
 
@@ -71,23 +72,24 @@ private:
 
   // boost property tree object
   pt::ptree property_tree_;
+  // Logical variable map. key=logical, value=substitution.
   std::unordered_map<std::string, std::string> logical_map_;
 
   void recursivePrintTree(std::stringstream& ss, const pt::ptree& property_tree, const std::string& parent, size_t depth) const;
   // These functions are recursive and throw file exceptions which are caught in readPropertiesFile().
-  std::stringstream preProcessPropertiesFile(const std::string& properties_file);
+  std::stringstream preProcessPropertiesFile(const std::string& reference_directory, const std::string& properties_file);
   std::stringstream preProcessLogicalComments(const std::string& xml_file_name);  // Strips out comments and substitutes logical variables.
-  void readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count);
+  void readRecursive(std::stringstream& ss, const std::string& reference_directory, const std::string& properties_file, size_t& file_count);
 
 };
 
 // These functions throw file exceptions.
-std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(const std::string& properties_file) {
+std::stringstream kel::PropertyTree::PropertyImpl::preProcessPropertiesFile(const std::string& reference_directory, const std::string& properties_file) {
 
   std::stringstream ss;
   size_t file_count{0};
 
-  readRecursive(ss, properties_file, file_count);
+  readRecursive(ss, reference_directory, properties_file, file_count);
 
   ExecEnv::log().info("Runtime definition XML files parsed: {}", file_count);
 
@@ -187,7 +189,7 @@ std::stringstream kel::PropertyTree::PropertyImpl::preProcessLogicalComments(con
 // This allows the runtime XML file to be broken up and simplified.
 // Redundant include statements can be disabled by prefixing with '//' in the first two characters of the line.
 // For example '//#include "subdir/include.xml' is a disabled include statement.
-void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& properties_file, size_t& file_count) {
+void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const std::string& reference_directory, const std::string& properties_file, size_t& file_count) {
 
   static const size_t include_token_size = std::string(INCLUDE_TOKEN_).size();
 
@@ -206,9 +208,9 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
         // The include XML file spec should be in quotes, e.g #include "subdir/include.xml".
         std::string file_spec = Utility::trimAllWhiteSpace(line.substr(include_token_size));
         file_spec = Utility::trimAllChar(file_spec, INCLUDE_FILE_QUOTE_);
-        file_spec = Utility::filePath(file_spec, Utility::filePath(properties_file));
+        file_spec = Utility::filePath(file_spec, reference_directory);
         // Recursively include XML file.
-        readRecursive(ss, file_spec, file_count);
+        readRecursive(ss, reference_directory, file_spec, file_count);
 
 
       } else {
@@ -229,13 +231,14 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
 }
 
 
-bool kel::PropertyTree::PropertyImpl::readPropertiesFile( const std::string& properties_file,
+bool kel::PropertyTree::PropertyImpl::readPropertiesFile( const std::string& reference_directory,
+                                                          const std::string& properties_file,
                                                           const std::string& options_write_file,
                                                           const std::string& parsed_write_file) {
 
   try {
 
-    std::stringstream ss = preProcessPropertiesFile(properties_file);
+    std::stringstream ss = preProcessPropertiesFile(reference_directory, properties_file);
 
     // Write the text xml file (prior to parsing) if the option_file_out argument is specified.
     if (not options_write_file.empty()) {
@@ -547,12 +550,16 @@ kel::PropertyTree::~PropertyTree() {}  // Required because of incomplete pimpl t
 
 // Functionality passed to the implmentation.
 
-bool kel::PropertyTree::readProperties( const std::string& properties_file,
+bool kel::PropertyTree::readProperties( const std::string& reference_directory,
+                                        const std::string& properties_file,
                                         const std::string& options_write_file,
                                         const std::string& parsed_write_file) {
 
   auto new_impl = std::make_unique<PropertyImpl>();
-  if (not new_impl->readPropertiesFile(properties_file, options_write_file, parsed_write_file)) {
+  if (not new_impl->readPropertiesFile( reference_directory,
+                                        properties_file,
+                                        options_write_file,
+                                        parsed_write_file)) {
 
     return false;
 

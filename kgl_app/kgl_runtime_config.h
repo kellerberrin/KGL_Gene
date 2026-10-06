@@ -29,9 +29,9 @@ class RuntimeConfiguration {
 
 public:
 
-  RuntimeConfiguration(const RuntimeProperties &runtime_options, std::string work_directory)
+  RuntimeConfiguration(const RuntimeProperties &runtime_options, std::string reference_directory)
       : runtime_options_(runtime_options),
-        work_directory_(std::move(work_directory)) { verifyPackages(); }
+        reference_directory_(std::move(reference_directory)) { verifyPackages(); }
 
   ~RuntimeConfiguration() = default;
 
@@ -59,13 +59,13 @@ public:
   /// Returns the active parameter list for analysis configuration.
   [[nodiscard]] const ActiveParameterList &activeParameterList() const { return runtime_options_.getParameterMap(); }
 
-  /// Returns the work directory.
-  [[nodiscard]] const std::string &workDirectory() const { return work_directory_; }
+  /// Returns the reference directory.
+  [[nodiscard]] const std::string &referenceDirectory() const { return reference_directory_; }
 
 private:
 
   const RuntimeProperties& runtime_options_;
-  const std::string work_directory_;
+  const std::string reference_directory_;
 
   // Check the integrity of all the XML information.
   void verifyPackages() const;

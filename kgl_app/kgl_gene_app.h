@@ -6,10 +6,8 @@
 #define KGL_GENE_APP_H
 
 
-#include "kgl_properties.h"
-#include "kgl_genome_types.h"
-
 #include "kel_exec_env.h"
+
 
 namespace kellerberrin::genome {   //  organization::project level namespace
 
@@ -18,15 +16,15 @@ namespace kellerberrin::genome {   //  organization::project level namespace
 struct CmdLineArgs {
 
   /// Working directory for file paths.
-  std::string workDirectory{"./"};
+  std::string reference_directory{"./"};
   /// Log file name.
-  std::string logFile{"kgl_phylo.log"};
+  std::string log_file{"kgl_phylo.log"};
   /// Runtime options XML file name.
   std::string options_file{"runtime_options.xml"};
   /// Optional file for the post-processed options_file.
   std::string option_file_out;
   /// Optional file output of parsed XML options.
-  std::string parsedOptionOut;
+  std::string parsed_option_out;
   /// Maximum number of error messages before suppression.
   size_t max_error_count{1000};
   /// Maximum number of warning messages before suppression.
@@ -54,18 +52,12 @@ public:
   [[nodiscard]] static bool parseCommandLine(int argc, char const ** argv);
   /// Create application logger.
   [[nodiscard]] static std::unique_ptr<ExecEnvLogger> createLogger();
-
-
   /// Returns the command line arguments.
   [[nodiscard]] static const CmdLineArgs& getArgs() { return args_; }
-  /// Returns the runtime properties/options.
-  [[nodiscard]] static const RuntimeProperties& getRuntimeOptions() { return runtime_options_; }
 
 private:
 
   inline static CmdLineArgs args_;
-  inline static RuntimeProperties runtime_options_;
-
 
 };
 

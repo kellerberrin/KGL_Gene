@@ -11,27 +11,18 @@ namespace kgl = kellerberrin::genome;
 
 
 /// Reads the runtime properties from the specified XML file.
-bool kgl::RuntimeProperties::readProperties( const std::string& properties_file,
+void kgl::RuntimeProperties::readProperties( const std::string& reference_directory,
+                                             const std::string& properties_file,
                                              const std::string& options_write_file,
                                              const std::string& parsed_write_file) {
 
-  std::string properties_path = Utility::filePath(properties_file, work_directory_);
-  std::string option_write_path;
-  std::string parsed_write_path;
+   reference_directory_ = reference_directory;
 
-  if (not options_write_file.empty()) {
+  if (not property_tree_ptr_->readProperties(reference_directory_, properties_file, options_write_file, parsed_write_file)) {
 
-    option_write_path = Utility::filePath(options_write_file, work_directory_);
+    ExecEnv::log().critical("parseCommandLine; could not read specified runtime properties file: {}", properties_file);
 
   }
-
-  if (not parsed_write_file.empty()) {
-
-    parsed_write_path = Utility::filePath(parsed_write_file, work_directory_);
-
-  }
-
-  return property_tree_ptr_->readProperties(properties_path, option_write_path, parsed_write_path);
 
 }
 
@@ -63,7 +54,7 @@ const kgl::RuntimeAnalysisMap& kgl::RuntimeProperties::getAnalysisMap() const {
 /// Returns the resource definitions parsed from the XML properties.
 const kgl::ResourceDefinitions& kgl::RuntimeProperties::getRuntimeResources() const {
 
-  return cache(runtime_resources_cache_, [&] { return xml::parseResources(*property_tree_ptr_, work_directory_); });
+  return cache(runtime_resources_cache_, [&] { return xml::parseResources(*property_tree_ptr_, reference_directory_); });
 
 }
 
@@ -71,7 +62,7 @@ const kgl::ResourceDefinitions& kgl::RuntimeProperties::getRuntimeResources() co
 /// Returns the map of data files parsed from the XML properties.
 const kgl::RuntimeDataFileMap& kgl::RuntimeProperties::getDataFiles() const {
 
-  return cache(data_files_cache_, [&] { return xml::parseDataFiles(*property_tree_ptr_, work_directory_); });
+  return cache(data_files_cache_, [&] { return xml::parseDataFiles(*property_tree_ptr_, reference_directory_); });
 
 }
 

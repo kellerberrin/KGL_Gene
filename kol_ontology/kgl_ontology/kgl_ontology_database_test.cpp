@@ -124,7 +124,7 @@ void kgl::OntologyDatabaseTest::calcPairs() const {
 
 void kgl::OntologyDatabaseTest::checkICs() const {
 
-  std::string file_path = Utility::filePath(IC_FILE_NAME_, GeneExecEnv::getArgs().workDirectory);
+  std::string file_path = Utility::filePath(IC_FILE_NAME_, GeneExecEnv::getArgs().reference_directory);
   std::ifstream ic_file(file_path);
   std::string line;
   std::map<std::string, double> IC_map;
@@ -163,7 +163,7 @@ void kgl::OntologyDatabaseTest::checkICs() const {
 
   ExecEnv::log().info("Loaded: {} go_term, ic_value pairs from: {}", IC_map.size(), file_path);
 
-  std::string out_file_path =   Utility::filePath(std::string("Out_") + std::string(IC_FILE_NAME_) , GeneExecEnv::getArgs().workDirectory);
+  std::string out_file_path =   Utility::filePath(std::string("Out_") + std::string(IC_FILE_NAME_) , GeneExecEnv::getArgs().reference_directory);
   std::ofstream out_file(out_file_path);
   if (not out_file.good()) {
 

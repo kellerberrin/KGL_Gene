@@ -19,8 +19,8 @@ class ExecutePackage {
 
 public:
 
-  ExecutePackage(const RuntimeProperties& runtime_options, const std::string& work_directory)
-                  : runtime_config_(runtime_options, work_directory),
+  ExecutePackage(const RuntimeProperties& runtime_options, const std::string& reference_directory)
+                  : runtime_config_(runtime_options, reference_directory),
                     package_manager_(runtime_config_),
                     package_analysis_(runtime_config_) {}
 

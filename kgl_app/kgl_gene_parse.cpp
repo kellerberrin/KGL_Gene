@@ -33,12 +33,12 @@ namespace kel = kellerberrin;
 // plus --help/-h as a boolean flag.
 struct ParsedArgs {
 
-  std::string workDirectory;
-  std::string logFile;
-  std::string optionFile;
-  std::string optionFileOut;
-  std::string parsedOptionOut;
-  bool helpRequested{false};
+  std::string reference_directory;
+  std::string log_file;
+  std::string option_file;
+  std::string option_file_out;
+  std::string parsed_option_out;
+  bool help_requested{false};
 
 };
 
@@ -50,11 +50,11 @@ struct ParsedArgs {
 
   // Map flag names to the ParsedArgs members they populate.
   static const std::unordered_map<std::string, std::string*> string_flags = {
-    {"--workDirectory", &args.workDirectory},
-    {"--logFile",       &args.logFile},
-    {"--optionFile",    &args.optionFile},
-    {"--optionFileOut",    &args.optionFileOut},
-    {"--parsedTree",    &args.parsedOptionOut},
+    {"--referenceDirectory", &args.reference_directory},
+    {"--logFile",       &args.log_file},
+    {"--optionFile",    &args.option_file},
+    {"--optionFileOut",    &args.option_file_out},
+    {"--parsedTree",    &args.parsed_option_out},
   };
 
   for (int i = 1; i < argc; ++i) {
@@ -63,7 +63,7 @@ struct ParsedArgs {
 
     if (arg == "--help" or arg == "-h") {
 
-      args.helpRequested = true;
+      args.help_requested = true;
       continue;
 
     }
@@ -107,6 +107,98 @@ struct ParsedArgs {
 
 }
 
+kgl::CmdLineArgs validateArguments(const ParsedArgs& parsed_args) {
+
+  // Reference directory non empty
+  if (parsed_args.reference_directory.empty()) {
+
+    fatalExit("--workDirectory was not specified");
+
+  }
+
+  // Reference directory exists
+  bool valid_directory = kel::Utility::directoryExists(parsed_args.reference_directory);
+  if (!valid_directory) {
+
+    fatalExit("Specified work directory:" + parsed_args.reference_directory + " does not exist.");
+
+  }
+
+  // Log file non empty
+  if (parsed_args.log_file.empty()) {
+
+    fatalExit("--logFile was not specified");
+
+  }
+
+  // Options file not empty
+  if (parsed_args.option_file.empty()) {
+
+    fatalExit("--optionFile was not specified");
+
+  }
+
+  if (parsed_args.option_file == parsed_args.log_file) {
+
+    fatalExit("--optionFile cannot have the same file name as --logFile.");
+
+  }
+
+
+  // Check the optional arguments.
+  if (not parsed_args.option_file_out.empty()) {
+
+    if (parsed_args.option_file_out == parsed_args.option_file) {
+
+      fatalExit("--optionFileOut cannot have the same file name as --optionFile.");
+
+    }
+
+    if (parsed_args.option_file_out == parsed_args.log_file) {
+
+      fatalExit("--optionFileOut cannot have the same file name as --logFile.");
+
+    }
+
+    if (not parsed_args.option_file_out.empty() and not parsed_args.parsed_option_out.empty()) {
+
+      if (parsed_args.option_file_out == parsed_args.parsed_option_out) {
+
+        fatalExit("--optionFileOut cannot have the same file name as --parsedTree");
+
+      }
+
+    }
+
+  }
+
+  if (not parsed_args.parsed_option_out.empty()) {
+
+    if (parsed_args.parsed_option_out == parsed_args.option_file) {
+
+      fatalExit("--parsedTree cannot have the same file name as --optionFile.");
+
+    }
+
+    if (parsed_args.option_file_out == parsed_args.log_file) {
+
+      fatalExit("--parsedTree cannot have the same file name as --logFile.");
+
+    }
+
+  }
+
+  kgl::CmdLineArgs cmd_args;
+
+  cmd_args.reference_directory = parsed_args.reference_directory;
+  cmd_args.log_file = kel::Utility::filePath(parsed_args.log_file, cmd_args.reference_directory);
+  cmd_args.options_file = kel::Utility::filePath(parsed_args.option_file, cmd_args.reference_directory);
+  cmd_args.option_file_out = kel::Utility::filePath(parsed_args.option_file_out, cmd_args.reference_directory);
+  cmd_args.parsed_option_out = kel::Utility::filePath(parsed_args.parsed_option_out, cmd_args.reference_directory);
+
+  return cmd_args;
+
+}
 
 /// Parses the command line arguments and initializes the runtime environment.
 bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
@@ -142,110 +234,20 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
   auto const& parsed = *parsed_opt;
 
-  if (parsed.helpRequested) {
+  if (parsed.help_requested) {
 
     std::cerr << help_description << std::endl;
     std::exit(EXIT_SUCCESS);
 
   }
 
-  // Work directory.
-  if (parsed.workDirectory.empty()) {
+  args_ = validateArguments(parsed);
 
-    fatalExit("--workDirectory was not specified");
-
-  }
-  args_.workDirectory = parsed.workDirectory;
-  std::cerr << "directory:" << args_.workDirectory << " was specified" << std::endl;
-
-  bool valid_directory = Utility::directoryExists(getArgs().workDirectory);
-
-  if (!valid_directory) {
-
-    fatalExit("Specified work directory:" + getArgs().workDirectory + " does not exist.");
-
-  }
-
-  // Log file.
-  if (parsed.logFile.empty()) {
-
-    fatalExit("--logFile was not specified");
-
-  }
-
-  std::string log_file_name = parsed.logFile;
-  // Join the log file and the directory
-  std::string log_file_path = Utility::filePath(log_file_name, getArgs().workDirectory);
   // truncate the log file.
-  std::fstream log_file(log_file_path, std::fstream::out | std::fstream::trunc);
+  std::fstream log_file(args_.log_file, std::fstream::out | std::fstream::trunc);
   if (!log_file) {
 
-    fatalExit("Cannot open log file (--logFile):" + log_file_path);
-
-  }
-
-  args_.logFile = log_file_path;
-
-  // Options file.
-  if (parsed.optionFile.empty()) {
-
-    fatalExit("--optionFile was not specified");
-
-  }
-
-  if (parsed.optionFile == parsed.logFile) {
-
-    fatalExit("--optionFile cannot have the same file name as --logFile.");
-
-  }
-
-  args_.options_file = parsed.optionFile;
-
-  // Check the temporary arguments.
-
-  if (not parsed.optionFileOut.empty()) {
-
-    if (parsed.optionFileOut == parsed.optionFile) {
-
-      fatalExit("--optionFileOut cannot have the same file name as --optionFile.");
-
-    }
-
-    if (parsed.optionFileOut == parsed.logFile) {
-
-      fatalExit("--optionFileOut cannot have the same file name as --logFile.");
-
-    }
-
-    if (not parsed.optionFileOut.empty() and not parsed.parsedOptionOut.empty()) {
-
-      if (parsed.optionFileOut == parsed.parsedOptionOut) {
-
-        fatalExit("--optionFileOut cannot have the same file name as --parsedTree");
-
-      }
-
-    }
-
-    args_.option_file_out = parsed.optionFileOut;
-
-  }
-
-  if (not parsed.parsedOptionOut.empty()) {
-
-    if (parsed.parsedOptionOut == parsed.optionFile) {
-
-      fatalExit("--parsedTree cannot have the same file name as --optionFile.");
-
-    }
-
-    if (parsed.optionFileOut == parsed.logFile) {
-
-      fatalExit("--parsedTree cannot have the same file name as --logFile.");
-
-    }
-
-    args_.parsedOptionOut = parsed.parsedOptionOut;
+    fatalExit("Cannot open log file (--logFile):" + args_.log_file);
 
   }
 
@@ -253,11 +255,12 @@ bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)
 
 }
 
-
 /// Creates and returns the application logger.
 std::unique_ptr<kel::ExecEnvLogger> kgl::GeneExecEnv::createLogger() {
 
   // Setup the Logger.
-  return ExecEnv::createLogger(MODULE_NAME, getArgs().logFile, getArgs().max_error_count, getArgs().max_warn_count);
+  return ExecEnv::createLogger(MODULE_NAME, getArgs().log_file, getArgs().max_error_count, getArgs().max_warn_count);
 
 }
+
+

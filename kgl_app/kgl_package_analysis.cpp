@@ -33,7 +33,7 @@ bool kgl::PackageAnalysis::initializeAnalysis( const RuntimePackage& package,
         auto defined_parameters = runtime_config_.activeParameterList().createParameterList(analysis_runtime.parameterMap());
 
         // Initialize the analysis.
-        if (analysis_ptr->initializeAnalysis(runtime_config_.workDirectory(), defined_parameters, resource_ptr)) {
+        if (analysis_ptr->initializeAnalysis(runtime_config_.referenceDirectory(), defined_parameters, resource_ptr)) {
 
           active_analysis_.emplace_back(std::move(analysis_ptr), true);
 

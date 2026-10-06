@@ -311,7 +311,7 @@ public:
   [[nodiscard]] std::optional<bool> getBool(const std::string& ident) const;
 
   /// Constant representing any vector size; bypasses size validation.
-  constexpr static const size_t ANY_SIZE{std::numeric_limits<size_t>::max()};
+  constexpr static size_t ANY_SIZE{std::numeric_limits<size_t>::max()};
 
 private:
 

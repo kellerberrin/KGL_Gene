@@ -26,7 +26,14 @@ class RuntimeProperties {
 
 public:
 
-  RuntimeProperties() : property_tree_ptr_(std::make_shared<PropertyTree>()) {}
+  RuntimeProperties(const std::string& reference_directory,
+                       const std::string& properties_file,
+                       const std::string& options_write_file,
+                       const std::string& parsed_write_file) : property_tree_ptr_(std::make_shared<PropertyTree>()) {
+
+    readProperties( reference_directory, properties_file, options_write_file, parsed_write_file);
+
+  }
   ~RuntimeProperties() = default;
   RuntimeProperties(const RuntimeProperties&) = delete;
   RuntimeProperties& operator=(const RuntimeProperties&) = delete;
@@ -34,15 +41,13 @@ public:
   RuntimeProperties& operator=(RuntimeProperties&&) = delete;
 
   /// Reads and parses the properties from the specified XML file.
-  [[nodiscard]] bool readProperties( const std::string& properties_file,
-                                     const std::string& options_write_file,
-                                     const std::string& parsed_write_file);
+  void readProperties( const std::string& reference_directory,
+                       const std::string& properties_file,
+                       const std::string& options_write_file,
+                       const std::string& parsed_write_file);
 
-  /// Sets the work directory used to resolve relative file paths.
-  void setWorkDirectory(const std::string& work_directory) { work_directory_ = work_directory; }
-  /// Returns the work directory.
-  [[nodiscard]] const std::string& workDirectory() const { return work_directory_; }
-
+  /// Returns the reference directory.
+  [[nodiscard]] const std::string& referenceDirectory() const { return reference_directory_; }
   /// Returns the list of active packages to be executed at runtime.
   [[nodiscard]] const ActivePackageVector& getActivePackages() const;
   /// Returns the map of package identifiers to RuntimePackage objects.
@@ -62,7 +67,7 @@ public:
 
 private:
 
-  std::string work_directory_;  // The work directory, all files are specified 'work_directory/file_name'
+  std::string reference_directory_;  // The reference directory, all files, XML and Data, are specified relative to this directory.
   std::shared_ptr<PropertyTree> property_tree_ptr_;   // The aggregated and parsed XML property tree.
 
   // Each section is parsed at most once because RuntimeProperties is logically read-only after readProperties().

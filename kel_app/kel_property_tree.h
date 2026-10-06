@@ -43,7 +43,8 @@ public:
   ~PropertyTree(); // Defined in implementation file.
 
   /// Reads and parses an XML properties file. Returns true on success.
-  [[nodiscard]] bool readProperties( const std::string& properties_file,
+  [[nodiscard]] bool readProperties( const std::string& reference_directory,
+                                     const std::string& properties_file,
                                      const std::string& options_write_file,
                                      const std::string& parsed_write_file);
 
