@@ -9,7 +9,6 @@
 #include "kgl_runtime.h"
 #include "kgl_runtime_resource.h"
 #include "kel_property_tree.h"
-#include "kgl_genome_types.h"
 
 #include <memory>
 #include <optional>
@@ -26,12 +25,13 @@ class RuntimeProperties {
 
 public:
 
-  RuntimeProperties(const std::string& reference_directory,
-                       const std::string& properties_file,
-                       const std::string& options_write_file,
-                       const std::string& parsed_write_file) : property_tree_ptr_(std::make_shared<PropertyTree>()) {
+  RuntimeProperties( const std::string& properties_file,
+                     const std::string& options_write_file,
+                     const std::string& parsed_write_file,
+                     const std::string& reference_directory) : reference_directory_(reference_directory),
+                                                               property_tree_ptr_(std::make_shared<PropertyTree>()) {
 
-    readProperties( reference_directory, properties_file, options_write_file, parsed_write_file);
+    readProperties( properties_file, options_write_file, parsed_write_file, reference_directory);
 
   }
   ~RuntimeProperties() = default;
@@ -40,11 +40,6 @@ public:
   RuntimeProperties(RuntimeProperties&&) = delete;
   RuntimeProperties& operator=(RuntimeProperties&&) = delete;
 
-  /// Reads and parses the properties from the specified XML file.
-  void readProperties( const std::string& reference_directory,
-                       const std::string& properties_file,
-                       const std::string& options_write_file,
-                       const std::string& parsed_write_file);
 
   /// Returns the reference directory.
   [[nodiscard]] const std::string& referenceDirectory() const { return reference_directory_; }
@@ -70,14 +65,6 @@ private:
   std::string reference_directory_;  // The reference directory, all files, XML and Data, are specified relative to this directory.
   std::shared_ptr<PropertyTree> property_tree_ptr_;   // The aggregated and parsed XML property tree.
 
-  // Each section is parsed at most once because RuntimeProperties is logically read-only after readProperties().
-  template <class T, class F>
-  [[nodiscard]] const T& cache(std::optional<T>& cache_slot, F&& parse) const {
-
-    if (not cache_slot) cache_slot = std::forward<F>(parse)();
-    return *cache_slot;
-
-  }
 
   mutable std::optional<ActivePackageVector> active_packages_cache_;
   mutable std::optional<RuntimePackageMap>   package_map_cache_;
@@ -87,6 +74,21 @@ private:
   mutable std::optional<ContigAliasMap>      contig_alias_cache_;
   mutable std::optional<VariantEvidenceMap>  evidence_map_cache_;
   mutable std::optional<ActiveParameterList> parameter_map_cache_;
+
+  /// Reads and parses the properties from the specified XML file.
+  void readProperties( const std::string& properties_file,
+                       const std::string& options_write_file,
+                       const std::string& parsed_write_file,
+                       const std::string& reference_directory);
+
+  // Each section is parsed at most once because RuntimeProperties is logically read-only after readProperties().
+  template <class T, class F>
+  [[nodiscard]] const T& cache(std::optional<T>& cache_slot, F&& parse) const {
+
+    if (not cache_slot) cache_slot = std::forward<F>(parse)();
+    return *cache_slot;
+
+  }
 
 };
 

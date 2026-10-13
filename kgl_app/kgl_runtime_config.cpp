@@ -14,22 +14,22 @@ namespace kgl = kellerberrin::genome;
 void kgl::RuntimeConfiguration::verifyPackages() const {
 
   // List the active packages.
-  for (auto const& active : runtime_options_.getActivePackages()) {
+  for (auto const& active : runtime_properties_.getActivePackages()) {
 
     ExecEnv::log().info("Sequentially Executing Active Package: {}", active.packageIdentifier());
 
   }
 
   // for all packages.
-  for (auto const& [package_ident, package] : runtime_options_.getPackageMap()) {
+  for (auto const& [package_ident, package] : runtime_properties_.getPackageMap()) {
 
     // Confirm that requested analytics are defined.
     for (auto const& analysis_ident : package.analysisList()) {
 
-      if (not runtime_options_.getAnalysisMap().contains(analysis_ident)) {
+      if (not runtime_properties_.getAnalysisMap().contains(analysis_ident)) {
 
         ExecEnv::log().error("RuntimeConfiguration::verifyPackages, Package: {}, Analysis: {}, not defined", package_ident, analysis_ident);
-        for (auto const& [ident, runtime] : runtime_options_.getAnalysisMap()) {
+        for (auto const& [ident, runtime] : runtime_properties_.getAnalysisMap()) {
 
           ExecEnv::log().warn("RuntimeConfiguration::verifyPackages, Available Analysis: {}", ident);
 
@@ -40,10 +40,10 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
       }
 
       // If the analysis exists, check that any active named parameter blocks also exist.
-      auto const& [analysis_id, analysis_obj] = *(runtime_options_.getAnalysisMap().find(analysis_ident));
+      auto const& [analysis_id, analysis_obj] = *(runtime_properties_.getAnalysisMap().find(analysis_ident));
       for (auto const& param_name : analysis_obj.parameterMap()) {
 
-        if (not runtime_options_.getParameterMap().getMap().contains(param_name)) {
+        if (not runtime_properties_.getParameterMap().getMap().contains(param_name)) {
 
           ExecEnv::log().critical("RuntimeConfiguration::verifyPackages, Package: {}, Analysis: {}, Named Parameter Block: {} not defined",
                                   package_ident, analysis_ident, param_name);
@@ -57,9 +57,9 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
     //Confirm that all resources exist.
     for (auto const& [resource_type, resource_ident] : package.resourceList()) {
 
-      if (not runtime_options_.getRuntimeResources().retrieve(resource_type, resource_ident)) {
+      if (not runtime_properties_.getRuntimeResources().retrieve(resource_type, resource_ident)) {
 
-        for (auto const& [ident, resource_parameters] : runtime_options_.getRuntimeResources().getMap()) {
+        for (auto const& [ident, resource_parameters] : runtime_properties_.getRuntimeResources().getMap()) {
 
           ExecEnv::log().info("RuntimeConfiguration::verifyPackages, Package: {}, Resource Type: {}, Ident: {}",
                               package_ident, resource_parameters.resourceType(), resource_parameters.resourceIdent());
@@ -79,7 +79,7 @@ void kgl::RuntimeConfiguration::verifyPackages() const {
 
       for (auto const& vcf_file_ident : vcf_file_vector) {
 
-        if (not runtime_options_.getDataFiles().contains(vcf_file_ident)) {
+        if (not runtime_properties_.getDataFiles().contains(vcf_file_ident)) {
 
           ExecEnv::log().critical("RuntimeConfiguration::verifyPackages, Package: {}, Iterative load file: {}, not defined", package_ident, vcf_file_ident);
 

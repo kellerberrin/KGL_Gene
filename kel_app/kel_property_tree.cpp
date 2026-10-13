@@ -231,10 +231,10 @@ void kel::PropertyTree::PropertyImpl::readRecursive(std::stringstream& ss, const
 }
 
 
-bool kel::PropertyTree::PropertyImpl::readPropertiesFile( const std::string& reference_directory,
-                                                          const std::string& properties_file,
+bool kel::PropertyTree::PropertyImpl::readPropertiesFile( const std::string& properties_file,
                                                           const std::string& options_write_file,
-                                                          const std::string& parsed_write_file) {
+                                                          const std::string& parsed_write_file,
+                                                          const std::string& reference_directory) {
 
   try {
 
@@ -550,16 +550,16 @@ kel::PropertyTree::~PropertyTree() {}  // Required because of incomplete pimpl t
 
 // Functionality passed to the implmentation.
 
-bool kel::PropertyTree::readProperties( const std::string& reference_directory,
-                                        const std::string& properties_file,
+bool kel::PropertyTree::readProperties( const std::string& properties_file,
                                         const std::string& options_write_file,
-                                        const std::string& parsed_write_file) {
+                                        const std::string& parsed_write_file,
+                                        const std::string& reference_directory) {
 
   auto new_impl = std::make_unique<PropertyImpl>();
-  if (not new_impl->readPropertiesFile( reference_directory,
-                                        properties_file,
+  if (not new_impl->readPropertiesFile( properties_file,
                                         options_write_file,
-                                        parsed_write_file)) {
+                                        parsed_write_file,
+                                        reference_directory)) {
 
     return false;
 

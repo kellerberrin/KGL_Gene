@@ -19,8 +19,12 @@ class ExecutePackage {
 
 public:
 
-  ExecutePackage(const RuntimeProperties& runtime_options, const std::string& reference_directory)
-                  : runtime_config_(runtime_options, reference_directory),
+  ExecutePackage( const std::string& options_file,
+                  const std::string& option_file_out,
+                  const std::string& parsed_option_out ,
+                  const std::string& reference_directory)
+                  : runtime_properties_( options_file, option_file_out, parsed_option_out, reference_directory),
+                    runtime_config_(runtime_properties_, reference_directory),
                     package_manager_(runtime_config_),
                     package_analysis_(runtime_config_) {}
 
@@ -31,6 +35,7 @@ public:
 
 private:
 
+  const RuntimeProperties    runtime_properties_;
   const RuntimeConfiguration runtime_config_;
   const PackageManager       package_manager_;
   const PackageAnalysis      package_analysis_;

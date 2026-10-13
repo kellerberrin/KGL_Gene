@@ -17,9 +17,11 @@
 namespace kgl = kellerberrin::genome;
 namespace kel = kellerberrin;
 
+// Anonymous namespace.
+namespace {
 
-/// Prints a fatal error message to stderr and exits the program.
-[[noreturn]] static void fatalExit(const std::string& message) {
+// Prints a fatal error message to stderr and exits the program.
+[[noreturn]] void fatalExit(const std::string& message) {
 
   std::cerr << message << std::endl;
   std::cerr << kgl::GeneExecEnv::MODULE_NAME << " exits" << std::endl;
@@ -44,7 +46,7 @@ struct ParsedArgs {
 
 
 /// Parses command-line arguments into a ParsedArgs structure, supporting --flag=value and --flag value syntax.
-[[nodiscard]] static std::optional<ParsedArgs> parseArgs(int argc, char const** argv) {
+[[nodiscard]] std::optional<ParsedArgs> parseArgs(int argc, char const** argv) {
 
   ParsedArgs args;
 
@@ -107,7 +109,7 @@ struct ParsedArgs {
 
 }
 
-kgl::CmdLineArgs validateArguments(const ParsedArgs& parsed_args) {
+[[nodiscard]] kgl::CmdLineArgs validateArguments(const ParsedArgs& parsed_args) {
 
   // Reference directory non empty
   if (parsed_args.reference_directory.empty()) {
@@ -190,6 +192,7 @@ kgl::CmdLineArgs validateArguments(const ParsedArgs& parsed_args) {
 
   kgl::CmdLineArgs cmd_args;
 
+  // All files are relative to the reference directory.
   cmd_args.reference_directory = parsed_args.reference_directory;
   cmd_args.log_file = kel::Utility::filePath(parsed_args.log_file, cmd_args.reference_directory);
   cmd_args.options_file = kel::Utility::filePath(parsed_args.option_file, cmd_args.reference_directory);
@@ -199,6 +202,8 @@ kgl::CmdLineArgs validateArguments(const ParsedArgs& parsed_args) {
   return cmd_args;
 
 }
+
+} // anonymous namespace.
 
 /// Parses the command line arguments and initializes the runtime environment.
 bool kgl::GeneExecEnv::parseCommandLine(int argc, char const ** argv)

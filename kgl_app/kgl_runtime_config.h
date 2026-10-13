@@ -29,42 +29,42 @@ class RuntimeConfiguration {
 
 public:
 
-  RuntimeConfiguration(const RuntimeProperties &runtime_options, std::string reference_directory)
-      : runtime_options_(runtime_options),
+  RuntimeConfiguration(const RuntimeProperties &runtime_properties, std::string reference_directory)
+      : runtime_properties_(runtime_properties),
         reference_directory_(std::move(reference_directory)) { verifyPackages(); }
 
   ~RuntimeConfiguration() = default;
 
   /// Returns the list of active packages to be executed.
-  [[nodiscard]] const ActivePackageVector &activePackages() const { return runtime_options_.getActivePackages(); }
+  [[nodiscard]] const ActivePackageVector &activePackages() const { return runtime_properties_.getActivePackages(); }
 
   /// Returns the contig alias map for chromosome identifier lookup.
-  [[nodiscard]] const ContigAliasMap &contigAlias() const { return runtime_options_.getContigAlias(); }
+  [[nodiscard]] const ContigAliasMap &contigAlias() const { return runtime_properties_.getContigAlias(); }
 
   /// Returns the map of data file identifiers to file info objects.
-  [[nodiscard]] const RuntimeDataFileMap &dataFileMap() const { return runtime_options_.getDataFiles(); }
+  [[nodiscard]] const RuntimeDataFileMap &dataFileMap() const { return runtime_properties_.getDataFiles(); }
 
   /// Returns the resource definitions parsed from the runtime XML.
-  [[nodiscard]] const ResourceDefinitions &resourceDefMap() const { return runtime_options_.getRuntimeResources(); }
+  [[nodiscard]] const ResourceDefinitions &resourceDefMap() const { return runtime_properties_.getRuntimeResources(); }
 
   /// Returns the map of analysis identifiers to RuntimeAnalysis objects.
-  [[nodiscard]] const RuntimeAnalysisMap &analysisMap() const { return runtime_options_.getAnalysisMap(); }
+  [[nodiscard]] const RuntimeAnalysisMap &analysisMap() const { return runtime_properties_.getAnalysisMap(); }
 
   /// Returns the map of package identifiers to RuntimePackage objects.
-  [[nodiscard]] const RuntimePackageMap &runtimePackageMap() const { return runtime_options_.getPackageMap(); }
+  [[nodiscard]] const RuntimePackageMap &runtimePackageMap() const { return runtime_properties_.getPackageMap(); }
 
   /// Returns the variant evidence map for VCF INFO field specifications.
-  [[nodiscard]] const VariantEvidenceMap &evidenceMap() const { return runtime_options_.getEvidenceMap(); }
+  [[nodiscard]] const VariantEvidenceMap &evidenceMap() const { return runtime_properties_.getEvidenceMap(); }
 
   /// Returns the active parameter list for analysis configuration.
-  [[nodiscard]] const ActiveParameterList &activeParameterList() const { return runtime_options_.getParameterMap(); }
+  [[nodiscard]] const ActiveParameterList &activeParameterList() const { return runtime_properties_.getParameterMap(); }
 
   /// Returns the reference directory.
   [[nodiscard]] const std::string &referenceDirectory() const { return reference_directory_; }
 
 private:
 
-  const RuntimeProperties& runtime_options_;
+  const RuntimeProperties& runtime_properties_;
   const std::string reference_directory_;
 
   // Check the integrity of all the XML information.

@@ -330,7 +330,12 @@ bool kga::MutationAnalysis::finalizeAnalysis() {
 
   ExecEnv::log().info("Default Finalize Analysis called for Analysis Id: {}", ident());
 
-  gene_mutation_.writeOutput(genome_aux_ptr_,  output_file_name_,  OUTPUT_DELIMITER_);
+  if (not gene_mutation_.writeOutput(genome_aux_ptr_,  output_file_name_,  OUTPUT_DELIMITER_)) {
+
+    ExecEnv::log().error("MutationAnalysis::finalizeAnalysis; error writing output file: {}", output_file_name_);
+    return false;
+
+  }
 
   return true;
 
